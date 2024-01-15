@@ -1,0 +1,14 @@
+node_modules
+.DS_Store
+dist
+lib
+*.local
+*.tgz
+.eslintcache
+*.tsbuildinfo
+.vscode
+.idea
+.pnpm-debug.log
+.history
+miniprogram_npm
+miniprogram/pages/**/*.js
