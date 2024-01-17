@@ -27,7 +27,7 @@ Page<{}, WechatMiniprogram.Page.CustomOption>({
       pixelRatio: 2,
       renderFramework: 'webgl'
     });
-    this.playByUrl(inspireList.spring.url);
+    this.playByUrl(inspireList.text.url);
   },
   bindPickerChange (e: WechatMiniprogram.TouchEvent) {
     const index = e.detail.value;

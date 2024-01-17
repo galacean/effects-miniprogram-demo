@@ -25,125 +25,53 @@ var weapp = {};
 
 var core = {};
 
-var atob$1 = {};
+var eventIniter = {};
 
-var __extends$c = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(atob$1, "__esModule", { value: true });
-atob$1.btoa = atob$1.atob = void 0;
-var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-var InvalidCharacterError = /** @class */ (function (_super) {
-    __extends$c(InvalidCharacterError, _super);
-    function InvalidCharacterError(message) {
-        var _this = _super.call(this, message) || this;
-        _this.message = message;
-        _this.name = 'InvalidCharacterError';
-        return _this;
-    }
-    return InvalidCharacterError;
-}(Error));
-function atob(input) {
-    var str = String(input).replace(/=+$/, '');
-    if (str.length % 4 === 1) {
-        throw new InvalidCharacterError('\'atob\' failed: The string to be decoded is not correctly encoded.');
-    }
-    var output = '';
-    for (
-    // initialize result and counters
-    var bc = 0, bs = void 0, buffer = void 0, idx = 0; 
-    // get next character
-    (buffer = str.charAt(idx++)); 
-    // character found in table? initialize bit storage and add its ascii value;
-    ~buffer &&
-        (
-        // @ts-expect-error
-        (bs = bc % 4 ? bs * 64 + buffer : buffer),
-            // and if not first of each 4 characters,
-            // convert the first 8 bits to one ascii character
-            bc++ % 4)
-        ? (output += String.fromCharCode(255 & (bs >> ((-2 * bc) & 6))))
-        : 0) {
-        // try to find character in table (0-63, not found => -1)
-        buffer = chars.indexOf(buffer);
-    }
-    return output;
-}
-atob$1.atob = atob;
-function btoa(string) {
-    string = String(string);
-    var bitmap;
-    var a;
-    var b;
-    var c;
-    var result = '';
-    var i = 0;
-    var rest = string.length % 3; // To determine the final padding
-    for (; i < string.length;) {
-        if ((a = string.charCodeAt(i++)) > 255 || (b = string.charCodeAt(i++)) > 255 || (c = string.charCodeAt(i++)) > 255) {
-            throw new TypeError('Failed to execute \'btoa\' on \'Window\': The string to be encoded contains characters outside of the Latin1 range.');
-        }
-        bitmap = (a << 16) | (b << 8) | c;
-        result +=
-            chars.charAt((bitmap >> 18) & 63) +
-                chars.charAt((bitmap >> 12) & 63) +
-                chars.charAt((bitmap >> 6) & 63) +
-                chars.charAt(bitmap & 63);
-    }
-    // If there's need of padding, replace the last 'A's with equal signs
-    return rest ? result.slice(0, rest - 3) + '==='.substring(rest) : result;
-}
-atob$1.btoa = btoa;
-
-var blob = {};
-
-Object.defineProperty(blob, "__esModule", { value: true });
-blob.Blob = void 0;
-var Blob = /** @class */ (function () {
-    /**
-     *
-     * @param buffers only support zero index
-     * @param type mimetype image/png image/webp...
-     */
-    function Blob(buffers, type) {
-        this.buffers = buffers;
-        this.type = type;
-    }
-    Blob.prototype.arraybuffer = function () {
-        return Promise.resolve(this.buffers[0]);
-    };
-    Blob.prototype.stream = function () {
-        throw 'not implemented';
-    };
-    Blob.prototype.text = function () {
-        throw 'not implemented';
-    };
-    Blob.prototype.slice = function (start, end, contentType) {
-        throw 'not implemented';
-    };
-    return Blob;
-}());
-blob.Blob = Blob;
-
-var devicePixelRatio$1 = {};
-
-Object.defineProperty(devicePixelRatio$1, "__esModule", { value: true });
-var devicePixelRatio = wx.getSystemInfoSync().pixelRatio;
-devicePixelRatio$1.default = devicePixelRatio;
+var touchEvent = {};
 
 var document$3 = {};
+
+var platform$1 = {};
+
+Object.defineProperty(platform$1, "__esModule", { value: true });
+platform$1.platform = void 0;
+platform$1.platform = {
+    getSystemInfoSync: function () {
+        return {
+            pixelRatio: 1,
+            system: '',
+            platform: '',
+            language: '',
+            screenWidth: 1,
+            screenHeight: 1,
+            windowWidth: 1,
+            windowHeight: 1,
+        };
+    },
+    createCanvas: function () {
+        return {
+            addEventListener: function (type, listener, options) {
+            },
+            removeEventListener: function (type, listener) { },
+            dispatchEvent: function (event) { },
+            width: 0,
+            height: 0,
+        };
+    },
+    createOffscreenCanvas: function (options) {
+        return {
+            addEventListener: function (type, listener, options) {
+            },
+            removeEventListener: function (type, listener) { },
+            dispatchEvent: function (event) { },
+            width: 0,
+            height: 0,
+        };
+    },
+    createImage: function () { },
+    createSelectorQuery: function () { },
+    request: function (object) { },
+};
 
 var body = {};
 
@@ -155,7 +83,8 @@ var screen$1 = {};
 
 Object.defineProperty(screen$1, "__esModule", { value: true });
 screen$1.screen = void 0;
-var _a$b = wx.getSystemInfoSync(), screenWidth = _a$b.screenWidth, screenHeight = _a$b.screenHeight, windowWidth = _a$b.windowWidth, windowHeight = _a$b.windowHeight;
+var platform_1$6 = platform$1;
+var _a$b = platform_1$6.platform.getSystemInfoSync(), screenWidth = _a$b.screenWidth, screenHeight = _a$b.screenHeight, windowWidth = _a$b.windowWidth, windowHeight = _a$b.windowHeight;
 screen$1.screen = {
     width: screenWidth,
     height: screenHeight,
@@ -304,6 +233,7 @@ var node$1 = {};
 var eventTarget = {};
 
 Object.defineProperty(eventTarget, "__esModule", { value: true });
+eventTarget.EventTarget = void 0;
 var eventMap = new WeakMap();
 var EventTarget = /** @class */ (function () {
     function EventTarget() {
@@ -348,9 +278,9 @@ var EventTarget = /** @class */ (function () {
     };
     return EventTarget;
 }());
-eventTarget.default = EventTarget;
+eventTarget.EventTarget = EventTarget;
 
-var __extends$b = (undefined && undefined.__extends) || (function () {
+var __extends$c = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -365,14 +295,11 @@ var __extends$b = (undefined && undefined.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __importDefault$1 = (undefined && undefined.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(node$1, "__esModule", { value: true });
 node$1.Node = void 0;
-var event_target_1$1 = __importDefault$1(eventTarget);
+var event_target_1$1 = eventTarget;
 var Node$1 = /** @class */ (function (_super) {
-    __extends$b(Node, _super);
+    __extends$c(Node, _super);
     function Node() {
         var _this = _super.call(this) || this;
         _this.childNodes = [];
@@ -399,10 +326,10 @@ var Node$1 = /** @class */ (function (_super) {
         return null;
     };
     return Node;
-}(event_target_1$1.default));
+}(event_target_1$1.EventTarget));
 node$1.Node = Node$1;
 
-var __extends$a = (undefined && undefined.__extends) || (function () {
+var __extends$b = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -421,7 +348,7 @@ Object.defineProperty(element, "__esModule", { value: true });
 element.Element = void 0;
 var node_1 = node$1;
 var Element = /** @class */ (function (_super) {
-    __extends$a(Element, _super);
+    __extends$b(Element, _super);
     function Element() {
         var _this = _super.call(this) || this;
         _this.className = '';
@@ -444,7 +371,7 @@ var Element = /** @class */ (function (_super) {
 }(node_1.Node));
 element.Element = Element;
 
-var __extends$9 = (undefined && undefined.__extends) || (function () {
+var __extends$a = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -488,7 +415,7 @@ var Mixin$1 = __importStar$1(mixin);
 var noop_1 = noop$3;
 var element_1 = element;
 var HTMLElement = /** @class */ (function (_super) {
-    __extends$9(HTMLElement, _super);
+    __extends$a(HTMLElement, _super);
     function HTMLElement(tagName, level) {
         if (tagName === void 0) { tagName = ''; }
         var _this = _super.call(this) || this;
@@ -519,7 +446,7 @@ Object.defineProperty(HTMLElement, Symbol.hasInstance, {
     },
 });
 
-var __extends$8 = (undefined && undefined.__extends) || (function () {
+var __extends$9 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -539,7 +466,7 @@ body.Body = void 0;
 var html_element_1$2 = htmlElement;
 var document_1$4 = document$3;
 var Body = /** @class */ (function (_super) {
-    __extends$8(Body, _super);
+    __extends$9(Body, _super);
     function Body() {
         // 为了性能, 此处不按照标准的DOM层级关系设计
         // 将 body 设置为 0级, parent元素为null
@@ -563,7 +490,7 @@ var htmlVideoElement = {};
 
 var htmlMediaElement = {};
 
-var __extends$7 = (undefined && undefined.__extends) || (function () {
+var __extends$8 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -582,7 +509,7 @@ Object.defineProperty(htmlMediaElement, "__esModule", { value: true });
 htmlMediaElement.HTMLMediaElement = void 0;
 var html_element_1$1 = htmlElement;
 var HTMLMediaElement = /** @class */ (function (_super) {
-    __extends$7(HTMLMediaElement, _super);
+    __extends$8(HTMLMediaElement, _super);
     function HTMLMediaElement(tagName) {
         return _super.call(this, tagName) || this;
     }
@@ -596,7 +523,7 @@ var HTMLMediaElement = /** @class */ (function (_super) {
 }(html_element_1$1.HTMLElement));
 htmlMediaElement.HTMLMediaElement = HTMLMediaElement;
 
-var __extends$6 = (undefined && undefined.__extends) || (function () {
+var __extends$7 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -615,7 +542,7 @@ Object.defineProperty(htmlVideoElement, "__esModule", { value: true });
 htmlVideoElement.HTMLVideoElement = void 0;
 var html_media_element_1$1 = htmlMediaElement;
 var HTMLVideoElement = /** @class */ (function (_super) {
-    __extends$6(HTMLVideoElement, _super);
+    __extends$7(HTMLVideoElement, _super);
     function HTMLVideoElement() {
         return _super.call(this, 'video') || this;
     }
@@ -687,7 +614,8 @@ var __generator$1 = (undefined && undefined.__generator) || function (thisArg, b
     }
 };
 Object.defineProperty(register, "__esModule", { value: true });
-register.isMiniGame = register.getCanvas = register.registerCanvas = void 0;
+register.isMiniGame = register.getCanvas = register.registerOffscreenCanvas = register.registerCanvas = void 0;
+var platform_1$5 = platform$1;
 var document_1$3 = document$3;
 var Mixin = __importStar(mixin);
 // 同步和异步都需要的数据
@@ -708,8 +636,7 @@ function registerCanvas(options) {
                     _a = options.id, id = _a === void 0 ? 'J-canvas' : _a, _b = options.isMiniGame, isMiniGame = _b === void 0 ? false : _b, _c = options.elementLevel, elementLevel = _c === void 0 ? 0 : _c;
                     if (!(typeof id === 'string')) return [3 /*break*/, 4];
                     if (!isMiniGame) return [3 /*break*/, 1];
-                    // @ts-expect-error
-                    canvas = wx.createCanvas();
+                    canvas = platform_1$5.platform.createCanvas();
                     return [3 /*break*/, 3];
                 case 1: return [4 /*yield*/, getCanvasById(id)];
                 case 2:
@@ -721,27 +648,7 @@ function registerCanvas(options) {
                     canvas.id = id;
                     _d.label = 5;
                 case 5:
-                    if (!('tagName' in canvas)) {
-                        canvas.tagName = 'CANVAS';
-                    }
-                    canvas.type = 'canvas';
-                    Mixin.parentNode(canvas, elementLevel);
-                    Mixin.style(canvas);
-                    Mixin.classList(canvas);
-                    Mixin.clientRegion(canvas);
-                    Mixin.offsetRegion(canvas);
-                    canvas.focus = function () { };
-                    canvas.blur = function () { };
-                    canvas.addEventListener = function (type, listener, options) {
-                        if (options === void 0) { options = {}; }
-                        document_1$3.document.addEventListener(type, listener, options);
-                    };
-                    canvas.removeEventListener = function (type, listener) {
-                        document_1$3.document.removeEventListener(type, listener);
-                    };
-                    canvas.dispatchEvent = function (event) {
-                        document_1$3.document.dispatchEvent(event);
-                    };
+                    registerOffscreenCanvas(canvas, elementLevel);
                     _isMiniGame = isMiniGame;
                     return [2 /*return*/, canvas];
             }
@@ -749,13 +656,45 @@ function registerCanvas(options) {
     });
 }
 register.registerCanvas = registerCanvas;
+/**
+ * 异步注册 canvas
+ * @param options
+ * @returns
+ */
+function registerOffscreenCanvas(canvas, elementLevel) {
+    if (!('tagName' in canvas)) {
+        canvas.tagName = 'CANVAS';
+    }
+    canvas.type = 'canvas';
+    Mixin.parentNode(canvas, elementLevel !== null && elementLevel !== void 0 ? elementLevel : 0);
+    Mixin.style(canvas);
+    Mixin.classList(canvas);
+    Mixin.clientRegion(canvas);
+    Mixin.offsetRegion(canvas);
+    canvas.focus = function () { };
+    canvas.blur = function () { };
+    canvas.addEventListener = function (type, listener, options) {
+        if (options === void 0) { options = {}; }
+        document_1$3.document.addEventListener(type, listener, options);
+    };
+    canvas.removeEventListener = function (type, listener) {
+        document_1$3.document.removeEventListener(type, listener);
+    };
+    canvas.dispatchEvent = function (event) {
+        document_1$3.document.dispatchEvent(event);
+    };
+    return canvas;
+}
+register.registerOffscreenCanvas = registerOffscreenCanvas;
 function getCanvasById(id) {
     return __awaiter$1(this, void 0, void 0, function () {
         return __generator$1(this, function (_a) {
             return [2 /*return*/, new Promise(function (resolve, reject) {
-                    wx.createSelectorQuery()
+                    platform_1$5.platform.createSelectorQuery()
+                        // @ts-expect-error
                         .select(id)
                         .node()
+                        // @ts-expect-error
                         .exec(function (res) {
                         try {
                             var canvas_1 = res[0].node;
@@ -784,17 +723,17 @@ register.isMiniGame = isMiniGame;
 
 Object.defineProperty(image, "__esModule", { value: true });
 image.Image = void 0;
-var register_1$3 = register;
+var platform_1$4 = platform$1;
+var register_1$4 = register;
 var Image = /** @class */ (function () {
     function Image() {
         var _a, _b;
         var image;
-        if ((0, register_1$3.isMiniGame)()) {
-            // @ts-expect-error
-            image = wx.createImage();
+        if ((0, register_1$4.isMiniGame)()) {
+            image = platform_1$4.platform.createImage();
         }
         else {
-            var canvas = (0, register_1$3.getCanvas)();
+            var canvas = (0, register_1$4.getCanvas)();
             image = (_b = (_a = canvas.createImage) === null || _a === void 0 ? void 0 : _a.call(canvas)) !== null && _b !== void 0 ? _b : {};
         }
         return image;
@@ -821,6 +760,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.document = void 0;
+var platform_1 = platform$1;
 var body_1 = body;
 var html_element_1 = htmlElement;
 var html_video_element_1 = htmlVideoElement;
@@ -864,8 +804,7 @@ exports.document = {
         tagName = tagName.toLowerCase();
         if (tagName === 'canvas') {
             if ((0, register_1.isMiniGame)()) {
-                // @ts-expect-error
-                var canvas = wx.createCanvas();
+                var canvas = platform_1.platform.createCanvas();
                 // 小游戏适配
                 canvas.addEventListener = function (type, listener, options) {
                     if (options === void 0) { options = {}; }
@@ -880,7 +819,9 @@ exports.document = {
                 return canvas;
             }
             else {
-                return wx.createOffscreenCanvas({ type: '2d' });
+                var canvas = platform_1.platform.createOffscreenCanvas({ type: '2d' });
+                (0, register_1.registerOffscreenCanvas)(canvas);
+                return canvas;
             }
         }
         else if (tagName === 'img') {
@@ -1017,9 +958,431 @@ var Event = /** @class */ (function () {
 }());
 event.Event = Event;
 
-var constructor = {};
+var __extends$6 = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(touchEvent, "__esModule", { value: true });
+touchEvent.dispatchTouchCancel = touchEvent.dispatchTouchEnd = touchEvent.dispatchTouchMove = touchEvent.dispatchTouchStart = void 0;
+var document_1$2 = document$3;
+var event_1$2 = event;
+var register_1$3 = register;
+var TouchEvent = /** @class */ (function (_super) {
+    __extends$6(TouchEvent, _super);
+    function TouchEvent(type) {
+        var _this = _super.call(this, type) || this;
+        _this.touches = [];
+        _this.targetTouches = [];
+        _this.changedTouches = [];
+        _this.target = (0, register_1$3.getCanvas)();
+        _this.currentTarget = (0, register_1$3.getCanvas)();
+        return _this;
+    }
+    return TouchEvent;
+}(event_1$2.Event));
+function mapEvent(event) {
+    var _a = event || {}, _b = _a.x, x = _b === void 0 ? 0 : _b, _c = _a.y, y = _c === void 0 ? 0 : _c, _d = _a.clientX, clientX = _d === void 0 ? 0 : _d, _e = _a.clientY, clientY = _e === void 0 ? 0 : _e;
+    // 小程序不支持Object.hasOwnProperty
+    // (抹平不同的view事件)[https://docs.alipay.com/mini/framework/event-object]
+    if (Object.keys(event).includes('x')) {
+        event.pageX = event.clientX = x;
+        event.pageY = event.clientY = y;
+    }
+    else {
+        event.x = clientX;
+        event.y = clientY;
+    }
+}
+function eventHandlerFactory$2(type) {
+    return function (rawEvent) {
+        var event = new TouchEvent(type);
+        event.changedTouches = rawEvent.changedTouches || rawEvent.touches;
+        event.touches = rawEvent.touches;
+        event.targetTouches = Array.prototype.slice.call(rawEvent.touches);
+        event.timeStamp = rawEvent.timeStamp;
+        event.changedTouches.forEach(function (e) { return mapEvent(e); });
+        event.touches.forEach(function (e) { return mapEvent(e); });
+        event.targetTouches.forEach(function (e) { return mapEvent(e); });
+        document_1$2.document.dispatchEvent(event);
+    };
+}
+var dispatchTouchStart = eventHandlerFactory$2('touchstart');
+touchEvent.dispatchTouchStart = dispatchTouchStart;
+var dispatchTouchMove = eventHandlerFactory$2('touchmove');
+touchEvent.dispatchTouchMove = dispatchTouchMove;
+var dispatchTouchEnd = eventHandlerFactory$2('touchend');
+touchEvent.dispatchTouchEnd = dispatchTouchEnd;
+var dispatchTouchCancel = eventHandlerFactory$2('touchcancel');
+touchEvent.dispatchTouchCancel = dispatchTouchCancel;
+
+var pointerEvent = {};
 
 var __extends$5 = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(pointerEvent, "__esModule", { value: true });
+pointerEvent.dispatchPointerCancel = pointerEvent.dispatchPointerLeave = pointerEvent.dispatchPointerUp = pointerEvent.dispatchPointerMove = pointerEvent.dispatchPointerDown = void 0;
+var event_1$1 = event;
+var register_1$2 = register;
+var document_1$1 = document$3;
+var PointerEvent = /** @class */ (function (_super) {
+    __extends$5(PointerEvent, _super);
+    function PointerEvent(type) {
+        var _this = _super.call(this, type) || this;
+        _this.target = (0, register_1$2.getCanvas)();
+        _this.currentTarget = (0, register_1$2.getCanvas)();
+        return _this;
+    }
+    return PointerEvent;
+}(event_1$1.Event));
+var CLONE_PROPS = [
+    // MouseEvent
+    'bubbles',
+    'cancelable',
+    'view',
+    'detail',
+    'screenX',
+    'screenY',
+    'clientX',
+    'clientY',
+    'ctrlKey',
+    'altKey',
+    'shiftKey',
+    'metaKey',
+    'button',
+    'relatedTarget',
+    // PointerEvent
+    'pointerId',
+    'width',
+    'height',
+    'pressure',
+    'tiltX',
+    'tiltY',
+    'pointerType',
+    'hwTimestamp',
+    'isPrimary',
+    // event instance
+    'pageX',
+    'pageY',
+    'timeStamp',
+];
+var CLONE_DEFAULTS = [
+    // MouseEvent
+    false,
+    false,
+    null,
+    null,
+    0,
+    0,
+    0,
+    0,
+    false,
+    false,
+    false,
+    false,
+    0,
+    null,
+    // DOM Level 3
+    0,
+    // PointerEvent
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    '',
+    0,
+    false,
+    // event instance
+    0,
+    0,
+    0,
+];
+var POINTER_TYPE = 'touch';
+function touchToPointer(type, touch) {
+    var e = new PointerEvent(type);
+    for (var i = 0; i < CLONE_PROPS.length; i++) {
+        var p = CLONE_PROPS[i];
+        e[p] = touch[p] || CLONE_DEFAULTS[i];
+    }
+    e.type = type;
+    e.target = (0, register_1$2.getCanvas)();
+    e.currentTarget = (0, register_1$2.getCanvas)();
+    e.buttons = typeToButtons(type);
+    e.which = e.buttons;
+    e.pointerId = (touch.identifier || 0) + 2;
+    e.bubbles = true;
+    e.cancelable = true; // e.detail = this.clickCount;
+    e.button = 0;
+    e.width = (touch.radiusX || 0.5) * 2;
+    e.height = (touch.radiusY || 0.5) * 2;
+    e.pressure = touch.force || 0.5;
+    e.isPrimary = isPrimaryPointer(touch);
+    e.pointerType = POINTER_TYPE; // forward modifier keys
+    // @ts-expect-error
+    e.offsetX = touch.pageX || touch.x;
+    // @ts-expect-error
+    e.offsetY = touch.pageY || touch.y;
+    return e;
+}
+function typeToButtons(type) {
+    var ret = 0;
+    if (type === 'touchstart' || type === 'touchmove' || type === 'pointerdown' || type === 'pointermove') {
+        ret = 1;
+    }
+    return ret;
+}
+var firstPointer = null;
+function isPrimaryPointer(touch) {
+    return firstPointer === touch.identifier;
+}
+function setPrimaryPointer(touch) {
+    if (firstPointer === null) {
+        firstPointer = touch.identifier;
+    }
+}
+function removePrimaryPointer(touch) {
+    if (firstPointer === touch.identifier) {
+        firstPointer = null;
+    }
+}
+function eventHandlerFactory$1(type) {
+    return function (rawEvent) {
+        var changedTouches = rawEvent.changedTouches || rawEvent.touches;
+        for (var i = 0; i < changedTouches.length; i++) {
+            var touch = changedTouches[i];
+            switch (type) {
+                case 'pointerdown':
+                    i === 0 && setPrimaryPointer(touch);
+                    document_1$1.document.dispatchEvent(touchToPointer(type, touch));
+                    break;
+                case 'pointermove':
+                    document_1$1.document.dispatchEvent(touchToPointer(type, touch));
+                    break;
+                case 'pointerup':
+                    document_1$1.document.dispatchEvent(touchToPointer(type, touch));
+                    break;
+                case 'pointerleave':
+                case 'pointercancel':
+                    removePrimaryPointer(touch);
+                    document_1$1.document.dispatchEvent(touchToPointer(type, touch));
+                    break;
+            }
+        }
+    };
+}
+var dispatchPointerDown = eventHandlerFactory$1('pointerdown');
+pointerEvent.dispatchPointerDown = dispatchPointerDown;
+var dispatchPointerMove = eventHandlerFactory$1('pointermove');
+pointerEvent.dispatchPointerMove = dispatchPointerMove;
+var dispatchPointerUp = eventHandlerFactory$1('pointerup');
+pointerEvent.dispatchPointerUp = dispatchPointerUp;
+var dispatchPointerLeave = eventHandlerFactory$1('pointerleave');
+pointerEvent.dispatchPointerLeave = dispatchPointerLeave;
+var dispatchPointerCancel = eventHandlerFactory$1('pointercancel');
+pointerEvent.dispatchPointerCancel = dispatchPointerCancel;
+
+var mouseEvent = {};
+
+var __extends$4 = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(mouseEvent, "__esModule", { value: true });
+mouseEvent.dispatchMouseUp = mouseEvent.dispatchMouseMove = mouseEvent.dispatchMouseDown = void 0;
+var event_1 = event;
+var document_1 = document$3;
+/** @class */ ((function (_super) {
+    __extends$4(MouseEvent, _super);
+    function MouseEvent(type) {
+        return _super.call(this, type) || this;
+    }
+    return MouseEvent;
+})(event_1.Event));
+function eventHandlerFactory(type) {
+    return function (rawEvent) {
+        rawEvent.type = type;
+        document_1.document.dispatchEvent(rawEvent);
+    };
+}
+var dispatchMouseDown = eventHandlerFactory('mousedown');
+mouseEvent.dispatchMouseDown = dispatchMouseDown;
+var dispatchMouseMove = eventHandlerFactory('mousemove');
+mouseEvent.dispatchMouseMove = dispatchMouseMove;
+var dispatchMouseUp = eventHandlerFactory('mouseup');
+mouseEvent.dispatchMouseUp = dispatchMouseUp;
+
+(function (exports) {
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+__exportStar(touchEvent, exports);
+__exportStar(pointerEvent, exports);
+__exportStar(mouseEvent, exports);
+}(eventIniter));
+
+var atob$1 = {};
+
+var __extends$3 = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(atob$1, "__esModule", { value: true });
+atob$1.btoa = atob$1.atob = void 0;
+var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+var InvalidCharacterError = /** @class */ (function (_super) {
+    __extends$3(InvalidCharacterError, _super);
+    function InvalidCharacterError(message) {
+        var _this = _super.call(this, message) || this;
+        _this.message = message;
+        _this.name = 'InvalidCharacterError';
+        return _this;
+    }
+    return InvalidCharacterError;
+}(Error));
+function atob(input) {
+    var str = String(input).replace(/=+$/, '');
+    if (str.length % 4 === 1) {
+        throw new InvalidCharacterError('\'atob\' failed: The string to be decoded is not correctly encoded.');
+    }
+    var output = '';
+    for (
+    // initialize result and counters
+    var bc = 0, bs = void 0, buffer = void 0, idx = 0; 
+    // get next character
+    (buffer = str.charAt(idx++)); 
+    // character found in table? initialize bit storage and add its ascii value;
+    ~buffer &&
+        (
+        // @ts-expect-error
+        (bs = bc % 4 ? bs * 64 + buffer : buffer),
+            // and if not first of each 4 characters,
+            // convert the first 8 bits to one ascii character
+            bc++ % 4)
+        ? (output += String.fromCharCode(255 & (bs >> ((-2 * bc) & 6))))
+        : 0) {
+        // try to find character in table (0-63, not found => -1)
+        buffer = chars.indexOf(buffer);
+    }
+    return output;
+}
+atob$1.atob = atob;
+function btoa(string) {
+    string = String(string);
+    var bitmap;
+    var a;
+    var b;
+    var c;
+    var result = '';
+    var i = 0;
+    var rest = string.length % 3; // To determine the final padding
+    for (; i < string.length;) {
+        if ((a = string.charCodeAt(i++)) > 255 || (b = string.charCodeAt(i++)) > 255 || (c = string.charCodeAt(i++)) > 255) {
+            throw new TypeError('Failed to execute \'btoa\' on \'Window\': The string to be encoded contains characters outside of the Latin1 range.');
+        }
+        bitmap = (a << 16) | (b << 8) | c;
+        result +=
+            chars.charAt((bitmap >> 18) & 63) +
+                chars.charAt((bitmap >> 12) & 63) +
+                chars.charAt((bitmap >> 6) & 63) +
+                chars.charAt(bitmap & 63);
+    }
+    // If there's need of padding, replace the last 'A's with equal signs
+    return rest ? result.slice(0, rest - 3) + '==='.substring(rest) : result;
+}
+atob$1.btoa = btoa;
+
+var blob = {};
+
+Object.defineProperty(blob, "__esModule", { value: true });
+blob.Blob = void 0;
+var Blob = /** @class */ (function () {
+    /**
+     *
+     * @param buffers only support zero index
+     * @param type mimetype image/png image/webp...
+     */
+    function Blob(buffers, type) {
+        this.buffers = buffers;
+        this.type = type;
+    }
+    Blob.prototype.arraybuffer = function () {
+        return Promise.resolve(this.buffers[0]);
+    };
+    Blob.prototype.stream = function () {
+        throw 'not implemented';
+    };
+    Blob.prototype.text = function () {
+        throw 'not implemented';
+    };
+    Blob.prototype.slice = function (start, end, contentType) {
+        throw 'not implemented';
+    };
+    return Blob;
+}());
+blob.Blob = Blob;
+
+var constructor = {};
+
+var __extends$2 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -1039,7 +1402,7 @@ constructor.HTMLAudioElement = constructor.HTMLCanvasElement = constructor.HTMLI
 var html_element_1 = htmlElement;
 var html_media_element_1 = htmlMediaElement;
 var HTMLImageElement = /** @class */ (function (_super) {
-    __extends$5(HTMLImageElement, _super);
+    __extends$2(HTMLImageElement, _super);
     function HTMLImageElement() {
         return _super.call(this, 'img') || this;
     }
@@ -1052,7 +1415,7 @@ Object.defineProperty(HTMLImageElement, Symbol.hasInstance, {
     },
 });
 var HTMLCanvasElement = /** @class */ (function (_super) {
-    __extends$5(HTMLCanvasElement, _super);
+    __extends$2(HTMLCanvasElement, _super);
     function HTMLCanvasElement() {
         return _super.call(this, 'canvas') || this;
     }
@@ -1060,13 +1423,20 @@ var HTMLCanvasElement = /** @class */ (function (_super) {
 }(html_element_1.HTMLElement));
 constructor.HTMLCanvasElement = HTMLCanvasElement;
 var HTMLAudioElement = /** @class */ (function (_super) {
-    __extends$5(HTMLAudioElement, _super);
+    __extends$2(HTMLAudioElement, _super);
     function HTMLAudioElement() {
         return _super.call(this, 'audio') || this;
     }
     return HTMLAudioElement;
 }(html_media_element_1.HTMLMediaElement));
 constructor.HTMLAudioElement = HTMLAudioElement;
+
+var devicePixelRatio = {};
+
+Object.defineProperty(devicePixelRatio, "__esModule", { value: true });
+devicePixelRatio.devicePixelRatio = void 0;
+var platform_1$3 = platform$1;
+devicePixelRatio.devicePixelRatio = platform_1$3.platform.getSystemInfoSync().pixelRatio;
 
 var imageData = {};
 
@@ -1129,8 +1499,9 @@ var navigator = {};
 
 Object.defineProperty(navigator, "__esModule", { value: true });
 navigator.navigator = void 0;
-var _a$a = wx.getSystemInfoSync(), system = _a$a.system, platform = _a$a.platform, language = _a$a.language;
-var android = system.toLowerCase().indexOf('android') !== -1;
+var platform_1$2 = platform$1;
+var _a$a = platform_1$2.platform.getSystemInfoSync(), system = _a$a.system, platform = _a$a.platform, language = _a$a.language;
+var android = system.toLowerCase().includes('android');
 var uaDesc = android ? 'Android; CPU Android 6.0' : 'iPhone; CPU iPhone OS 10_3_1 like Mac OS X';
 var ua = "Mozilla/5.0 (".concat(uaDesc, ") AppleWebKit/603.1.30 (KHTML, like Gecko) Mobile/14E8301 MicroMessenger/6.6.0 MiniGame NetType/WIFI Language/").concat(language);
 navigator.navigator = {
@@ -1139,6 +1510,32 @@ navigator.navigator = {
     appVersion: "5.0 (".concat(uaDesc, ") AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"),
     userAgent: ua,
 };
+
+var offscreenCanvas = {};
+
+Object.defineProperty(offscreenCanvas, "__esModule", { value: true });
+offscreenCanvas._OffscreenCanvas = void 0;
+var platform_1$1 = platform$1;
+var register_1$1 = register;
+// 会导致蒙版失效，暂时不进行 Adapter 操作
+var _OffscreenCanvas = /** @class */ (function () {
+    function _OffscreenCanvas(width, height) {
+        if (width === void 0) { width = 0; }
+        if (height === void 0) { height = 0; }
+        var canvas;
+        if ((0, register_1$1.isMiniGame)()) {
+            canvas = platform_1$1.platform.createCanvas();
+            canvas.width = width;
+            canvas.height = height;
+        }
+        else {
+            canvas = platform_1$1.platform.createOffscreenCanvas({ width: width, height: height });
+        }
+        return canvas;
+    }
+    return _OffscreenCanvas;
+}());
+offscreenCanvas._OffscreenCanvas = _OffscreenCanvas;
 
 var performance = {};
 
@@ -1169,7 +1566,7 @@ var requestAnimationFrame$1 = {};
 
 Object.defineProperty(requestAnimationFrame$1, "__esModule", { value: true });
 requestAnimationFrame$1.cancelAnimationFrame = requestAnimationFrame$1.requestAnimationFrame = void 0;
-var register_1$2 = register;
+var register_1 = register;
 var lastTime = 0;
 var id$2 = 0;
 function hack(cb) {
@@ -1181,7 +1578,7 @@ function hack(cb) {
     return id$2;
 }
 function requestAnimationFrame(cb) {
-    var canvas = (0, register_1$2.getCanvas)();
+    var canvas = (0, register_1.getCanvas)();
     if (canvas.requestAnimationFrame) {
         return canvas.requestAnimationFrame(cb);
     }
@@ -1191,7 +1588,7 @@ function requestAnimationFrame(cb) {
 }
 requestAnimationFrame$1.requestAnimationFrame = requestAnimationFrame;
 function cancelAnimationFrame(id) {
-    var canvas = (0, register_1$2.getCanvas)();
+    var canvas = (0, register_1.getCanvas)();
     if (canvas.cancelAnimationFrame) {
         return canvas.cancelAnimationFrame(id);
     }
@@ -1239,6 +1636,264 @@ function _arrayBufferToBase64(buffer) {
     }
     return (0, atob_1.btoa)(binary);
 }
+
+var xmlHttpRequest = {};
+
+var __extends$1 = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(xmlHttpRequest, "__esModule", { value: true });
+xmlHttpRequest.XMLHttpRequest = void 0;
+// @ts-nocheck
+var platform_1 = platform$1;
+var event_target_1 = eventTarget;
+var _requestHeader = new WeakMap();
+var _responseHeader = new WeakMap();
+var _requestTask = new WeakMap();
+function _triggerEvent(type, event) {
+    if (event === void 0) { event = {}; }
+    event.target = event.target || this;
+    if (typeof this["on".concat(type)] === 'function') {
+        this["on".concat(type)].call(this, event);
+    }
+}
+function _changeReadyState(readyState, event) {
+    if (event === void 0) { event = {}; }
+    this.readyState = readyState;
+    event.readyState = readyState;
+    _triggerEvent.call(this, 'readystatechange', event);
+}
+function _isRelativePath(url) {
+    return !/^(http|https|ftp|wxfile):\/\/.*/i.test(url);
+}
+var XMLHttpRequest = /** @class */ (function (_super) {
+    __extends$1(XMLHttpRequest, _super);
+    function XMLHttpRequest() {
+        var _this = _super.call(this) || this;
+        _this.runtime = platform_1.platform.getSystemInfoSync().platform;
+        /*
+         * TODO 这一批事件应该是在 XMLHttpRequestEventTarget.prototype 上面的
+         */
+        _this.onabort = null;
+        _this.onerror = null;
+        _this.onload = null;
+        _this.onloadstart = null;
+        _this.onprogress = null;
+        _this.ontimeout = null;
+        _this.onloadend = null;
+        _this.onreadystatechange = null;
+        _this.readyState = 0;
+        _this.response = null;
+        _this.responseText = null;
+        _this.responseType = 'text';
+        _this.dataType = 'string';
+        _this.responseXML = null;
+        _this.status = 0;
+        _this.statusText = '';
+        _this.upload = {};
+        _this.withCredentials = false;
+        _requestHeader.set(_this, {
+            'content-type': 'application/x-www-form-urlencoded',
+        });
+        _responseHeader.set(_this, {});
+        return _this;
+    }
+    XMLHttpRequest.prototype.abort = function () {
+        var myRequestTask = _requestTask.get(this);
+        if (myRequestTask) {
+            myRequestTask.abort();
+        }
+    };
+    XMLHttpRequest.prototype.getAllResponseHeaders = function () {
+        var responseHeader = _responseHeader.get(this);
+        return Object.keys(responseHeader)
+            .map(function (header) {
+            return "".concat(header, ": ").concat(responseHeader[header]);
+        })
+            .join('\n');
+    };
+    XMLHttpRequest.prototype.getResponseHeader = function (header) {
+        return _responseHeader.get(this)[header];
+    };
+    /* async, user, password 这几个参数在小程序内不支持 */
+    XMLHttpRequest.prototype.open = function (method, url) {
+        this._method = method;
+        this._url = url;
+        _changeReadyState.call(this, XMLHttpRequest.OPENED);
+    };
+    XMLHttpRequest.prototype.overrideMimeType = function () { };
+    XMLHttpRequest.prototype.send = function (data) {
+        var _this = this;
+        if (data === void 0) { data = ''; }
+        if (this.readyState !== XMLHttpRequest.OPENED) {
+            throw new Error('Failed to execute \'send\' on \'XMLHttpRequest\': The object\'s state must be OPENED.');
+        }
+        else {
+            var url_1 = this._url;
+            var header_1 = _requestHeader.get(this);
+            var responseType_1 = this.responseType;
+            var dataType_1 = this.dataType;
+            var relative_1 = _isRelativePath(url_1);
+            var encoding = void 0;
+            if (responseType_1 === 'arraybuffer') ;
+            else {
+                encoding = 'utf8';
+            }
+            if (responseType_1 === 'json') {
+                dataType_1 = 'json';
+                responseType_1 = 'text';
+            }
+            delete this.response;
+            this.response = null;
+            var resolved_1 = false;
+            var onSuccess_1 = function (_a) {
+                var data = _a.data, statusCode = _a.statusCode, header = _a.header;
+                // console.log('onSuccess', url);
+                if (resolved_1) {
+                    return;
+                }
+                resolved_1 = true;
+                statusCode = statusCode === undefined ? 200 : statusCode;
+                if (typeof data !== 'string' && !(data instanceof ArrayBuffer) && dataType_1 !== 'json') {
+                    try {
+                        data = JSON.stringify(data);
+                    }
+                    catch (e) { /* empty */ }
+                }
+                _this.status = statusCode;
+                if (header) {
+                    _responseHeader.set(_this, header);
+                }
+                _triggerEvent.call(_this, 'loadstart');
+                _changeReadyState.call(_this, XMLHttpRequest.HEADERS_RECEIVED);
+                _changeReadyState.call(_this, XMLHttpRequest.LOADING);
+                _this.response = data;
+                if (data instanceof ArrayBuffer) {
+                    Object.defineProperty(_this, 'responseText', {
+                        enumerable: true,
+                        configurable: true,
+                        get: function () {
+                            throw 'InvalidStateError : responseType is ' + this.responseType;
+                        },
+                    });
+                }
+                else {
+                    _this.responseText = data;
+                }
+                _changeReadyState.call(_this, XMLHttpRequest.DONE);
+                _triggerEvent.call(_this, 'load');
+                _triggerEvent.call(_this, 'loadend');
+            };
+            var onFail_1 = function (_a) {
+                var errMsg = _a.errMsg;
+                // TODO 规范错误
+                if (resolved_1) {
+                    return;
+                }
+                resolved_1 = true;
+                if (errMsg.indexOf('abort') !== -1) {
+                    _triggerEvent.call(_this, 'abort');
+                }
+                else {
+                    _triggerEvent.call(_this, 'error', {
+                        message: errMsg,
+                    });
+                }
+                _triggerEvent.call(_this, 'loadend');
+                if (relative_1) {
+                    // 用户即使没监听error事件, 也给出相应的警告
+                    console.warn(errMsg);
+                }
+            };
+            if (relative_1) {
+                var fs = platform_1.platform.getFileSystemManager();
+                var options = {
+                    filePath: url_1,
+                    success: onSuccess_1,
+                    fail: onFail_1,
+                };
+                if (encoding) {
+                    options['encoding'] = encoding;
+                }
+                fs.readFile(options);
+                return;
+            }
+            // IOS在某些情况下不会触发onSuccess...
+            var usePatch = responseType_1 === 'arraybuffer' && this.runtime === 'ios' && XMLHttpRequest.useFetchPatch;
+            platform_1.platform.request({
+                data: data,
+                url: url_1,
+                method: this._method.toUpperCase(),
+                header: header_1,
+                dataType: dataType_1,
+                responseType: responseType_1,
+                enableCache: false,
+                success: onSuccess_1,
+                // success: usePatch ? undefined : onSuccess,
+                fail: onFail_1,
+            });
+            if (usePatch) {
+                setTimeout(function () {
+                    platform_1.platform.request({
+                        data: data,
+                        url: url_1,
+                        method: this._method,
+                        header: header_1,
+                        dataType: dataType_1,
+                        responseType: responseType_1,
+                        enableCache: true,
+                        success: onSuccess_1,
+                        fail: onFail_1,
+                    });
+                }, XMLHttpRequest.fetchPatchDelay);
+            }
+        }
+    };
+    XMLHttpRequest.prototype.setRequestHeader = function (header, value) {
+        var myHeader = _requestHeader.get(this);
+        myHeader[header] = value;
+        _requestHeader.set(this, myHeader);
+    };
+    XMLHttpRequest.prototype.addEventListener = function (type, listener) {
+        var _this = this;
+        if (typeof listener !== 'function') {
+            return;
+        }
+        this['on' + type] = function (event) {
+            if (event === void 0) { event = {}; }
+            event.target = event.target || _this;
+            listener.call(_this, event);
+        };
+    };
+    XMLHttpRequest.prototype.removeEventListener = function (type, listener) {
+        if (this['on' + type] === listener) {
+            this['on' + type] = null;
+        }
+    };
+    return XMLHttpRequest;
+}(event_target_1.EventTarget));
+xmlHttpRequest.XMLHttpRequest = XMLHttpRequest;
+// TODO 没法模拟 HEADERS_RECEIVED 和 LOADING 两个状态
+XMLHttpRequest.UNSEND = 0;
+XMLHttpRequest.OPENED = 1;
+XMLHttpRequest.HEADERS_RECEIVED = 2;
+XMLHttpRequest.LOADING = 3;
+XMLHttpRequest.DONE = 4;
+// 某些情况下IOS会不success不触发。。。
+XMLHttpRequest.useFetchPatch = false;
+XMLHttpRequest.fetchPatchDelay = 200;
 
 var webgl = {};
 
@@ -2086,559 +2741,6 @@ Object.defineProperty(webgl2, "__esModule", { value: true });
 webgl2.WebGL2RenderingContext = void 0;
 webgl2.WebGL2RenderingContext = {};
 
-var xmlHttpRequest = {};
-
-var __extends$4 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __importDefault = (undefined && undefined.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(xmlHttpRequest, "__esModule", { value: true });
-xmlHttpRequest.XMLHttpRequest = void 0;
-// @ts-nocheck
-var event_target_1 = __importDefault(eventTarget);
-var _requestHeader = new WeakMap();
-var _responseHeader = new WeakMap();
-var _requestTask = new WeakMap();
-function _triggerEvent(type, event) {
-    if (event === void 0) { event = {}; }
-    event.target = event.target || this;
-    if (typeof this["on".concat(type)] === 'function') {
-        this["on".concat(type)].call(this, event);
-    }
-}
-function _changeReadyState(readyState, event) {
-    if (event === void 0) { event = {}; }
-    this.readyState = readyState;
-    event.readyState = readyState;
-    _triggerEvent.call(this, 'readystatechange', event);
-}
-function _isRelativePath(url) {
-    return !/^(http|https|ftp|wxfile):\/\/.*/i.test(url);
-}
-var XMLHttpRequest = /** @class */ (function (_super) {
-    __extends$4(XMLHttpRequest, _super);
-    function XMLHttpRequest() {
-        var _this = _super.call(this) || this;
-        _this.runtime = wx.getSystemInfoSync().platform;
-        /*
-         * TODO 这一批事件应该是在 XMLHttpRequestEventTarget.prototype 上面的
-         */
-        _this.onabort = null;
-        _this.onerror = null;
-        _this.onload = null;
-        _this.onloadstart = null;
-        _this.onprogress = null;
-        _this.ontimeout = null;
-        _this.onloadend = null;
-        _this.onreadystatechange = null;
-        _this.readyState = 0;
-        _this.response = null;
-        _this.responseText = null;
-        _this.responseType = 'text';
-        _this.dataType = 'string';
-        _this.responseXML = null;
-        _this.status = 0;
-        _this.statusText = '';
-        _this.upload = {};
-        _this.withCredentials = false;
-        _requestHeader.set(_this, {
-            'content-type': 'application/x-www-form-urlencoded',
-        });
-        _responseHeader.set(_this, {});
-        return _this;
-    }
-    XMLHttpRequest.prototype.abort = function () {
-        var myRequestTask = _requestTask.get(this);
-        if (myRequestTask) {
-            myRequestTask.abort();
-        }
-    };
-    XMLHttpRequest.prototype.getAllResponseHeaders = function () {
-        var responseHeader = _responseHeader.get(this);
-        return Object.keys(responseHeader)
-            .map(function (header) {
-            return "".concat(header, ": ").concat(responseHeader[header]);
-        })
-            .join('\n');
-    };
-    XMLHttpRequest.prototype.getResponseHeader = function (header) {
-        return _responseHeader.get(this)[header];
-    };
-    /* async, user, password 这几个参数在小程序内不支持 */
-    XMLHttpRequest.prototype.open = function (method, url) {
-        this._method = method;
-        this._url = url;
-        _changeReadyState.call(this, XMLHttpRequest.OPENED);
-    };
-    XMLHttpRequest.prototype.overrideMimeType = function () { };
-    XMLHttpRequest.prototype.send = function (data) {
-        var _this = this;
-        if (data === void 0) { data = ''; }
-        if (this.readyState !== XMLHttpRequest.OPENED) {
-            throw new Error('Failed to execute \'send\' on \'XMLHttpRequest\': The object\'s state must be OPENED.');
-        }
-        else {
-            var url_1 = this._url;
-            var header_1 = _requestHeader.get(this);
-            var responseType_1 = this.responseType;
-            var dataType_1 = this.dataType;
-            var relative_1 = _isRelativePath(url_1);
-            var encoding = void 0;
-            if (responseType_1 === 'arraybuffer') ;
-            else {
-                encoding = 'utf8';
-            }
-            if (responseType_1 === 'json') {
-                dataType_1 = 'json';
-                responseType_1 = 'text';
-            }
-            delete this.response;
-            this.response = null;
-            var resolved_1 = false;
-            var onSuccess_1 = function (_a) {
-                var data = _a.data, statusCode = _a.statusCode, header = _a.header;
-                // console.log('onSuccess', url);
-                if (resolved_1) {
-                    return;
-                }
-                resolved_1 = true;
-                statusCode = statusCode === undefined ? 200 : statusCode;
-                if (typeof data !== 'string' && !(data instanceof ArrayBuffer) && dataType_1 !== 'json') {
-                    try {
-                        data = JSON.stringify(data);
-                    }
-                    catch (e) { /* empty */ }
-                }
-                _this.status = statusCode;
-                if (header) {
-                    _responseHeader.set(_this, header);
-                }
-                _triggerEvent.call(_this, 'loadstart');
-                _changeReadyState.call(_this, XMLHttpRequest.HEADERS_RECEIVED);
-                _changeReadyState.call(_this, XMLHttpRequest.LOADING);
-                _this.response = data;
-                if (data instanceof ArrayBuffer) {
-                    Object.defineProperty(_this, 'responseText', {
-                        enumerable: true,
-                        configurable: true,
-                        get: function () {
-                            throw 'InvalidStateError : responseType is ' + this.responseType;
-                        },
-                    });
-                }
-                else {
-                    _this.responseText = data;
-                }
-                _changeReadyState.call(_this, XMLHttpRequest.DONE);
-                _triggerEvent.call(_this, 'load');
-                _triggerEvent.call(_this, 'loadend');
-            };
-            var onFail_1 = function (_a) {
-                var errMsg = _a.errMsg;
-                // TODO 规范错误
-                if (resolved_1) {
-                    return;
-                }
-                resolved_1 = true;
-                if (errMsg.indexOf('abort') !== -1) {
-                    _triggerEvent.call(_this, 'abort');
-                }
-                else {
-                    _triggerEvent.call(_this, 'error', {
-                        message: errMsg,
-                    });
-                }
-                _triggerEvent.call(_this, 'loadend');
-                if (relative_1) {
-                    // 用户即使没监听error事件, 也给出相应的警告
-                    console.warn(errMsg);
-                }
-            };
-            if (relative_1) {
-                var fs = wx.getFileSystemManager();
-                var options = {
-                    filePath: url_1,
-                    success: onSuccess_1,
-                    fail: onFail_1,
-                };
-                if (encoding) {
-                    options['encoding'] = encoding;
-                }
-                fs.readFile(options);
-                return;
-            }
-            // IOS在某些情况下不会触发onSuccess...
-            var usePatch = responseType_1 === 'arraybuffer' && this.runtime === 'ios' && XMLHttpRequest.useFetchPatch;
-            wx.request({
-                data: data,
-                url: url_1,
-                method: this._method.toUpperCase(),
-                header: header_1,
-                dataType: dataType_1,
-                responseType: responseType_1,
-                enableCache: false,
-                success: onSuccess_1,
-                // success: usePatch ? undefined : onSuccess,
-                fail: onFail_1,
-            });
-            if (usePatch) {
-                setTimeout(function () {
-                    wx.request({
-                        data: data,
-                        url: url_1,
-                        method: this._method,
-                        header: header_1,
-                        dataType: dataType_1,
-                        responseType: responseType_1,
-                        enableCache: true,
-                        success: onSuccess_1,
-                        fail: onFail_1,
-                    });
-                }, XMLHttpRequest.fetchPatchDelay);
-            }
-        }
-    };
-    XMLHttpRequest.prototype.setRequestHeader = function (header, value) {
-        var myHeader = _requestHeader.get(this);
-        myHeader[header] = value;
-        _requestHeader.set(this, myHeader);
-    };
-    XMLHttpRequest.prototype.addEventListener = function (type, listener) {
-        var _this = this;
-        if (typeof listener !== 'function') {
-            return;
-        }
-        this['on' + type] = function (event) {
-            if (event === void 0) { event = {}; }
-            event.target = event.target || _this;
-            listener.call(_this, event);
-        };
-    };
-    XMLHttpRequest.prototype.removeEventListener = function (type, listener) {
-        if (this['on' + type] === listener) {
-            this['on' + type] = null;
-        }
-    };
-    return XMLHttpRequest;
-}(event_target_1.default));
-xmlHttpRequest.XMLHttpRequest = XMLHttpRequest;
-// TODO 没法模拟 HEADERS_RECEIVED 和 LOADING 两个状态
-XMLHttpRequest.UNSEND = 0;
-XMLHttpRequest.OPENED = 1;
-XMLHttpRequest.HEADERS_RECEIVED = 2;
-XMLHttpRequest.LOADING = 3;
-XMLHttpRequest.DONE = 4;
-// 某些情况下IOS会不success不触发。。。
-XMLHttpRequest.useFetchPatch = false;
-XMLHttpRequest.fetchPatchDelay = 200;
-
-var eventIniter = {};
-
-var touchEvent = {};
-
-var __extends$3 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(touchEvent, "__esModule", { value: true });
-touchEvent.dispatchTouchCancel = touchEvent.dispatchTouchEnd = touchEvent.dispatchTouchMove = touchEvent.dispatchTouchStart = void 0;
-var document_1$2 = document$3;
-var event_1$2 = event;
-var register_1$1 = register;
-var TouchEvent = /** @class */ (function (_super) {
-    __extends$3(TouchEvent, _super);
-    function TouchEvent(type) {
-        var _this = _super.call(this, type) || this;
-        _this.touches = [];
-        _this.targetTouches = [];
-        _this.changedTouches = [];
-        _this.target = (0, register_1$1.getCanvas)();
-        _this.currentTarget = (0, register_1$1.getCanvas)();
-        return _this;
-    }
-    return TouchEvent;
-}(event_1$2.Event));
-function mapEvent(event) {
-    var _a = event || {}, _b = _a.x, x = _b === void 0 ? 0 : _b, _c = _a.y, y = _c === void 0 ? 0 : _c, _d = _a.clientX, clientX = _d === void 0 ? 0 : _d, _e = _a.clientY, clientY = _e === void 0 ? 0 : _e;
-    // 小程序不支持Object.hasOwnProperty
-    // (抹平不同的view事件)[https://docs.alipay.com/mini/framework/event-object]
-    if (Object.keys(event).includes('x')) {
-        event.pageX = event.clientX = x;
-        event.pageY = event.clientY = y;
-    }
-    else {
-        event.x = clientX;
-        event.y = clientY;
-    }
-}
-function eventHandlerFactory$2(type) {
-    return function (rawEvent) {
-        var event = new TouchEvent(type);
-        event.changedTouches = rawEvent.changedTouches || rawEvent.touches;
-        event.touches = rawEvent.touches;
-        event.targetTouches = Array.prototype.slice.call(rawEvent.touches);
-        event.timeStamp = rawEvent.timeStamp;
-        event.changedTouches.forEach(function (e) { return mapEvent(e); });
-        event.touches.forEach(function (e) { return mapEvent(e); });
-        event.targetTouches.forEach(function (e) { return mapEvent(e); });
-        document_1$2.document.dispatchEvent(event);
-    };
-}
-var dispatchTouchStart = eventHandlerFactory$2('touchstart');
-touchEvent.dispatchTouchStart = dispatchTouchStart;
-var dispatchTouchMove = eventHandlerFactory$2('touchmove');
-touchEvent.dispatchTouchMove = dispatchTouchMove;
-var dispatchTouchEnd = eventHandlerFactory$2('touchend');
-touchEvent.dispatchTouchEnd = dispatchTouchEnd;
-var dispatchTouchCancel = eventHandlerFactory$2('touchcancel');
-touchEvent.dispatchTouchCancel = dispatchTouchCancel;
-
-var pointerEvent = {};
-
-var __extends$2 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(pointerEvent, "__esModule", { value: true });
-pointerEvent.dispatchPointerCancel = pointerEvent.dispatchPointerLeave = pointerEvent.dispatchPointerUp = pointerEvent.dispatchPointerMove = pointerEvent.dispatchPointerDown = void 0;
-var event_1$1 = event;
-var register_1 = register;
-var document_1$1 = document$3;
-var PointerEvent = /** @class */ (function (_super) {
-    __extends$2(PointerEvent, _super);
-    function PointerEvent(type) {
-        var _this = _super.call(this, type) || this;
-        _this.target = (0, register_1.getCanvas)();
-        _this.currentTarget = (0, register_1.getCanvas)();
-        return _this;
-    }
-    return PointerEvent;
-}(event_1$1.Event));
-var CLONE_PROPS = [
-    // MouseEvent
-    'bubbles',
-    'cancelable',
-    'view',
-    'detail',
-    'screenX',
-    'screenY',
-    'clientX',
-    'clientY',
-    'ctrlKey',
-    'altKey',
-    'shiftKey',
-    'metaKey',
-    'button',
-    'relatedTarget',
-    // PointerEvent
-    'pointerId',
-    'width',
-    'height',
-    'pressure',
-    'tiltX',
-    'tiltY',
-    'pointerType',
-    'hwTimestamp',
-    'isPrimary',
-    // event instance
-    'pageX',
-    'pageY',
-    'timeStamp',
-];
-var CLONE_DEFAULTS = [
-    // MouseEvent
-    false,
-    false,
-    null,
-    null,
-    0,
-    0,
-    0,
-    0,
-    false,
-    false,
-    false,
-    false,
-    0,
-    null,
-    // DOM Level 3
-    0,
-    // PointerEvent
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    '',
-    0,
-    false,
-    // event instance
-    0,
-    0,
-    0,
-];
-var POINTER_TYPE = 'touch';
-function touchToPointer(type, touch) {
-    var e = new PointerEvent(type);
-    for (var i = 0; i < CLONE_PROPS.length; i++) {
-        var p = CLONE_PROPS[i];
-        e[p] = touch[p] || CLONE_DEFAULTS[i];
-    }
-    e.type = type;
-    e.target = (0, register_1.getCanvas)();
-    e.currentTarget = (0, register_1.getCanvas)();
-    e.buttons = typeToButtons(type);
-    e.which = e.buttons;
-    e.pointerId = (touch.identifier || 0) + 2;
-    e.bubbles = true;
-    e.cancelable = true; // e.detail = this.clickCount;
-    e.button = 0;
-    e.width = (touch.radiusX || 0.5) * 2;
-    e.height = (touch.radiusY || 0.5) * 2;
-    e.pressure = touch.force || 0.5;
-    e.isPrimary = isPrimaryPointer(touch);
-    e.pointerType = POINTER_TYPE; // forward modifier keys
-    // @ts-expect-error
-    e.offsetX = touch.pageX || touch.x;
-    // @ts-expect-error
-    e.offsetY = touch.pageY || touch.y;
-    return e;
-}
-function typeToButtons(type) {
-    var ret = 0;
-    if (type === 'touchstart' || type === 'touchmove' || type === 'pointerdown' || type === 'pointermove') {
-        ret = 1;
-    }
-    return ret;
-}
-var firstPointer = null;
-function isPrimaryPointer(touch) {
-    return firstPointer === touch.identifier;
-}
-function setPrimaryPointer(touch) {
-    if (firstPointer === null) {
-        firstPointer = touch.identifier;
-    }
-}
-function removePrimaryPointer(touch) {
-    if (firstPointer === touch.identifier) {
-        firstPointer = null;
-    }
-}
-function eventHandlerFactory$1(type) {
-    return function (rawEvent) {
-        var changedTouches = rawEvent.changedTouches || rawEvent.touches;
-        for (var i = 0; i < changedTouches.length; i++) {
-            var touch = changedTouches[i];
-            switch (type) {
-                case 'pointerdown':
-                    i === 0 && setPrimaryPointer(touch);
-                    document_1$1.document.dispatchEvent(touchToPointer(type, touch));
-                    break;
-                case 'pointermove':
-                    document_1$1.document.dispatchEvent(touchToPointer(type, touch));
-                    break;
-                case 'pointerup':
-                    document_1$1.document.dispatchEvent(touchToPointer(type, touch));
-                    break;
-                case 'pointerleave':
-                case 'pointercancel':
-                    removePrimaryPointer(touch);
-                    document_1$1.document.dispatchEvent(touchToPointer(type, touch));
-                    break;
-            }
-        }
-    };
-}
-var dispatchPointerDown = eventHandlerFactory$1('pointerdown');
-pointerEvent.dispatchPointerDown = dispatchPointerDown;
-var dispatchPointerMove = eventHandlerFactory$1('pointermove');
-pointerEvent.dispatchPointerMove = dispatchPointerMove;
-var dispatchPointerUp = eventHandlerFactory$1('pointerup');
-pointerEvent.dispatchPointerUp = dispatchPointerUp;
-var dispatchPointerLeave = eventHandlerFactory$1('pointerleave');
-pointerEvent.dispatchPointerLeave = dispatchPointerLeave;
-var dispatchPointerCancel = eventHandlerFactory$1('pointercancel');
-pointerEvent.dispatchPointerCancel = dispatchPointerCancel;
-
-var mouseEvent = {};
-
-var __extends$1 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(mouseEvent, "__esModule", { value: true });
-mouseEvent.dispatchMouseUp = mouseEvent.dispatchMouseMove = mouseEvent.dispatchMouseDown = void 0;
-var event_1 = event;
-var document_1 = document$3;
-/** @class */ ((function (_super) {
-    __extends$1(MouseEvent, _super);
-    function MouseEvent(type) {
-        return _super.call(this, type) || this;
-    }
-    return MouseEvent;
-})(event_1.Event));
-function eventHandlerFactory(type) {
-    return function (rawEvent) {
-        rawEvent.type = type;
-        document_1.document.dispatchEvent(rawEvent);
-    };
-}
-var dispatchMouseDown = eventHandlerFactory('mousedown');
-mouseEvent.dispatchMouseDown = dispatchMouseDown;
-var dispatchMouseMove = eventHandlerFactory('mousemove');
-mouseEvent.dispatchMouseMove = dispatchMouseMove;
-var dispatchMouseUp = eventHandlerFactory('mouseup');
-mouseEvent.dispatchMouseUp = dispatchMouseUp;
-
 (function (exports) {
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -2655,128 +2757,34 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-__exportStar(touchEvent, exports);
-__exportStar(pointerEvent, exports);
-__exportStar(mouseEvent, exports);
-}(eventIniter));
-
-(function (exports) {
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.WebGL2RenderingContext = exports.WebGLRenderingContext = exports.XMLHttpRequest = exports.cancelAnimationFrame = exports.requestAnimationFrame = exports.ImageData = exports.Image = exports.HTMLVideoElement = exports.HTMLAudioElement = exports.HTMLMediaElement = exports.HTMLElement = exports.HTMLCanvasElement = exports.HTMLImageElement = exports.Element = exports.Node = exports.EventTarget = exports.Event = exports.URL = exports.Blob = exports.screen = exports.devicePixelRatio = exports.performance = exports.location = exports.navigator = exports.window = exports.document = exports.btoa = exports.atob = exports.registerCanvas = void 0;
-var atob_1 = atob$1;
-Object.defineProperty(exports, "atob", { enumerable: true, get: function () { return atob_1.atob; } });
-Object.defineProperty(exports, "btoa", { enumerable: true, get: function () { return atob_1.btoa; } });
-var blob_1 = blob;
-Object.defineProperty(exports, "Blob", { enumerable: true, get: function () { return blob_1.Blob; } });
-var device_pixel_ratio_1 = __importDefault(devicePixelRatio$1);
-exports.devicePixelRatio = device_pixel_ratio_1.default;
-var document_1 = document$3;
-Object.defineProperty(exports, "document", { enumerable: true, get: function () { return document_1.document; } });
-var element_1 = element;
-Object.defineProperty(exports, "Element", { enumerable: true, get: function () { return element_1.Element; } });
-var event_1 = event;
-Object.defineProperty(exports, "Event", { enumerable: true, get: function () { return event_1.Event; } });
-var event_target_1 = __importDefault(eventTarget);
-exports.EventTarget = event_target_1.default;
-var constructor_1 = constructor;
-Object.defineProperty(exports, "HTMLCanvasElement", { enumerable: true, get: function () { return constructor_1.HTMLCanvasElement; } });
-Object.defineProperty(exports, "HTMLImageElement", { enumerable: true, get: function () { return constructor_1.HTMLImageElement; } });
-Object.defineProperty(exports, "HTMLAudioElement", { enumerable: true, get: function () { return constructor_1.HTMLAudioElement; } });
-var html_element_1 = htmlElement;
-Object.defineProperty(exports, "HTMLElement", { enumerable: true, get: function () { return html_element_1.HTMLElement; } });
-var html_media_element_1 = htmlMediaElement;
-Object.defineProperty(exports, "HTMLMediaElement", { enumerable: true, get: function () { return html_media_element_1.HTMLMediaElement; } });
-var html_video_element_1 = htmlVideoElement;
-Object.defineProperty(exports, "HTMLVideoElement", { enumerable: true, get: function () { return html_video_element_1.HTMLVideoElement; } });
-var image_1 = image;
-Object.defineProperty(exports, "Image", { enumerable: true, get: function () { return image_1.Image; } });
-var image_data_1 = imageData;
-Object.defineProperty(exports, "ImageData", { enumerable: true, get: function () { return image_data_1.ImageData; } });
-var location_1 = location;
-Object.defineProperty(exports, "location", { enumerable: true, get: function () { return location_1.location; } });
-var navigator_1 = navigator;
-Object.defineProperty(exports, "navigator", { enumerable: true, get: function () { return navigator_1.navigator; } });
-var node_1 = node$1;
-Object.defineProperty(exports, "Node", { enumerable: true, get: function () { return node_1.Node; } });
-var performance_1 = performance;
-Object.defineProperty(exports, "performance", { enumerable: true, get: function () { return performance_1.performance; } });
-var request_animation_frame_1 = requestAnimationFrame$1;
-Object.defineProperty(exports, "cancelAnimationFrame", { enumerable: true, get: function () { return request_animation_frame_1.cancelAnimationFrame; } });
-Object.defineProperty(exports, "requestAnimationFrame", { enumerable: true, get: function () { return request_animation_frame_1.requestAnimationFrame; } });
-var screen_1 = screen$1;
-Object.defineProperty(exports, "screen", { enumerable: true, get: function () { return screen_1.screen; } });
-var url_1 = url;
-Object.defineProperty(exports, "URL", { enumerable: true, get: function () { return url_1.URL; } });
-var webgl_1 = webgl;
-Object.defineProperty(exports, "WebGLRenderingContext", { enumerable: true, get: function () { return webgl_1.WebGLRenderingContext; } });
-var webgl2_1 = webgl2;
-Object.defineProperty(exports, "WebGL2RenderingContext", { enumerable: true, get: function () { return webgl2_1.WebGL2RenderingContext; } });
-var xml_http_request_1 = xmlHttpRequest;
-Object.defineProperty(exports, "XMLHttpRequest", { enumerable: true, get: function () { return xml_http_request_1.XMLHttpRequest; } });
-var window = {
-    atob: atob_1.atob,
-    btoa: atob_1.btoa,
-    devicePixelRatio: device_pixel_ratio_1.default,
-    document: document_1.document,
-    navigator: navigator_1.navigator,
-    location: location_1.location,
-    screen: screen_1.screen,
-    Blob: blob_1.Blob,
-    Event: event_1.Event,
-    EventTarget: event_target_1.default,
-    Node: node_1.Node,
-    Element: element_1.Element,
-    HTMLElement: html_element_1.HTMLElement,
-    HTMLCanvasElement: constructor_1.HTMLCanvasElement,
-    HTMLImageElement: constructor_1.HTMLImageElement,
-    HTMLMediaElement: html_media_element_1.HTMLMediaElement,
-    HTMLAudioElement: constructor_1.HTMLAudioElement,
-    HTMLVideoElement: html_video_element_1.HTMLVideoElement,
-    Image: image_1.Image,
-    ImageData: image_data_1.ImageData,
-    requestAnimationFrame: request_animation_frame_1.requestAnimationFrame,
-    cancelAnimationFrame: request_animation_frame_1.cancelAnimationFrame,
-    XMLHttpRequest: xml_http_request_1.XMLHttpRequest,
-    performance: performance_1.performance,
-    URL: url_1.URL,
-    WebGLRenderingContext: webgl_1.WebGLRenderingContext,
-    WebGL2RenderingContext: webgl2_1.WebGL2RenderingContext,
-    addEventListener: function (type, listener, options) {
-        if (options === void 0) { options = {}; }
-        document_1.document.addEventListener(type, listener, options);
-    },
-    removeEventListener: function (type, listener) {
-        document_1.document.removeEventListener(type, listener);
-    },
-    dispatchEvent: function (event) {
-        document_1.document.dispatchEvent(event);
-    },
-    innerWidth: screen_1.screen.availWidth,
-    innerHeight: screen_1.screen.availHeight,
-    setTimeout: setTimeout,
-    clearTimeout: clearTimeout,
-};
-exports.window = window;
 __exportStar(eventIniter, exports);
-var register_1 = register;
-Object.defineProperty(exports, "registerCanvas", { enumerable: true, get: function () { return register_1.registerCanvas; } });
+__exportStar(platform$1, exports);
+__exportStar(atob$1, exports);
+__exportStar(blob, exports);
+__exportStar(body, exports);
+__exportStar(constructor, exports);
+__exportStar(devicePixelRatio, exports);
+__exportStar(document$3, exports);
+__exportStar(element, exports);
+__exportStar(event, exports);
+__exportStar(eventTarget, exports);
+__exportStar(htmlElement, exports);
+__exportStar(htmlMediaElement, exports);
+__exportStar(htmlVideoElement, exports);
+__exportStar(image, exports);
+__exportStar(imageData, exports);
+__exportStar(location, exports);
+__exportStar(navigator, exports);
+__exportStar(offscreenCanvas, exports);
+__exportStar(performance, exports);
+__exportStar(register, exports);
+__exportStar(node$1, exports);
+__exportStar(requestAnimationFrame$1, exports);
+__exportStar(screen$1, exports);
+__exportStar(url, exports);
+__exportStar(xmlHttpRequest, exports);
+__exportStar(webgl, exports);
+__exportStar(webgl2, exports);
 }(core));
 
 (function (exports) {
@@ -2795,7 +2803,58 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.window = void 0;
 __exportStar(core, exports);
+var core_1 = core;
+exports.window = {
+    innerWidth: core_1.screen.availWidth,
+    innerHeight: core_1.screen.availHeight,
+    setTimeout: setTimeout,
+    clearTimeout: clearTimeout,
+    atob: core_1.atob,
+    btoa: core_1.btoa,
+    devicePixelRatio: core_1.devicePixelRatio,
+    document: core_1.document,
+    navigator: core_1.navigator,
+    location: core_1.location,
+    screen: core_1.screen,
+    Blob: core_1.Blob,
+    Event: core_1.Event,
+    EventTarget: core_1.EventTarget,
+    Node: core_1.Node,
+    Element: core_1.Element,
+    HTMLElement: core_1.HTMLElement,
+    HTMLCanvasElement: core_1.HTMLCanvasElement,
+    HTMLImageElement: core_1.HTMLImageElement,
+    HTMLMediaElement: core_1.HTMLMediaElement,
+    HTMLAudioElement: core_1.HTMLAudioElement,
+    HTMLVideoElement: core_1.HTMLVideoElement,
+    Image: core_1.Image,
+    ImageData: core_1.ImageData,
+    requestAnimationFrame: core_1.requestAnimationFrame,
+    cancelAnimationFrame: core_1.cancelAnimationFrame,
+    XMLHttpRequest: core_1.XMLHttpRequest,
+    performance: core_1.performance,
+    URL: core_1.URL,
+    WebGLRenderingContext: core_1.WebGLRenderingContext,
+    WebGL2RenderingContext: core_1.WebGL2RenderingContext,
+    addEventListener: function (type, listener, options) {
+        if (options === void 0) { options = {}; }
+        core_1.document.addEventListener(type, listener, options);
+    },
+    removeEventListener: function (type, listener) {
+        core_1.document.removeEventListener(type, listener);
+    },
+    dispatchEvent: function (event) {
+        core_1.document.dispatchEvent(event);
+    },
+};
+core_1.platform.createCanvas = wx.createCanvas;
+core_1.platform.createImage = wx.createImage;
+core_1.platform.createOffscreenCanvas = wx.createOffscreenCanvas;
+core_1.platform.createSelectorQuery = wx.createSelectorQuery;
+core_1.platform.getSystemInfoSync = wx.getSystemInfoSync;
+core_1.platform.request = wx.request;
 }(weapp));
 
 var index$2 = /*@__PURE__*/getDefaultExportFromCjs(weapp);
