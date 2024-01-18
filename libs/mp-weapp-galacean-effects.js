@@ -666,6 +666,8 @@ function registerOffscreenCanvas(canvas, elementLevel) {
         canvas.tagName = 'CANVAS';
     }
     canvas.type = 'canvas';
+    canvas.width = canvas.width * 2;
+    canvas.height = canvas.height * 2;
     Mixin.parentNode(canvas, elementLevel !== null && elementLevel !== void 0 ? elementLevel : 0);
     Mixin.style(canvas);
     Mixin.classList(canvas);

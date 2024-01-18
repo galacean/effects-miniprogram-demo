@@ -422,7 +422,7 @@ export default {
     name: '拼手气开奖',
   },
   text: {
-    url: 'https://mdn.alipayobjects.com/mars/afts/file/A*nDcLSaesskUAAAAAAAAAAAAADlB4AQ',
+    url: 'https://mdn.alipayobjects.com/mars/afts/file/A*gIaATLxG45QAAAAAAAAAAAAADlB4AQ',
     name: '文本元素',
   },
   compressed: {

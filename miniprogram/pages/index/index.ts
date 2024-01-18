@@ -18,14 +18,14 @@ Page<{}, WechatMiniprogram.Page.CustomOption>({
   },
   async onLoad () {
     const canvas = await registerCanvas({ id: '#J-webglCanvas' });
-    
+
     this.canvas = canvas;
     // 实例化一个播放器
     this.player = new Player({
       transparentBackground: true,
       canvas,
       pixelRatio: 2,
-      renderFramework: 'webgl'
+      renderFramework: 'webgl',
     });
     this.playByUrl(inspireList.text.url);
   },
