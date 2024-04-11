@@ -1,5 +1,5 @@
 {
-  "name": "galacean-effects-miniprogram-demo",
+  "name": "effects-miniprogram-demo",
   "scripts": {
     "dev": "rollup -wc",
     "build": "rollup -c --environment BUILD:production"
