@@ -12,10 +12,6 @@ export default {
     url: 'https://gw.alipayobjects.com/os/gltf-asset/mars-cli/MNJVBYCSYDWN/1425978492-8d707.json',
     name: '彩带下落',
   },
-  fireworks: {
-    url: 'https://gw.alipayobjects.com/os/gltf-asset/mars-cli/EDQRDRYRXERJ/551346662-76ba9.json',
-    name: '烟花',
-  },
   rotate: {
     url: 'https://gw.alipayobjects.com/os/gltf-asset/mars-cli/AEFTPXNTAVWO/-79861579-61067.json',
     name: '旋转出场',
@@ -194,12 +190,8 @@ export default {
   },
   // 弹窗
   applaud: {
-    url: 'https://mdn.alipayobjects.com/mars/afts/file/A*9gGLR558ANsAAAAAAAAAAAAADlB4AQ',
-    name: '双十一弹窗',
-  },
-  applaudNew: {
     url: 'https://mdn.alipayobjects.com/mars/afts/file/A*js8iRbOiExAAAAAAAAAAAAAADlB4AQ',
-    name: '双十一弹窗(新JSON)',
+    name: '双十一弹窗',
   },
   WuFu1: {
     url: 'https://mdn.alipayobjects.com/mars/afts/file/A*pn-zQotSdEUAAAAAAAAAAAAADlB4AQ',
@@ -319,10 +311,6 @@ export default {
   running: {
     url: 'https://gw.alipayobjects.com/os/gltf-asset/mars-cli/AIPUQVVFLCPA/1548889573-0d943.json',
     name: '支付宝2021——跑步',
-  },
-  door: {
-    url: 'https://gw.alipayobjects.com/os/gltf-asset/mars-cli/EJAYICIVXVEB/1200639368-999bc.json',
-    name: '支付宝2021——开门动画',
   },
   payment: {
     url: 'https://gw.alipayobjects.com/os/gltf-asset/mars-cli/DVHWTIBIRXHY/-788542078-c8fed.json',
