@@ -6,12 +6,12 @@
 
 相关示例通过独立分支维护，详情如下：
 
-- [alipay](/tree/alipay): 支付宝小程序完整 Demo
-- [alipay-js](/tree/alipay-js): 通过小程序开发者工具创建的基于原生 js 模版的支付宝小程序 Demo
-- [alipay-ts](/tree/alipay-ts): 通过小程序开发者工具创建的基于原生 ts 模版的支付宝小程序 Demo
-- [wechat](/tree/wechat): 微信小程序完整 Demo
-- [wechat-js](/tree/wechat-js): 通过小程序开发者工具创建的基于原生 js 模版的微信小程序 Demo
-- [wechat-ts](/tree/wechat-ts): 通过小程序开发者工具创建的基于原生 ts 模版的微信小程序 Demo
+- [alipay](/../../tree/alipay): 支付宝小程序完整 Demo
+- [alipay-js](/../../tree/alipay-js): 通过小程序开发者工具创建的基于原生 js 模版的支付宝小程序 Demo
+- [alipay-ts](/../../tree/alipay-ts): 通过小程序开发者工具创建的基于原生 ts 模版的支付宝小程序 Demo
+- [wechat](/../../tree/wechat): 微信小程序完整 Demo
+- [wechat-js](/../../tree/wechat-js): 通过小程序开发者工具创建的基于原生 js 模版的微信小程序 Demo
+- [wechat-ts](/../../tree/wechat-ts): 通过小程序开发者工具创建的基于原生 ts 模版的微信小程序 Demo
 
 ## 基于原生 js/ts 模版的小程序
 
