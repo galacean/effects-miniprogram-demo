@@ -11,14 +11,7 @@ const plugins = [
 ];
 
 export default () => {
-  return [{
-    input: ['./libs/mp-weapp-galacean-effects.ts'],
-    output: {
-      format: 'cjs',
-      dir: 'libs/',
-    },
-    plugins,
-  }, {
+  return {
     input: ['./miniprogram/pages/index/index.ts'],
     output: {
       format: 'cjs',
@@ -27,5 +20,5 @@ export default () => {
       chunkFileNames: 'chunks/[name].js',
     },
     plugins,
-  }];
+  };
 }

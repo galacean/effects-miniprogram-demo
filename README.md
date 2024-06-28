@@ -40,19 +40,6 @@ void this.player.loadScene('url');
 > 注意：
 > - Galacean Effects 对小程序的适配包使用了 `package.json` `exports`，NodeJS v12.7.0 和 Typescript v4.7 及以上才支持，同时 `tsconfig.json` 的 `module` 需配置为 `ESxxx`（如：`ESNext`）。
 
-## 基于原生 js/ts 模版的小程序
-
-1. 直接下载并使用编译好的 js 库（即本仓库下的：`libs/mp-weapp-galacean-effects.js`）
-2. 放到自己的项目中，并在业务代码中引入并使用：
-``` ts
-import { adapter, Player } from '../../libs/mp-weapp-galacean-effects';
-
-// 同上面的示例代码，不同是 registerCanvas 要从 adapter 命名空间下获取
-const canvas = await adapter.registerCanvas({ id: '#J-webglCanvas' });
-```
-
-> 完整示例代码见本仓库的 [resources](./resources) 目录。
-
 ## 开发
 
 ### 本地开发
