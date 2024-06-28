@@ -11,5 +11,4 @@ lib
 .pnpm-debug.log
 *-warn.log
 .history
-miniprogram_npm
-miniprogram/pages/**/*.js
+libs/**/*.js
