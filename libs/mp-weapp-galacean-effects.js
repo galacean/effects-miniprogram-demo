@@ -29,7 +29,7 @@ var eventIniter = {};
 
 var touchEvent = {};
 
-var document$3 = {};
+var document = {};
 
 var platform$1 = {};
 
@@ -71,6 +71,12 @@ platform$1.platform = {
     createImage: function () { },
     createSelectorQuery: function () { },
     request: function (object) { },
+    downloadFile: function (options) { },
+    createVideoContext: function (id) { },
+    startDeviceMotionListening: function (object) { },
+    stopDeviceMotionListening: function () { },
+    onDeviceMotionChange: function (listener) { },
+    offDeviceMotionChange: function (listener) { },
 };
 
 var body = {};
@@ -79,13 +85,13 @@ var htmlElement = {};
 
 var mixin = {};
 
-var screen$1 = {};
+var screen = {};
 
-Object.defineProperty(screen$1, "__esModule", { value: true });
-screen$1.screen = void 0;
-var platform_1$6 = platform$1;
-var _a$b = platform_1$6.platform.getSystemInfoSync(), screenWidth = _a$b.screenWidth, screenHeight = _a$b.screenHeight, windowWidth = _a$b.windowWidth, windowHeight = _a$b.windowHeight;
-screen$1.screen = {
+Object.defineProperty(screen, "__esModule", { value: true });
+screen.screen = void 0;
+var platform_1$7 = platform$1;
+var _a$a = platform_1$7.platform.getSystemInfoSync(), screenWidth = _a$a.screenWidth, screenHeight = _a$a.screenHeight, windowWidth = _a$a.windowWidth, windowHeight = _a$a.windowHeight;
+screen.screen = {
     width: screenWidth,
     height: screenHeight,
     availWidth: windowWidth,
@@ -94,12 +100,12 @@ screen$1.screen = {
     availTop: 0,
 };
 
-var noop$3 = {};
+var noop$2 = {};
 
-Object.defineProperty(noop$3, "__esModule", { value: true });
-noop$3.noop = void 0;
-function noop$2() { }
-noop$3.noop = noop$2;
+Object.defineProperty(noop$2, "__esModule", { value: true });
+noop$2.noop = void 0;
+function noop$1() { }
+noop$2.noop = noop$1;
 
 var __assign$2 = (undefined && undefined.__assign) || function () {
     __assign$2 = Object.assign || function(t) {
@@ -114,9 +120,9 @@ var __assign$2 = (undefined && undefined.__assign) || function () {
 };
 Object.defineProperty(mixin, "__esModule", { value: true });
 mixin.classList = mixin.scrollRegion = mixin.offsetRegion = mixin.clientRegion = mixin.style = mixin.parentNode = void 0;
-var screen_1 = screen$1;
-var document_1$5 = document$3;
-var noop_1$1 = noop$3;
+var screen_1 = screen;
+var document_1$6 = document;
+var noop_1$1 = noop$2;
 var innerWidth = screen_1.screen.availWidth, innerHeight = screen_1.screen.availHeight;
 function parentNode(obj, level) {
     if (!('parentNode' in obj)) {
@@ -128,12 +134,12 @@ function parentNode(obj, level) {
         }
         else if (level === 1) {
             parent_1 = function () {
-                return document_1$5.document.documentElement;
+                return document_1$6.document.documentElement;
             };
         }
         else {
             parent_1 = function () {
-                return document_1$5.document.body;
+                return document_1$6.document.body;
             };
         }
         Object.defineProperty(obj, 'parentNode', {
@@ -150,12 +156,12 @@ function parentNode(obj, level) {
         }
         else if (level === 1) {
             parent_2 = function () {
-                return document_1$5.document.documentElement;
+                return document_1$6.document.documentElement;
             };
         }
         else {
             parent_2 = function () {
-                return document_1$5.document.body;
+                return document_1$6.document.body;
             };
         }
         Object.defineProperty(obj, 'parentElement', {
@@ -184,8 +190,8 @@ function clientRegion(obj) {
             return {
                 x: 0,
                 y: 0,
-                top: 0,
-                left: 0,
+                top: obj.top || 0,
+                left: obj.left || 0,
                 width: this.clientWidth,
                 height: this.clientHeight,
                 right: this.clientWidth,
@@ -228,7 +234,7 @@ mixin.classList = classList;
 
 var element = {};
 
-var node$1 = {};
+var node = {};
 
 var eventTarget = {};
 
@@ -280,7 +286,7 @@ var EventTarget = /** @class */ (function () {
 }());
 eventTarget.EventTarget = EventTarget;
 
-var __extends$c = (undefined && undefined.__extends) || (function () {
+var __extends$b = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -295,11 +301,11 @@ var __extends$c = (undefined && undefined.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-Object.defineProperty(node$1, "__esModule", { value: true });
-node$1.Node = void 0;
+Object.defineProperty(node, "__esModule", { value: true });
+node.Node = void 0;
 var event_target_1$1 = eventTarget;
 var Node$1 = /** @class */ (function (_super) {
-    __extends$c(Node, _super);
+    __extends$b(Node, _super);
     function Node() {
         var _this = _super.call(this) || this;
         _this.childNodes = [];
@@ -327,9 +333,9 @@ var Node$1 = /** @class */ (function (_super) {
     };
     return Node;
 }(event_target_1$1.EventTarget));
-node$1.Node = Node$1;
+node.Node = Node$1;
 
-var __extends$b = (undefined && undefined.__extends) || (function () {
+var __extends$a = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -346,9 +352,9 @@ var __extends$b = (undefined && undefined.__extends) || (function () {
 })();
 Object.defineProperty(element, "__esModule", { value: true });
 element.Element = void 0;
-var node_1 = node$1;
+var node_1 = node;
 var Element = /** @class */ (function (_super) {
-    __extends$b(Element, _super);
+    __extends$a(Element, _super);
     function Element() {
         var _this = _super.call(this) || this;
         _this.className = '';
@@ -371,7 +377,7 @@ var Element = /** @class */ (function (_super) {
 }(node_1.Node));
 element.Element = Element;
 
-var __extends$a = (undefined && undefined.__extends) || (function () {
+var __extends$9 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -412,10 +418,10 @@ var __importStar$1 = (undefined && undefined.__importStar) || function (mod) {
 Object.defineProperty(htmlElement, "__esModule", { value: true });
 htmlElement.HTMLElement = void 0;
 var Mixin$1 = __importStar$1(mixin);
-var noop_1 = noop$3;
+var noop_1 = noop$2;
 var element_1 = element;
 var HTMLElement = /** @class */ (function (_super) {
-    __extends$a(HTMLElement, _super);
+    __extends$9(HTMLElement, _super);
     function HTMLElement(tagName, level) {
         if (tagName === void 0) { tagName = ''; }
         var _this = _super.call(this) || this;
@@ -440,13 +446,14 @@ var HTMLElement = /** @class */ (function (_super) {
     return HTMLElement;
 }(element_1.Element));
 htmlElement.HTMLElement = HTMLElement;
+// eslint-disable-next-line compat/compat
 Object.defineProperty(HTMLElement, Symbol.hasInstance, {
     value: function (instance) {
         return (instance === null || instance === void 0 ? void 0 : instance.tagName) === 'BODY';
     },
 });
 
-var __extends$9 = (undefined && undefined.__extends) || (function () {
+var __extends$8 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -464,23 +471,23 @@ var __extends$9 = (undefined && undefined.__extends) || (function () {
 Object.defineProperty(body, "__esModule", { value: true });
 body.Body = void 0;
 var html_element_1$2 = htmlElement;
-var document_1$4 = document$3;
+var document_1$5 = document;
 var Body = /** @class */ (function (_super) {
-    __extends$9(Body, _super);
+    __extends$8(Body, _super);
     function Body() {
-        // 为了性能, 此处不按照标准的DOM层级关系设计
-        // 将 body 设置为 0级, parent元素为null
+        // 为了性能, 此处不按照标准的 DOM 层级关系设计
+        // 将 body 设置为 0 级, parent 元素为 null
         return _super.call(this, 'body', 0) || this;
     }
     Body.prototype.addEventListener = function (type, listener, options) {
         if (options === void 0) { options = {}; }
-        document_1$4.document.addEventListener(type, listener, options);
+        document_1$5.document.addEventListener(type, listener, options);
     };
     Body.prototype.removeEventListener = function (type, listener) {
-        document_1$4.document.removeEventListener(type, listener);
+        document_1$5.document.removeEventListener(type, listener);
     };
     Body.prototype.dispatchEvent = function (event) {
-        document_1$4.document.dispatchEvent(event);
+        document_1$5.document.dispatchEvent(event);
     };
     return Body;
 }(html_element_1$2.HTMLElement));
@@ -490,7 +497,7 @@ var htmlVideoElement = {};
 
 var htmlMediaElement = {};
 
-var __extends$8 = (undefined && undefined.__extends) || (function () {
+var __extends$7 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -509,7 +516,7 @@ Object.defineProperty(htmlMediaElement, "__esModule", { value: true });
 htmlMediaElement.HTMLMediaElement = void 0;
 var html_element_1$1 = htmlElement;
 var HTMLMediaElement = /** @class */ (function (_super) {
-    __extends$8(HTMLMediaElement, _super);
+    __extends$7(HTMLMediaElement, _super);
     function HTMLMediaElement(tagName) {
         return _super.call(this, tagName) || this;
     }
@@ -523,7 +530,7 @@ var HTMLMediaElement = /** @class */ (function (_super) {
 }(html_element_1$1.HTMLElement));
 htmlMediaElement.HTMLMediaElement = HTMLMediaElement;
 
-var __extends$7 = (undefined && undefined.__extends) || (function () {
+var __extends$6 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -542,9 +549,13 @@ Object.defineProperty(htmlVideoElement, "__esModule", { value: true });
 htmlVideoElement.HTMLVideoElement = void 0;
 var html_media_element_1$1 = htmlMediaElement;
 var HTMLVideoElement = /** @class */ (function (_super) {
-    __extends$7(HTMLVideoElement, _super);
+    __extends$6(HTMLVideoElement, _super);
+    // srcObject: any;
+    // videoContext: any;
+    //
     function HTMLVideoElement() {
         return _super.call(this, 'video') || this;
+        // this.videoContext = platform.createVideoContext('GEVideo');
     }
     return HTMLVideoElement;
 }(html_media_element_1$1.HTMLMediaElement));
@@ -552,7 +563,7 @@ htmlVideoElement.HTMLVideoElement = HTMLVideoElement;
 
 var image = {};
 
-var register = {};
+var register$1 = {};
 
 var __createBinding = (undefined && undefined.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -613,10 +624,10 @@ var __generator$1 = (undefined && undefined.__generator) || function (thisArg, b
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-Object.defineProperty(register, "__esModule", { value: true });
-register.isMiniGame = register.getCanvas = register.registerOffscreenCanvas = register.registerCanvas = void 0;
-var platform_1$5 = platform$1;
-var document_1$3 = document$3;
+Object.defineProperty(register$1, "__esModule", { value: true });
+register$1.isMiniGame = register$1.getCanvas = register$1.registerOffscreenCanvas = register$1.registerCanvas = void 0;
+var platform_1$6 = platform$1;
+var document_1$4 = document;
 var Mixin = __importStar(mixin);
 // 同步和异步都需要的数据
 var canvas = {};
@@ -626,17 +637,17 @@ var _isMiniGame = false;
  * @param options
  * @returns
  */
-function registerCanvas(options) {
-    if (options === void 0) { options = {}; }
-    return __awaiter$1(this, void 0, void 0, function () {
+function registerCanvas() {
+    return __awaiter$1(this, arguments, void 0, function (options) {
         var _a, id, _b, isMiniGame, _c, elementLevel;
+        if (options === void 0) { options = {}; }
         return __generator$1(this, function (_d) {
             switch (_d.label) {
                 case 0:
                     _a = options.id, id = _a === void 0 ? 'J-canvas' : _a, _b = options.isMiniGame, isMiniGame = _b === void 0 ? false : _b, _c = options.elementLevel, elementLevel = _c === void 0 ? 0 : _c;
                     if (!(typeof id === 'string')) return [3 /*break*/, 4];
                     if (!isMiniGame) return [3 /*break*/, 1];
-                    canvas = platform_1$5.platform.createCanvas();
+                    canvas = platform_1$6.platform.createCanvas();
                     return [3 /*break*/, 3];
                 case 1: return [4 /*yield*/, getCanvasById(id)];
                 case 2:
@@ -655,7 +666,7 @@ function registerCanvas(options) {
         });
     });
 }
-register.registerCanvas = registerCanvas;
+register$1.registerCanvas = registerCanvas;
 /**
  * 异步注册 canvas
  * @param options
@@ -671,36 +682,42 @@ function registerOffscreenCanvas(canvas, elementLevel) {
     Mixin.parentNode(canvas, elementLevel !== null && elementLevel !== void 0 ? elementLevel : 0);
     Mixin.style(canvas);
     Mixin.classList(canvas);
-    Mixin.clientRegion(canvas);
     Mixin.offsetRegion(canvas);
     canvas.focus = function () { };
     canvas.blur = function () { };
     canvas.addEventListener = function (type, listener, options) {
         if (options === void 0) { options = {}; }
-        document_1$3.document.addEventListener(type, listener, options);
+        document_1$4.document.addEventListener(type, listener, options);
     };
     canvas.removeEventListener = function (type, listener) {
-        document_1$3.document.removeEventListener(type, listener);
+        document_1$4.document.removeEventListener(type, listener);
     };
     canvas.dispatchEvent = function (event) {
-        document_1$3.document.dispatchEvent(event);
+        document_1$4.document.dispatchEvent(event);
     };
     return canvas;
 }
-register.registerOffscreenCanvas = registerOffscreenCanvas;
+register$1.registerOffscreenCanvas = registerOffscreenCanvas;
 function getCanvasById(id) {
     return __awaiter$1(this, void 0, void 0, function () {
         return __generator$1(this, function (_a) {
             return [2 /*return*/, new Promise(function (resolve, reject) {
-                    platform_1$5.platform.createSelectorQuery()
+                    platform_1$6.platform.createSelectorQuery()
                         // @ts-expect-error
-                        .select(id)
-                        .node()
+                        .select(id).node()
+                        .select(id).boundingClientRect()
                         // @ts-expect-error
                         .exec(function (res) {
                         try {
                             var canvas_1 = res[0].node;
-                            resolve(canvas_1);
+                            var rect_1 = res[1];
+                            if (canvas_1) {
+                                canvas_1.getBoundingClientRect = function () { return rect_1; };
+                                resolve(canvas_1);
+                            }
+                            else {
+                                reject("create canvas fail, canvas is ".concat(canvas_1));
+                            }
                         }
                         catch (e) {
                             reject("Cannot find canvas by id: ".concat(id, ", ").concat(e));
@@ -717,22 +734,22 @@ function getCanvasById(id) {
 function getCanvas() {
     return canvas;
 }
-register.getCanvas = getCanvas;
+register$1.getCanvas = getCanvas;
 function isMiniGame() {
     return _isMiniGame;
 }
-register.isMiniGame = isMiniGame;
+register$1.isMiniGame = isMiniGame;
 
 Object.defineProperty(image, "__esModule", { value: true });
 image.Image = void 0;
-var platform_1$4 = platform$1;
-var register_1$4 = register;
+var platform_1$5 = platform$1;
+var register_1$4 = register$1;
 var Image = /** @class */ (function () {
     function Image() {
         var _a, _b;
         var image;
         if ((0, register_1$4.isMiniGame)()) {
-            image = platform_1$4.platform.createImage();
+            image = platform_1$5.platform.createImage();
         }
         else {
             var canvas = (0, register_1$4.getCanvas)();
@@ -767,7 +784,7 @@ var body_1 = body;
 var html_element_1 = htmlElement;
 var html_video_element_1 = htmlVideoElement;
 var image_1 = image;
-var register_1 = register;
+var register_1 = register$1;
 var DocumentElement = /** @class */ (function (_super) {
     __extends(DocumentElement, _super);
     function DocumentElement() {
@@ -788,7 +805,7 @@ var DocumentElement = /** @class */ (function (_super) {
 var events = {};
 exports.document = {
     readyState: 'complete',
-    visibilityState: 'visible',
+    visibilityState: 'visible', // 'visible' , 'hidden'
     hidden: false,
     fullscreen: true,
     scripts: [],
@@ -939,7 +956,7 @@ exports.document = {
 exports.document.documentElement = new DocumentElement();
 exports.document.head = new html_element_1.HTMLElement('head');
 exports.document.body = new body_1.Body();
-}(document$3));
+}(document));
 
 var event = {};
 
@@ -960,7 +977,7 @@ var Event = /** @class */ (function () {
 }());
 event.Event = Event;
 
-var __extends$6 = (undefined && undefined.__extends) || (function () {
+var __extends$5 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -977,11 +994,11 @@ var __extends$6 = (undefined && undefined.__extends) || (function () {
 })();
 Object.defineProperty(touchEvent, "__esModule", { value: true });
 touchEvent.dispatchTouchCancel = touchEvent.dispatchTouchEnd = touchEvent.dispatchTouchMove = touchEvent.dispatchTouchStart = void 0;
-var document_1$2 = document$3;
-var event_1$2 = event;
-var register_1$3 = register;
+var document_1$3 = document;
+var event_1$1 = event;
+var register_1$3 = register$1;
 var TouchEvent = /** @class */ (function (_super) {
-    __extends$6(TouchEvent, _super);
+    __extends$5(TouchEvent, _super);
     function TouchEvent(type) {
         var _this = _super.call(this, type) || this;
         _this.touches = [];
@@ -992,7 +1009,7 @@ var TouchEvent = /** @class */ (function (_super) {
         return _this;
     }
     return TouchEvent;
-}(event_1$2.Event));
+}(event_1$1.Event));
 function mapEvent(event) {
     var _a = event || {}, _b = _a.x, x = _b === void 0 ? 0 : _b, _c = _a.y, y = _c === void 0 ? 0 : _c, _d = _a.clientX, clientX = _d === void 0 ? 0 : _d, _e = _a.clientY, clientY = _e === void 0 ? 0 : _e;
     // 小程序不支持Object.hasOwnProperty
@@ -1005,6 +1022,9 @@ function mapEvent(event) {
         event.x = clientX;
         event.y = clientY;
     }
+    if (!event.target) {
+        event.target = (0, register_1$3.getCanvas)();
+    }
 }
 function eventHandlerFactory$2(type) {
     return function (rawEvent) {
@@ -1016,7 +1036,7 @@ function eventHandlerFactory$2(type) {
         event.changedTouches.forEach(function (e) { return mapEvent(e); });
         event.touches.forEach(function (e) { return mapEvent(e); });
         event.targetTouches.forEach(function (e) { return mapEvent(e); });
-        document_1$2.document.dispatchEvent(event);
+        document_1$3.document.dispatchEvent(event);
     };
 }
 var dispatchTouchStart = eventHandlerFactory$2('touchstart');
@@ -1030,7 +1050,7 @@ touchEvent.dispatchTouchCancel = dispatchTouchCancel;
 
 var pointerEvent = {};
 
-var __extends$5 = (undefined && undefined.__extends) || (function () {
+var __extends$4 = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -1047,11 +1067,11 @@ var __extends$5 = (undefined && undefined.__extends) || (function () {
 })();
 Object.defineProperty(pointerEvent, "__esModule", { value: true });
 pointerEvent.dispatchPointerCancel = pointerEvent.dispatchPointerLeave = pointerEvent.dispatchPointerUp = pointerEvent.dispatchPointerMove = pointerEvent.dispatchPointerDown = void 0;
-var event_1$1 = event;
-var register_1$2 = register;
-var document_1$1 = document$3;
+var event_1 = event;
+var register_1$2 = register$1;
+var document_1$2 = document;
 var PointerEvent = /** @class */ (function (_super) {
-    __extends$5(PointerEvent, _super);
+    __extends$4(PointerEvent, _super);
     function PointerEvent(type) {
         var _this = _super.call(this, type) || this;
         _this.target = (0, register_1$2.getCanvas)();
@@ -1059,7 +1079,7 @@ var PointerEvent = /** @class */ (function (_super) {
         return _this;
     }
     return PointerEvent;
-}(event_1$1.Event));
+}(event_1.Event));
 var CLONE_PROPS = [
     // MouseEvent
     'bubbles',
@@ -1180,18 +1200,18 @@ function eventHandlerFactory$1(type) {
             switch (type) {
                 case 'pointerdown':
                     i === 0 && setPrimaryPointer(touch);
-                    document_1$1.document.dispatchEvent(touchToPointer(type, touch));
+                    document_1$2.document.dispatchEvent(touchToPointer(type, touch));
                     break;
                 case 'pointermove':
-                    document_1$1.document.dispatchEvent(touchToPointer(type, touch));
+                    document_1$2.document.dispatchEvent(touchToPointer(type, touch));
                     break;
                 case 'pointerup':
-                    document_1$1.document.dispatchEvent(touchToPointer(type, touch));
+                    document_1$2.document.dispatchEvent(touchToPointer(type, touch));
                     break;
                 case 'pointerleave':
                 case 'pointercancel':
                     removePrimaryPointer(touch);
-                    document_1$1.document.dispatchEvent(touchToPointer(type, touch));
+                    document_1$2.document.dispatchEvent(touchToPointer(type, touch));
                     break;
             }
         }
@@ -1210,36 +1230,18 @@ pointerEvent.dispatchPointerCancel = dispatchPointerCancel;
 
 var mouseEvent = {};
 
-var __extends$4 = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(mouseEvent, "__esModule", { value: true });
 mouseEvent.dispatchMouseUp = mouseEvent.dispatchMouseMove = mouseEvent.dispatchMouseDown = void 0;
-var event_1 = event;
-var document_1 = document$3;
-/** @class */ ((function (_super) {
-    __extends$4(MouseEvent, _super);
-    function MouseEvent(type) {
-        return _super.call(this, type) || this;
-    }
-    return MouseEvent;
-})(event_1.Event));
+var document_1$1 = document;
+// class MouseEvent extends Event {
+//   constructor (type: string) {
+//     super(type);
+//   }
+// }
 function eventHandlerFactory(type) {
     return function (rawEvent) {
         rawEvent.type = type;
-        document_1.document.dispatchEvent(rawEvent);
+        document_1$1.document.dispatchEvent(rawEvent);
     };
 }
 var dispatchMouseDown = eventHandlerFactory('mousedown');
@@ -1269,6 +1271,40 @@ __exportStar(touchEvent, exports);
 __exportStar(pointerEvent, exports);
 __exportStar(mouseEvent, exports);
 }(eventIniter));
+
+var accelerometer = {};
+
+Object.defineProperty(accelerometer, "__esModule", { value: true });
+accelerometer.Accelerometer = void 0;
+var platform_1$4 = platform$1;
+var document_1 = document;
+var Accelerometer = /** @class */ (function () {
+    function Accelerometer() {
+    }
+    Accelerometer.prototype.handleDeviceMotionChange = function (event) {
+        document_1.document.dispatchEvent({
+            alpha: event.alpha,
+            gamma: event.gamma,
+            beta: -event.beta,
+            type: 'deviceorientation',
+        });
+    };
+    Accelerometer.prototype.startWatch = function (interval) {
+        var _this = this;
+        if (interval === void 0) { interval = 'ui'; }
+        platform_1$4.platform.startDeviceMotionListening({
+            interval: interval,
+            success: function () {
+                platform_1$4.platform.onDeviceMotionChange(_this.handleDeviceMotionChange);
+            },
+        });
+    };
+    Accelerometer.prototype.stopWatch = function () {
+        platform_1$4.platform.offDeviceMotionChange(this.handleDeviceMotionChange);
+    };
+    return Accelerometer;
+}());
+accelerometer.Accelerometer = Accelerometer;
 
 var atob$1 = {};
 
@@ -1411,6 +1447,7 @@ var HTMLImageElement = /** @class */ (function (_super) {
     return HTMLImageElement;
 }(html_element_1.HTMLElement));
 constructor.HTMLImageElement = HTMLImageElement;
+// eslint-disable-next-line compat/compat
 Object.defineProperty(HTMLImageElement, Symbol.hasInstance, {
     value: function (instance) {
         return (instance === null || instance === void 0 ? void 0 : instance.tagName) === 'IMG' || (instance === null || instance === void 0 ? void 0 : instance.crossOrigin);
@@ -1502,8 +1539,9 @@ var navigator = {};
 Object.defineProperty(navigator, "__esModule", { value: true });
 navigator.navigator = void 0;
 var platform_1$2 = platform$1;
-var _a$a = platform_1$2.platform.getSystemInfoSync(), system = _a$a.system, platform = _a$a.platform, language = _a$a.language;
-var android = system.toLowerCase().includes('android');
+var info$1 = platform_1$2.platform.getSystemInfoSync();
+var platform = info$1.platform, language = info$1.language;
+var android = platform.toLowerCase().includes('android');
 var uaDesc = android ? 'Android; CPU Android 6.0' : 'iPhone; CPU iPhone OS 10_3_1 like Mac OS X';
 var ua = "Mozilla/5.0 (".concat(uaDesc, ") AppleWebKit/603.1.30 (KHTML, like Gecko) Mobile/14E8301 MicroMessenger/6.6.0 MiniGame NetType/WIFI Language/").concat(language);
 navigator.navigator = {
@@ -1518,7 +1556,7 @@ var offscreenCanvas = {};
 Object.defineProperty(offscreenCanvas, "__esModule", { value: true });
 offscreenCanvas._OffscreenCanvas = void 0;
 var platform_1$1 = platform$1;
-var register_1$1 = register;
+var register_1$1 = register$1;
 // 会导致蒙版失效，暂时不进行 Adapter 操作
 var _OffscreenCanvas = /** @class */ (function () {
     function _OffscreenCanvas(width, height) {
@@ -1539,11 +1577,11 @@ var _OffscreenCanvas = /** @class */ (function () {
 }());
 offscreenCanvas._OffscreenCanvas = _OffscreenCanvas;
 
-var performance = {};
+var performance$1 = {};
 
-Object.defineProperty(performance, "__esModule", { value: true });
-performance.performance = void 0;
-performance.performance = /** @class */ (function () {
+Object.defineProperty(performance$1, "__esModule", { value: true });
+performance$1.performance = void 0;
+var performance = /** @class */ (function () {
     function performance() {
     }
     performance.now = function () {
@@ -1563,21 +1601,22 @@ performance.performance = /** @class */ (function () {
     performance.timeOrigin = 0;
     return performance;
 }());
+performance$1.performance = performance;
 
 var requestAnimationFrame$1 = {};
 
 Object.defineProperty(requestAnimationFrame$1, "__esModule", { value: true });
 requestAnimationFrame$1.cancelAnimationFrame = requestAnimationFrame$1.requestAnimationFrame = void 0;
-var register_1 = register;
+var register_1 = register$1;
 var lastTime = 0;
-var id$2 = 0;
+var id = 0;
 function hack(cb) {
     var now = Date.now();
     var nextTime = Math.max(lastTime + 23, now);
-    id$2 = setTimeout(function () {
+    id = setTimeout(function () {
         cb((lastTime = nextTime));
     }, nextTime - now);
-    return id$2;
+    return id;
 }
 function requestAnimationFrame(cb) {
     var canvas = (0, register_1.getCanvas)();
@@ -1609,10 +1648,17 @@ var URL = /** @class */ (function () {
     // todo: 完善URL对象
     function URL(url, host) {
         if (host === void 0) { host = ''; }
+        // 如果 URL 是绝对的，则直接使用它
         if (url.indexOf('http://') == 0 || url.indexOf('https://') == 0) {
             this.href = url;
             return;
         }
+        // 如果是相对地址
+        // 移除基础 URL 的文件名部分（如果有）
+        host = host.substring(0, host.lastIndexOf('/') + 1);
+        // 移除相对 URL 的 "./" 部分（如果有）
+        url = url.startsWith('./') ? url.substring(2) : url;
+        // 拼接两个部分以构建绝对 URL
         this.href = host + url;
     }
     /**
@@ -1625,6 +1671,8 @@ var URL = /** @class */ (function () {
         var base64 = _arrayBufferToBase64(buffer);
         var prefix = "data:".concat(type, ";base64,");
         return prefix + base64;
+    };
+    URL.revokeObjectURL = function () {
     };
     return URL;
 }());
@@ -1664,6 +1712,11 @@ var event_target_1 = eventTarget;
 var _requestHeader = new WeakMap();
 var _responseHeader = new WeakMap();
 var _requestTask = new WeakMap();
+var contentTypes = {
+    json: 'application/json',
+    text: 'application/text',
+    arraybuffer: 'application/octet-stream',
+};
 function _triggerEvent(type, event) {
     if (event === void 0) { event = {}; }
     event.target = event.target || this;
@@ -1747,9 +1800,15 @@ var XMLHttpRequest = /** @class */ (function (_super) {
             var header_1 = _requestHeader.get(this);
             var responseType_1 = this.responseType;
             var dataType_1 = this.dataType;
+            if (contentTypes[responseType_1] && !header_1['content-type']) {
+                header_1['content-type'] = contentTypes[responseType_1];
+            }
             var relative_1 = _isRelativePath(url_1);
             var encoding = void 0;
-            if (responseType_1 === 'arraybuffer') ;
+            if (responseType_1 === 'arraybuffer') {
+                // 避免被默认转换为JSON
+                dataType_1 = 'arrayBuffer';
+            }
             else {
                 encoding = 'utf8';
             }
@@ -1771,6 +1830,7 @@ var XMLHttpRequest = /** @class */ (function (_super) {
                 if (typeof data !== 'string' && !(data instanceof ArrayBuffer) && dataType_1 !== 'json') {
                     try {
                         data = JSON.stringify(data);
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     }
                     catch (e) { /* empty */ }
                 }
@@ -1798,8 +1858,8 @@ var XMLHttpRequest = /** @class */ (function (_super) {
                 _triggerEvent.call(_this, 'load');
                 _triggerEvent.call(_this, 'loadend');
             };
-            var onFail_1 = function (_a) {
-                var errMsg = _a.errMsg;
+            var onFail_1 = function (e) {
+                var errMsg = e.message || e.errorMessage;
                 // TODO 规范错误
                 if (resolved_1) {
                     return;
@@ -2761,12 +2821,13 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(eventIniter, exports);
 __exportStar(platform$1, exports);
+__exportStar(accelerometer, exports);
 __exportStar(atob$1, exports);
 __exportStar(blob, exports);
 __exportStar(body, exports);
 __exportStar(constructor, exports);
 __exportStar(devicePixelRatio, exports);
-__exportStar(document$3, exports);
+__exportStar(document, exports);
 __exportStar(element, exports);
 __exportStar(event, exports);
 __exportStar(eventTarget, exports);
@@ -2778,11 +2839,11 @@ __exportStar(imageData, exports);
 __exportStar(location, exports);
 __exportStar(navigator, exports);
 __exportStar(offscreenCanvas, exports);
-__exportStar(performance, exports);
-__exportStar(register, exports);
-__exportStar(node$1, exports);
+__exportStar(performance$1, exports);
+__exportStar(register$1, exports);
+__exportStar(node, exports);
 __exportStar(requestAnimationFrame$1, exports);
-__exportStar(screen$1, exports);
+__exportStar(screen, exports);
 __exportStar(url, exports);
 __exportStar(xmlHttpRequest, exports);
 __exportStar(webgl, exports);
@@ -2857,6 +2918,12 @@ core_1.platform.createOffscreenCanvas = wx.createOffscreenCanvas;
 core_1.platform.createSelectorQuery = wx.createSelectorQuery;
 core_1.platform.getSystemInfoSync = wx.getSystemInfoSync;
 core_1.platform.request = wx.request;
+core_1.platform.createVideoContext = wx.createVideoContext;
+core_1.platform.downloadFile = wx.downloadFile;
+core_1.platform.startDeviceMotionListening = wx.startDeviceMotionListening;
+core_1.platform.stopDeviceMotionListening = wx.stopDeviceMotionListening;
+core_1.platform.onDeviceMotionChange = wx.onDeviceMotionChange;
+core_1.platform.offDeviceMotionChange = wx.offDeviceMotionChange;
 }(weapp));
 
 var index$2 = /*@__PURE__*/getDefaultExportFromCjs(weapp);
@@ -2865,5984 +2932,6 @@ var index$3 = /*#__PURE__*/_mergeNamespaces({
 	__proto__: null,
 	'default': index$2
 }, [weapp]);
-
-var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-var check = function (it) {
-  return it && it.Math === Math && it;
-};
-
-// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
-var global$v =
-  // eslint-disable-next-line es/no-global-this -- safe
-  check(typeof globalThis == 'object' && globalThis) ||
-  check(typeof weapp.window == 'object' && weapp.window) ||
-  // eslint-disable-next-line no-restricted-globals -- safe
-  check(typeof self == 'object' && self) ||
-  check(typeof commonjsGlobal == 'object' && commonjsGlobal) ||
-  // eslint-disable-next-line no-new-func -- fallback
-  (function () { return this; })() || commonjsGlobal || Function('return this')();
-
-var objectGetOwnPropertyDescriptor = {};
-
-var fails$t = function (exec) {
-  try {
-    return !!exec();
-  } catch (error) {
-    return true;
-  }
-};
-
-var fails$s = fails$t;
-
-// Detect IE8's incomplete defineProperty implementation
-var descriptors = !fails$s(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] !== 7;
-});
-
-var fails$r = fails$t;
-
-var functionBindNative = !fails$r(function () {
-  // eslint-disable-next-line es/no-function-prototype-bind -- safe
-  var test = (function () { /* empty */ }).bind();
-  // eslint-disable-next-line no-prototype-builtins -- safe
-  return typeof test != 'function' || test.hasOwnProperty('prototype');
-});
-
-var NATIVE_BIND$3 = functionBindNative;
-
-var call$m = Function.prototype.call;
-
-var functionCall = NATIVE_BIND$3 ? call$m.bind(call$m) : function () {
-  return call$m.apply(call$m, arguments);
-};
-
-var objectPropertyIsEnumerable = {};
-
-var $propertyIsEnumerable$1 = {}.propertyIsEnumerable;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getOwnPropertyDescriptor$2 = Object.getOwnPropertyDescriptor;
-
-// Nashorn ~ JDK8 bug
-var NASHORN_BUG = getOwnPropertyDescriptor$2 && !$propertyIsEnumerable$1.call({ 1: 2 }, 1);
-
-// `Object.prototype.propertyIsEnumerable` method implementation
-// https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable
-objectPropertyIsEnumerable.f = NASHORN_BUG ? function propertyIsEnumerable(V) {
-  var descriptor = getOwnPropertyDescriptor$2(this, V);
-  return !!descriptor && descriptor.enumerable;
-} : $propertyIsEnumerable$1;
-
-var createPropertyDescriptor$5 = function (bitmap, value) {
-  return {
-    enumerable: !(bitmap & 1),
-    configurable: !(bitmap & 2),
-    writable: !(bitmap & 4),
-    value: value
-  };
-};
-
-var NATIVE_BIND$2 = functionBindNative;
-
-var FunctionPrototype$2 = Function.prototype;
-var call$l = FunctionPrototype$2.call;
-var uncurryThisWithBind = NATIVE_BIND$2 && FunctionPrototype$2.bind.bind(call$l, call$l);
-
-var functionUncurryThis = NATIVE_BIND$2 ? uncurryThisWithBind : function (fn) {
-  return function () {
-    return call$l.apply(fn, arguments);
-  };
-};
-
-var uncurryThis$x = functionUncurryThis;
-
-var toString$5 = uncurryThis$x({}.toString);
-var stringSlice$2 = uncurryThis$x(''.slice);
-
-var classofRaw$2 = function (it) {
-  return stringSlice$2(toString$5(it), 8, -1);
-};
-
-var uncurryThis$w = functionUncurryThis;
-var fails$q = fails$t;
-var classof$d = classofRaw$2;
-
-var $Object$4 = Object;
-var split = uncurryThis$w(''.split);
-
-// fallback for non-array-like ES3 and non-enumerable old V8 strings
-var indexedObject = fails$q(function () {
-  // throws an error in rhino, see https://github.com/mozilla/rhino/issues/346
-  // eslint-disable-next-line no-prototype-builtins -- safe
-  return !$Object$4('z').propertyIsEnumerable(0);
-}) ? function (it) {
-  return classof$d(it) === 'String' ? split(it, '') : $Object$4(it);
-} : $Object$4;
-
-// we can't use just `it == null` since of `document.all` special case
-// https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-aec
-var isNullOrUndefined$7 = function (it) {
-  return it === null || it === undefined;
-};
-
-var isNullOrUndefined$6 = isNullOrUndefined$7;
-
-var $TypeError$g = TypeError;
-
-// `RequireObjectCoercible` abstract operation
-// https://tc39.es/ecma262/#sec-requireobjectcoercible
-var requireObjectCoercible$3 = function (it) {
-  if (isNullOrUndefined$6(it)) throw $TypeError$g("Can't call method on " + it);
-  return it;
-};
-
-// toObject with fallback for non-array-like ES3 strings
-var IndexedObject$4 = indexedObject;
-var requireObjectCoercible$2 = requireObjectCoercible$3;
-
-var toIndexedObject$9 = function (it) {
-  return IndexedObject$4(requireObjectCoercible$2(it));
-};
-
-var documentAll$2 = typeof weapp.document == 'object' && weapp.document.all;
-
-// https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot
-// eslint-disable-next-line unicorn/no-typeof-undefined -- required for testing
-var IS_HTMLDDA = typeof documentAll$2 == 'undefined' && documentAll$2 !== undefined;
-
-var documentAll_1 = {
-  all: documentAll$2,
-  IS_HTMLDDA: IS_HTMLDDA
-};
-
-var $documentAll$1 = documentAll_1;
-
-var documentAll$1 = $documentAll$1.all;
-
-// `IsCallable` abstract operation
-// https://tc39.es/ecma262/#sec-iscallable
-var isCallable$o = $documentAll$1.IS_HTMLDDA ? function (argument) {
-  return typeof argument == 'function' || argument === documentAll$1;
-} : function (argument) {
-  return typeof argument == 'function';
-};
-
-var isCallable$n = isCallable$o;
-var $documentAll = documentAll_1;
-
-var documentAll = $documentAll.all;
-
-var isObject$i = $documentAll.IS_HTMLDDA ? function (it) {
-  return typeof it == 'object' ? it !== null : isCallable$n(it) || it === documentAll;
-} : function (it) {
-  return typeof it == 'object' ? it !== null : isCallable$n(it);
-};
-
-var global$u = global$v;
-var isCallable$m = isCallable$o;
-
-var aFunction = function (argument) {
-  return isCallable$m(argument) ? argument : undefined;
-};
-
-var getBuiltIn$c = function (namespace, method) {
-  return arguments.length < 2 ? aFunction(global$u[namespace]) : global$u[namespace] && global$u[namespace][method];
-};
-
-var uncurryThis$v = functionUncurryThis;
-
-var objectIsPrototypeOf = uncurryThis$v({}.isPrototypeOf);
-
-var engineUserAgent = typeof weapp.navigator != 'undefined' && String(weapp.navigator.userAgent) || '';
-
-var global$t = global$v;
-var userAgent$5 = engineUserAgent;
-
-var process$3 = global$t.process;
-var Deno$1 = global$t.Deno;
-var versions = process$3 && process$3.versions || Deno$1 && Deno$1.version;
-var v8 = versions && versions.v8;
-var match, version$1;
-
-if (v8) {
-  match = v8.split('.');
-  // in old Chrome, versions of V8 isn't V8 = Chrome / 10
-  // but their correct versions are not interesting for us
-  version$1 = match[0] > 0 && match[0] < 4 ? 1 : +(match[0] + match[1]);
-}
-
-// BrowserFS NodeJS `process` polyfill incorrectly set `.v8` to `0.0`
-// so check `userAgent` even if `.v8` exists, but 0
-if (!version$1 && userAgent$5) {
-  match = userAgent$5.match(/Edge\/(\d+)/);
-  if (!match || match[1] >= 74) {
-    match = userAgent$5.match(/Chrome\/(\d+)/);
-    if (match) version$1 = +match[1];
-  }
-}
-
-var engineV8Version = version$1;
-
-/* eslint-disable es/no-symbol -- required for testing */
-var V8_VERSION$1 = engineV8Version;
-var fails$p = fails$t;
-var global$s = global$v;
-
-var $String$5 = global$s.String;
-
-// eslint-disable-next-line es/no-object-getownpropertysymbols -- required for testing
-var symbolConstructorDetection = !!Object.getOwnPropertySymbols && !fails$p(function () {
-  var symbol = Symbol('symbol detection');
-  // Chrome 38 Symbol has incorrect toString conversion
-  // `get-own-property-symbols` polyfill symbols converted to object are not Symbol instances
-  // nb: Do not call `String` directly to avoid this being optimized out to `symbol+''` which will,
-  // of course, fail.
-  return !$String$5(symbol) || !(Object(symbol) instanceof Symbol) ||
-    // Chrome 38-40 symbols are not inherited from DOM collections prototypes to instances
-    !Symbol.sham && V8_VERSION$1 && V8_VERSION$1 < 41;
-});
-
-/* eslint-disable es/no-symbol -- required for testing */
-var NATIVE_SYMBOL$1 = symbolConstructorDetection;
-
-var useSymbolAsUid = NATIVE_SYMBOL$1
-  && !Symbol.sham
-  && typeof Symbol.iterator == 'symbol';
-
-var getBuiltIn$b = getBuiltIn$c;
-var isCallable$l = isCallable$o;
-var isPrototypeOf$4 = objectIsPrototypeOf;
-var USE_SYMBOL_AS_UID$1 = useSymbolAsUid;
-
-var $Object$3 = Object;
-
-var isSymbol$3 = USE_SYMBOL_AS_UID$1 ? function (it) {
-  return typeof it == 'symbol';
-} : function (it) {
-  var $Symbol = getBuiltIn$b('Symbol');
-  return isCallable$l($Symbol) && isPrototypeOf$4($Symbol.prototype, $Object$3(it));
-};
-
-var $String$4 = String;
-
-var tryToString$6 = function (argument) {
-  try {
-    return $String$4(argument);
-  } catch (error) {
-    return 'Object';
-  }
-};
-
-var isCallable$k = isCallable$o;
-var tryToString$5 = tryToString$6;
-
-var $TypeError$f = TypeError;
-
-// `Assert: IsCallable(argument) is true`
-var aCallable$d = function (argument) {
-  if (isCallable$k(argument)) return argument;
-  throw $TypeError$f(tryToString$5(argument) + ' is not a function');
-};
-
-var aCallable$c = aCallable$d;
-var isNullOrUndefined$5 = isNullOrUndefined$7;
-
-// `GetMethod` abstract operation
-// https://tc39.es/ecma262/#sec-getmethod
-var getMethod$7 = function (V, P) {
-  var func = V[P];
-  return isNullOrUndefined$5(func) ? undefined : aCallable$c(func);
-};
-
-var call$k = functionCall;
-var isCallable$j = isCallable$o;
-var isObject$h = isObject$i;
-
-var $TypeError$e = TypeError;
-
-// `OrdinaryToPrimitive` abstract operation
-// https://tc39.es/ecma262/#sec-ordinarytoprimitive
-var ordinaryToPrimitive$1 = function (input, pref) {
-  var fn, val;
-  if (pref === 'string' && isCallable$j(fn = input.toString) && !isObject$h(val = call$k(fn, input))) return val;
-  if (isCallable$j(fn = input.valueOf) && !isObject$h(val = call$k(fn, input))) return val;
-  if (pref !== 'string' && isCallable$j(fn = input.toString) && !isObject$h(val = call$k(fn, input))) return val;
-  throw $TypeError$e("Can't convert object to primitive value");
-};
-
-var shared$4 = {exports: {}};
-
-var global$r = global$v;
-
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var defineProperty$6 = Object.defineProperty;
-
-var defineGlobalProperty$3 = function (key, value) {
-  try {
-    defineProperty$6(global$r, key, { value: value, configurable: true, writable: true });
-  } catch (error) {
-    global$r[key] = value;
-  } return value;
-};
-
-var global$q = global$v;
-var defineGlobalProperty$2 = defineGlobalProperty$3;
-
-var SHARED = '__core-js_shared__';
-var store$3 = global$q[SHARED] || defineGlobalProperty$2(SHARED, {});
-
-var sharedStore = store$3;
-
-var store$2 = sharedStore;
-
-(shared$4.exports = function (key, value) {
-  return store$2[key] || (store$2[key] = value !== undefined ? value : {});
-})('versions', []).push({
-  version: '3.32.1',
-  mode: 'global',
-  copyright: '© 2014-2023 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.32.1/LICENSE',
-  source: 'https://github.com/zloirock/core-js'
-});
-
-var requireObjectCoercible$1 = requireObjectCoercible$3;
-
-var $Object$2 = Object;
-
-// `ToObject` abstract operation
-// https://tc39.es/ecma262/#sec-toobject
-var toObject$b = function (argument) {
-  return $Object$2(requireObjectCoercible$1(argument));
-};
-
-var uncurryThis$u = functionUncurryThis;
-var toObject$a = toObject$b;
-
-var hasOwnProperty = uncurryThis$u({}.hasOwnProperty);
-
-// `HasOwnProperty` abstract operation
-// https://tc39.es/ecma262/#sec-hasownproperty
-// eslint-disable-next-line es/no-object-hasown -- safe
-var hasOwnProperty_1 = Object.hasOwn || function hasOwn(it, key) {
-  return hasOwnProperty(toObject$a(it), key);
-};
-
-var uncurryThis$t = functionUncurryThis;
-
-var id$1 = 0;
-var postfix = Math.random();
-var toString$4 = uncurryThis$t(1.0.toString);
-
-var uid$4 = function (key) {
-  return 'Symbol(' + (key === undefined ? '' : key) + ')_' + toString$4(++id$1 + postfix, 36);
-};
-
-var global$p = global$v;
-var shared$3 = shared$4.exports;
-var hasOwn$c = hasOwnProperty_1;
-var uid$3 = uid$4;
-var NATIVE_SYMBOL = symbolConstructorDetection;
-var USE_SYMBOL_AS_UID = useSymbolAsUid;
-
-var Symbol$1 = global$p.Symbol;
-var WellKnownSymbolsStore = shared$3('wks');
-var createWellKnownSymbol = USE_SYMBOL_AS_UID ? Symbol$1['for'] || Symbol$1 : Symbol$1 && Symbol$1.withoutSetter || uid$3;
-
-var wellKnownSymbol$j = function (name) {
-  if (!hasOwn$c(WellKnownSymbolsStore, name)) {
-    WellKnownSymbolsStore[name] = NATIVE_SYMBOL && hasOwn$c(Symbol$1, name)
-      ? Symbol$1[name]
-      : createWellKnownSymbol('Symbol.' + name);
-  } return WellKnownSymbolsStore[name];
-};
-
-var call$j = functionCall;
-var isObject$g = isObject$i;
-var isSymbol$2 = isSymbol$3;
-var getMethod$6 = getMethod$7;
-var ordinaryToPrimitive = ordinaryToPrimitive$1;
-var wellKnownSymbol$i = wellKnownSymbol$j;
-
-var $TypeError$d = TypeError;
-var TO_PRIMITIVE = wellKnownSymbol$i('toPrimitive');
-
-// `ToPrimitive` abstract operation
-// https://tc39.es/ecma262/#sec-toprimitive
-var toPrimitive$2 = function (input, pref) {
-  if (!isObject$g(input) || isSymbol$2(input)) return input;
-  var exoticToPrim = getMethod$6(input, TO_PRIMITIVE);
-  var result;
-  if (exoticToPrim) {
-    if (pref === undefined) pref = 'default';
-    result = call$j(exoticToPrim, input, pref);
-    if (!isObject$g(result) || isSymbol$2(result)) return result;
-    throw $TypeError$d("Can't convert object to primitive value");
-  }
-  if (pref === undefined) pref = 'number';
-  return ordinaryToPrimitive(input, pref);
-};
-
-var toPrimitive$1 = toPrimitive$2;
-var isSymbol$1 = isSymbol$3;
-
-// `ToPropertyKey` abstract operation
-// https://tc39.es/ecma262/#sec-topropertykey
-var toPropertyKey$5 = function (argument) {
-  var key = toPrimitive$1(argument, 'string');
-  return isSymbol$1(key) ? key : key + '';
-};
-
-var global$o = global$v;
-var isObject$f = isObject$i;
-
-var document$2 = global$o.document;
-// typeof document.createElement is 'object' in old IE
-var EXISTS$1 = isObject$f(document$2) && isObject$f(document$2.createElement);
-
-var documentCreateElement$1 = function (it) {
-  return EXISTS$1 ? document$2.createElement(it) : {};
-};
-
-var DESCRIPTORS$e = descriptors;
-var fails$o = fails$t;
-var createElement$1 = documentCreateElement$1;
-
-// Thanks to IE8 for its funny defineProperty
-var ie8DomDefine = !DESCRIPTORS$e && !fails$o(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty(createElement$1('div'), 'a', {
-    get: function () { return 7; }
-  }).a !== 7;
-});
-
-var DESCRIPTORS$d = descriptors;
-var call$i = functionCall;
-var propertyIsEnumerableModule = objectPropertyIsEnumerable;
-var createPropertyDescriptor$4 = createPropertyDescriptor$5;
-var toIndexedObject$8 = toIndexedObject$9;
-var toPropertyKey$4 = toPropertyKey$5;
-var hasOwn$b = hasOwnProperty_1;
-var IE8_DOM_DEFINE$1 = ie8DomDefine;
-
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var $getOwnPropertyDescriptor$1 = Object.getOwnPropertyDescriptor;
-
-// `Object.getOwnPropertyDescriptor` method
-// https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
-objectGetOwnPropertyDescriptor.f = DESCRIPTORS$d ? $getOwnPropertyDescriptor$1 : function getOwnPropertyDescriptor(O, P) {
-  O = toIndexedObject$8(O);
-  P = toPropertyKey$4(P);
-  if (IE8_DOM_DEFINE$1) try {
-    return $getOwnPropertyDescriptor$1(O, P);
-  } catch (error) { /* empty */ }
-  if (hasOwn$b(O, P)) return createPropertyDescriptor$4(!call$i(propertyIsEnumerableModule.f, O, P), O[P]);
-};
-
-var objectDefineProperty = {};
-
-var DESCRIPTORS$c = descriptors;
-var fails$n = fails$t;
-
-// V8 ~ Chrome 36-
-// https://bugs.chromium.org/p/v8/issues/detail?id=3334
-var v8PrototypeDefineBug = DESCRIPTORS$c && fails$n(function () {
-  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
-  return Object.defineProperty(function () { /* empty */ }, 'prototype', {
-    value: 42,
-    writable: false
-  }).prototype !== 42;
-});
-
-var isObject$e = isObject$i;
-
-var $String$3 = String;
-var $TypeError$c = TypeError;
-
-// `Assert: Type(argument) is Object`
-var anObject$d = function (argument) {
-  if (isObject$e(argument)) return argument;
-  throw $TypeError$c($String$3(argument) + ' is not an object');
-};
-
-var DESCRIPTORS$b = descriptors;
-var IE8_DOM_DEFINE = ie8DomDefine;
-var V8_PROTOTYPE_DEFINE_BUG$1 = v8PrototypeDefineBug;
-var anObject$c = anObject$d;
-var toPropertyKey$3 = toPropertyKey$5;
-
-var $TypeError$b = TypeError;
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var $defineProperty = Object.defineProperty;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var $getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-var ENUMERABLE = 'enumerable';
-var CONFIGURABLE$1 = 'configurable';
-var WRITABLE = 'writable';
-
-// `Object.defineProperty` method
-// https://tc39.es/ecma262/#sec-object.defineproperty
-objectDefineProperty.f = DESCRIPTORS$b ? V8_PROTOTYPE_DEFINE_BUG$1 ? function defineProperty(O, P, Attributes) {
-  anObject$c(O);
-  P = toPropertyKey$3(P);
-  anObject$c(Attributes);
-  if (typeof O === 'function' && P === 'prototype' && 'value' in Attributes && WRITABLE in Attributes && !Attributes[WRITABLE]) {
-    var current = $getOwnPropertyDescriptor(O, P);
-    if (current && current[WRITABLE]) {
-      O[P] = Attributes.value;
-      Attributes = {
-        configurable: CONFIGURABLE$1 in Attributes ? Attributes[CONFIGURABLE$1] : current[CONFIGURABLE$1],
-        enumerable: ENUMERABLE in Attributes ? Attributes[ENUMERABLE] : current[ENUMERABLE],
-        writable: false
-      };
-    }
-  } return $defineProperty(O, P, Attributes);
-} : $defineProperty : function defineProperty(O, P, Attributes) {
-  anObject$c(O);
-  P = toPropertyKey$3(P);
-  anObject$c(Attributes);
-  if (IE8_DOM_DEFINE) try {
-    return $defineProperty(O, P, Attributes);
-  } catch (error) { /* empty */ }
-  if ('get' in Attributes || 'set' in Attributes) throw $TypeError$b('Accessors not supported');
-  if ('value' in Attributes) O[P] = Attributes.value;
-  return O;
-};
-
-var DESCRIPTORS$a = descriptors;
-var definePropertyModule$5 = objectDefineProperty;
-var createPropertyDescriptor$3 = createPropertyDescriptor$5;
-
-var createNonEnumerableProperty$6 = DESCRIPTORS$a ? function (object, key, value) {
-  return definePropertyModule$5.f(object, key, createPropertyDescriptor$3(1, value));
-} : function (object, key, value) {
-  object[key] = value;
-  return object;
-};
-
-var makeBuiltIn$3 = {exports: {}};
-
-var DESCRIPTORS$9 = descriptors;
-var hasOwn$a = hasOwnProperty_1;
-
-var FunctionPrototype$1 = Function.prototype;
-// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-var getDescriptor = DESCRIPTORS$9 && Object.getOwnPropertyDescriptor;
-
-var EXISTS = hasOwn$a(FunctionPrototype$1, 'name');
-// additional protection from minified / mangled / dropped function names
-var PROPER = EXISTS && (function something() { /* empty */ }).name === 'something';
-var CONFIGURABLE = EXISTS && (!DESCRIPTORS$9 || (DESCRIPTORS$9 && getDescriptor(FunctionPrototype$1, 'name').configurable));
-
-var functionName = {
-  EXISTS: EXISTS,
-  PROPER: PROPER,
-  CONFIGURABLE: CONFIGURABLE
-};
-
-var uncurryThis$s = functionUncurryThis;
-var isCallable$i = isCallable$o;
-var store$1 = sharedStore;
-
-var functionToString = uncurryThis$s(Function.toString);
-
-// this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
-if (!isCallable$i(store$1.inspectSource)) {
-  store$1.inspectSource = function (it) {
-    return functionToString(it);
-  };
-}
-
-var inspectSource$3 = store$1.inspectSource;
-
-var global$n = global$v;
-var isCallable$h = isCallable$o;
-
-var WeakMap$2 = global$n.WeakMap;
-
-var weakMapBasicDetection = isCallable$h(WeakMap$2) && /native code/.test(String(WeakMap$2));
-
-var shared$2 = shared$4.exports;
-var uid$2 = uid$4;
-
-var keys$1 = shared$2('keys');
-
-var sharedKey$3 = function (key) {
-  return keys$1[key] || (keys$1[key] = uid$2(key));
-};
-
-var hiddenKeys$5 = {};
-
-var NATIVE_WEAK_MAP = weakMapBasicDetection;
-var global$m = global$v;
-var isObject$d = isObject$i;
-var createNonEnumerableProperty$5 = createNonEnumerableProperty$6;
-var hasOwn$9 = hasOwnProperty_1;
-var shared$1 = sharedStore;
-var sharedKey$2 = sharedKey$3;
-var hiddenKeys$4 = hiddenKeys$5;
-
-var OBJECT_ALREADY_INITIALIZED = 'Object already initialized';
-var TypeError$3 = global$m.TypeError;
-var WeakMap$1 = global$m.WeakMap;
-var set$2, get$1, has;
-
-var enforce = function (it) {
-  return has(it) ? get$1(it) : set$2(it, {});
-};
-
-var getterFor = function (TYPE) {
-  return function (it) {
-    var state;
-    if (!isObject$d(it) || (state = get$1(it)).type !== TYPE) {
-      throw TypeError$3('Incompatible receiver, ' + TYPE + ' required');
-    } return state;
-  };
-};
-
-if (NATIVE_WEAK_MAP || shared$1.state) {
-  var store = shared$1.state || (shared$1.state = new WeakMap$1());
-  /* eslint-disable no-self-assign -- prototype methods protection */
-  store.get = store.get;
-  store.has = store.has;
-  store.set = store.set;
-  /* eslint-enable no-self-assign -- prototype methods protection */
-  set$2 = function (it, metadata) {
-    if (store.has(it)) throw TypeError$3(OBJECT_ALREADY_INITIALIZED);
-    metadata.facade = it;
-    store.set(it, metadata);
-    return metadata;
-  };
-  get$1 = function (it) {
-    return store.get(it) || {};
-  };
-  has = function (it) {
-    return store.has(it);
-  };
-} else {
-  var STATE = sharedKey$2('state');
-  hiddenKeys$4[STATE] = true;
-  set$2 = function (it, metadata) {
-    if (hasOwn$9(it, STATE)) throw TypeError$3(OBJECT_ALREADY_INITIALIZED);
-    metadata.facade = it;
-    createNonEnumerableProperty$5(it, STATE, metadata);
-    return metadata;
-  };
-  get$1 = function (it) {
-    return hasOwn$9(it, STATE) ? it[STATE] : {};
-  };
-  has = function (it) {
-    return hasOwn$9(it, STATE);
-  };
-}
-
-var internalState = {
-  set: set$2,
-  get: get$1,
-  has: has,
-  enforce: enforce,
-  getterFor: getterFor
-};
-
-var uncurryThis$r = functionUncurryThis;
-var fails$m = fails$t;
-var isCallable$g = isCallable$o;
-var hasOwn$8 = hasOwnProperty_1;
-var DESCRIPTORS$8 = descriptors;
-var CONFIGURABLE_FUNCTION_NAME$2 = functionName.CONFIGURABLE;
-var inspectSource$2 = inspectSource$3;
-var InternalStateModule$8 = internalState;
-
-var enforceInternalState$2 = InternalStateModule$8.enforce;
-var getInternalState$5 = InternalStateModule$8.get;
-var $String$2 = String;
-// eslint-disable-next-line es/no-object-defineproperty -- safe
-var defineProperty$5 = Object.defineProperty;
-var stringSlice$1 = uncurryThis$r(''.slice);
-var replace = uncurryThis$r(''.replace);
-var join$1 = uncurryThis$r([].join);
-
-var CONFIGURABLE_LENGTH = DESCRIPTORS$8 && !fails$m(function () {
-  return defineProperty$5(function () { /* empty */ }, 'length', { value: 8 }).length !== 8;
-});
-
-var TEMPLATE = String(String).split('String');
-
-var makeBuiltIn$2 = makeBuiltIn$3.exports = function (value, name, options) {
-  if (stringSlice$1($String$2(name), 0, 7) === 'Symbol(') {
-    name = '[' + replace($String$2(name), /^Symbol\(([^)]*)\)/, '$1') + ']';
-  }
-  if (options && options.getter) name = 'get ' + name;
-  if (options && options.setter) name = 'set ' + name;
-  if (!hasOwn$8(value, 'name') || (CONFIGURABLE_FUNCTION_NAME$2 && value.name !== name)) {
-    if (DESCRIPTORS$8) defineProperty$5(value, 'name', { value: name, configurable: true });
-    else value.name = name;
-  }
-  if (CONFIGURABLE_LENGTH && options && hasOwn$8(options, 'arity') && value.length !== options.arity) {
-    defineProperty$5(value, 'length', { value: options.arity });
-  }
-  try {
-    if (options && hasOwn$8(options, 'constructor') && options.constructor) {
-      if (DESCRIPTORS$8) defineProperty$5(value, 'prototype', { writable: false });
-    // in V8 ~ Chrome 53, prototypes of some methods, like `Array.prototype.values`, are non-writable
-    } else if (value.prototype) value.prototype = undefined;
-  } catch (error) { /* empty */ }
-  var state = enforceInternalState$2(value);
-  if (!hasOwn$8(state, 'source')) {
-    state.source = join$1(TEMPLATE, typeof name == 'string' ? name : '');
-  } return value;
-};
-
-// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
-// eslint-disable-next-line no-extend-native -- required
-Function.prototype.toString = makeBuiltIn$2(function toString() {
-  return isCallable$g(this) && getInternalState$5(this).source || inspectSource$2(this);
-}, 'toString');
-
-var isCallable$f = isCallable$o;
-var definePropertyModule$4 = objectDefineProperty;
-var makeBuiltIn$1 = makeBuiltIn$3.exports;
-var defineGlobalProperty$1 = defineGlobalProperty$3;
-
-var defineBuiltIn$a = function (O, key, value, options) {
-  if (!options) options = {};
-  var simple = options.enumerable;
-  var name = options.name !== undefined ? options.name : key;
-  if (isCallable$f(value)) makeBuiltIn$1(value, name, options);
-  if (options.global) {
-    if (simple) O[key] = value;
-    else defineGlobalProperty$1(key, value);
-  } else {
-    try {
-      if (!options.unsafe) delete O[key];
-      else if (O[key]) simple = true;
-    } catch (error) { /* empty */ }
-    if (simple) O[key] = value;
-    else definePropertyModule$4.f(O, key, {
-      value: value,
-      enumerable: false,
-      configurable: !options.nonConfigurable,
-      writable: !options.nonWritable
-    });
-  } return O;
-};
-
-var objectGetOwnPropertyNames = {};
-
-var ceil = Math.ceil;
-var floor$4 = Math.floor;
-
-// `Math.trunc` method
-// https://tc39.es/ecma262/#sec-math.trunc
-// eslint-disable-next-line es/no-math-trunc -- safe
-var mathTrunc = Math.trunc || function trunc(x) {
-  var n = +x;
-  return (n > 0 ? floor$4 : ceil)(n);
-};
-
-var trunc$1 = mathTrunc;
-
-// `ToIntegerOrInfinity` abstract operation
-// https://tc39.es/ecma262/#sec-tointegerorinfinity
-var toIntegerOrInfinity$b = function (argument) {
-  var number = +argument;
-  // eslint-disable-next-line no-self-compare -- NaN check
-  return number !== number || number === 0 ? 0 : trunc$1(number);
-};
-
-var toIntegerOrInfinity$a = toIntegerOrInfinity$b;
-
-var max$2 = Math.max;
-var min$4 = Math.min;
-
-// Helper for a popular repeating case of the spec:
-// Let integer be ? ToInteger(index).
-// If integer < 0, let result be max((length + integer), 0); else let result be min(integer, length).
-var toAbsoluteIndex$6 = function (index, length) {
-  var integer = toIntegerOrInfinity$a(index);
-  return integer < 0 ? max$2(integer + length, 0) : min$4(integer, length);
-};
-
-var toIntegerOrInfinity$9 = toIntegerOrInfinity$b;
-
-var min$3 = Math.min;
-
-// `ToLength` abstract operation
-// https://tc39.es/ecma262/#sec-tolength
-var toLength$5 = function (argument) {
-  return argument > 0 ? min$3(toIntegerOrInfinity$9(argument), 0x1FFFFFFFFFFFFF) : 0; // 2 ** 53 - 1 == 9007199254740991
-};
-
-var toLength$4 = toLength$5;
-
-// `LengthOfArrayLike` abstract operation
-// https://tc39.es/ecma262/#sec-lengthofarraylike
-var lengthOfArrayLike$i = function (obj) {
-  return toLength$4(obj.length);
-};
-
-var toIndexedObject$7 = toIndexedObject$9;
-var toAbsoluteIndex$5 = toAbsoluteIndex$6;
-var lengthOfArrayLike$h = lengthOfArrayLike$i;
-
-// `Array.prototype.{ indexOf, includes }` methods implementation
-var createMethod$6 = function (IS_INCLUDES) {
-  return function ($this, el, fromIndex) {
-    var O = toIndexedObject$7($this);
-    var length = lengthOfArrayLike$h(O);
-    var index = toAbsoluteIndex$5(fromIndex, length);
-    var value;
-    // Array#includes uses SameValueZero equality algorithm
-    // eslint-disable-next-line no-self-compare -- NaN check
-    if (IS_INCLUDES && el !== el) while (length > index) {
-      value = O[index++];
-      // eslint-disable-next-line no-self-compare -- NaN check
-      if (value !== value) return true;
-    // Array#indexOf ignores holes, Array#includes - not
-    } else for (;length > index; index++) {
-      if ((IS_INCLUDES || index in O) && O[index] === el) return IS_INCLUDES || index || 0;
-    } return !IS_INCLUDES && -1;
-  };
-};
-
-var arrayIncludes = {
-  // `Array.prototype.includes` method
-  // https://tc39.es/ecma262/#sec-array.prototype.includes
-  includes: createMethod$6(true),
-  // `Array.prototype.indexOf` method
-  // https://tc39.es/ecma262/#sec-array.prototype.indexof
-  indexOf: createMethod$6(false)
-};
-
-var uncurryThis$q = functionUncurryThis;
-var hasOwn$7 = hasOwnProperty_1;
-var toIndexedObject$6 = toIndexedObject$9;
-var indexOf = arrayIncludes.indexOf;
-var hiddenKeys$3 = hiddenKeys$5;
-
-var push$4 = uncurryThis$q([].push);
-
-var objectKeysInternal = function (object, names) {
-  var O = toIndexedObject$6(object);
-  var i = 0;
-  var result = [];
-  var key;
-  for (key in O) !hasOwn$7(hiddenKeys$3, key) && hasOwn$7(O, key) && push$4(result, key);
-  // Don't enum bug & hidden keys
-  while (names.length > i) if (hasOwn$7(O, key = names[i++])) {
-    ~indexOf(result, key) || push$4(result, key);
-  }
-  return result;
-};
-
-// IE8- don't enum bug keys
-var enumBugKeys$3 = [
-  'constructor',
-  'hasOwnProperty',
-  'isPrototypeOf',
-  'propertyIsEnumerable',
-  'toLocaleString',
-  'toString',
-  'valueOf'
-];
-
-var internalObjectKeys$1 = objectKeysInternal;
-var enumBugKeys$2 = enumBugKeys$3;
-
-var hiddenKeys$2 = enumBugKeys$2.concat('length', 'prototype');
-
-// `Object.getOwnPropertyNames` method
-// https://tc39.es/ecma262/#sec-object.getownpropertynames
-// eslint-disable-next-line es/no-object-getownpropertynames -- safe
-objectGetOwnPropertyNames.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
-  return internalObjectKeys$1(O, hiddenKeys$2);
-};
-
-var objectGetOwnPropertySymbols = {};
-
-// eslint-disable-next-line es/no-object-getownpropertysymbols -- safe
-objectGetOwnPropertySymbols.f = Object.getOwnPropertySymbols;
-
-var getBuiltIn$a = getBuiltIn$c;
-var uncurryThis$p = functionUncurryThis;
-var getOwnPropertyNamesModule$1 = objectGetOwnPropertyNames;
-var getOwnPropertySymbolsModule = objectGetOwnPropertySymbols;
-var anObject$b = anObject$d;
-
-var concat = uncurryThis$p([].concat);
-
-// all object keys, includes non-enumerable and symbols
-var ownKeys$1 = getBuiltIn$a('Reflect', 'ownKeys') || function ownKeys(it) {
-  var keys = getOwnPropertyNamesModule$1.f(anObject$b(it));
-  var getOwnPropertySymbols = getOwnPropertySymbolsModule.f;
-  return getOwnPropertySymbols ? concat(keys, getOwnPropertySymbols(it)) : keys;
-};
-
-var hasOwn$6 = hasOwnProperty_1;
-var ownKeys = ownKeys$1;
-var getOwnPropertyDescriptorModule$1 = objectGetOwnPropertyDescriptor;
-var definePropertyModule$3 = objectDefineProperty;
-
-var copyConstructorProperties$1 = function (target, source, exceptions) {
-  var keys = ownKeys(source);
-  var defineProperty = definePropertyModule$3.f;
-  var getOwnPropertyDescriptor = getOwnPropertyDescriptorModule$1.f;
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    if (!hasOwn$6(target, key) && !(exceptions && hasOwn$6(exceptions, key))) {
-      defineProperty(target, key, getOwnPropertyDescriptor(source, key));
-    }
-  }
-};
-
-var fails$l = fails$t;
-var isCallable$e = isCallable$o;
-
-var replacement = /#|\.prototype\./;
-
-var isForced$3 = function (feature, detection) {
-  var value = data[normalize(feature)];
-  return value === POLYFILL ? true
-    : value === NATIVE ? false
-    : isCallable$e(detection) ? fails$l(detection)
-    : !!detection;
-};
-
-var normalize = isForced$3.normalize = function (string) {
-  return String(string).replace(replacement, '.').toLowerCase();
-};
-
-var data = isForced$3.data = {};
-var NATIVE = isForced$3.NATIVE = 'N';
-var POLYFILL = isForced$3.POLYFILL = 'P';
-
-var isForced_1 = isForced$3;
-
-var global$l = global$v;
-var getOwnPropertyDescriptor$1 = objectGetOwnPropertyDescriptor.f;
-var createNonEnumerableProperty$4 = createNonEnumerableProperty$6;
-var defineBuiltIn$9 = defineBuiltIn$a;
-var defineGlobalProperty = defineGlobalProperty$3;
-var copyConstructorProperties = copyConstructorProperties$1;
-var isForced$2 = isForced_1;
-
-/*
-  options.target         - name of the target object
-  options.global         - target is the global object
-  options.stat           - export as static methods of target
-  options.proto          - export as prototype methods of target
-  options.real           - real prototype method for the `pure` version
-  options.forced         - export even if the native feature is available
-  options.bind           - bind methods to the target, required for the `pure` version
-  options.wrap           - wrap constructors to preventing global pollution, required for the `pure` version
-  options.unsafe         - use the simple assignment of property instead of delete + defineProperty
-  options.sham           - add a flag to not completely full polyfills
-  options.enumerable     - export as enumerable property
-  options.dontCallGetSet - prevent calling a getter on target
-  options.name           - the .name of the function if it does not match the key
-*/
-var _export = function (options, source) {
-  var TARGET = options.target;
-  var GLOBAL = options.global;
-  var STATIC = options.stat;
-  var FORCED, target, key, targetProperty, sourceProperty, descriptor;
-  if (GLOBAL) {
-    target = global$l;
-  } else if (STATIC) {
-    target = global$l[TARGET] || defineGlobalProperty(TARGET, {});
-  } else {
-    target = (global$l[TARGET] || {}).prototype;
-  }
-  if (target) for (key in source) {
-    sourceProperty = source[key];
-    if (options.dontCallGetSet) {
-      descriptor = getOwnPropertyDescriptor$1(target, key);
-      targetProperty = descriptor && descriptor.value;
-    } else targetProperty = target[key];
-    FORCED = isForced$2(GLOBAL ? key : TARGET + (STATIC ? '.' : '#') + key, options.forced);
-    // contained in target
-    if (!FORCED && targetProperty !== undefined) {
-      if (typeof sourceProperty == typeof targetProperty) continue;
-      copyConstructorProperties(sourceProperty, targetProperty);
-    }
-    // add a flag to not completely full polyfills
-    if (options.sham || (targetProperty && targetProperty.sham)) {
-      createNonEnumerableProperty$4(sourceProperty, 'sham', true);
-    }
-    defineBuiltIn$9(target, key, sourceProperty, options);
-  }
-};
-
-var objectDefineProperties = {};
-
-var internalObjectKeys = objectKeysInternal;
-var enumBugKeys$1 = enumBugKeys$3;
-
-// `Object.keys` method
-// https://tc39.es/ecma262/#sec-object.keys
-// eslint-disable-next-line es/no-object-keys -- safe
-var objectKeys$2 = Object.keys || function keys(O) {
-  return internalObjectKeys(O, enumBugKeys$1);
-};
-
-var DESCRIPTORS$7 = descriptors;
-var V8_PROTOTYPE_DEFINE_BUG = v8PrototypeDefineBug;
-var definePropertyModule$2 = objectDefineProperty;
-var anObject$a = anObject$d;
-var toIndexedObject$5 = toIndexedObject$9;
-var objectKeys$1 = objectKeys$2;
-
-// `Object.defineProperties` method
-// https://tc39.es/ecma262/#sec-object.defineproperties
-// eslint-disable-next-line es/no-object-defineproperties -- safe
-objectDefineProperties.f = DESCRIPTORS$7 && !V8_PROTOTYPE_DEFINE_BUG ? Object.defineProperties : function defineProperties(O, Properties) {
-  anObject$a(O);
-  var props = toIndexedObject$5(Properties);
-  var keys = objectKeys$1(Properties);
-  var length = keys.length;
-  var index = 0;
-  var key;
-  while (length > index) definePropertyModule$2.f(O, key = keys[index++], props[key]);
-  return O;
-};
-
-var getBuiltIn$9 = getBuiltIn$c;
-
-var html$2 = getBuiltIn$9('document', 'documentElement');
-
-/* global ActiveXObject -- old IE, WSH */
-var anObject$9 = anObject$d;
-var definePropertiesModule = objectDefineProperties;
-var enumBugKeys = enumBugKeys$3;
-var hiddenKeys$1 = hiddenKeys$5;
-var html$1 = html$2;
-var documentCreateElement = documentCreateElement$1;
-var sharedKey$1 = sharedKey$3;
-
-var GT = '>';
-var LT = '<';
-var PROTOTYPE$1 = 'prototype';
-var SCRIPT = 'script';
-var IE_PROTO$1 = sharedKey$1('IE_PROTO');
-
-var EmptyConstructor = function () { /* empty */ };
-
-var scriptTag = function (content) {
-  return LT + SCRIPT + GT + content + LT + '/' + SCRIPT + GT;
-};
-
-// Create object with fake `null` prototype: use ActiveX Object with cleared prototype
-var NullProtoObjectViaActiveX = function (activeXDocument) {
-  activeXDocument.write(scriptTag(''));
-  activeXDocument.close();
-  var temp = activeXDocument.parentWindow.Object;
-  activeXDocument = null; // avoid memory leak
-  return temp;
-};
-
-// Create object with fake `null` prototype: use iframe Object with cleared prototype
-var NullProtoObjectViaIFrame = function () {
-  // Thrash, waste and sodomy: IE GC bug
-  var iframe = documentCreateElement('iframe');
-  var JS = 'java' + SCRIPT + ':';
-  var iframeDocument;
-  iframe.style.display = 'none';
-  html$1.appendChild(iframe);
-  // https://github.com/zloirock/core-js/issues/475
-  iframe.src = String(JS);
-  iframeDocument = iframe.contentWindow.document;
-  iframeDocument.open();
-  iframeDocument.write(scriptTag('document.F=Object'));
-  iframeDocument.close();
-  return iframeDocument.F;
-};
-
-// Check for document.domain and active x support
-// No need to use active x approach when document.domain is not set
-// see https://github.com/es-shims/es5-shim/issues/150
-// variation of https://github.com/kitcambridge/es5-shim/commit/4f738ac066346
-// avoid IE GC bug
-var activeXDocument;
-var NullProtoObject = function () {
-  try {
-    activeXDocument = new ActiveXObject('htmlfile');
-  } catch (error) { /* ignore */ }
-  NullProtoObject = typeof weapp.document != 'undefined'
-    ? weapp.document.domain && activeXDocument
-      ? NullProtoObjectViaActiveX(activeXDocument) // old IE
-      : NullProtoObjectViaIFrame()
-    : NullProtoObjectViaActiveX(activeXDocument); // WSH
-  var length = enumBugKeys.length;
-  while (length--) delete NullProtoObject[PROTOTYPE$1][enumBugKeys[length]];
-  return NullProtoObject();
-};
-
-hiddenKeys$1[IE_PROTO$1] = true;
-
-// `Object.create` method
-// https://tc39.es/ecma262/#sec-object.create
-// eslint-disable-next-line es/no-object-create -- safe
-var objectCreate$1 = Object.create || function create(O, Properties) {
-  var result;
-  if (O !== null) {
-    EmptyConstructor[PROTOTYPE$1] = anObject$9(O);
-    result = new EmptyConstructor();
-    EmptyConstructor[PROTOTYPE$1] = null;
-    // add "__proto__" for Object.getPrototypeOf polyfill
-    result[IE_PROTO$1] = O;
-  } else result = NullProtoObject();
-  return Properties === undefined ? result : definePropertiesModule.f(result, Properties);
-};
-
-var wellKnownSymbol$h = wellKnownSymbol$j;
-var create$4 = objectCreate$1;
-var defineProperty$4 = objectDefineProperty.f;
-
-var UNSCOPABLES = wellKnownSymbol$h('unscopables');
-var ArrayPrototype$1 = Array.prototype;
-
-// Array.prototype[@@unscopables]
-// https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
-if (ArrayPrototype$1[UNSCOPABLES] === undefined) {
-  defineProperty$4(ArrayPrototype$1, UNSCOPABLES, {
-    configurable: true,
-    value: create$4(null)
-  });
-}
-
-// add a key to Array.prototype[@@unscopables]
-var addToUnscopables$2 = function (key) {
-  ArrayPrototype$1[UNSCOPABLES][key] = true;
-};
-
-var $$c = _export;
-var $includes$1 = arrayIncludes.includes;
-var fails$k = fails$t;
-var addToUnscopables$1 = addToUnscopables$2;
-
-// FF99+ bug
-var BROKEN_ON_SPARSE = fails$k(function () {
-  // eslint-disable-next-line es/no-array-prototype-includes -- detection
-  return !Array(1).includes();
-});
-
-// `Array.prototype.includes` method
-// https://tc39.es/ecma262/#sec-array.prototype.includes
-$$c({ target: 'Array', proto: true, forced: BROKEN_ON_SPARSE }, {
-  includes: function includes(el /* , fromIndex = 0 */) {
-    return $includes$1(this, el, arguments.length > 1 ? arguments[1] : undefined);
-  }
-});
-
-// https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
-addToUnscopables$1('includes');
-
-var global$k = global$v;
-var uncurryThis$o = functionUncurryThis;
-
-var entryUnbind$1 = function (CONSTRUCTOR, METHOD) {
-  return uncurryThis$o(global$k[CONSTRUCTOR].prototype[METHOD]);
-};
-
-var entryUnbind = entryUnbind$1;
-
-entryUnbind('Array', 'includes');
-
-var fails$j = fails$t;
-
-var correctPrototypeGetter = !fails$j(function () {
-  function F() { /* empty */ }
-  F.prototype.constructor = null;
-  // eslint-disable-next-line es/no-object-getprototypeof -- required for testing
-  return Object.getPrototypeOf(new F()) !== F.prototype;
-});
-
-var hasOwn$5 = hasOwnProperty_1;
-var isCallable$d = isCallable$o;
-var toObject$9 = toObject$b;
-var sharedKey = sharedKey$3;
-var CORRECT_PROTOTYPE_GETTER = correctPrototypeGetter;
-
-var IE_PROTO = sharedKey('IE_PROTO');
-var $Object$1 = Object;
-var ObjectPrototype$2 = $Object$1.prototype;
-
-// `Object.getPrototypeOf` method
-// https://tc39.es/ecma262/#sec-object.getprototypeof
-// eslint-disable-next-line es/no-object-getprototypeof -- safe
-var objectGetPrototypeOf$1 = CORRECT_PROTOTYPE_GETTER ? $Object$1.getPrototypeOf : function (O) {
-  var object = toObject$9(O);
-  if (hasOwn$5(object, IE_PROTO)) return object[IE_PROTO];
-  var constructor = object.constructor;
-  if (isCallable$d(constructor) && object instanceof constructor) {
-    return constructor.prototype;
-  } return object instanceof $Object$1 ? ObjectPrototype$2 : null;
-};
-
-var DESCRIPTORS$6 = descriptors;
-var fails$i = fails$t;
-var uncurryThis$n = functionUncurryThis;
-var objectGetPrototypeOf = objectGetPrototypeOf$1;
-var objectKeys = objectKeys$2;
-var toIndexedObject$4 = toIndexedObject$9;
-var $propertyIsEnumerable = objectPropertyIsEnumerable.f;
-
-var propertyIsEnumerable = uncurryThis$n($propertyIsEnumerable);
-var push$3 = uncurryThis$n([].push);
-
-// in some IE versions, `propertyIsEnumerable` returns incorrect result on integer keys
-// of `null` prototype objects
-var IE_BUG = DESCRIPTORS$6 && fails$i(function () {
-  // eslint-disable-next-line es/no-object-create -- safe
-  var O = Object.create(null);
-  O[2] = 2;
-  return !propertyIsEnumerable(O, 2);
-});
-
-// `Object.{ entries, values }` methods implementation
-var createMethod$5 = function (TO_ENTRIES) {
-  return function (it) {
-    var O = toIndexedObject$4(it);
-    var keys = objectKeys(O);
-    var IE_WORKAROUND = IE_BUG && objectGetPrototypeOf(O) === null;
-    var length = keys.length;
-    var i = 0;
-    var result = [];
-    var key;
-    while (length > i) {
-      key = keys[i++];
-      if (!DESCRIPTORS$6 || (IE_WORKAROUND ? key in O : propertyIsEnumerable(O, key))) {
-        push$3(result, TO_ENTRIES ? [key, O[key]] : O[key]);
-      }
-    }
-    return result;
-  };
-};
-
-var objectToArray = {
-  // `Object.entries` method
-  // https://tc39.es/ecma262/#sec-object.entries
-  entries: createMethod$5(true),
-  // `Object.values` method
-  // https://tc39.es/ecma262/#sec-object.values
-  values: createMethod$5(false)
-};
-
-var $$b = _export;
-var $values = objectToArray.values;
-
-// `Object.values` method
-// https://tc39.es/ecma262/#sec-object.values
-$$b({ target: 'Object', stat: true }, {
-  values: function values(O) {
-    return $values(O);
-  }
-});
-
-var global$j = global$v;
-
-var path$2 = global$j;
-
-var path$1 = path$2;
-
-path$1.Object.values;
-
-var $$a = _export;
-var $entries = objectToArray.entries;
-
-// `Object.entries` method
-// https://tc39.es/ecma262/#sec-object.entries
-$$a({ target: 'Object', stat: true }, {
-  entries: function entries(O) {
-    return $entries(O);
-  }
-});
-
-var path = path$2;
-
-path.Object.entries;
-
-var typedArrayConstructor = {exports: {}};
-
-var wellKnownSymbol$g = wellKnownSymbol$j;
-
-var ITERATOR$5 = wellKnownSymbol$g('iterator');
-var SAFE_CLOSING = false;
-
-try {
-  var called = 0;
-  var iteratorWithReturn = {
-    next: function () {
-      return { done: !!called++ };
-    },
-    'return': function () {
-      SAFE_CLOSING = true;
-    }
-  };
-  iteratorWithReturn[ITERATOR$5] = function () {
-    return this;
-  };
-  // eslint-disable-next-line es/no-array-from, no-throw-literal -- required for testing
-  Array.from(iteratorWithReturn, function () { throw 2; });
-} catch (error) { /* empty */ }
-
-var checkCorrectnessOfIteration$3 = function (exec, SKIP_CLOSING) {
-  if (!SKIP_CLOSING && !SAFE_CLOSING) return false;
-  var ITERATION_SUPPORT = false;
-  try {
-    var object = {};
-    object[ITERATOR$5] = function () {
-      return {
-        next: function () {
-          return { done: ITERATION_SUPPORT = true };
-        }
-      };
-    };
-    exec(object);
-  } catch (error) { /* empty */ }
-  return ITERATION_SUPPORT;
-};
-
-// eslint-disable-next-line es/no-typed-arrays -- safe
-var arrayBufferBasicDetection = typeof ArrayBuffer != 'undefined' && typeof DataView != 'undefined';
-
-var wellKnownSymbol$f = wellKnownSymbol$j;
-
-var TO_STRING_TAG$3 = wellKnownSymbol$f('toStringTag');
-var test = {};
-
-test[TO_STRING_TAG$3] = 'z';
-
-var toStringTagSupport = String(test) === '[object z]';
-
-var TO_STRING_TAG_SUPPORT$2 = toStringTagSupport;
-var isCallable$c = isCallable$o;
-var classofRaw$1 = classofRaw$2;
-var wellKnownSymbol$e = wellKnownSymbol$j;
-
-var TO_STRING_TAG$2 = wellKnownSymbol$e('toStringTag');
-var $Object = Object;
-
-// ES3 wrong here
-var CORRECT_ARGUMENTS = classofRaw$1(function () { return arguments; }()) === 'Arguments';
-
-// fallback for IE11 Script Access Denied error
-var tryGet = function (it, key) {
-  try {
-    return it[key];
-  } catch (error) { /* empty */ }
-};
-
-// getting tag from ES6+ `Object.prototype.toString`
-var classof$c = TO_STRING_TAG_SUPPORT$2 ? classofRaw$1 : function (it) {
-  var O, tag, result;
-  return it === undefined ? 'Undefined' : it === null ? 'Null'
-    // @@toStringTag case
-    : typeof (tag = tryGet(O = $Object(it), TO_STRING_TAG$2)) == 'string' ? tag
-    // builtinTag case
-    : CORRECT_ARGUMENTS ? classofRaw$1(O)
-    // ES3 arguments fallback
-    : (result = classofRaw$1(O)) === 'Object' && isCallable$c(O.callee) ? 'Arguments' : result;
-};
-
-var makeBuiltIn = makeBuiltIn$3.exports;
-var defineProperty$3 = objectDefineProperty;
-
-var defineBuiltInAccessor$5 = function (target, name, descriptor) {
-  if (descriptor.get) makeBuiltIn(descriptor.get, name, { getter: true });
-  if (descriptor.set) makeBuiltIn(descriptor.set, name, { setter: true });
-  return defineProperty$3.f(target, name, descriptor);
-};
-
-var uncurryThis$m = functionUncurryThis;
-var aCallable$b = aCallable$d;
-
-var functionUncurryThisAccessor = function (object, key, method) {
-  try {
-    // eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
-    return uncurryThis$m(aCallable$b(Object.getOwnPropertyDescriptor(object, key)[method]));
-  } catch (error) { /* empty */ }
-};
-
-var isCallable$b = isCallable$o;
-
-var $String$1 = String;
-var $TypeError$a = TypeError;
-
-var aPossiblePrototype$1 = function (argument) {
-  if (typeof argument == 'object' || isCallable$b(argument)) return argument;
-  throw $TypeError$a("Can't set " + $String$1(argument) + ' as a prototype');
-};
-
-/* eslint-disable no-proto -- safe */
-var uncurryThisAccessor = functionUncurryThisAccessor;
-var anObject$8 = anObject$d;
-var aPossiblePrototype = aPossiblePrototype$1;
-
-// `Object.setPrototypeOf` method
-// https://tc39.es/ecma262/#sec-object.setprototypeof
-// Works with __proto__ only. Old v8 can't work with null proto objects.
-// eslint-disable-next-line es/no-object-setprototypeof -- safe
-var objectSetPrototypeOf = Object.setPrototypeOf || ('__proto__' in {} ? function () {
-  var CORRECT_SETTER = false;
-  var test = {};
-  var setter;
-  try {
-    setter = uncurryThisAccessor(Object.prototype, '__proto__', 'set');
-    setter(test, []);
-    CORRECT_SETTER = test instanceof Array;
-  } catch (error) { /* empty */ }
-  return function setPrototypeOf(O, proto) {
-    anObject$8(O);
-    aPossiblePrototype(proto);
-    if (CORRECT_SETTER) setter(O, proto);
-    else O.__proto__ = proto;
-    return O;
-  };
-}() : undefined);
-
-var NATIVE_ARRAY_BUFFER$1 = arrayBufferBasicDetection;
-var DESCRIPTORS$5 = descriptors;
-var global$i = global$v;
-var isCallable$a = isCallable$o;
-var isObject$c = isObject$i;
-var hasOwn$4 = hasOwnProperty_1;
-var classof$b = classof$c;
-var tryToString$4 = tryToString$6;
-var createNonEnumerableProperty$3 = createNonEnumerableProperty$6;
-var defineBuiltIn$8 = defineBuiltIn$a;
-var defineBuiltInAccessor$4 = defineBuiltInAccessor$5;
-var isPrototypeOf$3 = objectIsPrototypeOf;
-var getPrototypeOf$4 = objectGetPrototypeOf$1;
-var setPrototypeOf$5 = objectSetPrototypeOf;
-var wellKnownSymbol$d = wellKnownSymbol$j;
-var uid$1 = uid$4;
-var InternalStateModule$7 = internalState;
-
-var enforceInternalState$1 = InternalStateModule$7.enforce;
-var getInternalState$4 = InternalStateModule$7.get;
-var Int8Array$4 = global$i.Int8Array;
-var Int8ArrayPrototype$1 = Int8Array$4 && Int8Array$4.prototype;
-var Uint8ClampedArray$1 = global$i.Uint8ClampedArray;
-var Uint8ClampedArrayPrototype = Uint8ClampedArray$1 && Uint8ClampedArray$1.prototype;
-var TypedArray$1 = Int8Array$4 && getPrototypeOf$4(Int8Array$4);
-var TypedArrayPrototype$2 = Int8ArrayPrototype$1 && getPrototypeOf$4(Int8ArrayPrototype$1);
-var ObjectPrototype$1 = Object.prototype;
-var TypeError$2 = global$i.TypeError;
-
-var TO_STRING_TAG$1 = wellKnownSymbol$d('toStringTag');
-var TYPED_ARRAY_TAG$1 = uid$1('TYPED_ARRAY_TAG');
-var TYPED_ARRAY_CONSTRUCTOR = 'TypedArrayConstructor';
-// Fixing native typed arrays in Opera Presto crashes the browser, see #595
-var NATIVE_ARRAY_BUFFER_VIEWS$2 = NATIVE_ARRAY_BUFFER$1 && !!setPrototypeOf$5 && classof$b(global$i.opera) !== 'Opera';
-var TYPED_ARRAY_TAG_REQUIRED = false;
-var NAME, Constructor, Prototype;
-
-var TypedArrayConstructorsList = {
-  Int8Array: 1,
-  Uint8Array: 1,
-  Uint8ClampedArray: 1,
-  Int16Array: 2,
-  Uint16Array: 2,
-  Int32Array: 4,
-  Uint32Array: 4,
-  Float32Array: 4,
-  Float64Array: 8
-};
-
-var BigIntArrayConstructorsList = {
-  BigInt64Array: 8,
-  BigUint64Array: 8
-};
-
-var isView = function isView(it) {
-  if (!isObject$c(it)) return false;
-  var klass = classof$b(it);
-  return klass === 'DataView'
-    || hasOwn$4(TypedArrayConstructorsList, klass)
-    || hasOwn$4(BigIntArrayConstructorsList, klass);
-};
-
-var getTypedArrayConstructor$6 = function (it) {
-  var proto = getPrototypeOf$4(it);
-  if (!isObject$c(proto)) return;
-  var state = getInternalState$4(proto);
-  return (state && hasOwn$4(state, TYPED_ARRAY_CONSTRUCTOR)) ? state[TYPED_ARRAY_CONSTRUCTOR] : getTypedArrayConstructor$6(proto);
-};
-
-var isTypedArray$1 = function (it) {
-  if (!isObject$c(it)) return false;
-  var klass = classof$b(it);
-  return hasOwn$4(TypedArrayConstructorsList, klass)
-    || hasOwn$4(BigIntArrayConstructorsList, klass);
-};
-
-var aTypedArray$x = function (it) {
-  if (isTypedArray$1(it)) return it;
-  throw TypeError$2('Target is not a typed array');
-};
-
-var aTypedArrayConstructor$5 = function (C) {
-  if (isCallable$a(C) && (!setPrototypeOf$5 || isPrototypeOf$3(TypedArray$1, C))) return C;
-  throw TypeError$2(tryToString$4(C) + ' is not a typed array constructor');
-};
-
-var exportTypedArrayMethod$y = function (KEY, property, forced, options) {
-  if (!DESCRIPTORS$5) return;
-  if (forced) for (var ARRAY in TypedArrayConstructorsList) {
-    var TypedArrayConstructor = global$i[ARRAY];
-    if (TypedArrayConstructor && hasOwn$4(TypedArrayConstructor.prototype, KEY)) try {
-      delete TypedArrayConstructor.prototype[KEY];
-    } catch (error) {
-      // old WebKit bug - some methods are non-configurable
-      try {
-        TypedArrayConstructor.prototype[KEY] = property;
-      } catch (error2) { /* empty */ }
-    }
-  }
-  if (!TypedArrayPrototype$2[KEY] || forced) {
-    defineBuiltIn$8(TypedArrayPrototype$2, KEY, forced ? property
-      : NATIVE_ARRAY_BUFFER_VIEWS$2 && Int8ArrayPrototype$1[KEY] || property, options);
-  }
-};
-
-var exportTypedArrayStaticMethod$3 = function (KEY, property, forced) {
-  var ARRAY, TypedArrayConstructor;
-  if (!DESCRIPTORS$5) return;
-  if (setPrototypeOf$5) {
-    if (forced) for (ARRAY in TypedArrayConstructorsList) {
-      TypedArrayConstructor = global$i[ARRAY];
-      if (TypedArrayConstructor && hasOwn$4(TypedArrayConstructor, KEY)) try {
-        delete TypedArrayConstructor[KEY];
-      } catch (error) { /* empty */ }
-    }
-    if (!TypedArray$1[KEY] || forced) {
-      // V8 ~ Chrome 49-50 `%TypedArray%` methods are non-writable non-configurable
-      try {
-        return defineBuiltIn$8(TypedArray$1, KEY, forced ? property : NATIVE_ARRAY_BUFFER_VIEWS$2 && TypedArray$1[KEY] || property);
-      } catch (error) { /* empty */ }
-    } else return;
-  }
-  for (ARRAY in TypedArrayConstructorsList) {
-    TypedArrayConstructor = global$i[ARRAY];
-    if (TypedArrayConstructor && (!TypedArrayConstructor[KEY] || forced)) {
-      defineBuiltIn$8(TypedArrayConstructor, KEY, property);
-    }
-  }
-};
-
-for (NAME in TypedArrayConstructorsList) {
-  Constructor = global$i[NAME];
-  Prototype = Constructor && Constructor.prototype;
-  if (Prototype) enforceInternalState$1(Prototype)[TYPED_ARRAY_CONSTRUCTOR] = Constructor;
-  else NATIVE_ARRAY_BUFFER_VIEWS$2 = false;
-}
-
-for (NAME in BigIntArrayConstructorsList) {
-  Constructor = global$i[NAME];
-  Prototype = Constructor && Constructor.prototype;
-  if (Prototype) enforceInternalState$1(Prototype)[TYPED_ARRAY_CONSTRUCTOR] = Constructor;
-}
-
-// WebKit bug - typed arrays constructors prototype is Object.prototype
-if (!NATIVE_ARRAY_BUFFER_VIEWS$2 || !isCallable$a(TypedArray$1) || TypedArray$1 === Function.prototype) {
-  // eslint-disable-next-line no-shadow -- safe
-  TypedArray$1 = function TypedArray() {
-    throw TypeError$2('Incorrect invocation');
-  };
-  if (NATIVE_ARRAY_BUFFER_VIEWS$2) for (NAME in TypedArrayConstructorsList) {
-    if (global$i[NAME]) setPrototypeOf$5(global$i[NAME], TypedArray$1);
-  }
-}
-
-if (!NATIVE_ARRAY_BUFFER_VIEWS$2 || !TypedArrayPrototype$2 || TypedArrayPrototype$2 === ObjectPrototype$1) {
-  TypedArrayPrototype$2 = TypedArray$1.prototype;
-  if (NATIVE_ARRAY_BUFFER_VIEWS$2) for (NAME in TypedArrayConstructorsList) {
-    if (global$i[NAME]) setPrototypeOf$5(global$i[NAME].prototype, TypedArrayPrototype$2);
-  }
-}
-
-// WebKit bug - one more object in Uint8ClampedArray prototype chain
-if (NATIVE_ARRAY_BUFFER_VIEWS$2 && getPrototypeOf$4(Uint8ClampedArrayPrototype) !== TypedArrayPrototype$2) {
-  setPrototypeOf$5(Uint8ClampedArrayPrototype, TypedArrayPrototype$2);
-}
-
-if (DESCRIPTORS$5 && !hasOwn$4(TypedArrayPrototype$2, TO_STRING_TAG$1)) {
-  TYPED_ARRAY_TAG_REQUIRED = true;
-  defineBuiltInAccessor$4(TypedArrayPrototype$2, TO_STRING_TAG$1, {
-    configurable: true,
-    get: function () {
-      return isObject$c(this) ? this[TYPED_ARRAY_TAG$1] : undefined;
-    }
-  });
-  for (NAME in TypedArrayConstructorsList) if (global$i[NAME]) {
-    createNonEnumerableProperty$3(global$i[NAME], TYPED_ARRAY_TAG$1, NAME);
-  }
-}
-
-var arrayBufferViewCore = {
-  NATIVE_ARRAY_BUFFER_VIEWS: NATIVE_ARRAY_BUFFER_VIEWS$2,
-  TYPED_ARRAY_TAG: TYPED_ARRAY_TAG_REQUIRED && TYPED_ARRAY_TAG$1,
-  aTypedArray: aTypedArray$x,
-  aTypedArrayConstructor: aTypedArrayConstructor$5,
-  exportTypedArrayMethod: exportTypedArrayMethod$y,
-  exportTypedArrayStaticMethod: exportTypedArrayStaticMethod$3,
-  getTypedArrayConstructor: getTypedArrayConstructor$6,
-  isView: isView,
-  isTypedArray: isTypedArray$1,
-  TypedArray: TypedArray$1,
-  TypedArrayPrototype: TypedArrayPrototype$2
-};
-
-/* eslint-disable no-new -- required for testing */
-var global$h = global$v;
-var fails$h = fails$t;
-var checkCorrectnessOfIteration$2 = checkCorrectnessOfIteration$3;
-var NATIVE_ARRAY_BUFFER_VIEWS$1 = arrayBufferViewCore.NATIVE_ARRAY_BUFFER_VIEWS;
-
-var ArrayBuffer$2 = global$h.ArrayBuffer;
-var Int8Array$3 = global$h.Int8Array;
-
-var typedArrayConstructorsRequireWrappers = !NATIVE_ARRAY_BUFFER_VIEWS$1 || !fails$h(function () {
-  Int8Array$3(1);
-}) || !fails$h(function () {
-  new Int8Array$3(-1);
-}) || !checkCorrectnessOfIteration$2(function (iterable) {
-  new Int8Array$3();
-  new Int8Array$3(null);
-  new Int8Array$3(1.5);
-  new Int8Array$3(iterable);
-}, true) || fails$h(function () {
-  // Safari (11+) bug - a reason why even Safari 13 should load a typed array polyfill
-  return new Int8Array$3(new ArrayBuffer$2(2), 1, undefined).length !== 1;
-});
-
-var defineBuiltIn$7 = defineBuiltIn$a;
-
-var defineBuiltIns$3 = function (target, src, options) {
-  for (var key in src) defineBuiltIn$7(target, key, src[key], options);
-  return target;
-};
-
-var isPrototypeOf$2 = objectIsPrototypeOf;
-
-var $TypeError$9 = TypeError;
-
-var anInstance$5 = function (it, Prototype) {
-  if (isPrototypeOf$2(Prototype, it)) return it;
-  throw $TypeError$9('Incorrect invocation');
-};
-
-var toIntegerOrInfinity$8 = toIntegerOrInfinity$b;
-var toLength$3 = toLength$5;
-
-var $RangeError$3 = RangeError;
-
-// `ToIndex` abstract operation
-// https://tc39.es/ecma262/#sec-toindex
-var toIndex$2 = function (it) {
-  if (it === undefined) return 0;
-  var number = toIntegerOrInfinity$8(it);
-  var length = toLength$3(number);
-  if (number !== length) throw $RangeError$3('Wrong length or index');
-  return length;
-};
-
-// `Math.sign` method implementation
-// https://tc39.es/ecma262/#sec-math.sign
-// eslint-disable-next-line es/no-math-sign -- safe
-var mathSign = Math.sign || function sign(x) {
-  var n = +x;
-  // eslint-disable-next-line no-self-compare -- NaN check
-  return n === 0 || n !== n ? n : n < 0 ? -1 : 1;
-};
-
-// IEEE754 conversions based on https://github.com/feross/ieee754
-var sign$1 = mathSign;
-var trunc = mathTrunc;
-
-var $Array$3 = Array;
-var abs = Math.abs;
-var pow = Math.pow;
-var floor$3 = Math.floor;
-var log = Math.log;
-var LN2 = Math.LN2;
-
-var roundToEven = function (number) {
-  var truncated = trunc(number);
-  var delta = abs(number - truncated);
-  if (delta > 0.5 || delta === 0.5 && truncated % 2 !== 0) {
-    return truncated + sign$1(number);
-  } return truncated;
-};
-
-var pack = function (number, mantissaLength, bytes) {
-  var buffer = $Array$3(bytes);
-  var exponentLength = bytes * 8 - mantissaLength - 1;
-  var eMax = (1 << exponentLength) - 1;
-  var eBias = eMax >> 1;
-  var rt = mantissaLength === 23 ? pow(2, -24) - pow(2, -77) : 0;
-  var s = number < 0 || number === 0 && 1 / number < 0 ? 1 : 0;
-  var index = 0;
-  var exponent, mantissa, c;
-  number = abs(number);
-  // eslint-disable-next-line no-self-compare -- NaN check
-  if (number !== number || number === Infinity) {
-    // eslint-disable-next-line no-self-compare -- NaN check
-    mantissa = number !== number ? 1 : 0;
-    exponent = eMax;
-  } else {
-    exponent = floor$3(log(number) / LN2);
-    c = pow(2, -exponent);
-    if (number * c < 1) {
-      exponent--;
-      c *= 2;
-    }
-    if (exponent + eBias >= 1) {
-      number += rt / c;
-    } else {
-      number += rt * pow(2, 1 - eBias);
-    }
-    if (number * c >= 2) {
-      exponent++;
-      c /= 2;
-    }
-    if (exponent + eBias >= eMax) {
-      mantissa = 0;
-      exponent = eMax;
-    } else if (exponent + eBias >= 1) {
-      mantissa = roundToEven((number * c - 1) * pow(2, mantissaLength));
-      exponent = exponent + eBias;
-    } else {
-      mantissa = roundToEven(number * pow(2, eBias - 1) * pow(2, mantissaLength));
-      exponent = 0;
-    }
-  }
-  while (mantissaLength >= 8) {
-    buffer[index++] = mantissa & 255;
-    mantissa /= 256;
-    mantissaLength -= 8;
-  }
-  exponent = exponent << mantissaLength | mantissa;
-  exponentLength += mantissaLength;
-  while (exponentLength > 0) {
-    buffer[index++] = exponent & 255;
-    exponent /= 256;
-    exponentLength -= 8;
-  }
-  buffer[--index] |= s * 128;
-  return buffer;
-};
-
-var unpack = function (buffer, mantissaLength) {
-  var bytes = buffer.length;
-  var exponentLength = bytes * 8 - mantissaLength - 1;
-  var eMax = (1 << exponentLength) - 1;
-  var eBias = eMax >> 1;
-  var nBits = exponentLength - 7;
-  var index = bytes - 1;
-  var s = buffer[index--];
-  var exponent = s & 127;
-  var mantissa;
-  s >>= 7;
-  while (nBits > 0) {
-    exponent = exponent * 256 + buffer[index--];
-    nBits -= 8;
-  }
-  mantissa = exponent & (1 << -nBits) - 1;
-  exponent >>= -nBits;
-  nBits += mantissaLength;
-  while (nBits > 0) {
-    mantissa = mantissa * 256 + buffer[index--];
-    nBits -= 8;
-  }
-  if (exponent === 0) {
-    exponent = 1 - eBias;
-  } else if (exponent === eMax) {
-    return mantissa ? NaN : s ? -Infinity : Infinity;
-  } else {
-    mantissa = mantissa + pow(2, mantissaLength);
-    exponent = exponent - eBias;
-  } return (s ? -1 : 1) * mantissa * pow(2, exponent - mantissaLength);
-};
-
-var ieee754 = {
-  pack: pack,
-  unpack: unpack
-};
-
-var toObject$8 = toObject$b;
-var toAbsoluteIndex$4 = toAbsoluteIndex$6;
-var lengthOfArrayLike$g = lengthOfArrayLike$i;
-
-// `Array.prototype.fill` method implementation
-// https://tc39.es/ecma262/#sec-array.prototype.fill
-var arrayFill$1 = function fill(value /* , start = 0, end = @length */) {
-  var O = toObject$8(this);
-  var length = lengthOfArrayLike$g(O);
-  var argumentsLength = arguments.length;
-  var index = toAbsoluteIndex$4(argumentsLength > 1 ? arguments[1] : undefined, length);
-  var end = argumentsLength > 2 ? arguments[2] : undefined;
-  var endPos = end === undefined ? length : toAbsoluteIndex$4(end, length);
-  while (endPos > index) O[index++] = value;
-  return O;
-};
-
-var toPropertyKey$2 = toPropertyKey$5;
-var definePropertyModule$1 = objectDefineProperty;
-var createPropertyDescriptor$2 = createPropertyDescriptor$5;
-
-var createProperty$1 = function (object, key, value) {
-  var propertyKey = toPropertyKey$2(key);
-  if (propertyKey in object) definePropertyModule$1.f(object, propertyKey, createPropertyDescriptor$2(0, value));
-  else object[propertyKey] = value;
-};
-
-var toAbsoluteIndex$3 = toAbsoluteIndex$6;
-var lengthOfArrayLike$f = lengthOfArrayLike$i;
-var createProperty = createProperty$1;
-
-var $Array$2 = Array;
-var max$1 = Math.max;
-
-var arraySliceSimple = function (O, start, end) {
-  var length = lengthOfArrayLike$f(O);
-  var k = toAbsoluteIndex$3(start, length);
-  var fin = toAbsoluteIndex$3(end === undefined ? length : end, length);
-  var result = $Array$2(max$1(fin - k, 0));
-  var n = 0;
-  for (; k < fin; k++, n++) createProperty(result, n, O[k]);
-  result.length = n;
-  return result;
-};
-
-var defineProperty$2 = objectDefineProperty.f;
-var hasOwn$3 = hasOwnProperty_1;
-var wellKnownSymbol$c = wellKnownSymbol$j;
-
-var TO_STRING_TAG = wellKnownSymbol$c('toStringTag');
-
-var setToStringTag$5 = function (target, TAG, STATIC) {
-  if (target && !STATIC) target = target.prototype;
-  if (target && !hasOwn$3(target, TO_STRING_TAG)) {
-    defineProperty$2(target, TO_STRING_TAG, { configurable: true, value: TAG });
-  }
-};
-
-var global$g = global$v;
-var uncurryThis$l = functionUncurryThis;
-var DESCRIPTORS$4 = descriptors;
-var NATIVE_ARRAY_BUFFER = arrayBufferBasicDetection;
-var FunctionName$1 = functionName;
-var createNonEnumerableProperty$2 = createNonEnumerableProperty$6;
-var defineBuiltInAccessor$3 = defineBuiltInAccessor$5;
-var defineBuiltIns$2 = defineBuiltIns$3;
-var fails$g = fails$t;
-var anInstance$4 = anInstance$5;
-var toIntegerOrInfinity$7 = toIntegerOrInfinity$b;
-var toLength$2 = toLength$5;
-var toIndex$1 = toIndex$2;
-var IEEE754 = ieee754;
-var getPrototypeOf$3 = objectGetPrototypeOf$1;
-var setPrototypeOf$4 = objectSetPrototypeOf;
-var getOwnPropertyNames$1 = objectGetOwnPropertyNames.f;
-var arrayFill = arrayFill$1;
-var arraySlice$6 = arraySliceSimple;
-var setToStringTag$4 = setToStringTag$5;
-var InternalStateModule$6 = internalState;
-
-var PROPER_FUNCTION_NAME$1 = FunctionName$1.PROPER;
-var CONFIGURABLE_FUNCTION_NAME$1 = FunctionName$1.CONFIGURABLE;
-var ARRAY_BUFFER = 'ArrayBuffer';
-var DATA_VIEW = 'DataView';
-var PROTOTYPE = 'prototype';
-var WRONG_LENGTH$1 = 'Wrong length';
-var WRONG_INDEX = 'Wrong index';
-var getInternalArrayBufferState = InternalStateModule$6.getterFor(ARRAY_BUFFER);
-var getInternalDataViewState = InternalStateModule$6.getterFor(DATA_VIEW);
-var setInternalState$6 = InternalStateModule$6.set;
-var NativeArrayBuffer = global$g[ARRAY_BUFFER];
-var $ArrayBuffer = NativeArrayBuffer;
-var ArrayBufferPrototype$1 = $ArrayBuffer && $ArrayBuffer[PROTOTYPE];
-var $DataView = global$g[DATA_VIEW];
-var DataViewPrototype = $DataView && $DataView[PROTOTYPE];
-var ObjectPrototype = Object.prototype;
-var Array$1 = global$g.Array;
-var RangeError$3 = global$g.RangeError;
-var fill = uncurryThis$l(arrayFill);
-var reverse = uncurryThis$l([].reverse);
-
-var packIEEE754 = IEEE754.pack;
-var unpackIEEE754 = IEEE754.unpack;
-
-var packInt8 = function (number) {
-  return [number & 0xFF];
-};
-
-var packInt16 = function (number) {
-  return [number & 0xFF, number >> 8 & 0xFF];
-};
-
-var packInt32 = function (number) {
-  return [number & 0xFF, number >> 8 & 0xFF, number >> 16 & 0xFF, number >> 24 & 0xFF];
-};
-
-var unpackInt32 = function (buffer) {
-  return buffer[3] << 24 | buffer[2] << 16 | buffer[1] << 8 | buffer[0];
-};
-
-var packFloat32 = function (number) {
-  return packIEEE754(number, 23, 4);
-};
-
-var packFloat64 = function (number) {
-  return packIEEE754(number, 52, 8);
-};
-
-var addGetter$1 = function (Constructor, key, getInternalState) {
-  defineBuiltInAccessor$3(Constructor[PROTOTYPE], key, {
-    configurable: true,
-    get: function () {
-      return getInternalState(this)[key];
-    }
-  });
-};
-
-var get = function (view, count, index, isLittleEndian) {
-  var store = getInternalDataViewState(view);
-  var intIndex = toIndex$1(index);
-  var boolIsLittleEndian = !!isLittleEndian;
-  if (intIndex + count > store.byteLength) throw RangeError$3(WRONG_INDEX);
-  var bytes = store.bytes;
-  var start = intIndex + store.byteOffset;
-  var pack = arraySlice$6(bytes, start, start + count);
-  return boolIsLittleEndian ? pack : reverse(pack);
-};
-
-var set$1 = function (view, count, index, conversion, value, isLittleEndian) {
-  var store = getInternalDataViewState(view);
-  var intIndex = toIndex$1(index);
-  var pack = conversion(+value);
-  var boolIsLittleEndian = !!isLittleEndian;
-  if (intIndex + count > store.byteLength) throw RangeError$3(WRONG_INDEX);
-  var bytes = store.bytes;
-  var start = intIndex + store.byteOffset;
-  for (var i = 0; i < count; i++) bytes[start + i] = pack[boolIsLittleEndian ? i : count - i - 1];
-};
-
-if (!NATIVE_ARRAY_BUFFER) {
-  $ArrayBuffer = function ArrayBuffer(length) {
-    anInstance$4(this, ArrayBufferPrototype$1);
-    var byteLength = toIndex$1(length);
-    setInternalState$6(this, {
-      type: ARRAY_BUFFER,
-      bytes: fill(Array$1(byteLength), 0),
-      byteLength: byteLength
-    });
-    if (!DESCRIPTORS$4) {
-      this.byteLength = byteLength;
-      this.detached = false;
-    }
-  };
-
-  ArrayBufferPrototype$1 = $ArrayBuffer[PROTOTYPE];
-
-  $DataView = function DataView(buffer, byteOffset, byteLength) {
-    anInstance$4(this, DataViewPrototype);
-    anInstance$4(buffer, ArrayBufferPrototype$1);
-    var bufferState = getInternalArrayBufferState(buffer);
-    var bufferLength = bufferState.byteLength;
-    var offset = toIntegerOrInfinity$7(byteOffset);
-    if (offset < 0 || offset > bufferLength) throw RangeError$3('Wrong offset');
-    byteLength = byteLength === undefined ? bufferLength - offset : toLength$2(byteLength);
-    if (offset + byteLength > bufferLength) throw RangeError$3(WRONG_LENGTH$1);
-    setInternalState$6(this, {
-      type: DATA_VIEW,
-      buffer: buffer,
-      byteLength: byteLength,
-      byteOffset: offset,
-      bytes: bufferState.bytes
-    });
-    if (!DESCRIPTORS$4) {
-      this.buffer = buffer;
-      this.byteLength = byteLength;
-      this.byteOffset = offset;
-    }
-  };
-
-  DataViewPrototype = $DataView[PROTOTYPE];
-
-  if (DESCRIPTORS$4) {
-    addGetter$1($ArrayBuffer, 'byteLength', getInternalArrayBufferState);
-    addGetter$1($DataView, 'buffer', getInternalDataViewState);
-    addGetter$1($DataView, 'byteLength', getInternalDataViewState);
-    addGetter$1($DataView, 'byteOffset', getInternalDataViewState);
-  }
-
-  defineBuiltIns$2(DataViewPrototype, {
-    getInt8: function getInt8(byteOffset) {
-      return get(this, 1, byteOffset)[0] << 24 >> 24;
-    },
-    getUint8: function getUint8(byteOffset) {
-      return get(this, 1, byteOffset)[0];
-    },
-    getInt16: function getInt16(byteOffset /* , littleEndian */) {
-      var bytes = get(this, 2, byteOffset, arguments.length > 1 ? arguments[1] : false);
-      return (bytes[1] << 8 | bytes[0]) << 16 >> 16;
-    },
-    getUint16: function getUint16(byteOffset /* , littleEndian */) {
-      var bytes = get(this, 2, byteOffset, arguments.length > 1 ? arguments[1] : false);
-      return bytes[1] << 8 | bytes[0];
-    },
-    getInt32: function getInt32(byteOffset /* , littleEndian */) {
-      return unpackInt32(get(this, 4, byteOffset, arguments.length > 1 ? arguments[1] : false));
-    },
-    getUint32: function getUint32(byteOffset /* , littleEndian */) {
-      return unpackInt32(get(this, 4, byteOffset, arguments.length > 1 ? arguments[1] : false)) >>> 0;
-    },
-    getFloat32: function getFloat32(byteOffset /* , littleEndian */) {
-      return unpackIEEE754(get(this, 4, byteOffset, arguments.length > 1 ? arguments[1] : false), 23);
-    },
-    getFloat64: function getFloat64(byteOffset /* , littleEndian */) {
-      return unpackIEEE754(get(this, 8, byteOffset, arguments.length > 1 ? arguments[1] : false), 52);
-    },
-    setInt8: function setInt8(byteOffset, value) {
-      set$1(this, 1, byteOffset, packInt8, value);
-    },
-    setUint8: function setUint8(byteOffset, value) {
-      set$1(this, 1, byteOffset, packInt8, value);
-    },
-    setInt16: function setInt16(byteOffset, value /* , littleEndian */) {
-      set$1(this, 2, byteOffset, packInt16, value, arguments.length > 2 ? arguments[2] : false);
-    },
-    setUint16: function setUint16(byteOffset, value /* , littleEndian */) {
-      set$1(this, 2, byteOffset, packInt16, value, arguments.length > 2 ? arguments[2] : false);
-    },
-    setInt32: function setInt32(byteOffset, value /* , littleEndian */) {
-      set$1(this, 4, byteOffset, packInt32, value, arguments.length > 2 ? arguments[2] : false);
-    },
-    setUint32: function setUint32(byteOffset, value /* , littleEndian */) {
-      set$1(this, 4, byteOffset, packInt32, value, arguments.length > 2 ? arguments[2] : false);
-    },
-    setFloat32: function setFloat32(byteOffset, value /* , littleEndian */) {
-      set$1(this, 4, byteOffset, packFloat32, value, arguments.length > 2 ? arguments[2] : false);
-    },
-    setFloat64: function setFloat64(byteOffset, value /* , littleEndian */) {
-      set$1(this, 8, byteOffset, packFloat64, value, arguments.length > 2 ? arguments[2] : false);
-    }
-  });
-} else {
-  var INCORRECT_ARRAY_BUFFER_NAME = PROPER_FUNCTION_NAME$1 && NativeArrayBuffer.name !== ARRAY_BUFFER;
-  /* eslint-disable no-new -- required for testing */
-  if (!fails$g(function () {
-    NativeArrayBuffer(1);
-  }) || !fails$g(function () {
-    new NativeArrayBuffer(-1);
-  }) || fails$g(function () {
-    new NativeArrayBuffer();
-    new NativeArrayBuffer(1.5);
-    new NativeArrayBuffer(NaN);
-    return NativeArrayBuffer.length !== 1 || INCORRECT_ARRAY_BUFFER_NAME && !CONFIGURABLE_FUNCTION_NAME$1;
-  })) {
-    /* eslint-enable no-new -- required for testing */
-    $ArrayBuffer = function ArrayBuffer(length) {
-      anInstance$4(this, ArrayBufferPrototype$1);
-      return new NativeArrayBuffer(toIndex$1(length));
-    };
-
-    $ArrayBuffer[PROTOTYPE] = ArrayBufferPrototype$1;
-
-    for (var keys = getOwnPropertyNames$1(NativeArrayBuffer), j = 0, key; keys.length > j;) {
-      if (!((key = keys[j++]) in $ArrayBuffer)) {
-        createNonEnumerableProperty$2($ArrayBuffer, key, NativeArrayBuffer[key]);
-      }
-    }
-
-    ArrayBufferPrototype$1.constructor = $ArrayBuffer;
-  } else if (INCORRECT_ARRAY_BUFFER_NAME && CONFIGURABLE_FUNCTION_NAME$1) {
-    createNonEnumerableProperty$2(NativeArrayBuffer, 'name', ARRAY_BUFFER);
-  }
-
-  // WebKit bug - the same parent prototype for typed arrays and data view
-  if (setPrototypeOf$4 && getPrototypeOf$3(DataViewPrototype) !== ObjectPrototype) {
-    setPrototypeOf$4(DataViewPrototype, ObjectPrototype);
-  }
-
-  // iOS Safari 7.x bug
-  var testView = new $DataView(new $ArrayBuffer(2));
-  var $setInt8 = uncurryThis$l(DataViewPrototype.setInt8);
-  testView.setInt8(0, 2147483648);
-  testView.setInt8(1, 2147483649);
-  if (testView.getInt8(0) || !testView.getInt8(1)) defineBuiltIns$2(DataViewPrototype, {
-    setInt8: function setInt8(byteOffset, value) {
-      $setInt8(this, byteOffset, value << 24 >> 24);
-    },
-    setUint8: function setUint8(byteOffset, value) {
-      $setInt8(this, byteOffset, value << 24 >> 24);
-    }
-  }, { unsafe: true });
-}
-
-setToStringTag$4($ArrayBuffer, ARRAY_BUFFER);
-setToStringTag$4($DataView, DATA_VIEW);
-
-var arrayBuffer = {
-  ArrayBuffer: $ArrayBuffer,
-  DataView: $DataView
-};
-
-var isObject$b = isObject$i;
-
-var floor$2 = Math.floor;
-
-// `IsIntegralNumber` abstract operation
-// https://tc39.es/ecma262/#sec-isintegralnumber
-// eslint-disable-next-line es/no-number-isinteger -- safe
-var isIntegralNumber$1 = Number.isInteger || function isInteger(it) {
-  return !isObject$b(it) && isFinite(it) && floor$2(it) === it;
-};
-
-var toIntegerOrInfinity$6 = toIntegerOrInfinity$b;
-
-var $RangeError$2 = RangeError;
-
-var toPositiveInteger$1 = function (it) {
-  var result = toIntegerOrInfinity$6(it);
-  if (result < 0) throw $RangeError$2("The argument can't be less than 0");
-  return result;
-};
-
-var toPositiveInteger = toPositiveInteger$1;
-
-var $RangeError$1 = RangeError;
-
-var toOffset$2 = function (it, BYTES) {
-  var offset = toPositiveInteger(it);
-  if (offset % BYTES) throw $RangeError$1('Wrong offset');
-  return offset;
-};
-
-var round = Math.round;
-
-var toUint8Clamped$1 = function (it) {
-  var value = round(it);
-  return value < 0 ? 0 : value > 0xFF ? 0xFF : value & 0xFF;
-};
-
-var classofRaw = classofRaw$2;
-var uncurryThis$k = functionUncurryThis;
-
-var functionUncurryThisClause = function (fn) {
-  // Nashorn bug:
-  //   https://github.com/zloirock/core-js/issues/1128
-  //   https://github.com/zloirock/core-js/issues/1130
-  if (classofRaw(fn) === 'Function') return uncurryThis$k(fn);
-};
-
-var uncurryThis$j = functionUncurryThisClause;
-var aCallable$a = aCallable$d;
-var NATIVE_BIND$1 = functionBindNative;
-
-var bind$a = uncurryThis$j(uncurryThis$j.bind);
-
-// optional / simple context binding
-var functionBindContext = function (fn, that) {
-  aCallable$a(fn);
-  return that === undefined ? fn : NATIVE_BIND$1 ? bind$a(fn, that) : function (/* ...args */) {
-    return fn.apply(that, arguments);
-  };
-};
-
-var uncurryThis$i = functionUncurryThis;
-var fails$f = fails$t;
-var isCallable$9 = isCallable$o;
-var classof$a = classof$c;
-var getBuiltIn$8 = getBuiltIn$c;
-var inspectSource$1 = inspectSource$3;
-
-var noop$1 = function () { /* empty */ };
-var empty = [];
-var construct = getBuiltIn$8('Reflect', 'construct');
-var constructorRegExp = /^\s*(?:class|function)\b/;
-var exec = uncurryThis$i(constructorRegExp.exec);
-var INCORRECT_TO_STRING = !constructorRegExp.exec(noop$1);
-
-var isConstructorModern = function isConstructor(argument) {
-  if (!isCallable$9(argument)) return false;
-  try {
-    construct(noop$1, empty, argument);
-    return true;
-  } catch (error) {
-    return false;
-  }
-};
-
-var isConstructorLegacy = function isConstructor(argument) {
-  if (!isCallable$9(argument)) return false;
-  switch (classof$a(argument)) {
-    case 'AsyncFunction':
-    case 'GeneratorFunction':
-    case 'AsyncGeneratorFunction': return false;
-  }
-  try {
-    // we can't check .prototype since constructors produced by .bind haven't it
-    // `Function#toString` throws on some built-it function in some legacy engines
-    // (for example, `DOMQuad` and similar in FF41-)
-    return INCORRECT_TO_STRING || !!exec(constructorRegExp, inspectSource$1(argument));
-  } catch (error) {
-    return true;
-  }
-};
-
-isConstructorLegacy.sham = true;
-
-// `IsConstructor` abstract operation
-// https://tc39.es/ecma262/#sec-isconstructor
-var isConstructor$3 = !construct || fails$f(function () {
-  var called;
-  return isConstructorModern(isConstructorModern.call)
-    || !isConstructorModern(Object)
-    || !isConstructorModern(function () { called = true; })
-    || called;
-}) ? isConstructorLegacy : isConstructorModern;
-
-var isConstructor$2 = isConstructor$3;
-var tryToString$3 = tryToString$6;
-
-var $TypeError$8 = TypeError;
-
-// `Assert: IsConstructor(argument) is true`
-var aConstructor$3 = function (argument) {
-  if (isConstructor$2(argument)) return argument;
-  throw $TypeError$8(tryToString$3(argument) + ' is not a constructor');
-};
-
-var iterators = {};
-
-var classof$9 = classof$c;
-var getMethod$5 = getMethod$7;
-var isNullOrUndefined$4 = isNullOrUndefined$7;
-var Iterators$4 = iterators;
-var wellKnownSymbol$b = wellKnownSymbol$j;
-
-var ITERATOR$4 = wellKnownSymbol$b('iterator');
-
-var getIteratorMethod$4 = function (it) {
-  if (!isNullOrUndefined$4(it)) return getMethod$5(it, ITERATOR$4)
-    || getMethod$5(it, '@@iterator')
-    || Iterators$4[classof$9(it)];
-};
-
-var call$h = functionCall;
-var aCallable$9 = aCallable$d;
-var anObject$7 = anObject$d;
-var tryToString$2 = tryToString$6;
-var getIteratorMethod$3 = getIteratorMethod$4;
-
-var $TypeError$7 = TypeError;
-
-var getIterator$4 = function (argument, usingIterator) {
-  var iteratorMethod = arguments.length < 2 ? getIteratorMethod$3(argument) : usingIterator;
-  if (aCallable$9(iteratorMethod)) return anObject$7(call$h(iteratorMethod, argument));
-  throw $TypeError$7(tryToString$2(argument) + ' is not iterable');
-};
-
-var wellKnownSymbol$a = wellKnownSymbol$j;
-var Iterators$3 = iterators;
-
-var ITERATOR$3 = wellKnownSymbol$a('iterator');
-var ArrayPrototype = Array.prototype;
-
-// check on default Array iterator
-var isArrayIteratorMethod$2 = function (it) {
-  return it !== undefined && (Iterators$3.Array === it || ArrayPrototype[ITERATOR$3] === it);
-};
-
-var classof$8 = classof$c;
-
-var isBigIntArray$3 = function (it) {
-  var klass = classof$8(it);
-  return klass === 'BigInt64Array' || klass === 'BigUint64Array';
-};
-
-var toPrimitive = toPrimitive$2;
-
-var $TypeError$6 = TypeError;
-
-// `ToBigInt` abstract operation
-// https://tc39.es/ecma262/#sec-tobigint
-var toBigInt$4 = function (argument) {
-  var prim = toPrimitive(argument, 'number');
-  if (typeof prim == 'number') throw $TypeError$6("Can't convert number to bigint");
-  // eslint-disable-next-line es/no-bigint -- safe
-  return BigInt(prim);
-};
-
-var bind$9 = functionBindContext;
-var call$g = functionCall;
-var aConstructor$2 = aConstructor$3;
-var toObject$7 = toObject$b;
-var lengthOfArrayLike$e = lengthOfArrayLike$i;
-var getIterator$3 = getIterator$4;
-var getIteratorMethod$2 = getIteratorMethod$4;
-var isArrayIteratorMethod$1 = isArrayIteratorMethod$2;
-var isBigIntArray$2 = isBigIntArray$3;
-var aTypedArrayConstructor$4 = arrayBufferViewCore.aTypedArrayConstructor;
-var toBigInt$3 = toBigInt$4;
-
-var typedArrayFrom$2 = function from(source /* , mapfn, thisArg */) {
-  var C = aConstructor$2(this);
-  var O = toObject$7(source);
-  var argumentsLength = arguments.length;
-  var mapfn = argumentsLength > 1 ? arguments[1] : undefined;
-  var mapping = mapfn !== undefined;
-  var iteratorMethod = getIteratorMethod$2(O);
-  var i, length, result, thisIsBigIntArray, value, step, iterator, next;
-  if (iteratorMethod && !isArrayIteratorMethod$1(iteratorMethod)) {
-    iterator = getIterator$3(O, iteratorMethod);
-    next = iterator.next;
-    O = [];
-    while (!(step = call$g(next, iterator)).done) {
-      O.push(step.value);
-    }
-  }
-  if (mapping && argumentsLength > 2) {
-    mapfn = bind$9(mapfn, arguments[2]);
-  }
-  length = lengthOfArrayLike$e(O);
-  result = new (aTypedArrayConstructor$4(C))(length);
-  thisIsBigIntArray = isBigIntArray$2(result);
-  for (i = 0; length > i; i++) {
-    value = mapping ? mapfn(O[i], i) : O[i];
-    // FF30- typed arrays doesn't properly convert objects to typed array values
-    result[i] = thisIsBigIntArray ? toBigInt$3(value) : +value;
-  }
-  return result;
-};
-
-var classof$7 = classofRaw$2;
-
-// `IsArray` abstract operation
-// https://tc39.es/ecma262/#sec-isarray
-// eslint-disable-next-line es/no-array-isarray -- safe
-var isArray$2 = Array.isArray || function isArray(argument) {
-  return classof$7(argument) === 'Array';
-};
-
-var isArray$1 = isArray$2;
-var isConstructor$1 = isConstructor$3;
-var isObject$a = isObject$i;
-var wellKnownSymbol$9 = wellKnownSymbol$j;
-
-var SPECIES$3 = wellKnownSymbol$9('species');
-var $Array$1 = Array;
-
-// a part of `ArraySpeciesCreate` abstract operation
-// https://tc39.es/ecma262/#sec-arrayspeciescreate
-var arraySpeciesConstructor$1 = function (originalArray) {
-  var C;
-  if (isArray$1(originalArray)) {
-    C = originalArray.constructor;
-    // cross-realm fallback
-    if (isConstructor$1(C) && (C === $Array$1 || isArray$1(C.prototype))) C = undefined;
-    else if (isObject$a(C)) {
-      C = C[SPECIES$3];
-      if (C === null) C = undefined;
-    }
-  } return C === undefined ? $Array$1 : C;
-};
-
-var arraySpeciesConstructor = arraySpeciesConstructor$1;
-
-// `ArraySpeciesCreate` abstract operation
-// https://tc39.es/ecma262/#sec-arrayspeciescreate
-var arraySpeciesCreate$1 = function (originalArray, length) {
-  return new (arraySpeciesConstructor(originalArray))(length === 0 ? 0 : length);
-};
-
-var bind$8 = functionBindContext;
-var uncurryThis$h = functionUncurryThis;
-var IndexedObject$3 = indexedObject;
-var toObject$6 = toObject$b;
-var lengthOfArrayLike$d = lengthOfArrayLike$i;
-var arraySpeciesCreate = arraySpeciesCreate$1;
-
-var push$2 = uncurryThis$h([].push);
-
-// `Array.prototype.{ forEach, map, filter, some, every, find, findIndex, filterReject }` methods implementation
-var createMethod$4 = function (TYPE) {
-  var IS_MAP = TYPE === 1;
-  var IS_FILTER = TYPE === 2;
-  var IS_SOME = TYPE === 3;
-  var IS_EVERY = TYPE === 4;
-  var IS_FIND_INDEX = TYPE === 6;
-  var IS_FILTER_REJECT = TYPE === 7;
-  var NO_HOLES = TYPE === 5 || IS_FIND_INDEX;
-  return function ($this, callbackfn, that, specificCreate) {
-    var O = toObject$6($this);
-    var self = IndexedObject$3(O);
-    var boundFunction = bind$8(callbackfn, that);
-    var length = lengthOfArrayLike$d(self);
-    var index = 0;
-    var create = specificCreate || arraySpeciesCreate;
-    var target = IS_MAP ? create($this, length) : IS_FILTER || IS_FILTER_REJECT ? create($this, 0) : undefined;
-    var value, result;
-    for (;length > index; index++) if (NO_HOLES || index in self) {
-      value = self[index];
-      result = boundFunction(value, index, O);
-      if (TYPE) {
-        if (IS_MAP) target[index] = result; // map
-        else if (result) switch (TYPE) {
-          case 3: return true;              // some
-          case 5: return value;             // find
-          case 6: return index;             // findIndex
-          case 2: push$2(target, value);      // filter
-        } else switch (TYPE) {
-          case 4: return false;             // every
-          case 7: push$2(target, value);      // filterReject
-        }
-      }
-    }
-    return IS_FIND_INDEX ? -1 : IS_SOME || IS_EVERY ? IS_EVERY : target;
-  };
-};
-
-var arrayIteration = {
-  // `Array.prototype.forEach` method
-  // https://tc39.es/ecma262/#sec-array.prototype.foreach
-  forEach: createMethod$4(0),
-  // `Array.prototype.map` method
-  // https://tc39.es/ecma262/#sec-array.prototype.map
-  map: createMethod$4(1),
-  // `Array.prototype.filter` method
-  // https://tc39.es/ecma262/#sec-array.prototype.filter
-  filter: createMethod$4(2),
-  // `Array.prototype.some` method
-  // https://tc39.es/ecma262/#sec-array.prototype.some
-  some: createMethod$4(3),
-  // `Array.prototype.every` method
-  // https://tc39.es/ecma262/#sec-array.prototype.every
-  every: createMethod$4(4),
-  // `Array.prototype.find` method
-  // https://tc39.es/ecma262/#sec-array.prototype.find
-  find: createMethod$4(5),
-  // `Array.prototype.findIndex` method
-  // https://tc39.es/ecma262/#sec-array.prototype.findIndex
-  findIndex: createMethod$4(6),
-  // `Array.prototype.filterReject` method
-  // https://github.com/tc39/proposal-array-filtering
-  filterReject: createMethod$4(7)
-};
-
-var getBuiltIn$7 = getBuiltIn$c;
-var defineBuiltInAccessor$2 = defineBuiltInAccessor$5;
-var wellKnownSymbol$8 = wellKnownSymbol$j;
-var DESCRIPTORS$3 = descriptors;
-
-var SPECIES$2 = wellKnownSymbol$8('species');
-
-var setSpecies$3 = function (CONSTRUCTOR_NAME) {
-  var Constructor = getBuiltIn$7(CONSTRUCTOR_NAME);
-
-  if (DESCRIPTORS$3 && Constructor && !Constructor[SPECIES$2]) {
-    defineBuiltInAccessor$2(Constructor, SPECIES$2, {
-      configurable: true,
-      get: function () { return this; }
-    });
-  }
-};
-
-var isCallable$8 = isCallable$o;
-var isObject$9 = isObject$i;
-var setPrototypeOf$3 = objectSetPrototypeOf;
-
-// makes subclassing work correct for wrapped built-ins
-var inheritIfRequired$2 = function ($this, dummy, Wrapper) {
-  var NewTarget, NewTargetPrototype;
-  if (
-    // it can work only with native `setPrototypeOf`
-    setPrototypeOf$3 &&
-    // we haven't completely correct pre-ES6 way for getting `new.target`, so use this
-    isCallable$8(NewTarget = dummy.constructor) &&
-    NewTarget !== Wrapper &&
-    isObject$9(NewTargetPrototype = NewTarget.prototype) &&
-    NewTargetPrototype !== Wrapper.prototype
-  ) setPrototypeOf$3($this, NewTargetPrototype);
-  return $this;
-};
-
-var $$9 = _export;
-var global$f = global$v;
-var call$f = functionCall;
-var DESCRIPTORS$2 = descriptors;
-var TYPED_ARRAYS_CONSTRUCTORS_REQUIRES_WRAPPERS$2 = typedArrayConstructorsRequireWrappers;
-var ArrayBufferViewCore$A = arrayBufferViewCore;
-var ArrayBufferModule = arrayBuffer;
-var anInstance$3 = anInstance$5;
-var createPropertyDescriptor$1 = createPropertyDescriptor$5;
-var createNonEnumerableProperty$1 = createNonEnumerableProperty$6;
-var isIntegralNumber = isIntegralNumber$1;
-var toLength$1 = toLength$5;
-var toIndex = toIndex$2;
-var toOffset$1 = toOffset$2;
-var toUint8Clamped = toUint8Clamped$1;
-var toPropertyKey$1 = toPropertyKey$5;
-var hasOwn$2 = hasOwnProperty_1;
-var classof$6 = classof$c;
-var isObject$8 = isObject$i;
-var isSymbol = isSymbol$3;
-var create$3 = objectCreate$1;
-var isPrototypeOf$1 = objectIsPrototypeOf;
-var setPrototypeOf$2 = objectSetPrototypeOf;
-var getOwnPropertyNames = objectGetOwnPropertyNames.f;
-var typedArrayFrom$1 = typedArrayFrom$2;
-var forEach$2 = arrayIteration.forEach;
-var setSpecies$2 = setSpecies$3;
-var defineBuiltInAccessor$1 = defineBuiltInAccessor$5;
-var definePropertyModule = objectDefineProperty;
-var getOwnPropertyDescriptorModule = objectGetOwnPropertyDescriptor;
-var InternalStateModule$5 = internalState;
-var inheritIfRequired$1 = inheritIfRequired$2;
-
-var getInternalState$3 = InternalStateModule$5.get;
-var setInternalState$5 = InternalStateModule$5.set;
-var enforceInternalState = InternalStateModule$5.enforce;
-var nativeDefineProperty = definePropertyModule.f;
-var nativeGetOwnPropertyDescriptor = getOwnPropertyDescriptorModule.f;
-var RangeError$2 = global$f.RangeError;
-var ArrayBuffer$1 = ArrayBufferModule.ArrayBuffer;
-var ArrayBufferPrototype = ArrayBuffer$1.prototype;
-var DataView$1 = ArrayBufferModule.DataView;
-var NATIVE_ARRAY_BUFFER_VIEWS = ArrayBufferViewCore$A.NATIVE_ARRAY_BUFFER_VIEWS;
-var TYPED_ARRAY_TAG = ArrayBufferViewCore$A.TYPED_ARRAY_TAG;
-var TypedArray = ArrayBufferViewCore$A.TypedArray;
-var TypedArrayPrototype$1 = ArrayBufferViewCore$A.TypedArrayPrototype;
-var aTypedArrayConstructor$3 = ArrayBufferViewCore$A.aTypedArrayConstructor;
-var isTypedArray = ArrayBufferViewCore$A.isTypedArray;
-var BYTES_PER_ELEMENT = 'BYTES_PER_ELEMENT';
-var WRONG_LENGTH = 'Wrong length';
-
-var fromList = function (C, list) {
-  aTypedArrayConstructor$3(C);
-  var index = 0;
-  var length = list.length;
-  var result = new C(length);
-  while (length > index) result[index] = list[index++];
-  return result;
-};
-
-var addGetter = function (it, key) {
-  defineBuiltInAccessor$1(it, key, {
-    configurable: true,
-    get: function () {
-      return getInternalState$3(this)[key];
-    }
-  });
-};
-
-var isArrayBuffer = function (it) {
-  var klass;
-  return isPrototypeOf$1(ArrayBufferPrototype, it) || (klass = classof$6(it)) === 'ArrayBuffer' || klass === 'SharedArrayBuffer';
-};
-
-var isTypedArrayIndex = function (target, key) {
-  return isTypedArray(target)
-    && !isSymbol(key)
-    && key in target
-    && isIntegralNumber(+key)
-    && key >= 0;
-};
-
-var wrappedGetOwnPropertyDescriptor = function getOwnPropertyDescriptor(target, key) {
-  key = toPropertyKey$1(key);
-  return isTypedArrayIndex(target, key)
-    ? createPropertyDescriptor$1(2, target[key])
-    : nativeGetOwnPropertyDescriptor(target, key);
-};
-
-var wrappedDefineProperty = function defineProperty(target, key, descriptor) {
-  key = toPropertyKey$1(key);
-  if (isTypedArrayIndex(target, key)
-    && isObject$8(descriptor)
-    && hasOwn$2(descriptor, 'value')
-    && !hasOwn$2(descriptor, 'get')
-    && !hasOwn$2(descriptor, 'set')
-    // TODO: add validation descriptor w/o calling accessors
-    && !descriptor.configurable
-    && (!hasOwn$2(descriptor, 'writable') || descriptor.writable)
-    && (!hasOwn$2(descriptor, 'enumerable') || descriptor.enumerable)
-  ) {
-    target[key] = descriptor.value;
-    return target;
-  } return nativeDefineProperty(target, key, descriptor);
-};
-
-if (DESCRIPTORS$2) {
-  if (!NATIVE_ARRAY_BUFFER_VIEWS) {
-    getOwnPropertyDescriptorModule.f = wrappedGetOwnPropertyDescriptor;
-    definePropertyModule.f = wrappedDefineProperty;
-    addGetter(TypedArrayPrototype$1, 'buffer');
-    addGetter(TypedArrayPrototype$1, 'byteOffset');
-    addGetter(TypedArrayPrototype$1, 'byteLength');
-    addGetter(TypedArrayPrototype$1, 'length');
-  }
-
-  $$9({ target: 'Object', stat: true, forced: !NATIVE_ARRAY_BUFFER_VIEWS }, {
-    getOwnPropertyDescriptor: wrappedGetOwnPropertyDescriptor,
-    defineProperty: wrappedDefineProperty
-  });
-
-  typedArrayConstructor.exports = function (TYPE, wrapper, CLAMPED) {
-    var BYTES = TYPE.match(/\d+/)[0] / 8;
-    var CONSTRUCTOR_NAME = TYPE + (CLAMPED ? 'Clamped' : '') + 'Array';
-    var GETTER = 'get' + TYPE;
-    var SETTER = 'set' + TYPE;
-    var NativeTypedArrayConstructor = global$f[CONSTRUCTOR_NAME];
-    var TypedArrayConstructor = NativeTypedArrayConstructor;
-    var TypedArrayConstructorPrototype = TypedArrayConstructor && TypedArrayConstructor.prototype;
-    var exported = {};
-
-    var getter = function (that, index) {
-      var data = getInternalState$3(that);
-      return data.view[GETTER](index * BYTES + data.byteOffset, true);
-    };
-
-    var setter = function (that, index, value) {
-      var data = getInternalState$3(that);
-      data.view[SETTER](index * BYTES + data.byteOffset, CLAMPED ? toUint8Clamped(value) : value, true);
-    };
-
-    var addElement = function (that, index) {
-      nativeDefineProperty(that, index, {
-        get: function () {
-          return getter(this, index);
-        },
-        set: function (value) {
-          return setter(this, index, value);
-        },
-        enumerable: true
-      });
-    };
-
-    if (!NATIVE_ARRAY_BUFFER_VIEWS) {
-      TypedArrayConstructor = wrapper(function (that, data, offset, $length) {
-        anInstance$3(that, TypedArrayConstructorPrototype);
-        var index = 0;
-        var byteOffset = 0;
-        var buffer, byteLength, length;
-        if (!isObject$8(data)) {
-          length = toIndex(data);
-          byteLength = length * BYTES;
-          buffer = new ArrayBuffer$1(byteLength);
-        } else if (isArrayBuffer(data)) {
-          buffer = data;
-          byteOffset = toOffset$1(offset, BYTES);
-          var $len = data.byteLength;
-          if ($length === undefined) {
-            if ($len % BYTES) throw RangeError$2(WRONG_LENGTH);
-            byteLength = $len - byteOffset;
-            if (byteLength < 0) throw RangeError$2(WRONG_LENGTH);
-          } else {
-            byteLength = toLength$1($length) * BYTES;
-            if (byteLength + byteOffset > $len) throw RangeError$2(WRONG_LENGTH);
-          }
-          length = byteLength / BYTES;
-        } else if (isTypedArray(data)) {
-          return fromList(TypedArrayConstructor, data);
-        } else {
-          return call$f(typedArrayFrom$1, TypedArrayConstructor, data);
-        }
-        setInternalState$5(that, {
-          buffer: buffer,
-          byteOffset: byteOffset,
-          byteLength: byteLength,
-          length: length,
-          view: new DataView$1(buffer)
-        });
-        while (index < length) addElement(that, index++);
-      });
-
-      if (setPrototypeOf$2) setPrototypeOf$2(TypedArrayConstructor, TypedArray);
-      TypedArrayConstructorPrototype = TypedArrayConstructor.prototype = create$3(TypedArrayPrototype$1);
-    } else if (TYPED_ARRAYS_CONSTRUCTORS_REQUIRES_WRAPPERS$2) {
-      TypedArrayConstructor = wrapper(function (dummy, data, typedArrayOffset, $length) {
-        anInstance$3(dummy, TypedArrayConstructorPrototype);
-        return inheritIfRequired$1(function () {
-          if (!isObject$8(data)) return new NativeTypedArrayConstructor(toIndex(data));
-          if (isArrayBuffer(data)) return $length !== undefined
-            ? new NativeTypedArrayConstructor(data, toOffset$1(typedArrayOffset, BYTES), $length)
-            : typedArrayOffset !== undefined
-              ? new NativeTypedArrayConstructor(data, toOffset$1(typedArrayOffset, BYTES))
-              : new NativeTypedArrayConstructor(data);
-          if (isTypedArray(data)) return fromList(TypedArrayConstructor, data);
-          return call$f(typedArrayFrom$1, TypedArrayConstructor, data);
-        }(), dummy, TypedArrayConstructor);
-      });
-
-      if (setPrototypeOf$2) setPrototypeOf$2(TypedArrayConstructor, TypedArray);
-      forEach$2(getOwnPropertyNames(NativeTypedArrayConstructor), function (key) {
-        if (!(key in TypedArrayConstructor)) {
-          createNonEnumerableProperty$1(TypedArrayConstructor, key, NativeTypedArrayConstructor[key]);
-        }
-      });
-      TypedArrayConstructor.prototype = TypedArrayConstructorPrototype;
-    }
-
-    if (TypedArrayConstructorPrototype.constructor !== TypedArrayConstructor) {
-      createNonEnumerableProperty$1(TypedArrayConstructorPrototype, 'constructor', TypedArrayConstructor);
-    }
-
-    enforceInternalState(TypedArrayConstructorPrototype).TypedArrayConstructor = TypedArrayConstructor;
-
-    if (TYPED_ARRAY_TAG) {
-      createNonEnumerableProperty$1(TypedArrayConstructorPrototype, TYPED_ARRAY_TAG, CONSTRUCTOR_NAME);
-    }
-
-    var FORCED = TypedArrayConstructor !== NativeTypedArrayConstructor;
-
-    exported[CONSTRUCTOR_NAME] = TypedArrayConstructor;
-
-    $$9({ global: true, constructor: true, forced: FORCED, sham: !NATIVE_ARRAY_BUFFER_VIEWS }, exported);
-
-    if (!(BYTES_PER_ELEMENT in TypedArrayConstructor)) {
-      createNonEnumerableProperty$1(TypedArrayConstructor, BYTES_PER_ELEMENT, BYTES);
-    }
-
-    if (!(BYTES_PER_ELEMENT in TypedArrayConstructorPrototype)) {
-      createNonEnumerableProperty$1(TypedArrayConstructorPrototype, BYTES_PER_ELEMENT, BYTES);
-    }
-
-    setSpecies$2(CONSTRUCTOR_NAME);
-  };
-} else typedArrayConstructor.exports = function () { /* empty */ };
-
-var createTypedArrayConstructor$8 = typedArrayConstructor.exports;
-
-// `Int8Array` constructor
-// https://tc39.es/ecma262/#sec-typedarray-objects
-createTypedArrayConstructor$8('Int8', function (init) {
-  return function Int8Array(data, byteOffset, length) {
-    return init(this, data, byteOffset, length);
-  };
-});
-
-var createTypedArrayConstructor$7 = typedArrayConstructor.exports;
-
-// `Uint8Array` constructor
-// https://tc39.es/ecma262/#sec-typedarray-objects
-createTypedArrayConstructor$7('Uint8', function (init) {
-  return function Uint8Array(data, byteOffset, length) {
-    return init(this, data, byteOffset, length);
-  };
-});
-
-var createTypedArrayConstructor$6 = typedArrayConstructor.exports;
-
-// `Uint8ClampedArray` constructor
-// https://tc39.es/ecma262/#sec-typedarray-objects
-createTypedArrayConstructor$6('Uint8', function (init) {
-  return function Uint8ClampedArray(data, byteOffset, length) {
-    return init(this, data, byteOffset, length);
-  };
-}, true);
-
-var createTypedArrayConstructor$5 = typedArrayConstructor.exports;
-
-// `Int16Array` constructor
-// https://tc39.es/ecma262/#sec-typedarray-objects
-createTypedArrayConstructor$5('Int16', function (init) {
-  return function Int16Array(data, byteOffset, length) {
-    return init(this, data, byteOffset, length);
-  };
-});
-
-var createTypedArrayConstructor$4 = typedArrayConstructor.exports;
-
-// `Uint16Array` constructor
-// https://tc39.es/ecma262/#sec-typedarray-objects
-createTypedArrayConstructor$4('Uint16', function (init) {
-  return function Uint16Array(data, byteOffset, length) {
-    return init(this, data, byteOffset, length);
-  };
-});
-
-var createTypedArrayConstructor$3 = typedArrayConstructor.exports;
-
-// `Int32Array` constructor
-// https://tc39.es/ecma262/#sec-typedarray-objects
-createTypedArrayConstructor$3('Int32', function (init) {
-  return function Int32Array(data, byteOffset, length) {
-    return init(this, data, byteOffset, length);
-  };
-});
-
-var createTypedArrayConstructor$2 = typedArrayConstructor.exports;
-
-// `Uint32Array` constructor
-// https://tc39.es/ecma262/#sec-typedarray-objects
-createTypedArrayConstructor$2('Uint32', function (init) {
-  return function Uint32Array(data, byteOffset, length) {
-    return init(this, data, byteOffset, length);
-  };
-});
-
-var createTypedArrayConstructor$1 = typedArrayConstructor.exports;
-
-// `Float32Array` constructor
-// https://tc39.es/ecma262/#sec-typedarray-objects
-createTypedArrayConstructor$1('Float32', function (init) {
-  return function Float32Array(data, byteOffset, length) {
-    return init(this, data, byteOffset, length);
-  };
-});
-
-var createTypedArrayConstructor = typedArrayConstructor.exports;
-
-// `Float64Array` constructor
-// https://tc39.es/ecma262/#sec-typedarray-objects
-createTypedArrayConstructor('Float64', function (init) {
-  return function Float64Array(data, byteOffset, length) {
-    return init(this, data, byteOffset, length);
-  };
-});
-
-var TO_STRING_TAG_SUPPORT$1 = toStringTagSupport;
-var classof$5 = classof$c;
-
-// `Object.prototype.toString` method implementation
-// https://tc39.es/ecma262/#sec-object.prototype.tostring
-var objectToString = TO_STRING_TAG_SUPPORT$1 ? {}.toString : function toString() {
-  return '[object ' + classof$5(this) + ']';
-};
-
-var TO_STRING_TAG_SUPPORT = toStringTagSupport;
-var defineBuiltIn$6 = defineBuiltIn$a;
-var toString$3 = objectToString;
-
-// `Object.prototype.toString` method
-// https://tc39.es/ecma262/#sec-object.prototype.tostring
-if (!TO_STRING_TAG_SUPPORT) {
-  defineBuiltIn$6(Object.prototype, 'toString', toString$3, { unsafe: true });
-}
-
-var classof$4 = classof$c;
-
-var $String = String;
-
-var toString$2 = function (argument) {
-  if (classof$4(argument) === 'Symbol') throw TypeError('Cannot convert a Symbol value to a string');
-  return $String(argument);
-};
-
-var uncurryThis$g = functionUncurryThis;
-var toIntegerOrInfinity$5 = toIntegerOrInfinity$b;
-var toString$1 = toString$2;
-var requireObjectCoercible = requireObjectCoercible$3;
-
-var charAt$1 = uncurryThis$g(''.charAt);
-var charCodeAt = uncurryThis$g(''.charCodeAt);
-var stringSlice = uncurryThis$g(''.slice);
-
-var createMethod$3 = function (CONVERT_TO_STRING) {
-  return function ($this, pos) {
-    var S = toString$1(requireObjectCoercible($this));
-    var position = toIntegerOrInfinity$5(pos);
-    var size = S.length;
-    var first, second;
-    if (position < 0 || position >= size) return CONVERT_TO_STRING ? '' : undefined;
-    first = charCodeAt(S, position);
-    return first < 0xD800 || first > 0xDBFF || position + 1 === size
-      || (second = charCodeAt(S, position + 1)) < 0xDC00 || second > 0xDFFF
-        ? CONVERT_TO_STRING
-          ? charAt$1(S, position)
-          : first
-        : CONVERT_TO_STRING
-          ? stringSlice(S, position, position + 2)
-          : (first - 0xD800 << 10) + (second - 0xDC00) + 0x10000;
-  };
-};
-
-var stringMultibyte = {
-  // `String.prototype.codePointAt` method
-  // https://tc39.es/ecma262/#sec-string.prototype.codepointat
-  codeAt: createMethod$3(false),
-  // `String.prototype.at` method
-  // https://github.com/mathiasbynens/String.prototype.at
-  charAt: createMethod$3(true)
-};
-
-var fails$e = fails$t;
-var isCallable$7 = isCallable$o;
-var isObject$7 = isObject$i;
-var getPrototypeOf$2 = objectGetPrototypeOf$1;
-var defineBuiltIn$5 = defineBuiltIn$a;
-var wellKnownSymbol$7 = wellKnownSymbol$j;
-
-var ITERATOR$2 = wellKnownSymbol$7('iterator');
-var BUGGY_SAFARI_ITERATORS$1 = false;
-
-// `%IteratorPrototype%` object
-// https://tc39.es/ecma262/#sec-%iteratorprototype%-object
-var IteratorPrototype$2, PrototypeOfArrayIteratorPrototype, arrayIterator$1;
-
-/* eslint-disable es/no-array-prototype-keys -- safe */
-if ([].keys) {
-  arrayIterator$1 = [].keys();
-  // Safari 8 has buggy iterators w/o `next`
-  if (!('next' in arrayIterator$1)) BUGGY_SAFARI_ITERATORS$1 = true;
-  else {
-    PrototypeOfArrayIteratorPrototype = getPrototypeOf$2(getPrototypeOf$2(arrayIterator$1));
-    if (PrototypeOfArrayIteratorPrototype !== Object.prototype) IteratorPrototype$2 = PrototypeOfArrayIteratorPrototype;
-  }
-}
-
-var NEW_ITERATOR_PROTOTYPE = !isObject$7(IteratorPrototype$2) || fails$e(function () {
-  var test = {};
-  // FF44- legacy iterators case
-  return IteratorPrototype$2[ITERATOR$2].call(test) !== test;
-});
-
-if (NEW_ITERATOR_PROTOTYPE) IteratorPrototype$2 = {};
-
-// `%IteratorPrototype%[@@iterator]()` method
-// https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator
-if (!isCallable$7(IteratorPrototype$2[ITERATOR$2])) {
-  defineBuiltIn$5(IteratorPrototype$2, ITERATOR$2, function () {
-    return this;
-  });
-}
-
-var iteratorsCore = {
-  IteratorPrototype: IteratorPrototype$2,
-  BUGGY_SAFARI_ITERATORS: BUGGY_SAFARI_ITERATORS$1
-};
-
-var IteratorPrototype$1 = iteratorsCore.IteratorPrototype;
-var create$2 = objectCreate$1;
-var createPropertyDescriptor = createPropertyDescriptor$5;
-var setToStringTag$3 = setToStringTag$5;
-var Iterators$2 = iterators;
-
-var returnThis$1 = function () { return this; };
-
-var iteratorCreateConstructor = function (IteratorConstructor, NAME, next, ENUMERABLE_NEXT) {
-  var TO_STRING_TAG = NAME + ' Iterator';
-  IteratorConstructor.prototype = create$2(IteratorPrototype$1, { next: createPropertyDescriptor(+!ENUMERABLE_NEXT, next) });
-  setToStringTag$3(IteratorConstructor, TO_STRING_TAG, false);
-  Iterators$2[TO_STRING_TAG] = returnThis$1;
-  return IteratorConstructor;
-};
-
-var $$8 = _export;
-var call$e = functionCall;
-var FunctionName = functionName;
-var isCallable$6 = isCallable$o;
-var createIteratorConstructor = iteratorCreateConstructor;
-var getPrototypeOf$1 = objectGetPrototypeOf$1;
-var setPrototypeOf$1 = objectSetPrototypeOf;
-var setToStringTag$2 = setToStringTag$5;
-var createNonEnumerableProperty = createNonEnumerableProperty$6;
-var defineBuiltIn$4 = defineBuiltIn$a;
-var wellKnownSymbol$6 = wellKnownSymbol$j;
-var Iterators$1 = iterators;
-var IteratorsCore = iteratorsCore;
-
-var PROPER_FUNCTION_NAME = FunctionName.PROPER;
-var CONFIGURABLE_FUNCTION_NAME = FunctionName.CONFIGURABLE;
-var IteratorPrototype = IteratorsCore.IteratorPrototype;
-var BUGGY_SAFARI_ITERATORS = IteratorsCore.BUGGY_SAFARI_ITERATORS;
-var ITERATOR$1 = wellKnownSymbol$6('iterator');
-var KEYS = 'keys';
-var VALUES = 'values';
-var ENTRIES = 'entries';
-
-var returnThis = function () { return this; };
-
-var iteratorDefine = function (Iterable, NAME, IteratorConstructor, next, DEFAULT, IS_SET, FORCED) {
-  createIteratorConstructor(IteratorConstructor, NAME, next);
-
-  var getIterationMethod = function (KIND) {
-    if (KIND === DEFAULT && defaultIterator) return defaultIterator;
-    if (!BUGGY_SAFARI_ITERATORS && KIND in IterablePrototype) return IterablePrototype[KIND];
-    switch (KIND) {
-      case KEYS: return function keys() { return new IteratorConstructor(this, KIND); };
-      case VALUES: return function values() { return new IteratorConstructor(this, KIND); };
-      case ENTRIES: return function entries() { return new IteratorConstructor(this, KIND); };
-    } return function () { return new IteratorConstructor(this); };
-  };
-
-  var TO_STRING_TAG = NAME + ' Iterator';
-  var INCORRECT_VALUES_NAME = false;
-  var IterablePrototype = Iterable.prototype;
-  var nativeIterator = IterablePrototype[ITERATOR$1]
-    || IterablePrototype['@@iterator']
-    || DEFAULT && IterablePrototype[DEFAULT];
-  var defaultIterator = !BUGGY_SAFARI_ITERATORS && nativeIterator || getIterationMethod(DEFAULT);
-  var anyNativeIterator = NAME === 'Array' ? IterablePrototype.entries || nativeIterator : nativeIterator;
-  var CurrentIteratorPrototype, methods, KEY;
-
-  // fix native
-  if (anyNativeIterator) {
-    CurrentIteratorPrototype = getPrototypeOf$1(anyNativeIterator.call(new Iterable()));
-    if (CurrentIteratorPrototype !== Object.prototype && CurrentIteratorPrototype.next) {
-      if (getPrototypeOf$1(CurrentIteratorPrototype) !== IteratorPrototype) {
-        if (setPrototypeOf$1) {
-          setPrototypeOf$1(CurrentIteratorPrototype, IteratorPrototype);
-        } else if (!isCallable$6(CurrentIteratorPrototype[ITERATOR$1])) {
-          defineBuiltIn$4(CurrentIteratorPrototype, ITERATOR$1, returnThis);
-        }
-      }
-      // Set @@toStringTag to native iterators
-      setToStringTag$2(CurrentIteratorPrototype, TO_STRING_TAG, true);
-    }
-  }
-
-  // fix Array.prototype.{ values, @@iterator }.name in V8 / FF
-  if (PROPER_FUNCTION_NAME && DEFAULT === VALUES && nativeIterator && nativeIterator.name !== VALUES) {
-    if (CONFIGURABLE_FUNCTION_NAME) {
-      createNonEnumerableProperty(IterablePrototype, 'name', VALUES);
-    } else {
-      INCORRECT_VALUES_NAME = true;
-      defaultIterator = function values() { return call$e(nativeIterator, this); };
-    }
-  }
-
-  // export additional methods
-  if (DEFAULT) {
-    methods = {
-      values: getIterationMethod(VALUES),
-      keys: IS_SET ? defaultIterator : getIterationMethod(KEYS),
-      entries: getIterationMethod(ENTRIES)
-    };
-    if (FORCED) for (KEY in methods) {
-      if (BUGGY_SAFARI_ITERATORS || INCORRECT_VALUES_NAME || !(KEY in IterablePrototype)) {
-        defineBuiltIn$4(IterablePrototype, KEY, methods[KEY]);
-      }
-    } else $$8({ target: NAME, proto: true, forced: BUGGY_SAFARI_ITERATORS || INCORRECT_VALUES_NAME }, methods);
-  }
-
-  // define iterator
-  if (IterablePrototype[ITERATOR$1] !== defaultIterator) {
-    defineBuiltIn$4(IterablePrototype, ITERATOR$1, defaultIterator, { name: DEFAULT });
-  }
-  Iterators$1[NAME] = defaultIterator;
-
-  return methods;
-};
-
-// `CreateIterResultObject` abstract operation
-// https://tc39.es/ecma262/#sec-createiterresultobject
-var createIterResultObject$4 = function (value, done) {
-  return { value: value, done: done };
-};
-
-var charAt = stringMultibyte.charAt;
-var toString = toString$2;
-var InternalStateModule$4 = internalState;
-var defineIterator$2 = iteratorDefine;
-var createIterResultObject$3 = createIterResultObject$4;
-
-var STRING_ITERATOR = 'String Iterator';
-var setInternalState$4 = InternalStateModule$4.set;
-var getInternalState$2 = InternalStateModule$4.getterFor(STRING_ITERATOR);
-
-// `String.prototype[@@iterator]` method
-// https://tc39.es/ecma262/#sec-string.prototype-@@iterator
-defineIterator$2(String, 'String', function (iterated) {
-  setInternalState$4(this, {
-    type: STRING_ITERATOR,
-    string: toString(iterated),
-    index: 0
-  });
-// `%StringIteratorPrototype%.next` method
-// https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next
-}, function next() {
-  var state = getInternalState$2(this);
-  var string = state.string;
-  var index = state.index;
-  var point;
-  if (index >= string.length) return createIterResultObject$3(undefined, true);
-  point = charAt(string, index);
-  state.index += point.length;
-  return createIterResultObject$3(point, false);
-});
-
-var TYPED_ARRAYS_CONSTRUCTORS_REQUIRES_WRAPPERS$1 = typedArrayConstructorsRequireWrappers;
-var exportTypedArrayStaticMethod$2 = arrayBufferViewCore.exportTypedArrayStaticMethod;
-var typedArrayFrom = typedArrayFrom$2;
-
-// `%TypedArray%.from` method
-// https://tc39.es/ecma262/#sec-%typedarray%.from
-exportTypedArrayStaticMethod$2('from', typedArrayFrom, TYPED_ARRAYS_CONSTRUCTORS_REQUIRES_WRAPPERS$1);
-
-var ArrayBufferViewCore$z = arrayBufferViewCore;
-var TYPED_ARRAYS_CONSTRUCTORS_REQUIRES_WRAPPERS = typedArrayConstructorsRequireWrappers;
-
-var aTypedArrayConstructor$2 = ArrayBufferViewCore$z.aTypedArrayConstructor;
-var exportTypedArrayStaticMethod$1 = ArrayBufferViewCore$z.exportTypedArrayStaticMethod;
-
-// `%TypedArray%.of` method
-// https://tc39.es/ecma262/#sec-%typedarray%.of
-exportTypedArrayStaticMethod$1('of', function of(/* ...items */) {
-  var index = 0;
-  var length = arguments.length;
-  var result = new (aTypedArrayConstructor$2(this))(length);
-  while (length > index) result[index] = arguments[index++];
-  return result;
-}, TYPED_ARRAYS_CONSTRUCTORS_REQUIRES_WRAPPERS);
-
-var ArrayBufferViewCore$y = arrayBufferViewCore;
-var lengthOfArrayLike$c = lengthOfArrayLike$i;
-var toIntegerOrInfinity$4 = toIntegerOrInfinity$b;
-
-var aTypedArray$w = ArrayBufferViewCore$y.aTypedArray;
-var exportTypedArrayMethod$x = ArrayBufferViewCore$y.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.at` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.at
-exportTypedArrayMethod$x('at', function at(index) {
-  var O = aTypedArray$w(this);
-  var len = lengthOfArrayLike$c(O);
-  var relativeIndex = toIntegerOrInfinity$4(index);
-  var k = relativeIndex >= 0 ? relativeIndex : len + relativeIndex;
-  return (k < 0 || k >= len) ? undefined : O[k];
-});
-
-var tryToString$1 = tryToString$6;
-
-var $TypeError$5 = TypeError;
-
-var deletePropertyOrThrow$1 = function (O, P) {
-  if (!delete O[P]) throw $TypeError$5('Cannot delete property ' + tryToString$1(P) + ' of ' + tryToString$1(O));
-};
-
-var toObject$5 = toObject$b;
-var toAbsoluteIndex$2 = toAbsoluteIndex$6;
-var lengthOfArrayLike$b = lengthOfArrayLike$i;
-var deletePropertyOrThrow = deletePropertyOrThrow$1;
-
-var min$2 = Math.min;
-
-// `Array.prototype.copyWithin` method implementation
-// https://tc39.es/ecma262/#sec-array.prototype.copywithin
-// eslint-disable-next-line es/no-array-prototype-copywithin -- safe
-var arrayCopyWithin = [].copyWithin || function copyWithin(target /* = 0 */, start /* = 0, end = @length */) {
-  var O = toObject$5(this);
-  var len = lengthOfArrayLike$b(O);
-  var to = toAbsoluteIndex$2(target, len);
-  var from = toAbsoluteIndex$2(start, len);
-  var end = arguments.length > 2 ? arguments[2] : undefined;
-  var count = min$2((end === undefined ? len : toAbsoluteIndex$2(end, len)) - from, len - to);
-  var inc = 1;
-  if (from < to && to < from + count) {
-    inc = -1;
-    from += count - 1;
-    to += count - 1;
-  }
-  while (count-- > 0) {
-    if (from in O) O[to] = O[from];
-    else deletePropertyOrThrow(O, to);
-    to += inc;
-    from += inc;
-  } return O;
-};
-
-var uncurryThis$f = functionUncurryThis;
-var ArrayBufferViewCore$x = arrayBufferViewCore;
-var $ArrayCopyWithin = arrayCopyWithin;
-
-var u$ArrayCopyWithin = uncurryThis$f($ArrayCopyWithin);
-var aTypedArray$v = ArrayBufferViewCore$x.aTypedArray;
-var exportTypedArrayMethod$w = ArrayBufferViewCore$x.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.copyWithin` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin
-exportTypedArrayMethod$w('copyWithin', function copyWithin(target, start /* , end */) {
-  return u$ArrayCopyWithin(aTypedArray$v(this), target, start, arguments.length > 2 ? arguments[2] : undefined);
-});
-
-var ArrayBufferViewCore$w = arrayBufferViewCore;
-var $every = arrayIteration.every;
-
-var aTypedArray$u = ArrayBufferViewCore$w.aTypedArray;
-var exportTypedArrayMethod$v = ArrayBufferViewCore$w.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.every` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.every
-exportTypedArrayMethod$v('every', function every(callbackfn /* , thisArg */) {
-  return $every(aTypedArray$u(this), callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-});
-
-var ArrayBufferViewCore$v = arrayBufferViewCore;
-var $fill = arrayFill$1;
-var toBigInt$2 = toBigInt$4;
-var classof$3 = classof$c;
-var call$d = functionCall;
-var uncurryThis$e = functionUncurryThis;
-var fails$d = fails$t;
-
-var aTypedArray$t = ArrayBufferViewCore$v.aTypedArray;
-var exportTypedArrayMethod$u = ArrayBufferViewCore$v.exportTypedArrayMethod;
-var slice = uncurryThis$e(''.slice);
-
-// V8 ~ Chrome < 59, Safari < 14.1, FF < 55, Edge <=18
-var CONVERSION_BUG = fails$d(function () {
-  var count = 0;
-  // eslint-disable-next-line es/no-typed-arrays -- safe
-  new Int8Array(2).fill({ valueOf: function () { return count++; } });
-  return count !== 1;
-});
-
-// `%TypedArray%.prototype.fill` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill
-exportTypedArrayMethod$u('fill', function fill(value /* , start, end */) {
-  var length = arguments.length;
-  aTypedArray$t(this);
-  var actualValue = slice(classof$3(this), 0, 3) === 'Big' ? toBigInt$2(value) : +value;
-  return call$d($fill, this, actualValue, length > 1 ? arguments[1] : undefined, length > 2 ? arguments[2] : undefined);
-}, CONVERSION_BUG);
-
-var lengthOfArrayLike$a = lengthOfArrayLike$i;
-
-var arrayFromConstructorAndList$5 = function (Constructor, list) {
-  var index = 0;
-  var length = lengthOfArrayLike$a(list);
-  var result = new Constructor(length);
-  while (length > index) result[index] = list[index++];
-  return result;
-};
-
-var anObject$6 = anObject$d;
-var aConstructor$1 = aConstructor$3;
-var isNullOrUndefined$3 = isNullOrUndefined$7;
-var wellKnownSymbol$5 = wellKnownSymbol$j;
-
-var SPECIES$1 = wellKnownSymbol$5('species');
-
-// `SpeciesConstructor` abstract operation
-// https://tc39.es/ecma262/#sec-speciesconstructor
-var speciesConstructor$2 = function (O, defaultConstructor) {
-  var C = anObject$6(O).constructor;
-  var S;
-  return C === undefined || isNullOrUndefined$3(S = anObject$6(C)[SPECIES$1]) ? defaultConstructor : aConstructor$1(S);
-};
-
-var ArrayBufferViewCore$u = arrayBufferViewCore;
-var speciesConstructor$1 = speciesConstructor$2;
-
-var aTypedArrayConstructor$1 = ArrayBufferViewCore$u.aTypedArrayConstructor;
-var getTypedArrayConstructor$5 = ArrayBufferViewCore$u.getTypedArrayConstructor;
-
-// a part of `TypedArraySpeciesCreate` abstract operation
-// https://tc39.es/ecma262/#typedarray-species-create
-var typedArraySpeciesConstructor$5 = function (originalArray) {
-  return aTypedArrayConstructor$1(speciesConstructor$1(originalArray, getTypedArrayConstructor$5(originalArray)));
-};
-
-var arrayFromConstructorAndList$4 = arrayFromConstructorAndList$5;
-var typedArraySpeciesConstructor$4 = typedArraySpeciesConstructor$5;
-
-var typedArrayFromSpeciesAndList = function (instance, list) {
-  return arrayFromConstructorAndList$4(typedArraySpeciesConstructor$4(instance), list);
-};
-
-var ArrayBufferViewCore$t = arrayBufferViewCore;
-var $filter = arrayIteration.filter;
-var fromSpeciesAndList$2 = typedArrayFromSpeciesAndList;
-
-var aTypedArray$s = ArrayBufferViewCore$t.aTypedArray;
-var exportTypedArrayMethod$t = ArrayBufferViewCore$t.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.filter` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.filter
-exportTypedArrayMethod$t('filter', function filter(callbackfn /* , thisArg */) {
-  var list = $filter(aTypedArray$s(this), callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-  return fromSpeciesAndList$2(this, list);
-});
-
-var ArrayBufferViewCore$s = arrayBufferViewCore;
-var $find = arrayIteration.find;
-
-var aTypedArray$r = ArrayBufferViewCore$s.aTypedArray;
-var exportTypedArrayMethod$s = ArrayBufferViewCore$s.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.find` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.find
-exportTypedArrayMethod$s('find', function find(predicate /* , thisArg */) {
-  return $find(aTypedArray$r(this), predicate, arguments.length > 1 ? arguments[1] : undefined);
-});
-
-var ArrayBufferViewCore$r = arrayBufferViewCore;
-var $findIndex = arrayIteration.findIndex;
-
-var aTypedArray$q = ArrayBufferViewCore$r.aTypedArray;
-var exportTypedArrayMethod$r = ArrayBufferViewCore$r.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.findIndex` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.findindex
-exportTypedArrayMethod$r('findIndex', function findIndex(predicate /* , thisArg */) {
-  return $findIndex(aTypedArray$q(this), predicate, arguments.length > 1 ? arguments[1] : undefined);
-});
-
-var bind$7 = functionBindContext;
-var IndexedObject$2 = indexedObject;
-var toObject$4 = toObject$b;
-var lengthOfArrayLike$9 = lengthOfArrayLike$i;
-
-// `Array.prototype.{ findLast, findLastIndex }` methods implementation
-var createMethod$2 = function (TYPE) {
-  var IS_FIND_LAST_INDEX = TYPE === 1;
-  return function ($this, callbackfn, that) {
-    var O = toObject$4($this);
-    var self = IndexedObject$2(O);
-    var boundFunction = bind$7(callbackfn, that);
-    var index = lengthOfArrayLike$9(self);
-    var value, result;
-    while (index-- > 0) {
-      value = self[index];
-      result = boundFunction(value, index, O);
-      if (result) switch (TYPE) {
-        case 0: return value; // findLast
-        case 1: return index; // findLastIndex
-      }
-    }
-    return IS_FIND_LAST_INDEX ? -1 : undefined;
-  };
-};
-
-var arrayIterationFromLast = {
-  // `Array.prototype.findLast` method
-  // https://github.com/tc39/proposal-array-find-from-last
-  findLast: createMethod$2(0),
-  // `Array.prototype.findLastIndex` method
-  // https://github.com/tc39/proposal-array-find-from-last
-  findLastIndex: createMethod$2(1)
-};
-
-var ArrayBufferViewCore$q = arrayBufferViewCore;
-var $findLast = arrayIterationFromLast.findLast;
-
-var aTypedArray$p = ArrayBufferViewCore$q.aTypedArray;
-var exportTypedArrayMethod$q = ArrayBufferViewCore$q.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.findLast` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlast
-exportTypedArrayMethod$q('findLast', function findLast(predicate /* , thisArg */) {
-  return $findLast(aTypedArray$p(this), predicate, arguments.length > 1 ? arguments[1] : undefined);
-});
-
-var ArrayBufferViewCore$p = arrayBufferViewCore;
-var $findLastIndex = arrayIterationFromLast.findLastIndex;
-
-var aTypedArray$o = ArrayBufferViewCore$p.aTypedArray;
-var exportTypedArrayMethod$p = ArrayBufferViewCore$p.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.findLastIndex` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlastindex
-exportTypedArrayMethod$p('findLastIndex', function findLastIndex(predicate /* , thisArg */) {
-  return $findLastIndex(aTypedArray$o(this), predicate, arguments.length > 1 ? arguments[1] : undefined);
-});
-
-var ArrayBufferViewCore$o = arrayBufferViewCore;
-var $forEach = arrayIteration.forEach;
-
-var aTypedArray$n = ArrayBufferViewCore$o.aTypedArray;
-var exportTypedArrayMethod$o = ArrayBufferViewCore$o.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.forEach` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach
-exportTypedArrayMethod$o('forEach', function forEach(callbackfn /* , thisArg */) {
-  $forEach(aTypedArray$n(this), callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-});
-
-var ArrayBufferViewCore$n = arrayBufferViewCore;
-var $includes = arrayIncludes.includes;
-
-var aTypedArray$m = ArrayBufferViewCore$n.aTypedArray;
-var exportTypedArrayMethod$n = ArrayBufferViewCore$n.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.includes` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes
-exportTypedArrayMethod$n('includes', function includes(searchElement /* , fromIndex */) {
-  return $includes(aTypedArray$m(this), searchElement, arguments.length > 1 ? arguments[1] : undefined);
-});
-
-var ArrayBufferViewCore$m = arrayBufferViewCore;
-var $indexOf = arrayIncludes.indexOf;
-
-var aTypedArray$l = ArrayBufferViewCore$m.aTypedArray;
-var exportTypedArrayMethod$m = ArrayBufferViewCore$m.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.indexOf` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof
-exportTypedArrayMethod$m('indexOf', function indexOf(searchElement /* , fromIndex */) {
-  return $indexOf(aTypedArray$l(this), searchElement, arguments.length > 1 ? arguments[1] : undefined);
-});
-
-var ArrayBufferViewCore$l = arrayBufferViewCore;
-var uncurryThis$d = functionUncurryThis;
-
-var aTypedArray$k = ArrayBufferViewCore$l.aTypedArray;
-var exportTypedArrayMethod$l = ArrayBufferViewCore$l.exportTypedArrayMethod;
-var $join = uncurryThis$d([].join);
-
-// `%TypedArray%.prototype.join` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.join
-exportTypedArrayMethod$l('join', function join(separator) {
-  return $join(aTypedArray$k(this), separator);
-});
-
-var NATIVE_BIND = functionBindNative;
-
-var FunctionPrototype = Function.prototype;
-var apply$4 = FunctionPrototype.apply;
-var call$c = FunctionPrototype.call;
-
-// eslint-disable-next-line es/no-reflect -- safe
-var functionApply = typeof Reflect == 'object' && Reflect.apply || (NATIVE_BIND ? call$c.bind(apply$4) : function () {
-  return call$c.apply(apply$4, arguments);
-});
-
-var fails$c = fails$t;
-
-var arrayMethodIsStrict$1 = function (METHOD_NAME, argument) {
-  var method = [][METHOD_NAME];
-  return !!method && fails$c(function () {
-    // eslint-disable-next-line no-useless-call -- required for testing
-    method.call(null, argument || function () { return 1; }, 1);
-  });
-};
-
-/* eslint-disable es/no-array-prototype-lastindexof -- safe */
-var apply$3 = functionApply;
-var toIndexedObject$3 = toIndexedObject$9;
-var toIntegerOrInfinity$3 = toIntegerOrInfinity$b;
-var lengthOfArrayLike$8 = lengthOfArrayLike$i;
-var arrayMethodIsStrict = arrayMethodIsStrict$1;
-
-var min$1 = Math.min;
-var $lastIndexOf$1 = [].lastIndexOf;
-var NEGATIVE_ZERO = !!$lastIndexOf$1 && 1 / [1].lastIndexOf(1, -0) < 0;
-var STRICT_METHOD = arrayMethodIsStrict('lastIndexOf');
-var FORCED$2 = NEGATIVE_ZERO || !STRICT_METHOD;
-
-// `Array.prototype.lastIndexOf` method implementation
-// https://tc39.es/ecma262/#sec-array.prototype.lastindexof
-var arrayLastIndexOf = FORCED$2 ? function lastIndexOf(searchElement /* , fromIndex = @[*-1] */) {
-  // convert -0 to +0
-  if (NEGATIVE_ZERO) return apply$3($lastIndexOf$1, this, arguments) || 0;
-  var O = toIndexedObject$3(this);
-  var length = lengthOfArrayLike$8(O);
-  var index = length - 1;
-  if (arguments.length > 1) index = min$1(index, toIntegerOrInfinity$3(arguments[1]));
-  if (index < 0) index = length + index;
-  for (;index >= 0; index--) if (index in O && O[index] === searchElement) return index || 0;
-  return -1;
-} : $lastIndexOf$1;
-
-var ArrayBufferViewCore$k = arrayBufferViewCore;
-var apply$2 = functionApply;
-var $lastIndexOf = arrayLastIndexOf;
-
-var aTypedArray$j = ArrayBufferViewCore$k.aTypedArray;
-var exportTypedArrayMethod$k = ArrayBufferViewCore$k.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.lastIndexOf` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof
-exportTypedArrayMethod$k('lastIndexOf', function lastIndexOf(searchElement /* , fromIndex */) {
-  var length = arguments.length;
-  return apply$2($lastIndexOf, aTypedArray$j(this), length > 1 ? [searchElement, arguments[1]] : [searchElement]);
-});
-
-var ArrayBufferViewCore$j = arrayBufferViewCore;
-var $map = arrayIteration.map;
-var typedArraySpeciesConstructor$3 = typedArraySpeciesConstructor$5;
-
-var aTypedArray$i = ArrayBufferViewCore$j.aTypedArray;
-var exportTypedArrayMethod$j = ArrayBufferViewCore$j.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.map` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.map
-exportTypedArrayMethod$j('map', function map(mapfn /* , thisArg */) {
-  return $map(aTypedArray$i(this), mapfn, arguments.length > 1 ? arguments[1] : undefined, function (O, length) {
-    return new (typedArraySpeciesConstructor$3(O))(length);
-  });
-});
-
-var aCallable$8 = aCallable$d;
-var toObject$3 = toObject$b;
-var IndexedObject$1 = indexedObject;
-var lengthOfArrayLike$7 = lengthOfArrayLike$i;
-
-var $TypeError$4 = TypeError;
-
-// `Array.prototype.{ reduce, reduceRight }` methods implementation
-var createMethod$1 = function (IS_RIGHT) {
-  return function (that, callbackfn, argumentsLength, memo) {
-    aCallable$8(callbackfn);
-    var O = toObject$3(that);
-    var self = IndexedObject$1(O);
-    var length = lengthOfArrayLike$7(O);
-    var index = IS_RIGHT ? length - 1 : 0;
-    var i = IS_RIGHT ? -1 : 1;
-    if (argumentsLength < 2) while (true) {
-      if (index in self) {
-        memo = self[index];
-        index += i;
-        break;
-      }
-      index += i;
-      if (IS_RIGHT ? index < 0 : length <= index) {
-        throw $TypeError$4('Reduce of empty array with no initial value');
-      }
-    }
-    for (;IS_RIGHT ? index >= 0 : length > index; index += i) if (index in self) {
-      memo = callbackfn(memo, self[index], index, O);
-    }
-    return memo;
-  };
-};
-
-var arrayReduce = {
-  // `Array.prototype.reduce` method
-  // https://tc39.es/ecma262/#sec-array.prototype.reduce
-  left: createMethod$1(false),
-  // `Array.prototype.reduceRight` method
-  // https://tc39.es/ecma262/#sec-array.prototype.reduceright
-  right: createMethod$1(true)
-};
-
-var ArrayBufferViewCore$i = arrayBufferViewCore;
-var $reduce = arrayReduce.left;
-
-var aTypedArray$h = ArrayBufferViewCore$i.aTypedArray;
-var exportTypedArrayMethod$i = ArrayBufferViewCore$i.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.reduce` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce
-exportTypedArrayMethod$i('reduce', function reduce(callbackfn /* , initialValue */) {
-  var length = arguments.length;
-  return $reduce(aTypedArray$h(this), callbackfn, length, length > 1 ? arguments[1] : undefined);
-});
-
-var ArrayBufferViewCore$h = arrayBufferViewCore;
-var $reduceRight = arrayReduce.right;
-
-var aTypedArray$g = ArrayBufferViewCore$h.aTypedArray;
-var exportTypedArrayMethod$h = ArrayBufferViewCore$h.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.reduceRight` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduceright
-exportTypedArrayMethod$h('reduceRight', function reduceRight(callbackfn /* , initialValue */) {
-  var length = arguments.length;
-  return $reduceRight(aTypedArray$g(this), callbackfn, length, length > 1 ? arguments[1] : undefined);
-});
-
-var ArrayBufferViewCore$g = arrayBufferViewCore;
-
-var aTypedArray$f = ArrayBufferViewCore$g.aTypedArray;
-var exportTypedArrayMethod$g = ArrayBufferViewCore$g.exportTypedArrayMethod;
-var floor$1 = Math.floor;
-
-// `%TypedArray%.prototype.reverse` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse
-exportTypedArrayMethod$g('reverse', function reverse() {
-  var that = this;
-  var length = aTypedArray$f(that).length;
-  var middle = floor$1(length / 2);
-  var index = 0;
-  var value;
-  while (index < middle) {
-    value = that[index];
-    that[index++] = that[--length];
-    that[length] = value;
-  } return that;
-});
-
-var global$e = global$v;
-var call$b = functionCall;
-var ArrayBufferViewCore$f = arrayBufferViewCore;
-var lengthOfArrayLike$6 = lengthOfArrayLike$i;
-var toOffset = toOffset$2;
-var toIndexedObject$2 = toObject$b;
-var fails$b = fails$t;
-
-var RangeError$1 = global$e.RangeError;
-var Int8Array$2 = global$e.Int8Array;
-var Int8ArrayPrototype = Int8Array$2 && Int8Array$2.prototype;
-var $set = Int8ArrayPrototype && Int8ArrayPrototype.set;
-var aTypedArray$e = ArrayBufferViewCore$f.aTypedArray;
-var exportTypedArrayMethod$f = ArrayBufferViewCore$f.exportTypedArrayMethod;
-
-var WORKS_WITH_OBJECTS_AND_GENERIC_ON_TYPED_ARRAYS = !fails$b(function () {
-  // eslint-disable-next-line es/no-typed-arrays -- required for testing
-  var array = new Uint8ClampedArray(2);
-  call$b($set, array, { length: 1, 0: 3 }, 1);
-  return array[1] !== 3;
-});
-
-// https://bugs.chromium.org/p/v8/issues/detail?id=11294 and other
-var TO_OBJECT_BUG = WORKS_WITH_OBJECTS_AND_GENERIC_ON_TYPED_ARRAYS && ArrayBufferViewCore$f.NATIVE_ARRAY_BUFFER_VIEWS && fails$b(function () {
-  var array = new Int8Array$2(2);
-  array.set(1);
-  array.set('2', 1);
-  return array[0] !== 0 || array[1] !== 2;
-});
-
-// `%TypedArray%.prototype.set` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.set
-exportTypedArrayMethod$f('set', function set(arrayLike /* , offset */) {
-  aTypedArray$e(this);
-  var offset = toOffset(arguments.length > 1 ? arguments[1] : undefined, 1);
-  var src = toIndexedObject$2(arrayLike);
-  if (WORKS_WITH_OBJECTS_AND_GENERIC_ON_TYPED_ARRAYS) return call$b($set, this, src, offset);
-  var length = this.length;
-  var len = lengthOfArrayLike$6(src);
-  var index = 0;
-  if (len + offset > length) throw RangeError$1('Wrong length');
-  while (index < len) this[offset + index] = src[index++];
-}, !WORKS_WITH_OBJECTS_AND_GENERIC_ON_TYPED_ARRAYS || TO_OBJECT_BUG);
-
-var uncurryThis$c = functionUncurryThis;
-
-var arraySlice$5 = uncurryThis$c([].slice);
-
-var ArrayBufferViewCore$e = arrayBufferViewCore;
-var typedArraySpeciesConstructor$2 = typedArraySpeciesConstructor$5;
-var fails$a = fails$t;
-var arraySlice$4 = arraySlice$5;
-
-var aTypedArray$d = ArrayBufferViewCore$e.aTypedArray;
-var exportTypedArrayMethod$e = ArrayBufferViewCore$e.exportTypedArrayMethod;
-
-var FORCED$1 = fails$a(function () {
-  // eslint-disable-next-line es/no-typed-arrays -- required for testing
-  new Int8Array(1).slice();
-});
-
-// `%TypedArray%.prototype.slice` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice
-exportTypedArrayMethod$e('slice', function slice(start, end) {
-  var list = arraySlice$4(aTypedArray$d(this), start, end);
-  var C = typedArraySpeciesConstructor$2(this);
-  var index = 0;
-  var length = list.length;
-  var result = new C(length);
-  while (length > index) result[index] = list[index++];
-  return result;
-}, FORCED$1);
-
-var ArrayBufferViewCore$d = arrayBufferViewCore;
-var $some = arrayIteration.some;
-
-var aTypedArray$c = ArrayBufferViewCore$d.aTypedArray;
-var exportTypedArrayMethod$d = ArrayBufferViewCore$d.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.some` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.some
-exportTypedArrayMethod$d('some', function some(callbackfn /* , thisArg */) {
-  return $some(aTypedArray$c(this), callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-});
-
-var arraySlice$3 = arraySliceSimple;
-
-var floor = Math.floor;
-
-var mergeSort = function (array, comparefn) {
-  var length = array.length;
-  var middle = floor(length / 2);
-  return length < 8 ? insertionSort$1(array, comparefn) : merge(
-    array,
-    mergeSort(arraySlice$3(array, 0, middle), comparefn),
-    mergeSort(arraySlice$3(array, middle), comparefn),
-    comparefn
-  );
-};
-
-var insertionSort$1 = function (array, comparefn) {
-  var length = array.length;
-  var i = 1;
-  var element, j;
-
-  while (i < length) {
-    j = i;
-    element = array[i];
-    while (j && comparefn(array[j - 1], element) > 0) {
-      array[j] = array[--j];
-    }
-    if (j !== i++) array[j] = element;
-  } return array;
-};
-
-var merge = function (array, left, right, comparefn) {
-  var llength = left.length;
-  var rlength = right.length;
-  var lindex = 0;
-  var rindex = 0;
-
-  while (lindex < llength || rindex < rlength) {
-    array[lindex + rindex] = (lindex < llength && rindex < rlength)
-      ? comparefn(left[lindex], right[rindex]) <= 0 ? left[lindex++] : right[rindex++]
-      : lindex < llength ? left[lindex++] : right[rindex++];
-  } return array;
-};
-
-var arraySort = mergeSort;
-
-var userAgent$4 = engineUserAgent;
-
-var firefox = userAgent$4.match(/firefox\/(\d+)/i);
-
-var engineFfVersion = !!firefox && +firefox[1];
-
-var UA = engineUserAgent;
-
-var engineIsIeOrEdge = /MSIE|Trident/.test(UA);
-
-var userAgent$3 = engineUserAgent;
-
-var webkit = userAgent$3.match(/AppleWebKit\/(\d+)\./);
-
-var engineWebkitVersion = !!webkit && +webkit[1];
-
-var global$d = global$v;
-var uncurryThis$b = functionUncurryThisClause;
-var fails$9 = fails$t;
-var aCallable$7 = aCallable$d;
-var internalSort = arraySort;
-var ArrayBufferViewCore$c = arrayBufferViewCore;
-var FF = engineFfVersion;
-var IE_OR_EDGE = engineIsIeOrEdge;
-var V8 = engineV8Version;
-var WEBKIT = engineWebkitVersion;
-
-var aTypedArray$b = ArrayBufferViewCore$c.aTypedArray;
-var exportTypedArrayMethod$c = ArrayBufferViewCore$c.exportTypedArrayMethod;
-var Uint16Array$1 = global$d.Uint16Array;
-var nativeSort = Uint16Array$1 && uncurryThis$b(Uint16Array$1.prototype.sort);
-
-// WebKit
-var ACCEPT_INCORRECT_ARGUMENTS = !!nativeSort && !(fails$9(function () {
-  nativeSort(new Uint16Array$1(2), null);
-}) && fails$9(function () {
-  nativeSort(new Uint16Array$1(2), {});
-}));
-
-var STABLE_SORT = !!nativeSort && !fails$9(function () {
-  // feature detection can be too slow, so check engines versions
-  if (V8) return V8 < 74;
-  if (FF) return FF < 67;
-  if (IE_OR_EDGE) return true;
-  if (WEBKIT) return WEBKIT < 602;
-
-  var array = new Uint16Array$1(516);
-  var expected = Array(516);
-  var index, mod;
-
-  for (index = 0; index < 516; index++) {
-    mod = index % 4;
-    array[index] = 515 - index;
-    expected[index] = index - 2 * mod + 3;
-  }
-
-  nativeSort(array, function (a, b) {
-    return (a / 4 | 0) - (b / 4 | 0);
-  });
-
-  for (index = 0; index < 516; index++) {
-    if (array[index] !== expected[index]) return true;
-  }
-});
-
-var getSortCompare = function (comparefn) {
-  return function (x, y) {
-    if (comparefn !== undefined) return +comparefn(x, y) || 0;
-    // eslint-disable-next-line no-self-compare -- NaN check
-    if (y !== y) return -1;
-    // eslint-disable-next-line no-self-compare -- NaN check
-    if (x !== x) return 1;
-    if (x === 0 && y === 0) return 1 / x > 0 && 1 / y < 0 ? 1 : -1;
-    return x > y;
-  };
-};
-
-// `%TypedArray%.prototype.sort` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort
-exportTypedArrayMethod$c('sort', function sort(comparefn) {
-  if (comparefn !== undefined) aCallable$7(comparefn);
-  if (STABLE_SORT) return nativeSort(this, comparefn);
-
-  return internalSort(aTypedArray$b(this), getSortCompare(comparefn));
-}, !STABLE_SORT || ACCEPT_INCORRECT_ARGUMENTS);
-
-var ArrayBufferViewCore$b = arrayBufferViewCore;
-var toLength = toLength$5;
-var toAbsoluteIndex$1 = toAbsoluteIndex$6;
-var typedArraySpeciesConstructor$1 = typedArraySpeciesConstructor$5;
-
-var aTypedArray$a = ArrayBufferViewCore$b.aTypedArray;
-var exportTypedArrayMethod$b = ArrayBufferViewCore$b.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.subarray` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray
-exportTypedArrayMethod$b('subarray', function subarray(begin, end) {
-  var O = aTypedArray$a(this);
-  var length = O.length;
-  var beginIndex = toAbsoluteIndex$1(begin, length);
-  var C = typedArraySpeciesConstructor$1(O);
-  return new C(
-    O.buffer,
-    O.byteOffset + beginIndex * O.BYTES_PER_ELEMENT,
-    toLength((end === undefined ? length : toAbsoluteIndex$1(end, length)) - beginIndex)
-  );
-});
-
-var global$c = global$v;
-var apply$1 = functionApply;
-var ArrayBufferViewCore$a = arrayBufferViewCore;
-var fails$8 = fails$t;
-var arraySlice$2 = arraySlice$5;
-
-var Int8Array$1 = global$c.Int8Array;
-var aTypedArray$9 = ArrayBufferViewCore$a.aTypedArray;
-var exportTypedArrayMethod$a = ArrayBufferViewCore$a.exportTypedArrayMethod;
-var $toLocaleString = [].toLocaleString;
-
-// iOS Safari 6.x fails here
-var TO_LOCALE_STRING_BUG = !!Int8Array$1 && fails$8(function () {
-  $toLocaleString.call(new Int8Array$1(1));
-});
-
-var FORCED = fails$8(function () {
-  return [1, 2].toLocaleString() !== new Int8Array$1([1, 2]).toLocaleString();
-}) || !fails$8(function () {
-  Int8Array$1.prototype.toLocaleString.call([1, 2]);
-});
-
-// `%TypedArray%.prototype.toLocaleString` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring
-exportTypedArrayMethod$a('toLocaleString', function toLocaleString() {
-  return apply$1(
-    $toLocaleString,
-    TO_LOCALE_STRING_BUG ? arraySlice$2(aTypedArray$9(this)) : aTypedArray$9(this),
-    arraySlice$2(arguments)
-  );
-}, FORCED);
-
-var exportTypedArrayMethod$9 = arrayBufferViewCore.exportTypedArrayMethod;
-var fails$7 = fails$t;
-var global$b = global$v;
-var uncurryThis$a = functionUncurryThis;
-
-var Uint8Array$2 = global$b.Uint8Array;
-var Uint8ArrayPrototype = Uint8Array$2 && Uint8Array$2.prototype || {};
-var arrayToString = [].toString;
-var join = uncurryThis$a([].join);
-
-if (fails$7(function () { arrayToString.call({}); })) {
-  arrayToString = function toString() {
-    return join(this);
-  };
-}
-
-var IS_NOT_ARRAY_METHOD = Uint8ArrayPrototype.toString !== arrayToString;
-
-// `%TypedArray%.prototype.toString` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.tostring
-exportTypedArrayMethod$9('toString', arrayToString, IS_NOT_ARRAY_METHOD);
-
-var lengthOfArrayLike$5 = lengthOfArrayLike$i;
-
-// https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toReversed
-// https://tc39.es/proposal-change-array-by-copy/#sec-%typedarray%.prototype.toReversed
-var arrayToReversed$1 = function (O, C) {
-  var len = lengthOfArrayLike$5(O);
-  var A = new C(len);
-  var k = 0;
-  for (; k < len; k++) A[k] = O[len - k - 1];
-  return A;
-};
-
-var arrayToReversed = arrayToReversed$1;
-var ArrayBufferViewCore$9 = arrayBufferViewCore;
-
-var aTypedArray$8 = ArrayBufferViewCore$9.aTypedArray;
-var exportTypedArrayMethod$8 = ArrayBufferViewCore$9.exportTypedArrayMethod;
-var getTypedArrayConstructor$4 = ArrayBufferViewCore$9.getTypedArrayConstructor;
-
-// `%TypedArray%.prototype.toReversed` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.toreversed
-exportTypedArrayMethod$8('toReversed', function toReversed() {
-  return arrayToReversed(aTypedArray$8(this), getTypedArrayConstructor$4(this));
-});
-
-var ArrayBufferViewCore$8 = arrayBufferViewCore;
-var uncurryThis$9 = functionUncurryThis;
-var aCallable$6 = aCallable$d;
-var arrayFromConstructorAndList$3 = arrayFromConstructorAndList$5;
-
-var aTypedArray$7 = ArrayBufferViewCore$8.aTypedArray;
-var getTypedArrayConstructor$3 = ArrayBufferViewCore$8.getTypedArrayConstructor;
-var exportTypedArrayMethod$7 = ArrayBufferViewCore$8.exportTypedArrayMethod;
-var sort = uncurryThis$9(ArrayBufferViewCore$8.TypedArrayPrototype.sort);
-
-// `%TypedArray%.prototype.toSorted` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.tosorted
-exportTypedArrayMethod$7('toSorted', function toSorted(compareFn) {
-  if (compareFn !== undefined) aCallable$6(compareFn);
-  var O = aTypedArray$7(this);
-  var A = arrayFromConstructorAndList$3(getTypedArrayConstructor$3(O), O);
-  return sort(A, compareFn);
-});
-
-var lengthOfArrayLike$4 = lengthOfArrayLike$i;
-var toIntegerOrInfinity$2 = toIntegerOrInfinity$b;
-
-var $RangeError = RangeError;
-
-// https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.with
-// https://tc39.es/proposal-change-array-by-copy/#sec-%typedarray%.prototype.with
-var arrayWith$1 = function (O, C, index, value) {
-  var len = lengthOfArrayLike$4(O);
-  var relativeIndex = toIntegerOrInfinity$2(index);
-  var actualIndex = relativeIndex < 0 ? len + relativeIndex : relativeIndex;
-  if (actualIndex >= len || actualIndex < 0) throw $RangeError('Incorrect index');
-  var A = new C(len);
-  var k = 0;
-  for (; k < len; k++) A[k] = k === actualIndex ? value : O[k];
-  return A;
-};
-
-var arrayWith = arrayWith$1;
-var ArrayBufferViewCore$7 = arrayBufferViewCore;
-var isBigIntArray$1 = isBigIntArray$3;
-var toIntegerOrInfinity$1 = toIntegerOrInfinity$b;
-var toBigInt$1 = toBigInt$4;
-
-var aTypedArray$6 = ArrayBufferViewCore$7.aTypedArray;
-var getTypedArrayConstructor$2 = ArrayBufferViewCore$7.getTypedArrayConstructor;
-var exportTypedArrayMethod$6 = ArrayBufferViewCore$7.exportTypedArrayMethod;
-
-var PROPER_ORDER$1 = !!function () {
-  try {
-    // eslint-disable-next-line no-throw-literal, es/no-typed-arrays, es/no-array-prototype-with -- required for testing
-    new Int8Array(1)['with'](2, { valueOf: function () { throw 8; } });
-  } catch (error) {
-    // some early implementations, like WebKit, does not follow the final semantic
-    // https://github.com/tc39/proposal-change-array-by-copy/pull/86
-    return error === 8;
-  }
-}();
-
-// `%TypedArray%.prototype.with` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.with
-exportTypedArrayMethod$6('with', { 'with': function (index, value) {
-  var O = aTypedArray$6(this);
-  var relativeIndex = toIntegerOrInfinity$1(index);
-  var actualValue = isBigIntArray$1(O) ? toBigInt$1(value) : +value;
-  return arrayWith(O, getTypedArrayConstructor$2(O), relativeIndex, actualValue);
-} }['with'], !PROPER_ORDER$1);
-
-var toIndexedObject$1 = toIndexedObject$9;
-var addToUnscopables = addToUnscopables$2;
-var Iterators = iterators;
-var InternalStateModule$3 = internalState;
-var defineProperty$1 = objectDefineProperty.f;
-var defineIterator$1 = iteratorDefine;
-var createIterResultObject$2 = createIterResultObject$4;
-var DESCRIPTORS$1 = descriptors;
-
-var ARRAY_ITERATOR = 'Array Iterator';
-var setInternalState$3 = InternalStateModule$3.set;
-var getInternalState$1 = InternalStateModule$3.getterFor(ARRAY_ITERATOR);
-
-// `Array.prototype.entries` method
-// https://tc39.es/ecma262/#sec-array.prototype.entries
-// `Array.prototype.keys` method
-// https://tc39.es/ecma262/#sec-array.prototype.keys
-// `Array.prototype.values` method
-// https://tc39.es/ecma262/#sec-array.prototype.values
-// `Array.prototype[@@iterator]` method
-// https://tc39.es/ecma262/#sec-array.prototype-@@iterator
-// `CreateArrayIterator` internal method
-// https://tc39.es/ecma262/#sec-createarrayiterator
-var es_array_iterator = defineIterator$1(Array, 'Array', function (iterated, kind) {
-  setInternalState$3(this, {
-    type: ARRAY_ITERATOR,
-    target: toIndexedObject$1(iterated), // target
-    index: 0,                          // next index
-    kind: kind                         // kind
-  });
-// `%ArrayIteratorPrototype%.next` method
-// https://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next
-}, function () {
-  var state = getInternalState$1(this);
-  var target = state.target;
-  var kind = state.kind;
-  var index = state.index++;
-  if (!target || index >= target.length) {
-    state.target = undefined;
-    return createIterResultObject$2(undefined, true);
-  }
-  switch (kind) {
-    case 'keys': return createIterResultObject$2(index, false);
-    case 'values': return createIterResultObject$2(target[index], false);
-  } return createIterResultObject$2([index, target[index]], false);
-}, 'values');
-
-// argumentsList[@@iterator] is %ArrayProto_values%
-// https://tc39.es/ecma262/#sec-createunmappedargumentsobject
-// https://tc39.es/ecma262/#sec-createmappedargumentsobject
-var values = Iterators.Arguments = Iterators.Array;
-
-// https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
-addToUnscopables('keys');
-addToUnscopables('values');
-addToUnscopables('entries');
-
-// V8 ~ Chrome 45- bug
-if (DESCRIPTORS$1 && values.name !== 'values') try {
-  defineProperty$1(values, 'name', { value: 'values' });
-} catch (error) { /* empty */ }
-
-var global$a = global$v;
-var fails$6 = fails$t;
-var uncurryThis$8 = functionUncurryThis;
-var ArrayBufferViewCore$6 = arrayBufferViewCore;
-var ArrayIterators = es_array_iterator;
-var wellKnownSymbol$4 = wellKnownSymbol$j;
-
-var ITERATOR = wellKnownSymbol$4('iterator');
-var Uint8Array$1 = global$a.Uint8Array;
-var arrayValues = uncurryThis$8(ArrayIterators.values);
-var arrayKeys = uncurryThis$8(ArrayIterators.keys);
-var arrayEntries = uncurryThis$8(ArrayIterators.entries);
-var aTypedArray$5 = ArrayBufferViewCore$6.aTypedArray;
-var exportTypedArrayMethod$5 = ArrayBufferViewCore$6.exportTypedArrayMethod;
-var TypedArrayPrototype = Uint8Array$1 && Uint8Array$1.prototype;
-
-var GENERIC = !fails$6(function () {
-  TypedArrayPrototype[ITERATOR].call([1]);
-});
-
-var ITERATOR_IS_VALUES = !!TypedArrayPrototype
-  && TypedArrayPrototype.values
-  && TypedArrayPrototype[ITERATOR] === TypedArrayPrototype.values
-  && TypedArrayPrototype.values.name === 'values';
-
-var typedArrayValues = function values() {
-  return arrayValues(aTypedArray$5(this));
-};
-
-// `%TypedArray%.prototype.entries` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries
-exportTypedArrayMethod$5('entries', function entries() {
-  return arrayEntries(aTypedArray$5(this));
-}, GENERIC);
-// `%TypedArray%.prototype.keys` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys
-exportTypedArrayMethod$5('keys', function keys() {
-  return arrayKeys(aTypedArray$5(this));
-}, GENERIC);
-// `%TypedArray%.prototype.values` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype.values
-exportTypedArrayMethod$5('values', typedArrayValues, GENERIC || !ITERATOR_IS_VALUES, { name: 'values' });
-// `%TypedArray%.prototype[@@iterator]` method
-// https://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator
-exportTypedArrayMethod$5(ITERATOR, typedArrayValues, GENERIC || !ITERATOR_IS_VALUES, { name: 'values' });
-
-// TODO: Remove from `core-js@4`
-var ArrayBufferViewCore$5 = arrayBufferViewCore;
-var lengthOfArrayLike$3 = lengthOfArrayLike$i;
-var isBigIntArray = isBigIntArray$3;
-var toAbsoluteIndex = toAbsoluteIndex$6;
-var toBigInt = toBigInt$4;
-var toIntegerOrInfinity = toIntegerOrInfinity$b;
-var fails$5 = fails$t;
-
-var aTypedArray$4 = ArrayBufferViewCore$5.aTypedArray;
-var getTypedArrayConstructor$1 = ArrayBufferViewCore$5.getTypedArrayConstructor;
-var exportTypedArrayMethod$4 = ArrayBufferViewCore$5.exportTypedArrayMethod;
-var max = Math.max;
-var min = Math.min;
-
-// some early implementations, like WebKit, does not follow the final semantic
-var PROPER_ORDER = !fails$5(function () {
-  // eslint-disable-next-line es/no-typed-arrays -- required for testing
-  var array = new Int8Array([1]);
-
-  var spliced = array.toSpliced(1, 0, {
-    valueOf: function () {
-      array[0] = 2;
-      return 3;
-    }
-  });
-
-  return spliced[0] !== 2 || spliced[1] !== 3;
-});
-
-// `%TypedArray%.prototype.toSpliced` method
-// https://tc39.es/proposal-change-array-by-copy/#sec-%typedarray%.prototype.toSpliced
-exportTypedArrayMethod$4('toSpliced', function toSpliced(start, deleteCount /* , ...items */) {
-  var O = aTypedArray$4(this);
-  var C = getTypedArrayConstructor$1(O);
-  var len = lengthOfArrayLike$3(O);
-  var actualStart = toAbsoluteIndex(start, len);
-  var argumentsLength = arguments.length;
-  var k = 0;
-  var insertCount, actualDeleteCount, thisIsBigIntArray, convertedItems, value, newLen, A;
-  if (argumentsLength === 0) {
-    insertCount = actualDeleteCount = 0;
-  } else if (argumentsLength === 1) {
-    insertCount = 0;
-    actualDeleteCount = len - actualStart;
-  } else {
-    actualDeleteCount = min(max(toIntegerOrInfinity(deleteCount), 0), len - actualStart);
-    insertCount = argumentsLength - 2;
-    if (insertCount) {
-      convertedItems = new C(insertCount);
-      thisIsBigIntArray = isBigIntArray(convertedItems);
-      for (var i = 2; i < argumentsLength; i++) {
-        value = arguments[i];
-        // FF30- typed arrays doesn't properly convert objects to typed array values
-        convertedItems[i - 2] = thisIsBigIntArray ? toBigInt(value) : +value;
-      }
-    }
-  }
-  newLen = len + insertCount - actualDeleteCount;
-  A = new C(newLen);
-
-  for (; k < actualStart; k++) A[k] = O[k];
-  for (; k < actualStart + insertCount; k++) A[k] = convertedItems[k - actualStart];
-  for (; k < newLen; k++) A[k] = O[k + actualDeleteCount - insertCount];
-
-  return A;
-}, !PROPER_ORDER);
-
-var internalMetadata = {exports: {}};
-
-var objectGetOwnPropertyNamesExternal = {};
-
-/* eslint-disable es/no-object-getownpropertynames -- safe */
-var classof$2 = classofRaw$2;
-var toIndexedObject = toIndexedObject$9;
-var $getOwnPropertyNames = objectGetOwnPropertyNames.f;
-var arraySlice$1 = arraySliceSimple;
-
-var windowNames = typeof weapp.window == 'object' && weapp.window && Object.getOwnPropertyNames
-  ? Object.getOwnPropertyNames(weapp.window) : [];
-
-var getWindowNames = function (it) {
-  try {
-    return $getOwnPropertyNames(it);
-  } catch (error) {
-    return arraySlice$1(windowNames);
-  }
-};
-
-// fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
-objectGetOwnPropertyNamesExternal.f = function getOwnPropertyNames(it) {
-  return windowNames && classof$2(it) === 'Window'
-    ? getWindowNames(it)
-    : $getOwnPropertyNames(toIndexedObject(it));
-};
-
-// FF26- bug: ArrayBuffers are non-extensible, but Object.isExtensible does not report it
-var fails$4 = fails$t;
-
-var arrayBufferNonExtensible = fails$4(function () {
-  if (typeof ArrayBuffer == 'function') {
-    var buffer = new ArrayBuffer(8);
-    // eslint-disable-next-line es/no-object-isextensible, es/no-object-defineproperty -- safe
-    if (Object.isExtensible(buffer)) Object.defineProperty(buffer, 'a', { value: 8 });
-  }
-});
-
-var fails$3 = fails$t;
-var isObject$6 = isObject$i;
-var classof$1 = classofRaw$2;
-var ARRAY_BUFFER_NON_EXTENSIBLE = arrayBufferNonExtensible;
-
-// eslint-disable-next-line es/no-object-isextensible -- safe
-var $isExtensible = Object.isExtensible;
-var FAILS_ON_PRIMITIVES = fails$3(function () { $isExtensible(1); });
-
-// `Object.isExtensible` method
-// https://tc39.es/ecma262/#sec-object.isextensible
-var objectIsExtensible = (FAILS_ON_PRIMITIVES || ARRAY_BUFFER_NON_EXTENSIBLE) ? function isExtensible(it) {
-  if (!isObject$6(it)) return false;
-  if (ARRAY_BUFFER_NON_EXTENSIBLE && classof$1(it) === 'ArrayBuffer') return false;
-  return $isExtensible ? $isExtensible(it) : true;
-} : $isExtensible;
-
-var fails$2 = fails$t;
-
-var freezing = !fails$2(function () {
-  // eslint-disable-next-line es/no-object-isextensible, es/no-object-preventextensions -- required for testing
-  return Object.isExtensible(Object.preventExtensions({}));
-});
-
-var $$7 = _export;
-var uncurryThis$7 = functionUncurryThis;
-var hiddenKeys = hiddenKeys$5;
-var isObject$5 = isObject$i;
-var hasOwn$1 = hasOwnProperty_1;
-var defineProperty = objectDefineProperty.f;
-var getOwnPropertyNamesModule = objectGetOwnPropertyNames;
-var getOwnPropertyNamesExternalModule = objectGetOwnPropertyNamesExternal;
-var isExtensible = objectIsExtensible;
-var uid = uid$4;
-var FREEZING = freezing;
-
-var REQUIRED = false;
-var METADATA = uid('meta');
-var id = 0;
-
-var setMetadata = function (it) {
-  defineProperty(it, METADATA, { value: {
-    objectID: 'O' + id++, // object ID
-    weakData: {}          // weak collections IDs
-  } });
-};
-
-var fastKey$1 = function (it, create) {
-  // return a primitive with prefix
-  if (!isObject$5(it)) return typeof it == 'symbol' ? it : (typeof it == 'string' ? 'S' : 'P') + it;
-  if (!hasOwn$1(it, METADATA)) {
-    // can't set metadata to uncaught frozen object
-    if (!isExtensible(it)) return 'F';
-    // not necessary to add metadata
-    if (!create) return 'E';
-    // add missing metadata
-    setMetadata(it);
-  // return object ID
-  } return it[METADATA].objectID;
-};
-
-var getWeakData = function (it, create) {
-  if (!hasOwn$1(it, METADATA)) {
-    // can't set metadata to uncaught frozen object
-    if (!isExtensible(it)) return true;
-    // not necessary to add metadata
-    if (!create) return false;
-    // add missing metadata
-    setMetadata(it);
-  // return the store of weak collections IDs
-  } return it[METADATA].weakData;
-};
-
-// add metadata on freeze-family methods calling
-var onFreeze = function (it) {
-  if (FREEZING && REQUIRED && isExtensible(it) && !hasOwn$1(it, METADATA)) setMetadata(it);
-  return it;
-};
-
-var enable = function () {
-  meta.enable = function () { /* empty */ };
-  REQUIRED = true;
-  var getOwnPropertyNames = getOwnPropertyNamesModule.f;
-  var splice = uncurryThis$7([].splice);
-  var test = {};
-  test[METADATA] = 1;
-
-  // prevent exposing of metadata key
-  if (getOwnPropertyNames(test).length) {
-    getOwnPropertyNamesModule.f = function (it) {
-      var result = getOwnPropertyNames(it);
-      for (var i = 0, length = result.length; i < length; i++) {
-        if (result[i] === METADATA) {
-          splice(result, i, 1);
-          break;
-        }
-      } return result;
-    };
-
-    $$7({ target: 'Object', stat: true, forced: true }, {
-      getOwnPropertyNames: getOwnPropertyNamesExternalModule.f
-    });
-  }
-};
-
-var meta = internalMetadata.exports = {
-  enable: enable,
-  fastKey: fastKey$1,
-  getWeakData: getWeakData,
-  onFreeze: onFreeze
-};
-
-hiddenKeys[METADATA] = true;
-
-var call$a = functionCall;
-var anObject$5 = anObject$d;
-var getMethod$4 = getMethod$7;
-
-var iteratorClose$1 = function (iterator, kind, value) {
-  var innerResult, innerError;
-  anObject$5(iterator);
-  try {
-    innerResult = getMethod$4(iterator, 'return');
-    if (!innerResult) {
-      if (kind === 'throw') throw value;
-      return value;
-    }
-    innerResult = call$a(innerResult, iterator);
-  } catch (error) {
-    innerError = true;
-    innerResult = error;
-  }
-  if (kind === 'throw') throw value;
-  if (innerError) throw innerResult;
-  anObject$5(innerResult);
-  return value;
-};
-
-var bind$6 = functionBindContext;
-var call$9 = functionCall;
-var anObject$4 = anObject$d;
-var tryToString = tryToString$6;
-var isArrayIteratorMethod = isArrayIteratorMethod$2;
-var lengthOfArrayLike$2 = lengthOfArrayLike$i;
-var isPrototypeOf = objectIsPrototypeOf;
-var getIterator$2 = getIterator$4;
-var getIteratorMethod$1 = getIteratorMethod$4;
-var iteratorClose = iteratorClose$1;
-
-var $TypeError$3 = TypeError;
-
-var Result = function (stopped, result) {
-  this.stopped = stopped;
-  this.result = result;
-};
-
-var ResultPrototype = Result.prototype;
-
-var iterate$5 = function (iterable, unboundFunction, options) {
-  var that = options && options.that;
-  var AS_ENTRIES = !!(options && options.AS_ENTRIES);
-  var IS_RECORD = !!(options && options.IS_RECORD);
-  var IS_ITERATOR = !!(options && options.IS_ITERATOR);
-  var INTERRUPTED = !!(options && options.INTERRUPTED);
-  var fn = bind$6(unboundFunction, that);
-  var iterator, iterFn, index, length, result, next, step;
-
-  var stop = function (condition) {
-    if (iterator) iteratorClose(iterator, 'normal', condition);
-    return new Result(true, condition);
-  };
-
-  var callFn = function (value) {
-    if (AS_ENTRIES) {
-      anObject$4(value);
-      return INTERRUPTED ? fn(value[0], value[1], stop) : fn(value[0], value[1]);
-    } return INTERRUPTED ? fn(value, stop) : fn(value);
-  };
-
-  if (IS_RECORD) {
-    iterator = iterable.iterator;
-  } else if (IS_ITERATOR) {
-    iterator = iterable;
-  } else {
-    iterFn = getIteratorMethod$1(iterable);
-    if (!iterFn) throw $TypeError$3(tryToString(iterable) + ' is not iterable');
-    // optimisation for array iterators
-    if (isArrayIteratorMethod(iterFn)) {
-      for (index = 0, length = lengthOfArrayLike$2(iterable); length > index; index++) {
-        result = callFn(iterable[index]);
-        if (result && isPrototypeOf(ResultPrototype, result)) return result;
-      } return new Result(false);
-    }
-    iterator = getIterator$2(iterable, iterFn);
-  }
-
-  next = IS_RECORD ? iterable.next : iterator.next;
-  while (!(step = call$9(next, iterator)).done) {
-    try {
-      result = callFn(step.value);
-    } catch (error) {
-      iteratorClose(iterator, 'throw', error);
-    }
-    if (typeof result == 'object' && result && isPrototypeOf(ResultPrototype, result)) return result;
-  } return new Result(false);
-};
-
-var $$6 = _export;
-var global$9 = global$v;
-var uncurryThis$6 = functionUncurryThis;
-var isForced$1 = isForced_1;
-var defineBuiltIn$3 = defineBuiltIn$a;
-var InternalMetadataModule = internalMetadata.exports;
-var iterate$4 = iterate$5;
-var anInstance$2 = anInstance$5;
-var isCallable$5 = isCallable$o;
-var isNullOrUndefined$2 = isNullOrUndefined$7;
-var isObject$4 = isObject$i;
-var fails$1 = fails$t;
-var checkCorrectnessOfIteration$1 = checkCorrectnessOfIteration$3;
-var setToStringTag$1 = setToStringTag$5;
-var inheritIfRequired = inheritIfRequired$2;
-
-var collection$1 = function (CONSTRUCTOR_NAME, wrapper, common) {
-  var IS_MAP = CONSTRUCTOR_NAME.indexOf('Map') !== -1;
-  var IS_WEAK = CONSTRUCTOR_NAME.indexOf('Weak') !== -1;
-  var ADDER = IS_MAP ? 'set' : 'add';
-  var NativeConstructor = global$9[CONSTRUCTOR_NAME];
-  var NativePrototype = NativeConstructor && NativeConstructor.prototype;
-  var Constructor = NativeConstructor;
-  var exported = {};
-
-  var fixMethod = function (KEY) {
-    var uncurriedNativeMethod = uncurryThis$6(NativePrototype[KEY]);
-    defineBuiltIn$3(NativePrototype, KEY,
-      KEY === 'add' ? function add(value) {
-        uncurriedNativeMethod(this, value === 0 ? 0 : value);
-        return this;
-      } : KEY === 'delete' ? function (key) {
-        return IS_WEAK && !isObject$4(key) ? false : uncurriedNativeMethod(this, key === 0 ? 0 : key);
-      } : KEY === 'get' ? function get(key) {
-        return IS_WEAK && !isObject$4(key) ? undefined : uncurriedNativeMethod(this, key === 0 ? 0 : key);
-      } : KEY === 'has' ? function has(key) {
-        return IS_WEAK && !isObject$4(key) ? false : uncurriedNativeMethod(this, key === 0 ? 0 : key);
-      } : function set(key, value) {
-        uncurriedNativeMethod(this, key === 0 ? 0 : key, value);
-        return this;
-      }
-    );
-  };
-
-  var REPLACE = isForced$1(
-    CONSTRUCTOR_NAME,
-    !isCallable$5(NativeConstructor) || !(IS_WEAK || NativePrototype.forEach && !fails$1(function () {
-      new NativeConstructor().entries().next();
-    }))
-  );
-
-  if (REPLACE) {
-    // create collection constructor
-    Constructor = common.getConstructor(wrapper, CONSTRUCTOR_NAME, IS_MAP, ADDER);
-    InternalMetadataModule.enable();
-  } else if (isForced$1(CONSTRUCTOR_NAME, true)) {
-    var instance = new Constructor();
-    // early implementations not supports chaining
-    var HASNT_CHAINING = instance[ADDER](IS_WEAK ? {} : -0, 1) !== instance;
-    // V8 ~ Chromium 40- weak-collections throws on primitives, but should return false
-    var THROWS_ON_PRIMITIVES = fails$1(function () { instance.has(1); });
-    // most early implementations doesn't supports iterables, most modern - not close it correctly
-    // eslint-disable-next-line no-new -- required for testing
-    var ACCEPT_ITERABLES = checkCorrectnessOfIteration$1(function (iterable) { new NativeConstructor(iterable); });
-    // for early implementations -0 and +0 not the same
-    var BUGGY_ZERO = !IS_WEAK && fails$1(function () {
-      // V8 ~ Chromium 42- fails only with 5+ elements
-      var $instance = new NativeConstructor();
-      var index = 5;
-      while (index--) $instance[ADDER](index, index);
-      return !$instance.has(-0);
-    });
-
-    if (!ACCEPT_ITERABLES) {
-      Constructor = wrapper(function (dummy, iterable) {
-        anInstance$2(dummy, NativePrototype);
-        var that = inheritIfRequired(new NativeConstructor(), dummy, Constructor);
-        if (!isNullOrUndefined$2(iterable)) iterate$4(iterable, that[ADDER], { that: that, AS_ENTRIES: IS_MAP });
-        return that;
-      });
-      Constructor.prototype = NativePrototype;
-      NativePrototype.constructor = Constructor;
-    }
-
-    if (THROWS_ON_PRIMITIVES || BUGGY_ZERO) {
-      fixMethod('delete');
-      fixMethod('has');
-      IS_MAP && fixMethod('get');
-    }
-
-    if (BUGGY_ZERO || HASNT_CHAINING) fixMethod(ADDER);
-
-    // weak collections should not contains .clear method
-    if (IS_WEAK && NativePrototype.clear) delete NativePrototype.clear;
-  }
-
-  exported[CONSTRUCTOR_NAME] = Constructor;
-  $$6({ global: true, constructor: true, forced: Constructor !== NativeConstructor }, exported);
-
-  setToStringTag$1(Constructor, CONSTRUCTOR_NAME);
-
-  if (!IS_WEAK) common.setStrong(Constructor, CONSTRUCTOR_NAME, IS_MAP);
-
-  return Constructor;
-};
-
-var create$1 = objectCreate$1;
-var defineBuiltInAccessor = defineBuiltInAccessor$5;
-var defineBuiltIns$1 = defineBuiltIns$3;
-var bind$5 = functionBindContext;
-var anInstance$1 = anInstance$5;
-var isNullOrUndefined$1 = isNullOrUndefined$7;
-var iterate$3 = iterate$5;
-var defineIterator = iteratorDefine;
-var createIterResultObject$1 = createIterResultObject$4;
-var setSpecies$1 = setSpecies$3;
-var DESCRIPTORS = descriptors;
-var fastKey = internalMetadata.exports.fastKey;
-var InternalStateModule$2 = internalState;
-
-var setInternalState$2 = InternalStateModule$2.set;
-var internalStateGetterFor = InternalStateModule$2.getterFor;
-
-var collectionStrong$1 = {
-  getConstructor: function (wrapper, CONSTRUCTOR_NAME, IS_MAP, ADDER) {
-    var Constructor = wrapper(function (that, iterable) {
-      anInstance$1(that, Prototype);
-      setInternalState$2(that, {
-        type: CONSTRUCTOR_NAME,
-        index: create$1(null),
-        first: undefined,
-        last: undefined,
-        size: 0
-      });
-      if (!DESCRIPTORS) that.size = 0;
-      if (!isNullOrUndefined$1(iterable)) iterate$3(iterable, that[ADDER], { that: that, AS_ENTRIES: IS_MAP });
-    });
-
-    var Prototype = Constructor.prototype;
-
-    var getInternalState = internalStateGetterFor(CONSTRUCTOR_NAME);
-
-    var define = function (that, key, value) {
-      var state = getInternalState(that);
-      var entry = getEntry(that, key);
-      var previous, index;
-      // change existing entry
-      if (entry) {
-        entry.value = value;
-      // create new entry
-      } else {
-        state.last = entry = {
-          index: index = fastKey(key, true),
-          key: key,
-          value: value,
-          previous: previous = state.last,
-          next: undefined,
-          removed: false
-        };
-        if (!state.first) state.first = entry;
-        if (previous) previous.next = entry;
-        if (DESCRIPTORS) state.size++;
-        else that.size++;
-        // add to index
-        if (index !== 'F') state.index[index] = entry;
-      } return that;
-    };
-
-    var getEntry = function (that, key) {
-      var state = getInternalState(that);
-      // fast case
-      var index = fastKey(key);
-      var entry;
-      if (index !== 'F') return state.index[index];
-      // frozen object case
-      for (entry = state.first; entry; entry = entry.next) {
-        if (entry.key === key) return entry;
-      }
-    };
-
-    defineBuiltIns$1(Prototype, {
-      // `{ Map, Set }.prototype.clear()` methods
-      // https://tc39.es/ecma262/#sec-map.prototype.clear
-      // https://tc39.es/ecma262/#sec-set.prototype.clear
-      clear: function clear() {
-        var that = this;
-        var state = getInternalState(that);
-        var data = state.index;
-        var entry = state.first;
-        while (entry) {
-          entry.removed = true;
-          if (entry.previous) entry.previous = entry.previous.next = undefined;
-          delete data[entry.index];
-          entry = entry.next;
-        }
-        state.first = state.last = undefined;
-        if (DESCRIPTORS) state.size = 0;
-        else that.size = 0;
-      },
-      // `{ Map, Set }.prototype.delete(key)` methods
-      // https://tc39.es/ecma262/#sec-map.prototype.delete
-      // https://tc39.es/ecma262/#sec-set.prototype.delete
-      'delete': function (key) {
-        var that = this;
-        var state = getInternalState(that);
-        var entry = getEntry(that, key);
-        if (entry) {
-          var next = entry.next;
-          var prev = entry.previous;
-          delete state.index[entry.index];
-          entry.removed = true;
-          if (prev) prev.next = next;
-          if (next) next.previous = prev;
-          if (state.first === entry) state.first = next;
-          if (state.last === entry) state.last = prev;
-          if (DESCRIPTORS) state.size--;
-          else that.size--;
-        } return !!entry;
-      },
-      // `{ Map, Set }.prototype.forEach(callbackfn, thisArg = undefined)` methods
-      // https://tc39.es/ecma262/#sec-map.prototype.foreach
-      // https://tc39.es/ecma262/#sec-set.prototype.foreach
-      forEach: function forEach(callbackfn /* , that = undefined */) {
-        var state = getInternalState(this);
-        var boundFunction = bind$5(callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-        var entry;
-        while (entry = entry ? entry.next : state.first) {
-          boundFunction(entry.value, entry.key, this);
-          // revert to the last existing entry
-          while (entry && entry.removed) entry = entry.previous;
-        }
-      },
-      // `{ Map, Set}.prototype.has(key)` methods
-      // https://tc39.es/ecma262/#sec-map.prototype.has
-      // https://tc39.es/ecma262/#sec-set.prototype.has
-      has: function has(key) {
-        return !!getEntry(this, key);
-      }
-    });
-
-    defineBuiltIns$1(Prototype, IS_MAP ? {
-      // `Map.prototype.get(key)` method
-      // https://tc39.es/ecma262/#sec-map.prototype.get
-      get: function get(key) {
-        var entry = getEntry(this, key);
-        return entry && entry.value;
-      },
-      // `Map.prototype.set(key, value)` method
-      // https://tc39.es/ecma262/#sec-map.prototype.set
-      set: function set(key, value) {
-        return define(this, key === 0 ? 0 : key, value);
-      }
-    } : {
-      // `Set.prototype.add(value)` method
-      // https://tc39.es/ecma262/#sec-set.prototype.add
-      add: function add(value) {
-        return define(this, value = value === 0 ? 0 : value, value);
-      }
-    });
-    if (DESCRIPTORS) defineBuiltInAccessor(Prototype, 'size', {
-      configurable: true,
-      get: function () {
-        return getInternalState(this).size;
-      }
-    });
-    return Constructor;
-  },
-  setStrong: function (Constructor, CONSTRUCTOR_NAME, IS_MAP) {
-    var ITERATOR_NAME = CONSTRUCTOR_NAME + ' Iterator';
-    var getInternalCollectionState = internalStateGetterFor(CONSTRUCTOR_NAME);
-    var getInternalIteratorState = internalStateGetterFor(ITERATOR_NAME);
-    // `{ Map, Set }.prototype.{ keys, values, entries, @@iterator }()` methods
-    // https://tc39.es/ecma262/#sec-map.prototype.entries
-    // https://tc39.es/ecma262/#sec-map.prototype.keys
-    // https://tc39.es/ecma262/#sec-map.prototype.values
-    // https://tc39.es/ecma262/#sec-map.prototype-@@iterator
-    // https://tc39.es/ecma262/#sec-set.prototype.entries
-    // https://tc39.es/ecma262/#sec-set.prototype.keys
-    // https://tc39.es/ecma262/#sec-set.prototype.values
-    // https://tc39.es/ecma262/#sec-set.prototype-@@iterator
-    defineIterator(Constructor, CONSTRUCTOR_NAME, function (iterated, kind) {
-      setInternalState$2(this, {
-        type: ITERATOR_NAME,
-        target: iterated,
-        state: getInternalCollectionState(iterated),
-        kind: kind,
-        last: undefined
-      });
-    }, function () {
-      var state = getInternalIteratorState(this);
-      var kind = state.kind;
-      var entry = state.last;
-      // revert to the last existing entry
-      while (entry && entry.removed) entry = entry.previous;
-      // get next entry
-      if (!state.target || !(state.last = entry = entry ? entry.next : state.state.first)) {
-        // or finish the iteration
-        state.target = undefined;
-        return createIterResultObject$1(undefined, true);
-      }
-      // return step by kind
-      if (kind === 'keys') return createIterResultObject$1(entry.key, false);
-      if (kind === 'values') return createIterResultObject$1(entry.value, false);
-      return createIterResultObject$1([entry.key, entry.value], false);
-    }, IS_MAP ? 'entries' : 'values', !IS_MAP, true);
-
-    // `{ Map, Set }.prototype[@@species]` accessors
-    // https://tc39.es/ecma262/#sec-get-map-@@species
-    // https://tc39.es/ecma262/#sec-get-set-@@species
-    setSpecies$1(CONSTRUCTOR_NAME);
-  }
-};
-
-var collection = collection$1;
-var collectionStrong = collectionStrong$1;
-
-// `Map` constructor
-// https://tc39.es/ecma262/#sec-map-objects
-collection('Map', function (init) {
-  return function Map() { return init(this, arguments.length ? arguments[0] : undefined); };
-}, collectionStrong);
-
-var global$8 = global$v;
-var classof = classofRaw$2;
-
-var engineIsNode = classof(global$8.process) === 'process';
-
-var $TypeError$2 = TypeError;
-
-var validateArgumentsLength$1 = function (passed, required) {
-  if (passed < required) throw $TypeError$2('Not enough arguments');
-  return passed;
-};
-
-var userAgent$2 = engineUserAgent;
-
-// eslint-disable-next-line redos/no-vulnerable -- safe
-var engineIsIos = /(?:ipad|iphone|ipod).*applewebkit/i.test(userAgent$2);
-
-var global$7 = global$v;
-var apply = functionApply;
-var bind$4 = functionBindContext;
-var isCallable$4 = isCallable$o;
-var hasOwn = hasOwnProperty_1;
-var fails = fails$t;
-var html = html$2;
-var arraySlice = arraySlice$5;
-var createElement = documentCreateElement$1;
-var validateArgumentsLength = validateArgumentsLength$1;
-var IS_IOS$1 = engineIsIos;
-var IS_NODE$3 = engineIsNode;
-
-var set = global$7.setImmediate;
-var clear = global$7.clearImmediate;
-var process$2 = global$7.process;
-var Dispatch = global$7.Dispatch;
-var Function$1 = global$7.Function;
-var MessageChannel = global$7.MessageChannel;
-var String$1 = global$7.String;
-var counter = 0;
-var queue$2 = {};
-var ONREADYSTATECHANGE = 'onreadystatechange';
-var $location, defer, channel, port;
-
-fails(function () {
-  // Deno throws a ReferenceError on `location` access without `--location` flag
-  $location = global$7.location;
-});
-
-var run = function (id) {
-  if (hasOwn(queue$2, id)) {
-    var fn = queue$2[id];
-    delete queue$2[id];
-    fn();
-  }
-};
-
-var runner = function (id) {
-  return function () {
-    run(id);
-  };
-};
-
-var eventListener = function (event) {
-  run(event.data);
-};
-
-var globalPostMessageDefer = function (id) {
-  // old engines have not location.origin
-  global$7.postMessage(String$1(id), $location.protocol + '//' + $location.host);
-};
-
-// Node.js 0.9+ & IE10+ has setImmediate, otherwise:
-if (!set || !clear) {
-  set = function setImmediate(handler) {
-    validateArgumentsLength(arguments.length, 1);
-    var fn = isCallable$4(handler) ? handler : Function$1(handler);
-    var args = arraySlice(arguments, 1);
-    queue$2[++counter] = function () {
-      apply(fn, undefined, args);
-    };
-    defer(counter);
-    return counter;
-  };
-  clear = function clearImmediate(id) {
-    delete queue$2[id];
-  };
-  // Node.js 0.8-
-  if (IS_NODE$3) {
-    defer = function (id) {
-      process$2.nextTick(runner(id));
-    };
-  // Sphere (JS game engine) Dispatch API
-  } else if (Dispatch && Dispatch.now) {
-    defer = function (id) {
-      Dispatch.now(runner(id));
-    };
-  // Browsers with MessageChannel, includes WebWorkers
-  // except iOS - https://github.com/zloirock/core-js/issues/624
-  } else if (MessageChannel && !IS_IOS$1) {
-    channel = new MessageChannel();
-    port = channel.port2;
-    channel.port1.onmessage = eventListener;
-    defer = bind$4(port.postMessage, port);
-  // Browsers with postMessage, skip WebWorkers
-  // IE8 has postMessage, but it's sync & typeof its postMessage is 'object'
-  } else if (
-    global$7.addEventListener &&
-    isCallable$4(global$7.postMessage) &&
-    !global$7.importScripts &&
-    $location && $location.protocol !== 'file:' &&
-    !fails(globalPostMessageDefer)
-  ) {
-    defer = globalPostMessageDefer;
-    global$7.addEventListener('message', eventListener, false);
-  // IE8-
-  } else if (ONREADYSTATECHANGE in createElement('script')) {
-    defer = function (id) {
-      html.appendChild(createElement('script'))[ONREADYSTATECHANGE] = function () {
-        html.removeChild(this);
-        run(id);
-      };
-    };
-  // Rest old browsers
-  } else {
-    defer = function (id) {
-      setTimeout(runner(id), 0);
-    };
-  }
-}
-
-var task$1 = {
-  set: set,
-  clear: clear
-};
-
-var Queue$2 = function () {
-  this.head = null;
-  this.tail = null;
-};
-
-Queue$2.prototype = {
-  add: function (item) {
-    var entry = { item: item, next: null };
-    var tail = this.tail;
-    if (tail) tail.next = entry;
-    else this.head = entry;
-    this.tail = entry;
-  },
-  get: function () {
-    var entry = this.head;
-    if (entry) {
-      var next = this.head = entry.next;
-      if (next === null) this.tail = null;
-      return entry.item;
-    }
-  }
-};
-
-var queue$1 = Queue$2;
-
-var userAgent$1 = engineUserAgent;
-
-var engineIsIosPebble = /ipad|iphone|ipod/i.test(userAgent$1) && typeof Pebble != 'undefined';
-
-var userAgent = engineUserAgent;
-
-var engineIsWebosWebkit = /web0s(?!.*chrome)/i.test(userAgent);
-
-var global$6 = global$v;
-var bind$3 = functionBindContext;
-var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
-var macrotask = task$1.set;
-var Queue$1 = queue$1;
-var IS_IOS = engineIsIos;
-var IS_IOS_PEBBLE = engineIsIosPebble;
-var IS_WEBOS_WEBKIT = engineIsWebosWebkit;
-var IS_NODE$2 = engineIsNode;
-
-var MutationObserver = global$6.MutationObserver || global$6.WebKitMutationObserver;
-var document$1 = global$6.document;
-var process$1 = global$6.process;
-var Promise$2 = global$6.Promise;
-// Node.js 11 shows ExperimentalWarning on getting `queueMicrotask`
-var queueMicrotaskDescriptor = getOwnPropertyDescriptor(global$6, 'queueMicrotask');
-var microtask$1 = queueMicrotaskDescriptor && queueMicrotaskDescriptor.value;
-var notify$1, toggle, node, promise, then;
-
-// modern engines have queueMicrotask method
-if (!microtask$1) {
-  var queue = new Queue$1();
-
-  var flush = function () {
-    var parent, fn;
-    if (IS_NODE$2 && (parent = process$1.domain)) parent.exit();
-    while (fn = queue.get()) try {
-      fn();
-    } catch (error) {
-      if (queue.head) notify$1();
-      throw error;
-    }
-    if (parent) parent.enter();
-  };
-
-  // browsers with MutationObserver, except iOS - https://github.com/zloirock/core-js/issues/339
-  // also except WebOS Webkit https://github.com/zloirock/core-js/issues/898
-  if (!IS_IOS && !IS_NODE$2 && !IS_WEBOS_WEBKIT && MutationObserver && document$1) {
-    toggle = true;
-    node = document$1.createTextNode('');
-    new MutationObserver(flush).observe(node, { characterData: true });
-    notify$1 = function () {
-      node.data = toggle = !toggle;
-    };
-  // environments with maybe non-completely correct, but existent Promise
-  } else if (!IS_IOS_PEBBLE && Promise$2 && Promise$2.resolve) {
-    // Promise.resolve without an argument throws an error in LG WebOS 2
-    promise = Promise$2.resolve(undefined);
-    // workaround of WebKit ~ iOS Safari 10.1 bug
-    promise.constructor = Promise$2;
-    then = bind$3(promise.then, promise);
-    notify$1 = function () {
-      then(flush);
-    };
-  // Node.js without promises
-  } else if (IS_NODE$2) {
-    notify$1 = function () {
-      process$1.nextTick(flush);
-    };
-  // for other environments - macrotask based on:
-  // - setImmediate
-  // - MessageChannel
-  // - window.postMessage
-  // - onreadystatechange
-  // - setTimeout
-  } else {
-    // `webpack` dev server bug on IE global methods - use bind(fn, global)
-    macrotask = bind$3(macrotask, global$6);
-    notify$1 = function () {
-      macrotask(flush);
-    };
-  }
-
-  microtask$1 = function (fn) {
-    if (!queue.head) notify$1();
-    queue.add(fn);
-  };
-}
-
-var microtask_1 = microtask$1;
-
-var hostReportErrors$1 = function (a, b) {
-  try {
-    // eslint-disable-next-line no-console -- safe
-    arguments.length === 1 ? console.error(a) : console.error(a, b);
-  } catch (error) { /* empty */ }
-};
-
-var perform$3 = function (exec) {
-  try {
-    return { error: false, value: exec() };
-  } catch (error) {
-    return { error: true, value: error };
-  }
-};
-
-var global$5 = global$v;
-
-var promiseNativeConstructor = global$5.Promise;
-
-/* global Deno -- Deno case */
-var engineIsDeno = typeof Deno == 'object' && Deno && typeof Deno.version == 'object';
-
-var IS_DENO$1 = engineIsDeno;
-var IS_NODE$1 = engineIsNode;
-
-var engineIsBrowser = !IS_DENO$1 && !IS_NODE$1
-  && typeof weapp.window == 'object'
-  && typeof weapp.document == 'object';
-
-var global$4 = global$v;
-var NativePromiseConstructor$3 = promiseNativeConstructor;
-var isCallable$3 = isCallable$o;
-var isForced = isForced_1;
-var inspectSource = inspectSource$3;
-var wellKnownSymbol$3 = wellKnownSymbol$j;
-var IS_BROWSER = engineIsBrowser;
-var IS_DENO = engineIsDeno;
-var V8_VERSION = engineV8Version;
-
-NativePromiseConstructor$3 && NativePromiseConstructor$3.prototype;
-var SPECIES = wellKnownSymbol$3('species');
-var SUBCLASSING = false;
-var NATIVE_PROMISE_REJECTION_EVENT$1 = isCallable$3(global$4.PromiseRejectionEvent);
-
-var FORCED_PROMISE_CONSTRUCTOR$5 = isForced('Promise', function () {
-  var PROMISE_CONSTRUCTOR_SOURCE = inspectSource(NativePromiseConstructor$3);
-  var GLOBAL_CORE_JS_PROMISE = PROMISE_CONSTRUCTOR_SOURCE !== String(NativePromiseConstructor$3);
-  // V8 6.6 (Node 10 and Chrome 66) have a bug with resolving custom thenables
-  // https://bugs.chromium.org/p/chromium/issues/detail?id=830565
-  // We can't detect it synchronously, so just check versions
-  if (!GLOBAL_CORE_JS_PROMISE && V8_VERSION === 66) return true;
-  // We can't use @@species feature detection in V8 since it causes
-  // deoptimization and performance degradation
-  // https://github.com/zloirock/core-js/issues/679
-  if (!V8_VERSION || V8_VERSION < 51 || !/native code/.test(PROMISE_CONSTRUCTOR_SOURCE)) {
-    // Detect correctness of subclassing with @@species support
-    var promise = new NativePromiseConstructor$3(function (resolve) { resolve(1); });
-    var FakePromise = function (exec) {
-      exec(function () { /* empty */ }, function () { /* empty */ });
-    };
-    var constructor = promise.constructor = {};
-    constructor[SPECIES] = FakePromise;
-    SUBCLASSING = promise.then(function () { /* empty */ }) instanceof FakePromise;
-    if (!SUBCLASSING) return true;
-  // Unhandled rejections tracking support, NodeJS Promise without it fails @@species test
-  } return !GLOBAL_CORE_JS_PROMISE && (IS_BROWSER || IS_DENO) && !NATIVE_PROMISE_REJECTION_EVENT$1;
-});
-
-var promiseConstructorDetection = {
-  CONSTRUCTOR: FORCED_PROMISE_CONSTRUCTOR$5,
-  REJECTION_EVENT: NATIVE_PROMISE_REJECTION_EVENT$1,
-  SUBCLASSING: SUBCLASSING
-};
-
-var newPromiseCapability$2 = {};
-
-var aCallable$5 = aCallable$d;
-
-var $TypeError$1 = TypeError;
-
-var PromiseCapability = function (C) {
-  var resolve, reject;
-  this.promise = new C(function ($$resolve, $$reject) {
-    if (resolve !== undefined || reject !== undefined) throw $TypeError$1('Bad Promise constructor');
-    resolve = $$resolve;
-    reject = $$reject;
-  });
-  this.resolve = aCallable$5(resolve);
-  this.reject = aCallable$5(reject);
-};
-
-// `NewPromiseCapability` abstract operation
-// https://tc39.es/ecma262/#sec-newpromisecapability
-newPromiseCapability$2.f = function (C) {
-  return new PromiseCapability(C);
-};
-
-var $$5 = _export;
-var IS_NODE = engineIsNode;
-var global$3 = global$v;
-var call$8 = functionCall;
-var defineBuiltIn$2 = defineBuiltIn$a;
-var setPrototypeOf = objectSetPrototypeOf;
-var setToStringTag = setToStringTag$5;
-var setSpecies = setSpecies$3;
-var aCallable$4 = aCallable$d;
-var isCallable$2 = isCallable$o;
-var isObject$3 = isObject$i;
-var anInstance = anInstance$5;
-var speciesConstructor = speciesConstructor$2;
-var task = task$1.set;
-var microtask = microtask_1;
-var hostReportErrors = hostReportErrors$1;
-var perform$2 = perform$3;
-var Queue = queue$1;
-var InternalStateModule$1 = internalState;
-var NativePromiseConstructor$2 = promiseNativeConstructor;
-var PromiseConstructorDetection = promiseConstructorDetection;
-var newPromiseCapabilityModule$3 = newPromiseCapability$2;
-
-var PROMISE = 'Promise';
-var FORCED_PROMISE_CONSTRUCTOR$4 = PromiseConstructorDetection.CONSTRUCTOR;
-var NATIVE_PROMISE_REJECTION_EVENT = PromiseConstructorDetection.REJECTION_EVENT;
-var NATIVE_PROMISE_SUBCLASSING = PromiseConstructorDetection.SUBCLASSING;
-var getInternalPromiseState = InternalStateModule$1.getterFor(PROMISE);
-var setInternalState$1 = InternalStateModule$1.set;
-var NativePromisePrototype$1 = NativePromiseConstructor$2 && NativePromiseConstructor$2.prototype;
-var PromiseConstructor = NativePromiseConstructor$2;
-var PromisePrototype = NativePromisePrototype$1;
-var TypeError$1 = global$3.TypeError;
-var document = global$3.document;
-var process = global$3.process;
-var newPromiseCapability$1 = newPromiseCapabilityModule$3.f;
-var newGenericPromiseCapability = newPromiseCapability$1;
-
-var DISPATCH_EVENT = !!(document && document.createEvent && global$3.dispatchEvent);
-var UNHANDLED_REJECTION = 'unhandledrejection';
-var REJECTION_HANDLED = 'rejectionhandled';
-var PENDING = 0;
-var FULFILLED = 1;
-var REJECTED = 2;
-var HANDLED = 1;
-var UNHANDLED = 2;
-
-var Internal, OwnPromiseCapability, PromiseWrapper, nativeThen;
-
-// helpers
-var isThenable = function (it) {
-  var then;
-  return isObject$3(it) && isCallable$2(then = it.then) ? then : false;
-};
-
-var callReaction = function (reaction, state) {
-  var value = state.value;
-  var ok = state.state === FULFILLED;
-  var handler = ok ? reaction.ok : reaction.fail;
-  var resolve = reaction.resolve;
-  var reject = reaction.reject;
-  var domain = reaction.domain;
-  var result, then, exited;
-  try {
-    if (handler) {
-      if (!ok) {
-        if (state.rejection === UNHANDLED) onHandleUnhandled(state);
-        state.rejection = HANDLED;
-      }
-      if (handler === true) result = value;
-      else {
-        if (domain) domain.enter();
-        result = handler(value); // can throw
-        if (domain) {
-          domain.exit();
-          exited = true;
-        }
-      }
-      if (result === reaction.promise) {
-        reject(TypeError$1('Promise-chain cycle'));
-      } else if (then = isThenable(result)) {
-        call$8(then, result, resolve, reject);
-      } else resolve(result);
-    } else reject(value);
-  } catch (error) {
-    if (domain && !exited) domain.exit();
-    reject(error);
-  }
-};
-
-var notify = function (state, isReject) {
-  if (state.notified) return;
-  state.notified = true;
-  microtask(function () {
-    var reactions = state.reactions;
-    var reaction;
-    while (reaction = reactions.get()) {
-      callReaction(reaction, state);
-    }
-    state.notified = false;
-    if (isReject && !state.rejection) onUnhandled(state);
-  });
-};
-
-var dispatchEvent = function (name, promise, reason) {
-  var event, handler;
-  if (DISPATCH_EVENT) {
-    event = document.createEvent('Event');
-    event.promise = promise;
-    event.reason = reason;
-    event.initEvent(name, false, true);
-    global$3.dispatchEvent(event);
-  } else event = { promise: promise, reason: reason };
-  if (!NATIVE_PROMISE_REJECTION_EVENT && (handler = global$3['on' + name])) handler(event);
-  else if (name === UNHANDLED_REJECTION) hostReportErrors('Unhandled promise rejection', reason);
-};
-
-var onUnhandled = function (state) {
-  call$8(task, global$3, function () {
-    var promise = state.facade;
-    var value = state.value;
-    var IS_UNHANDLED = isUnhandled(state);
-    var result;
-    if (IS_UNHANDLED) {
-      result = perform$2(function () {
-        if (IS_NODE) {
-          process.emit('unhandledRejection', value, promise);
-        } else dispatchEvent(UNHANDLED_REJECTION, promise, value);
-      });
-      // Browsers should not trigger `rejectionHandled` event if it was handled here, NodeJS - should
-      state.rejection = IS_NODE || isUnhandled(state) ? UNHANDLED : HANDLED;
-      if (result.error) throw result.value;
-    }
-  });
-};
-
-var isUnhandled = function (state) {
-  return state.rejection !== HANDLED && !state.parent;
-};
-
-var onHandleUnhandled = function (state) {
-  call$8(task, global$3, function () {
-    var promise = state.facade;
-    if (IS_NODE) {
-      process.emit('rejectionHandled', promise);
-    } else dispatchEvent(REJECTION_HANDLED, promise, state.value);
-  });
-};
-
-var bind$2 = function (fn, state, unwrap) {
-  return function (value) {
-    fn(state, value, unwrap);
-  };
-};
-
-var internalReject = function (state, value, unwrap) {
-  if (state.done) return;
-  state.done = true;
-  if (unwrap) state = unwrap;
-  state.value = value;
-  state.state = REJECTED;
-  notify(state, true);
-};
-
-var internalResolve = function (state, value, unwrap) {
-  if (state.done) return;
-  state.done = true;
-  if (unwrap) state = unwrap;
-  try {
-    if (state.facade === value) throw TypeError$1("Promise can't be resolved itself");
-    var then = isThenable(value);
-    if (then) {
-      microtask(function () {
-        var wrapper = { done: false };
-        try {
-          call$8(then, value,
-            bind$2(internalResolve, wrapper, state),
-            bind$2(internalReject, wrapper, state)
-          );
-        } catch (error) {
-          internalReject(wrapper, error, state);
-        }
-      });
-    } else {
-      state.value = value;
-      state.state = FULFILLED;
-      notify(state, false);
-    }
-  } catch (error) {
-    internalReject({ done: false }, error, state);
-  }
-};
-
-// constructor polyfill
-if (FORCED_PROMISE_CONSTRUCTOR$4) {
-  // 25.4.3.1 Promise(executor)
-  PromiseConstructor = function Promise(executor) {
-    anInstance(this, PromisePrototype);
-    aCallable$4(executor);
-    call$8(Internal, this);
-    var state = getInternalPromiseState(this);
-    try {
-      executor(bind$2(internalResolve, state), bind$2(internalReject, state));
-    } catch (error) {
-      internalReject(state, error);
-    }
-  };
-
-  PromisePrototype = PromiseConstructor.prototype;
-
-  // eslint-disable-next-line no-unused-vars -- required for `.length`
-  Internal = function Promise(executor) {
-    setInternalState$1(this, {
-      type: PROMISE,
-      done: false,
-      notified: false,
-      parent: false,
-      reactions: new Queue(),
-      rejection: false,
-      state: PENDING,
-      value: undefined
-    });
-  };
-
-  // `Promise.prototype.then` method
-  // https://tc39.es/ecma262/#sec-promise.prototype.then
-  Internal.prototype = defineBuiltIn$2(PromisePrototype, 'then', function then(onFulfilled, onRejected) {
-    var state = getInternalPromiseState(this);
-    var reaction = newPromiseCapability$1(speciesConstructor(this, PromiseConstructor));
-    state.parent = true;
-    reaction.ok = isCallable$2(onFulfilled) ? onFulfilled : true;
-    reaction.fail = isCallable$2(onRejected) && onRejected;
-    reaction.domain = IS_NODE ? process.domain : undefined;
-    if (state.state === PENDING) state.reactions.add(reaction);
-    else microtask(function () {
-      callReaction(reaction, state);
-    });
-    return reaction.promise;
-  });
-
-  OwnPromiseCapability = function () {
-    var promise = new Internal();
-    var state = getInternalPromiseState(promise);
-    this.promise = promise;
-    this.resolve = bind$2(internalResolve, state);
-    this.reject = bind$2(internalReject, state);
-  };
-
-  newPromiseCapabilityModule$3.f = newPromiseCapability$1 = function (C) {
-    return C === PromiseConstructor || C === PromiseWrapper
-      ? new OwnPromiseCapability(C)
-      : newGenericPromiseCapability(C);
-  };
-
-  if (isCallable$2(NativePromiseConstructor$2) && NativePromisePrototype$1 !== Object.prototype) {
-    nativeThen = NativePromisePrototype$1.then;
-
-    if (!NATIVE_PROMISE_SUBCLASSING) {
-      // make `Promise#then` return a polyfilled `Promise` for native promise-based APIs
-      defineBuiltIn$2(NativePromisePrototype$1, 'then', function then(onFulfilled, onRejected) {
-        var that = this;
-        return new PromiseConstructor(function (resolve, reject) {
-          call$8(nativeThen, that, resolve, reject);
-        }).then(onFulfilled, onRejected);
-      // https://github.com/zloirock/core-js/issues/640
-      }, { unsafe: true });
-    }
-
-    // make `.constructor === Promise` work for native promise-based APIs
-    try {
-      delete NativePromisePrototype$1.constructor;
-    } catch (error) { /* empty */ }
-
-    // make `instanceof Promise` work for native promise-based APIs
-    if (setPrototypeOf) {
-      setPrototypeOf(NativePromisePrototype$1, PromisePrototype);
-    }
-  }
-}
-
-$$5({ global: true, constructor: true, wrap: true, forced: FORCED_PROMISE_CONSTRUCTOR$4 }, {
-  Promise: PromiseConstructor
-});
-
-setToStringTag(PromiseConstructor, PROMISE, false);
-setSpecies(PROMISE);
-
-var NativePromiseConstructor$1 = promiseNativeConstructor;
-var checkCorrectnessOfIteration = checkCorrectnessOfIteration$3;
-var FORCED_PROMISE_CONSTRUCTOR$3 = promiseConstructorDetection.CONSTRUCTOR;
-
-var promiseStaticsIncorrectIteration = FORCED_PROMISE_CONSTRUCTOR$3 || !checkCorrectnessOfIteration(function (iterable) {
-  NativePromiseConstructor$1.all(iterable).then(undefined, function () { /* empty */ });
-});
-
-var $$4 = _export;
-var call$7 = functionCall;
-var aCallable$3 = aCallable$d;
-var newPromiseCapabilityModule$2 = newPromiseCapability$2;
-var perform$1 = perform$3;
-var iterate$2 = iterate$5;
-var PROMISE_STATICS_INCORRECT_ITERATION$1 = promiseStaticsIncorrectIteration;
-
-// `Promise.all` method
-// https://tc39.es/ecma262/#sec-promise.all
-$$4({ target: 'Promise', stat: true, forced: PROMISE_STATICS_INCORRECT_ITERATION$1 }, {
-  all: function all(iterable) {
-    var C = this;
-    var capability = newPromiseCapabilityModule$2.f(C);
-    var resolve = capability.resolve;
-    var reject = capability.reject;
-    var result = perform$1(function () {
-      var $promiseResolve = aCallable$3(C.resolve);
-      var values = [];
-      var counter = 0;
-      var remaining = 1;
-      iterate$2(iterable, function (promise) {
-        var index = counter++;
-        var alreadyCalled = false;
-        remaining++;
-        call$7($promiseResolve, C, promise).then(function (value) {
-          if (alreadyCalled) return;
-          alreadyCalled = true;
-          values[index] = value;
-          --remaining || resolve(values);
-        }, reject);
-      });
-      --remaining || resolve(values);
-    });
-    if (result.error) reject(result.value);
-    return capability.promise;
-  }
-});
-
-var $$3 = _export;
-var FORCED_PROMISE_CONSTRUCTOR$2 = promiseConstructorDetection.CONSTRUCTOR;
-var NativePromiseConstructor = promiseNativeConstructor;
-var getBuiltIn$6 = getBuiltIn$c;
-var isCallable$1 = isCallable$o;
-var defineBuiltIn$1 = defineBuiltIn$a;
-
-var NativePromisePrototype = NativePromiseConstructor && NativePromiseConstructor.prototype;
-
-// `Promise.prototype.catch` method
-// https://tc39.es/ecma262/#sec-promise.prototype.catch
-$$3({ target: 'Promise', proto: true, forced: FORCED_PROMISE_CONSTRUCTOR$2, real: true }, {
-  'catch': function (onRejected) {
-    return this.then(undefined, onRejected);
-  }
-});
-
-// makes sure that native promise-based APIs `Promise#catch` properly works with patched `Promise#then`
-if (isCallable$1(NativePromiseConstructor)) {
-  var method = getBuiltIn$6('Promise').prototype['catch'];
-  if (NativePromisePrototype['catch'] !== method) {
-    defineBuiltIn$1(NativePromisePrototype, 'catch', method, { unsafe: true });
-  }
-}
-
-var $$2 = _export;
-var call$6 = functionCall;
-var aCallable$2 = aCallable$d;
-var newPromiseCapabilityModule$1 = newPromiseCapability$2;
-var perform = perform$3;
-var iterate$1 = iterate$5;
-var PROMISE_STATICS_INCORRECT_ITERATION = promiseStaticsIncorrectIteration;
-
-// `Promise.race` method
-// https://tc39.es/ecma262/#sec-promise.race
-$$2({ target: 'Promise', stat: true, forced: PROMISE_STATICS_INCORRECT_ITERATION }, {
-  race: function race(iterable) {
-    var C = this;
-    var capability = newPromiseCapabilityModule$1.f(C);
-    var reject = capability.reject;
-    var result = perform(function () {
-      var $promiseResolve = aCallable$2(C.resolve);
-      iterate$1(iterable, function (promise) {
-        call$6($promiseResolve, C, promise).then(capability.resolve, reject);
-      });
-    });
-    if (result.error) reject(result.value);
-    return capability.promise;
-  }
-});
-
-var $$1 = _export;
-var call$5 = functionCall;
-var newPromiseCapabilityModule = newPromiseCapability$2;
-var FORCED_PROMISE_CONSTRUCTOR$1 = promiseConstructorDetection.CONSTRUCTOR;
-
-// `Promise.reject` method
-// https://tc39.es/ecma262/#sec-promise.reject
-$$1({ target: 'Promise', stat: true, forced: FORCED_PROMISE_CONSTRUCTOR$1 }, {
-  reject: function reject(r) {
-    var capability = newPromiseCapabilityModule.f(this);
-    call$5(capability.reject, undefined, r);
-    return capability.promise;
-  }
-});
-
-var anObject$3 = anObject$d;
-var isObject$2 = isObject$i;
-var newPromiseCapability = newPromiseCapability$2;
-
-var promiseResolve$1 = function (C, x) {
-  anObject$3(C);
-  if (isObject$2(x) && x.constructor === C) return x;
-  var promiseCapability = newPromiseCapability.f(C);
-  var resolve = promiseCapability.resolve;
-  resolve(x);
-  return promiseCapability.promise;
-};
-
-var $ = _export;
-var getBuiltIn$5 = getBuiltIn$c;
-var FORCED_PROMISE_CONSTRUCTOR = promiseConstructorDetection.CONSTRUCTOR;
-var promiseResolve = promiseResolve$1;
-
-getBuiltIn$5('Promise');
-
-// `Promise.resolve` method
-// https://tc39.es/ecma262/#sec-promise.resolve
-$({ target: 'Promise', stat: true, forced: FORCED_PROMISE_CONSTRUCTOR }, {
-  resolve: function resolve(x) {
-    return promiseResolve(this, x);
-  }
-});
-
-var global$2 = global$v;
-var shared = sharedStore;
-var isCallable = isCallable$o;
-var getPrototypeOf = objectGetPrototypeOf$1;
-var defineBuiltIn = defineBuiltIn$a;
-var wellKnownSymbol$2 = wellKnownSymbol$j;
-
-var USE_FUNCTION_CONSTRUCTOR = 'USE_FUNCTION_CONSTRUCTOR';
-var ASYNC_ITERATOR$2 = wellKnownSymbol$2('asyncIterator');
-var AsyncIterator = global$2.AsyncIterator;
-var PassedAsyncIteratorPrototype = shared.AsyncIteratorPrototype;
-var AsyncIteratorPrototype$1, prototype;
-
-if (PassedAsyncIteratorPrototype) {
-  AsyncIteratorPrototype$1 = PassedAsyncIteratorPrototype;
-} else if (isCallable(AsyncIterator)) {
-  AsyncIteratorPrototype$1 = AsyncIterator.prototype;
-} else if (shared[USE_FUNCTION_CONSTRUCTOR] || global$2[USE_FUNCTION_CONSTRUCTOR]) {
-  try {
-    // eslint-disable-next-line no-new-func -- we have no alternatives without usage of modern syntax
-    prototype = getPrototypeOf(getPrototypeOf(getPrototypeOf(Function('return async function*(){}()')())));
-    if (getPrototypeOf(prototype) === Object.prototype) AsyncIteratorPrototype$1 = prototype;
-  } catch (error) { /* empty */ }
-}
-
-if (!AsyncIteratorPrototype$1) AsyncIteratorPrototype$1 = {};
-
-if (!isCallable(AsyncIteratorPrototype$1[ASYNC_ITERATOR$2])) {
-  defineBuiltIn(AsyncIteratorPrototype$1, ASYNC_ITERATOR$2, function () {
-    return this;
-  });
-}
-
-var asyncIteratorPrototype = AsyncIteratorPrototype$1;
-
-var call$4 = functionCall;
-var anObject$2 = anObject$d;
-var create = objectCreate$1;
-var getMethod$3 = getMethod$7;
-var defineBuiltIns = defineBuiltIns$3;
-var InternalStateModule = internalState;
-var getBuiltIn$4 = getBuiltIn$c;
-var AsyncIteratorPrototype = asyncIteratorPrototype;
-var createIterResultObject = createIterResultObject$4;
-
-var Promise$1 = getBuiltIn$4('Promise');
-
-var ASYNC_FROM_SYNC_ITERATOR = 'AsyncFromSyncIterator';
-var setInternalState = InternalStateModule.set;
-var getInternalState = InternalStateModule.getterFor(ASYNC_FROM_SYNC_ITERATOR);
-
-var asyncFromSyncIteratorContinuation = function (result, resolve, reject) {
-  var done = result.done;
-  Promise$1.resolve(result.value).then(function (value) {
-    resolve(createIterResultObject(value, done));
-  }, reject);
-};
-
-var AsyncFromSyncIterator$2 = function AsyncIterator(iteratorRecord) {
-  iteratorRecord.type = ASYNC_FROM_SYNC_ITERATOR;
-  setInternalState(this, iteratorRecord);
-};
-
-AsyncFromSyncIterator$2.prototype = defineBuiltIns(create(AsyncIteratorPrototype), {
-  next: function next() {
-    var state = getInternalState(this);
-    return new Promise$1(function (resolve, reject) {
-      var result = anObject$2(call$4(state.next, state.iterator));
-      asyncFromSyncIteratorContinuation(result, resolve, reject);
-    });
-  },
-  'return': function () {
-    var iterator = getInternalState(this).iterator;
-    return new Promise$1(function (resolve, reject) {
-      var $return = getMethod$3(iterator, 'return');
-      if ($return === undefined) return resolve(createIterResultObject(undefined, true));
-      var result = anObject$2(call$4($return, iterator));
-      asyncFromSyncIteratorContinuation(result, resolve, reject);
-    });
-  }
-});
-
-var asyncFromSyncIterator = AsyncFromSyncIterator$2;
-
-// `GetIteratorDirect(obj)` abstract operation
-// https://tc39.es/proposal-iterator-helpers/#sec-getiteratordirect
-var getIteratorDirect$3 = function (obj) {
-  return {
-    iterator: obj,
-    next: obj.next,
-    done: false
-  };
-};
-
-var call$3 = functionCall;
-var AsyncFromSyncIterator$1 = asyncFromSyncIterator;
-var anObject$1 = anObject$d;
-var getIterator$1 = getIterator$4;
-var getIteratorDirect$2 = getIteratorDirect$3;
-var getMethod$2 = getMethod$7;
-var wellKnownSymbol$1 = wellKnownSymbol$j;
-
-var ASYNC_ITERATOR$1 = wellKnownSymbol$1('asyncIterator');
-
-var getAsyncIterator$1 = function (it, usingIterator) {
-  var method = arguments.length < 2 ? getMethod$2(it, ASYNC_ITERATOR$1) : usingIterator;
-  return method ? anObject$1(call$3(method, it)) : new AsyncFromSyncIterator$1(getIteratorDirect$2(getIterator$1(it)));
-};
-
-var global$1 = global$v;
-
-var entryVirtual = function (CONSTRUCTOR) {
-  return global$1[CONSTRUCTOR].prototype;
-};
-
-var $TypeError = TypeError;
-var MAX_SAFE_INTEGER = 0x1FFFFFFFFFFFFF; // 2 ** 53 - 1 == 9007199254740991
-
-var doesNotExceedSafeInteger$1 = function (it) {
-  if (it > MAX_SAFE_INTEGER) throw $TypeError('Maximum allowed index exceeded');
-  return it;
-};
-
-var call$2 = functionCall;
-var getBuiltIn$3 = getBuiltIn$c;
-var getMethod$1 = getMethod$7;
-
-var asyncIteratorClose = function (iterator, method, argument, reject) {
-  try {
-    var returnMethod = getMethod$1(iterator, 'return');
-    if (returnMethod) {
-      return getBuiltIn$3('Promise').resolve(call$2(returnMethod, iterator)).then(function () {
-        method(argument);
-      }, function (error) {
-        reject(error);
-      });
-    }
-  } catch (error2) {
-    return reject(error2);
-  } method(argument);
-};
-
-// https://github.com/tc39/proposal-iterator-helpers
-// https://github.com/tc39/proposal-array-from-async
-var call$1 = functionCall;
-var aCallable$1 = aCallable$d;
-var anObject = anObject$d;
-var isObject$1 = isObject$i;
-var doesNotExceedSafeInteger = doesNotExceedSafeInteger$1;
-var getBuiltIn$2 = getBuiltIn$c;
-var getIteratorDirect$1 = getIteratorDirect$3;
-var closeAsyncIteration = asyncIteratorClose;
-
-var createMethod = function (TYPE) {
-  var IS_TO_ARRAY = TYPE === 0;
-  var IS_FOR_EACH = TYPE === 1;
-  var IS_EVERY = TYPE === 2;
-  var IS_SOME = TYPE === 3;
-  return function (object, fn, target) {
-    anObject(object);
-    var MAPPING = fn !== undefined;
-    if (MAPPING || !IS_TO_ARRAY) aCallable$1(fn);
-    var record = getIteratorDirect$1(object);
-    var Promise = getBuiltIn$2('Promise');
-    var iterator = record.iterator;
-    var next = record.next;
-    var counter = 0;
-
-    return new Promise(function (resolve, reject) {
-      var ifAbruptCloseAsyncIterator = function (error) {
-        closeAsyncIteration(iterator, reject, error, reject);
-      };
-
-      var loop = function () {
-        try {
-          if (MAPPING) try {
-            doesNotExceedSafeInteger(counter);
-          } catch (error5) { ifAbruptCloseAsyncIterator(error5); }
-          Promise.resolve(anObject(call$1(next, iterator))).then(function (step) {
-            try {
-              if (anObject(step).done) {
-                if (IS_TO_ARRAY) {
-                  target.length = counter;
-                  resolve(target);
-                } else resolve(IS_SOME ? false : IS_EVERY || undefined);
-              } else {
-                var value = step.value;
-                try {
-                  if (MAPPING) {
-                    var result = fn(value, counter);
-
-                    var handler = function ($result) {
-                      if (IS_FOR_EACH) {
-                        loop();
-                      } else if (IS_EVERY) {
-                        $result ? loop() : closeAsyncIteration(iterator, resolve, false, reject);
-                      } else if (IS_TO_ARRAY) {
-                        try {
-                          target[counter++] = $result;
-                          loop();
-                        } catch (error4) { ifAbruptCloseAsyncIterator(error4); }
-                      } else {
-                        $result ? closeAsyncIteration(iterator, resolve, IS_SOME || value, reject) : loop();
-                      }
-                    };
-
-                    if (isObject$1(result)) Promise.resolve(result).then(handler, ifAbruptCloseAsyncIterator);
-                    else handler(result);
-                  } else {
-                    target[counter++] = value;
-                    loop();
-                  }
-                } catch (error3) { ifAbruptCloseAsyncIterator(error3); }
-              }
-            } catch (error2) { reject(error2); }
-          }, reject);
-        } catch (error) { reject(error); }
-      };
-
-      loop();
-    });
-  };
-};
-
-var asyncIteratorIteration = {
-  toArray: createMethod(0),
-  forEach: createMethod(1),
-  every: createMethod(2),
-  some: createMethod(3),
-  find: createMethod(4)
-};
-
-var bind$1 = functionBindContext;
-var uncurryThis$5 = functionUncurryThis;
-var toObject$2 = toObject$b;
-var isConstructor = isConstructor$3;
-var getAsyncIterator = getAsyncIterator$1;
-var getIterator = getIterator$4;
-var getIteratorDirect = getIteratorDirect$3;
-var getIteratorMethod = getIteratorMethod$4;
-var getMethod = getMethod$7;
-var getVirtual = entryVirtual;
-var getBuiltIn$1 = getBuiltIn$c;
-var wellKnownSymbol = wellKnownSymbol$j;
-var AsyncFromSyncIterator = asyncFromSyncIterator;
-var toArray = asyncIteratorIteration.toArray;
-
-var ASYNC_ITERATOR = wellKnownSymbol('asyncIterator');
-var arrayIterator = uncurryThis$5(getVirtual('Array').values);
-var arrayIteratorNext = uncurryThis$5(arrayIterator([]).next);
-
-var safeArrayIterator = function () {
-  return new SafeArrayIterator(this);
-};
-
-var SafeArrayIterator = function (O) {
-  this.iterator = arrayIterator(O);
-};
-
-SafeArrayIterator.prototype.next = function () {
-  return arrayIteratorNext(this.iterator);
-};
-
-// `Array.fromAsync` method implementation
-// https://github.com/tc39/proposal-array-from-async
-var arrayFromAsync$1 = function fromAsync(asyncItems /* , mapfn = undefined, thisArg = undefined */) {
-  var C = this;
-  var argumentsLength = arguments.length;
-  var mapfn = argumentsLength > 1 ? arguments[1] : undefined;
-  var thisArg = argumentsLength > 2 ? arguments[2] : undefined;
-  return new (getBuiltIn$1('Promise'))(function (resolve) {
-    var O = toObject$2(asyncItems);
-    if (mapfn !== undefined) mapfn = bind$1(mapfn, thisArg);
-    var usingAsyncIterator = getMethod(O, ASYNC_ITERATOR);
-    var usingSyncIterator = usingAsyncIterator ? undefined : getIteratorMethod(O) || safeArrayIterator;
-    var A = isConstructor(C) ? new C() : [];
-    var iterator = usingAsyncIterator
-      ? getAsyncIterator(O, usingAsyncIterator)
-      : new AsyncFromSyncIterator(getIteratorDirect(getIterator(O, usingSyncIterator)));
-    resolve(toArray(iterator, mapfn, A));
-  });
-};
-
-// TODO: Remove from `core-js@4`
-var getBuiltIn = getBuiltIn$c;
-var aConstructor = aConstructor$3;
-var arrayFromAsync = arrayFromAsync$1;
-var ArrayBufferViewCore$4 = arrayBufferViewCore;
-var arrayFromConstructorAndList$2 = arrayFromConstructorAndList$5;
-
-var aTypedArrayConstructor = ArrayBufferViewCore$4.aTypedArrayConstructor;
-var exportTypedArrayStaticMethod = ArrayBufferViewCore$4.exportTypedArrayStaticMethod;
-
-// `%TypedArray%.fromAsync` method
-// https://github.com/tc39/proposal-array-from-async
-exportTypedArrayStaticMethod('fromAsync', function fromAsync(asyncItems /* , mapfn = undefined, thisArg = undefined */) {
-  var C = this;
-  var argumentsLength = arguments.length;
-  var mapfn = argumentsLength > 1 ? arguments[1] : undefined;
-  var thisArg = argumentsLength > 2 ? arguments[2] : undefined;
-  return new (getBuiltIn('Promise'))(function (resolve) {
-    aConstructor(C);
-    resolve(arrayFromAsync(asyncItems, mapfn, thisArg));
-  }).then(function (list) {
-    return arrayFromConstructorAndList$2(aTypedArrayConstructor(C), list);
-  });
-}, true);
-
-// TODO: Remove from `core-js@4`
-var ArrayBufferViewCore$3 = arrayBufferViewCore;
-var $filterReject$1 = arrayIteration.filterReject;
-var fromSpeciesAndList$1 = typedArrayFromSpeciesAndList;
-
-var aTypedArray$3 = ArrayBufferViewCore$3.aTypedArray;
-var exportTypedArrayMethod$3 = ArrayBufferViewCore$3.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.filterOut` method
-// https://github.com/tc39/proposal-array-filtering
-exportTypedArrayMethod$3('filterOut', function filterOut(callbackfn /* , thisArg */) {
-  var list = $filterReject$1(aTypedArray$3(this), callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-  return fromSpeciesAndList$1(this, list);
-}, true);
-
-var ArrayBufferViewCore$2 = arrayBufferViewCore;
-var $filterReject = arrayIteration.filterReject;
-var fromSpeciesAndList = typedArrayFromSpeciesAndList;
-
-var aTypedArray$2 = ArrayBufferViewCore$2.aTypedArray;
-var exportTypedArrayMethod$2 = ArrayBufferViewCore$2.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.filterReject` method
-// https://github.com/tc39/proposal-array-filtering
-exportTypedArrayMethod$2('filterReject', function filterReject(callbackfn /* , thisArg */) {
-  var list = $filterReject(aTypedArray$2(this), callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-  return fromSpeciesAndList(this, list);
-}, true);
-
-var bind = functionBindContext;
-var uncurryThis$4 = functionUncurryThis;
-var IndexedObject = indexedObject;
-var toObject$1 = toObject$b;
-var toPropertyKey = toPropertyKey$5;
-var lengthOfArrayLike$1 = lengthOfArrayLike$i;
-var objectCreate = objectCreate$1;
-var arrayFromConstructorAndList$1 = arrayFromConstructorAndList$5;
-
-var $Array = Array;
-var push$1 = uncurryThis$4([].push);
-
-var arrayGroup = function ($this, callbackfn, that, specificConstructor) {
-  var O = toObject$1($this);
-  var self = IndexedObject(O);
-  var boundFunction = bind(callbackfn, that);
-  var target = objectCreate(null);
-  var length = lengthOfArrayLike$1(self);
-  var index = 0;
-  var Constructor, key, value;
-  for (;length > index; index++) {
-    value = self[index];
-    key = toPropertyKey(boundFunction(value, index, O));
-    // in some IE versions, `hasOwnProperty` returns incorrect result on integer keys
-    // but since it's a `null` prototype object, we can safely use `in`
-    if (key in target) push$1(target[key], value);
-    else target[key] = [value];
-  }
-  // TODO: Remove this block from `core-js@4`
-  if (specificConstructor) {
-    Constructor = specificConstructor(O);
-    if (Constructor !== $Array) {
-      for (key in target) target[key] = arrayFromConstructorAndList$1(Constructor, target[key]);
-    }
-  } return target;
-};
-
-// TODO: Remove from `core-js@4`
-var ArrayBufferViewCore$1 = arrayBufferViewCore;
-var $group = arrayGroup;
-var typedArraySpeciesConstructor = typedArraySpeciesConstructor$5;
-
-var aTypedArray$1 = ArrayBufferViewCore$1.aTypedArray;
-var exportTypedArrayMethod$1 = ArrayBufferViewCore$1.exportTypedArrayMethod;
-
-// `%TypedArray%.prototype.groupBy` method
-// https://github.com/tc39/proposal-array-grouping
-exportTypedArrayMethod$1('groupBy', function groupBy(callbackfn /* , thisArg */) {
-  var thisArg = arguments.length > 1 ? arguments[1] : undefined;
-  return $group(aTypedArray$1(this), callbackfn, thisArg, typedArraySpeciesConstructor);
-}, true);
-
-var uncurryThis$3 = functionUncurryThis;
-
-// eslint-disable-next-line es/no-map -- safe
-var MapPrototype$1 = Map.prototype;
-
-var mapHelpers = {
-  // eslint-disable-next-line es/no-map -- safe
-  Map: Map,
-  set: uncurryThis$3(MapPrototype$1.set),
-  get: uncurryThis$3(MapPrototype$1.get),
-  has: uncurryThis$3(MapPrototype$1.has),
-  remove: uncurryThis$3(MapPrototype$1['delete']),
-  proto: MapPrototype$1
-};
-
-var call = functionCall;
-
-var iterateSimple$1 = function (record, fn, ITERATOR_INSTEAD_OF_RECORD) {
-  var iterator = ITERATOR_INSTEAD_OF_RECORD ? record : record.iterator;
-  var next = record.next;
-  var step, result;
-  while (!(step = call(next, iterator)).done) {
-    result = fn(step.value);
-    if (result !== undefined) return result;
-  }
-};
-
-var uncurryThis$2 = functionUncurryThis;
-var iterateSimple = iterateSimple$1;
-var MapHelpers$1 = mapHelpers;
-
-var Map$2 = MapHelpers$1.Map;
-var MapPrototype = MapHelpers$1.proto;
-var forEach$1 = uncurryThis$2(MapPrototype.forEach);
-var entries = uncurryThis$2(MapPrototype.entries);
-var next = entries(new Map$2()).next;
-
-var mapIterate = function (map, fn, interruptible) {
-  return interruptible ? iterateSimple({ iterator: entries(map), next: next }, function (entry) {
-    return fn(entry[1], entry[0]);
-  }) : forEach$1(map, fn);
-};
-
-var uncurryThis$1 = functionUncurryThis;
-var aCallable = aCallable$d;
-var isNullOrUndefined = isNullOrUndefined$7;
-var lengthOfArrayLike = lengthOfArrayLike$i;
-var toObject = toObject$b;
-var MapHelpers = mapHelpers;
-var iterate = mapIterate;
-
-var Map$1 = MapHelpers.Map;
-var mapHas = MapHelpers.has;
-var mapSet = MapHelpers.set;
-var push = uncurryThis$1([].push);
-
-// `Array.prototype.uniqueBy` method
-// https://github.com/tc39/proposal-array-unique
-var arrayUniqueBy$1 = function uniqueBy(resolver) {
-  var that = toObject(this);
-  var length = lengthOfArrayLike(that);
-  var result = [];
-  var map = new Map$1();
-  var resolverFunction = !isNullOrUndefined(resolver) ? aCallable(resolver) : function (value) {
-    return value;
-  };
-  var index, item, key;
-  for (index = 0; index < length; index++) {
-    item = that[index];
-    key = resolverFunction(item);
-    if (!mapHas(map, key)) mapSet(map, key, item);
-  }
-  iterate(map, function (value) {
-    push(result, value);
-  });
-  return result;
-};
-
-var uncurryThis = functionUncurryThis;
-var ArrayBufferViewCore = arrayBufferViewCore;
-var arrayFromConstructorAndList = arrayFromConstructorAndList$5;
-var $arrayUniqueBy = arrayUniqueBy$1;
-
-var aTypedArray = ArrayBufferViewCore.aTypedArray;
-var getTypedArrayConstructor = ArrayBufferViewCore.getTypedArrayConstructor;
-var exportTypedArrayMethod = ArrayBufferViewCore.exportTypedArrayMethod;
-var arrayUniqueBy = uncurryThis($arrayUniqueBy);
-
-// `%TypedArray%.prototype.uniqueBy` method
-// https://github.com/tc39/proposal-array-unique
-exportTypedArrayMethod('uniqueBy', function uniqueBy(resolver) {
-  aTypedArray(this);
-  return arrayFromConstructorAndList(getTypedArrayConstructor(this), arrayUniqueBy(this, resolver));
-}, true);
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -9059,8 +3148,8 @@ if (!initErrors.length) {
 }
 function initGLContext() {
     // 重要：iOS 9/10 低版本需要拷贝 gl context 的 prototype，要不然会有属性值的缺失
-    if (typeof WebGL2RenderingContext === 'function') {
-        copy(WebGL2RenderingContext);
+    if (typeof weapp.WebGL2RenderingContext === 'function') {
+        copy(weapp.WebGL2RenderingContext);
     }
     else if (typeof weapp.WebGLRenderingContext !== 'undefined') {
         copy(weapp.WebGLRenderingContext);
@@ -9077,7 +3166,7 @@ function initGLContext() {
     }
 }
 function isWebGL2(gl) {
-    return typeof WebGL2RenderingContext !== 'undefined' && gl.constructor.name === 'WebGL2RenderingContext';
+    return typeof weapp.WebGL2RenderingContext !== 'undefined' && gl.constructor.name === 'WebGL2RenderingContext';
 }
 function copy(target) {
     for (var name_1 in target) {
@@ -9325,9 +3414,9 @@ function parsePercent$1(c) {
 }
 
 function getPixelRatio() {
-    if (typeof screen === 'object' && typeof weapp.document === 'object') {
+    if (typeof weapp.screen === 'object' && typeof weapp.document === 'object') {
         var viewportWidth = Math.max(weapp.document.documentElement.clientWidth, weapp.window.innerWidth || 0);
-        var screenWidth = screen.width;
+        var screenWidth = weapp.screen.width;
         var viewportScale = screenWidth / viewportWidth;
         return Math.min(2 * viewportScale, 2);
     }
@@ -9342,6 +3431,10 @@ function isAndroid() {
 }
 function isSimulatorCellPhone() {
     return isAndroid() || /\b(iPad|iPhone|iPod)\b/.test(weapp.navigator.userAgent);
+}
+function isAlipayMiniApp() {
+    //@ts-expect-error
+    return typeof my !== 'undefined' && (my === null || my === void 0 ? void 0 : my.renderTarget) === 'web';
 }
 
 function imageDataFromColor(value) {
@@ -9516,11 +3609,23 @@ function asserts(condition, msg) {
     }
 }
 
+/**
+ * 判断是否为可解析的字体
+ * - 首字母不能为数字或 `.`
+ * - 不能包含特殊字符，`_-` 是被允许的
+ * @param fontFamily - 字体名称
+ * @returns
+ */
+function isValidFontFamily(fontFamily) {
+    // iOS 11/12 不支持自定义字体开头为数字的名称，特殊字符也有风险
+    return /^[^\d.][\w-]*$/.test(fontFamily);
+}
+
 /*!
  * Name: @galacean/effects-specification
  * Description: Galacean Effects JSON Specification
  * Author: Ant Group CO., Ltd.
- * Version: v1.0.0
+ * Version: v1.3.0
  */
 
 /*********************************************/
@@ -9901,6 +4006,16 @@ var CompositionEndBehavior$1;
     CompositionEndBehavior[CompositionEndBehavior["pause_destroy"] = END_BEHAVIOR_PAUSE_AND_DESTROY$1] = "pause_destroy";
 })(CompositionEndBehavior$1 || (CompositionEndBehavior$1 = {}));
 
+/**
+ * 动态换图类型
+ * @since 1.3.0
+ */
+var BackgroundType$1;
+(function (BackgroundType) {
+    BackgroundType["video"] = "video";
+    BackgroundType["image"] = "image";
+})(BackgroundType$1 || (BackgroundType$1 = {}));
+
 /*********************************************/
 /*               基本数值属性参数              */
 /*********************************************/
@@ -10189,47 +4304,48 @@ var FontStyle$1;
 })(FontStyle$1 || (FontStyle$1 = {}));
 
 var index$1 = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	get BezierKeyframeType () { return BezierKeyframeType$1; },
-	get BlendingMode () { return BlendingMode$1; },
-	BloomFilterThresholdAvgColor: BloomFilterThresholdAvgColor,
-	CAMERA_CLIP_MODE_NORMAL: CAMERA_CLIP_MODE_NORMAL$1,
-	CAMERA_CLIP_MODE_VERTICAL: CAMERA_CLIP_MODE_VERTICAL$1,
-	get CameraClipMode () { return CameraClipMode$1; },
-	get CompositionEndBehavior () { return CompositionEndBehavior$1; },
-	END_BEHAVIOR_DESTROY: END_BEHAVIOR_DESTROY$1,
-	END_BEHAVIOR_DESTROY_CHILDREN: END_BEHAVIOR_DESTROY_CHILDREN$1,
-	END_BEHAVIOR_FORWARD: END_BEHAVIOR_FORWARD$1,
-	END_BEHAVIOR_FREEZE: END_BEHAVIOR_FREEZE$1,
-	END_BEHAVIOR_PAUSE: END_BEHAVIOR_PAUSE$1,
-	END_BEHAVIOR_PAUSE_AND_DESTROY: END_BEHAVIOR_PAUSE_AND_DESTROY$1,
-	END_BEHAVIOR_RESTART: END_BEHAVIOR_RESTART$1,
-	get FontStyle () { return FontStyle$1; },
-	get InteractBehavior () { return InteractBehavior$2; },
-	get InteractType () { return InteractType$1; },
-	get ItemEndBehavior () { return ItemEndBehavior$1; },
-	get ItemType () { return ItemType$1; },
-	MESSAGE_ITEM_PHRASE_BEGIN: MESSAGE_ITEM_PHRASE_BEGIN,
-	MESSAGE_ITEM_PHRASE_END: MESSAGE_ITEM_PHRASE_END,
-	get MaskMode () { return MaskMode$1; },
-	get MaterialBlending () { return MaterialBlending$1; },
-	get MaterialType () { return MaterialType$1; },
-	get ModelBoundingType () { return ModelBoundingType$1; },
-	get ParentItemEndBehavior () { return ParentItemEndBehavior$1; },
-	get ParticleInteractionBehavior () { return ParticleInteractionBehavior$1; },
-	get ParticleOrigin () { return ParticleOrigin$1; },
-	get PluginType () { return PluginType$1; },
-	get RenderLevel () { return RenderLevel$1; },
-	get RenderMode () { return RenderMode$1; },
-	get RenderMode3D () { return RenderMode3D$1; },
-	get ShapeArcMode () { return ShapeArcMode$1; },
-	get ShapeType () { return ShapeType$1; },
-	get SideMode () { return SideMode$1; },
-	get TextAlignment () { return TextAlignment$1; },
-	get TextBaseline () { return TextBaseline$1; },
-	get TextOverflow () { return TextOverflow$1; },
-	get TextWeight () { return TextWeight$1; },
-	get ValueType () { return ValueType$1; }
+    __proto__: null,
+    get BackgroundType () { return BackgroundType$1; },
+    get BezierKeyframeType () { return BezierKeyframeType$1; },
+    get BlendingMode () { return BlendingMode$1; },
+    BloomFilterThresholdAvgColor: BloomFilterThresholdAvgColor,
+    CAMERA_CLIP_MODE_NORMAL: CAMERA_CLIP_MODE_NORMAL$1,
+    CAMERA_CLIP_MODE_VERTICAL: CAMERA_CLIP_MODE_VERTICAL$1,
+    get CameraClipMode () { return CameraClipMode$1; },
+    get CompositionEndBehavior () { return CompositionEndBehavior$1; },
+    END_BEHAVIOR_DESTROY: END_BEHAVIOR_DESTROY$1,
+    END_BEHAVIOR_DESTROY_CHILDREN: END_BEHAVIOR_DESTROY_CHILDREN$1,
+    END_BEHAVIOR_FORWARD: END_BEHAVIOR_FORWARD$1,
+    END_BEHAVIOR_FREEZE: END_BEHAVIOR_FREEZE$1,
+    END_BEHAVIOR_PAUSE: END_BEHAVIOR_PAUSE$1,
+    END_BEHAVIOR_PAUSE_AND_DESTROY: END_BEHAVIOR_PAUSE_AND_DESTROY$1,
+    END_BEHAVIOR_RESTART: END_BEHAVIOR_RESTART$1,
+    get FontStyle () { return FontStyle$1; },
+    get InteractBehavior () { return InteractBehavior$2; },
+    get InteractType () { return InteractType$1; },
+    get ItemEndBehavior () { return ItemEndBehavior$1; },
+    get ItemType () { return ItemType$1; },
+    MESSAGE_ITEM_PHRASE_BEGIN: MESSAGE_ITEM_PHRASE_BEGIN,
+    MESSAGE_ITEM_PHRASE_END: MESSAGE_ITEM_PHRASE_END,
+    get MaskMode () { return MaskMode$1; },
+    get MaterialBlending () { return MaterialBlending$1; },
+    get MaterialType () { return MaterialType$1; },
+    get ModelBoundingType () { return ModelBoundingType$1; },
+    get ParentItemEndBehavior () { return ParentItemEndBehavior$1; },
+    get ParticleInteractionBehavior () { return ParticleInteractionBehavior$1; },
+    get ParticleOrigin () { return ParticleOrigin$1; },
+    get PluginType () { return PluginType$1; },
+    get RenderLevel () { return RenderLevel$1; },
+    get RenderMode () { return RenderMode$1; },
+    get RenderMode3D () { return RenderMode3D$1; },
+    get ShapeArcMode () { return ShapeArcMode$1; },
+    get ShapeType () { return ShapeType$1; },
+    get SideMode () { return SideMode$1; },
+    get TextAlignment () { return TextAlignment$1; },
+    get TextBaseline () { return TextBaseline$1; },
+    get TextOverflow () { return TextOverflow$1; },
+    get TextWeight () { return TextWeight$1; },
+    get ValueType () { return ValueType$1; }
 });
 
 var PI2 = Math.PI * 2;
@@ -15881,30 +9997,30 @@ var Sphere$1 = /** @class */ (function () {
 }());
 
 var index = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	get EulerOrder () { return EulerOrder; },
-	Euler: Euler,
-	Quaternion: Quaternion,
-	Vector2: Vector2,
-	Vector3: Vector3,
-	Vector4: Vector4$1,
-	Matrix3: Matrix3,
-	Matrix4: Matrix4$1,
-	Ray: Ray,
-	PI2: PI2,
-	DEG2RAD: DEG2RAD,
-	RAD2DEG: RAD2DEG,
-	NumberEpsilon: NumberEpsilon,
-	isZero: isZero,
-	isEqual: isEqual,
-	damp: damp,
-	lerp: lerp,
-	degToRad: degToRad,
-	radToDeg: radToDeg,
-	clamp: clamp$1,
-	Color: Color,
-	Box3: Box3,
-	Sphere: Sphere$1
+    __proto__: null,
+    get EulerOrder () { return EulerOrder; },
+    Euler: Euler,
+    Quaternion: Quaternion,
+    Vector2: Vector2,
+    Vector3: Vector3,
+    Vector4: Vector4$1,
+    Matrix3: Matrix3,
+    Matrix4: Matrix4$1,
+    Ray: Ray,
+    PI2: PI2,
+    DEG2RAD: DEG2RAD,
+    RAD2DEG: RAD2DEG,
+    NumberEpsilon: NumberEpsilon,
+    isZero: isZero,
+    isEqual: isEqual,
+    damp: damp,
+    lerp: lerp,
+    degToRad: degToRad,
+    radToDeg: radToDeg,
+    clamp: clamp$1,
+    Color: Color,
+    Box3: Box3,
+    Sphere: Sphere$1
 });
 
 var toHalf = (function () {
@@ -16126,6 +10242,439 @@ function trianglesFromRect(position, halfWidth, halfHeight) {
         { p0: p0.clone(), p1: p2.clone(), p2: p3 },
     ];
 }
+function decimalEqual(a, b, epsilon) {
+    if (epsilon === void 0) { epsilon = 0.000001; }
+    return Math.abs(a - b) < epsilon;
+}
+function numberToFix(a, fixed) {
+    if (fixed === void 0) { fixed = 2; }
+    var base = Math.pow(10, fixed);
+    return Math.floor(a * base) / base;
+}
+function pointOnLine(x1, y1, x2, y2, x3, y3) {
+    var det1 = (x1 * y2) + (y1 * x3) + (x2 * y3) - (x3 * y2) - (y3 * x1) - (x2 * y1);
+    return det1 > -0.001 && det1 < 0.001;
+}
+
+var keyframeInfo = {
+    /**
+     * 根据不同关键帧类型，获取位于曲线上的点
+     */
+    getPointInCurve: function (keyframe) {
+        var _a = __read$3(keyframe, 2); _a[0]; var data = _a[1];
+        var _b = this.getPointIndexInCurve(keyframe), xIndex = _b.xIndex, yIndex = _b.yIndex;
+        var time = data[xIndex];
+        var value = data[yIndex];
+        return new Vector2(time, value);
+    },
+    /**
+     * 根据不同关键帧类型，获取位于曲线上的点的索引
+     */
+    getPointIndexInCurve: function (keyframe) {
+        var _a = __read$3(keyframe, 3), type = _a[0], markType = _a[2];
+        // 不同类型，存放的时间不同
+        var index = type === BezierKeyframeType$1.LINE ? 0
+            : type === BezierKeyframeType$1.EASE_OUT ? 0
+                : type === BezierKeyframeType$1.EASE_IN ? 2
+                    : type === BezierKeyframeType$1.EASE ? 2
+                        : type === BezierKeyframeType$1.HOLD ? (markType === BezierKeyframeType$1.EASE_IN ? 2 : 0)
+                            : 0;
+        return { xIndex: index, yIndex: index + 1 };
+    },
+    /**
+     * 关键帧左侧是否为缓动类型（否则为线段）
+     */
+    isLeftSideEase: function (keyframe) {
+        var _a = __read$3(keyframe, 3), keyframeType = _a[0]; _a[1]; var markType = _a[2];
+        // 定格关键帧的左侧类型，需要借助markType判断
+        if (keyframeType === BezierKeyframeType$1.HOLD && this.isKeyframeTypeLeftSideEase(markType)) {
+            return true;
+        }
+        return this.isKeyframeTypeLeftSideEase(keyframeType);
+    },
+    /**
+     * 关键帧右侧是否为缓动类型（否则为线段）
+     */
+    isRightSideEase: function (keyframe) {
+        var _a = __read$3(keyframe, 3), keyframeType = _a[0]; _a[1]; var markType = _a[2];
+        // 定格关键帧的右侧类型，需要借助markType判断
+        if (keyframeType === BezierKeyframeType$1.HOLD && this.isKeyframeTypeRightSideEase(markType)) {
+            return true;
+        }
+        return this.isKeyframeTypeRightSideEase(keyframeType);
+    },
+    /**
+     * 关键帧左侧是否为缓动类型（否则为线段）
+     */
+    isKeyframeTypeLeftSideEase: function (keyframeType) {
+        return [BezierKeyframeType$1.EASE, BezierKeyframeType$1.EASE_IN, BezierKeyframeType$1.AUTO].includes(keyframeType);
+    },
+    /**
+     * 关键帧右侧是否为缓动类型（否则为线段）
+     */
+    isKeyframeTypeRightSideEase: function (keyframeType) {
+        return [BezierKeyframeType$1.EASE, BezierKeyframeType$1.EASE_OUT, BezierKeyframeType$1.AUTO].includes(keyframeType);
+    },
+    /**
+     * 是否为定格进关键帧
+     */
+    isHoldInKeyframe: function (keyframe) {
+        var _a = __read$3(keyframe, 3), keyframeType = _a[0]; _a[1]; var leftSubType = _a[2];
+        return keyframeType === BezierKeyframeType$1.HOLD && [BezierKeyframeType$1.HOLD, BezierKeyframeType$1.LINE_OUT, BezierKeyframeType$1.EASE_OUT].includes(leftSubType);
+    },
+    /**
+     * 是否为定格出关键帧
+     */
+    isHoldOutKeyframe: function (keyframe) {
+        var _a = __read$3(keyframe, 3), keyframeType = _a[0]; _a[1]; var leftSubType = _a[2];
+        return keyframeType === BezierKeyframeType$1.HOLD && [BezierKeyframeType$1.HOLD, BezierKeyframeType$1.LINE, BezierKeyframeType$1.EASE_IN].includes(leftSubType);
+    },
+};
+
+var BezierLengthData = /** @class */ (function () {
+    function BezierLengthData(points, totalLength) {
+        this.points = points;
+        this.totalLength = totalLength;
+    }
+    return BezierLengthData;
+}());
+var BezierMap = {};
+var BezierDataMap = {};
+var NEWTON_ITERATIONS = 4;
+var NEWTON_MIN_SLOPE = 0.001;
+var SUBDIVISION_PRECISION = 0.0000001;
+var SUBDIVISION_MAX_ITERATIONS = 10;
+var CURVE_SEGMENTS = 300;
+var kSplineTableSize = 11;
+var kSampleStepSize = 1.0 / (kSplineTableSize - 1.0);
+function A(a1, a2) { return 1.0 - 3.0 * a2 + 3.0 * a1; }
+function B(a1, a2) { return 3.0 * a2 - 6.0 * a1; }
+function C(a1) { return 3.0 * a1; }
+// A * t ^ 3 + B * t ^ 2 + C * t
+// Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2.
+function calcBezier(t, a1, a2) {
+    return ((A(a1, a2) * t + B(a1, a2)) * t + C(a1)) * t;
+}
+// Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2.
+function getSlope(t, a1, a2) {
+    return 3.0 * A(a1, a2) * t * t + 2.0 * B(a1, a2) * t + C(a1);
+}
+function binarySubdivide(aX, aA, aB, mX1, mX2) {
+    var currentX, currentT, i = 0;
+    do {
+        currentT = aA + (aB - aA) / 2.0;
+        currentX = calcBezier(currentT, mX1, mX2) - aX;
+        if (currentX > 0.0) {
+            aB = currentT;
+        }
+        else {
+            aA = currentT;
+        }
+    } while (Math.abs(currentX) > SUBDIVISION_PRECISION && ++i < SUBDIVISION_MAX_ITERATIONS);
+    return currentT;
+}
+function newtonRaphsonIterate(aX, aGuessT, mX1, mX2) {
+    for (var i = 0; i < NEWTON_ITERATIONS; ++i) {
+        var currentSlope = getSlope(aGuessT, mX1, mX2);
+        if (currentSlope === 0.0) {
+            return aGuessT;
+        }
+        var currentX = calcBezier(aGuessT, mX1, mX2) - aX;
+        aGuessT -= currentX / currentSlope;
+    }
+    return aGuessT;
+}
+// de Casteljau算法构建曲线
+/**
+ * @param p1 起始点
+ * @param p2 终点
+ * @param p3 起始控制点
+ * @param p4 终止控制点
+ * @returns
+ */
+function buildBezierData(p1, p2, p3, p4) {
+    // 使用平移后的终点、控制点作为key
+    var s1 = numberToFix(p2.x - p1.x, 3) + '_' + numberToFix(p2.y - p1.y, 3) + '_' + numberToFix(p2.z - p1.z, 3);
+    var s2 = numberToFix(p3.x - p1.x, 3) + '_' + numberToFix(p3.y - p1.y, 3) + '_' + numberToFix(p3.z - p1.z, 3);
+    var s3 = numberToFix(p4.x - p1.x, 3) + '_' + numberToFix(p4.y - p1.y, 3) + '_' + numberToFix(p4.z - p1.z, 3);
+    var str = s1 + '&' + s2 + '&' + s3;
+    if (BezierDataMap[str]) {
+        return {
+            data: BezierDataMap[str],
+            interval: p1,
+        };
+    }
+    else {
+        var samples = [];
+        var lastPoint = null, addedLength = 0, ptDistance = 0;
+        var curveSegments = CURVE_SEGMENTS;
+        for (var k = 0; k < curveSegments; k += 1) {
+            var point = new Vector3();
+            var perc = k / (curveSegments - 1);
+            ptDistance = 0;
+            point.x = 3 * Math.pow(1 - perc, 2) * perc * (p3.x - p1.x) + 3 * (1 - perc) * Math.pow(perc, 2) * (p4.x - p1.x) + Math.pow(perc, 3) * (p2.x - p1.x);
+            point.y = 3 * Math.pow(1 - perc, 2) * perc * (p3.y - p1.y) + 3 * (1 - perc) * Math.pow(perc, 2) * (p4.y - p1.y) + Math.pow(perc, 3) * (p2.y - p1.y);
+            point.z = 3 * Math.pow(1 - perc, 2) * perc * (p3.z - p1.z) + 3 * (1 - perc) * Math.pow(perc, 2) * (p4.z - p1.z) + Math.pow(perc, 3) * (p2.z - p1.z);
+            if (lastPoint !== null) {
+                ptDistance += Math.pow(point.x - lastPoint.x, 2);
+                ptDistance += Math.pow(point.y - lastPoint.y, 2);
+                ptDistance += Math.pow(point.z - lastPoint.z, 2);
+            }
+            lastPoint = point;
+            ptDistance = Math.sqrt(ptDistance);
+            addedLength += ptDistance;
+            samples[k] = {
+                partialLength: ptDistance,
+                point: point,
+            };
+        }
+        var data = new BezierLengthData(samples, addedLength);
+        BezierDataMap[str] = data;
+        return {
+            data: data,
+            interval: new Vector3(p1.x, p1.y, p1.z),
+        };
+    }
+}
+var BezierPath = /** @class */ (function () {
+    function BezierPath(p1, p2, p3, p4) {
+        this.p1 = p1;
+        this.p2 = p2;
+        this.p3 = p3;
+        this.p4 = p4;
+        this.catching = {
+            lastPoint: 0,
+            lastAddedLength: 0,
+        };
+        var _a = buildBezierData(p1, p2, p3, p4), data = _a.data, interval = _a.interval;
+        this.lengthData = data;
+        this.interval = interval;
+        this.totalLength = data.totalLength;
+    }
+    /**
+     * 获取路径在指定比例长度上点的坐标
+     * @param percent 路径长度的比例
+     */
+    BezierPath.prototype.getPointInPercent = function (percent) {
+        var bezierData = this.lengthData;
+        if (percent === 0) {
+            return bezierData.points[0].point.clone().add(this.interval);
+        }
+        if (decimalEqual(1 - percent, 0)) {
+            return bezierData.points[CURVE_SEGMENTS - 1].point.clone().add(this.interval);
+        }
+        if (decimalEqual(bezierData.totalLength, 0)) {
+            return this.p1.clone();
+        }
+        var point = new Vector3();
+        var segmentLength = numberToFix(bezierData.totalLength * percent, 4);
+        var addedLength = this.catching.lastAddedLength;
+        var j = this.catching.lastPoint;
+        if (decimalEqual(addedLength, segmentLength)) {
+            return bezierData.points[j].point.clone().add(this.interval);
+        }
+        var flag = true;
+        var dir = 1;
+        if (segmentLength < addedLength) {
+            dir = -1;
+        }
+        while (flag) {
+            if (segmentLength >= addedLength) {
+                if (j === CURVE_SEGMENTS - 1) {
+                    point.x = bezierData.points[j].point.x;
+                    point.y = bezierData.points[j].point.y;
+                    point.z = bezierData.points[j].point.z;
+                    break;
+                }
+                if (segmentLength < addedLength + bezierData.points[j + 1].partialLength) {
+                    var segmentPerc = (segmentLength - addedLength) / bezierData.points[j + 1].partialLength;
+                    point.x = bezierData.points[j].point.x + (bezierData.points[j + 1].point.x - bezierData.points[j].point.x) * segmentPerc;
+                    point.y = bezierData.points[j].point.y + (bezierData.points[j + 1].point.y - bezierData.points[j].point.y) * segmentPerc;
+                    point.z = bezierData.points[j].point.z + (bezierData.points[j + 1].point.z - bezierData.points[j].point.z) * segmentPerc;
+                    break;
+                }
+            }
+            if (dir > 0 && j < (CURVE_SEGMENTS - 1)) {
+                j += dir;
+                addedLength += numberToFix(bezierData.points[j].partialLength, 5);
+            }
+            else if (dir < 0 && j > 0) {
+                addedLength -= numberToFix(bezierData.points[j].partialLength, 5);
+                j += dir;
+            }
+            else {
+                flag = false;
+            }
+        }
+        this.catching.lastPoint = j;
+        this.catching.lastAddedLength = addedLength;
+        point.add(this.interval);
+        return point;
+    };
+    return BezierPath;
+}());
+var BezierEasing = /** @class */ (function () {
+    function BezierEasing(mX1, mY1, mX2, mY2) {
+        this.mX1 = mX1;
+        this.mY1 = mY1;
+        this.mX2 = mX2;
+        this.mY2 = mY2;
+        this.precomputed = false;
+        this.mSampleValues = new Array(kSplineTableSize);
+    }
+    BezierEasing.prototype.precompute = function () {
+        this.precomputed = true;
+        if (this.mX1 !== this.mY1 || this.mX2 !== this.mY2) {
+            this.calcSampleValues();
+        }
+    };
+    BezierEasing.prototype.getValue = function (x) {
+        if (this.mX1 === this.mY1 && this.mX2 === this.mY2) {
+            return x;
+        }
+        if (isNaN(this.mY1) || isNaN(this.mY2)) {
+            return 0;
+        }
+        if (x === 0 || x === 1) {
+            return x;
+        }
+        if (!this.precomputed) {
+            this.precompute();
+        }
+        var value = calcBezier(this.getTForX(x), this.mY1, this.mY2);
+        return value;
+    };
+    BezierEasing.prototype.calcSampleValues = function () {
+        for (var i = 0; i < kSplineTableSize; ++i) {
+            this.mSampleValues[i] = calcBezier(i * kSampleStepSize, this.mX1, this.mX2);
+        }
+    };
+    BezierEasing.prototype.getTForX = function (aX) {
+        var mSampleValues = this.mSampleValues, lastSample = kSplineTableSize - 1;
+        var intervalStart = 0, currentSample = 1;
+        for (; currentSample !== lastSample && mSampleValues[currentSample] <= aX; ++currentSample) {
+            intervalStart += kSampleStepSize;
+        }
+        --currentSample;
+        // Interpolate to provide an initial guess for t
+        var dist = (aX - mSampleValues[currentSample]) / (mSampleValues[currentSample + 1] - mSampleValues[currentSample]);
+        var guessForT = intervalStart + dist * kSampleStepSize;
+        var initialSlope = getSlope(guessForT, this.mX1, this.mX2);
+        if (initialSlope >= NEWTON_MIN_SLOPE) {
+            return newtonRaphsonIterate(aX, guessForT, this.mX1, this.mX2);
+        }
+        if (initialSlope === 0.0) {
+            return guessForT;
+        }
+        return binarySubdivide(aX, intervalStart, intervalStart + kSampleStepSize, this.mX1, this.mX2);
+    };
+    return BezierEasing;
+}());
+function buildEasingCurve(leftKeyframe, rightKeyframe) {
+    // 获取控制点和曲线类型
+    var _a = getControlPoints(leftKeyframe, rightKeyframe, true), p0 = _a.p0, p1 = _a.p1, p2 = _a.p2, p3 = _a.p3;
+    assertExist(p2);
+    assertExist(p3);
+    var timeInterval = p3.x - p0.x;
+    var valueInterval = p3.y - p0.y;
+    var y1, y2;
+    var x1 = numberToFix((p1.x - p0.x) / timeInterval, 5);
+    var x2 = numberToFix((p2.x - p0.x) / timeInterval, 5);
+    if (decimalEqual(valueInterval, 0)) {
+        y1 = y2 = NaN;
+    }
+    else {
+        y1 = numberToFix((p1.y - p0.y) / valueInterval, 5);
+        y2 = numberToFix((p2.y - p0.y) / valueInterval, 5);
+    }
+    if (x1 < 0) {
+        console.error('invalid bezier points, x1 < 0', p0, p1, p2, p3);
+        x1 = 0;
+    }
+    if (x2 < 0) {
+        console.error('invalid bezier points, x2 < 0', p0, p1, p2, p3);
+        x2 = 0;
+    }
+    if (x1 > 1) {
+        console.error('invalid bezier points, x1 >= 1', p0, p1, p2, p3);
+        x1 = 1;
+    }
+    if (x2 > 1) {
+        console.error('invalid bezier points, x2 >= 1', p0, p1, p2, p3);
+        x2 = 1;
+    }
+    var str = ('bez_' + x1 + '_' + y1 + '_' + x2 + '_' + y2).replace(/\./g, 'p');
+    var bezEasing;
+    if (BezierMap[str]) {
+        bezEasing = BezierMap[str];
+    }
+    else {
+        bezEasing = new BezierEasing(x1, y1, x2, y2);
+        BezierMap[str] = bezEasing;
+    }
+    return {
+        points: [p0, p1, p2, p3],
+        timeInterval: timeInterval,
+        valueInterval: valueInterval,
+        curve: bezEasing,
+    };
+}
+/**
+ * 根据关键帧类型获取贝塞尔曲线上的关键点
+ */
+function getControlPoints(leftKeyframe, rightKeyframe, lineToBezier) {
+    var _a = __read$3(leftKeyframe, 2), leftValue = _a[1];
+    var leftHoldLine = keyframeInfo.isHoldOutKeyframe(leftKeyframe);
+    var rightHoldLine = keyframeInfo.isHoldInKeyframe(rightKeyframe);
+    var leftEase = !rightHoldLine && keyframeInfo.isRightSideEase(leftKeyframe);
+    var rightEase = !leftHoldLine && keyframeInfo.isLeftSideEase(rightKeyframe);
+    // 1. 左边为ease，右边为line（补充右边的控制点，该点在曲线上的点的偏左边位置）
+    if (leftEase && !rightEase && !rightHoldLine) {
+        var p0_1 = new Vector2(leftValue[leftValue.length - 4], leftValue[leftValue.length - 3]);
+        var p1_1 = new Vector2(leftValue[leftValue.length - 2], leftValue[leftValue.length - 1]);
+        var rightPoint = keyframeInfo.getPointInCurve(rightKeyframe);
+        var p3 = new Vector2(rightPoint.x, rightPoint.y);
+        var p2 = new Vector2(p3.x - (p3.x - p0_1.x) / 10, p3.y);
+        return { type: 'ease', p0: p0_1, p1: p1_1, p2: p2, p3: p3 };
+    }
+    // 2. 左边为line，右边为ease（补充左边的控制点，该点在曲线上的点的偏右边位置）
+    if (!leftEase && rightEase && !leftHoldLine) {
+        var _b = __read$3(rightKeyframe, 2), rightValue = _b[1];
+        var leftPoint = keyframeInfo.getPointInCurve(leftKeyframe);
+        var p0_2 = new Vector2(leftPoint.x, leftPoint.y);
+        var p2 = new Vector2(rightValue[0], rightValue[1]);
+        var p3 = new Vector2(rightValue[2], rightValue[3]);
+        var p1_2 = new Vector2(p0_2.x + (p3.x - p0_2.x) / 10, p0_2.y);
+        return { type: 'ease', p0: p0_2, p1: p1_2, p2: p2, p3: p3 };
+    }
+    // 3. 左边为ease，右边为ease
+    if (leftEase && rightEase) {
+        var _c = __read$3(rightKeyframe, 2), rightValue = _c[1];
+        var p0_3 = new Vector2(leftValue[leftValue.length - 4], leftValue[leftValue.length - 3]);
+        var p1_3 = new Vector2(leftValue[leftValue.length - 2], leftValue[leftValue.length - 1]);
+        var p2 = new Vector2(rightValue[0], rightValue[1]);
+        var p3 = new Vector2(rightValue[2], rightValue[3]);
+        return { type: 'ease', p0: p0_3, p1: p1_3, p2: p2, p3: p3 };
+    }
+    // 4. 左边为line，右边为line
+    var p0 = keyframeInfo.getPointInCurve(leftKeyframe);
+    var p1 = keyframeInfo.getPointInCurve(rightKeyframe);
+    if (leftHoldLine) {
+        p1.y = p0.y; // 定格关键帧使用相同的点
+    }
+    else if (rightHoldLine) {
+        p0.y = p1.y;
+    }
+    if (lineToBezier) {
+        // 补上两个在直线上的控制点
+        var p2 = new Vector2((p1.x - p0.x) / 3 + p0.x, (p1.y - p0.y) / 3 + p0.y);
+        var p3 = new Vector2((p1.x - p0.x) / 3 * 2 + p0.x, (p1.y - p0.y) / 3 * 2 + p0.y);
+        return { type: 'ease', p0: p0, p1: p2, p2: p3, p3: p1, isHold: leftHoldLine || rightHoldLine, leftHoldLine: leftHoldLine, rightHoldLine: rightHoldLine };
+    }
+    else {
+        return { type: 'line', p0: p0, p1: p1, isHold: leftHoldLine || rightHoldLine, leftHoldLine: leftHoldLine, rightHoldLine: rightHoldLine };
+    }
+}
 
 var _a$8;
 var NOT_IMPLEMENT = 'not_implement';
@@ -16133,6 +10682,15 @@ var ValueGetter = /** @class */ (function () {
     function ValueGetter(arg) {
         this.onCreate(arg);
     }
+    ValueGetter.getAllData = function (meta, halfFloat) {
+        var ret = new (halfFloat ? Float16ArrayWrapper : Float32Array)(meta.index * 4);
+        for (var i = 0, cursor = 0, curves = meta.curves; i < curves.length; i++) {
+            var data = curves[i].toData();
+            ret.set(data, cursor);
+            cursor += data.length;
+        }
+        return halfFloat ? ret.data : ret;
+    };
     ValueGetter.prototype.onCreate = function (props) {
         throw Error(NOT_IMPLEMENT);
     };
@@ -16153,6 +10711,9 @@ var ValueGetter = /** @class */ (function () {
     };
     ValueGetter.prototype.scaleXCoord = function (scale) {
         return this;
+    };
+    ValueGetter.prototype.toData = function () {
+        throw Error(NOT_IMPLEMENT);
     };
     return ValueGetter;
 }());
@@ -16316,153 +10877,6 @@ var GradientValue = /** @class */ (function (_super) {
     };
     return GradientValue;
 }(ValueGetter));
-var CURVE_PRO_TIME = 0;
-var CURVE_PRO_VALUE = 1;
-var CURVE_PRO_IN_TANGENT = 2;
-var CURVE_PRO_OUT_TANGENT = 3;
-var CurveValue = /** @class */ (function (_super) {
-    __extends(CurveValue, _super);
-    function CurveValue() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    CurveValue.getAllData = function (meta, halfFloat) {
-        var ret = new (halfFloat ? Float16ArrayWrapper : Float32Array)(meta.index * 4);
-        for (var i = 0, cursor = 0, curves = meta.curves; i < curves.length; i++) {
-            var data = curves[i].toData();
-            ret.set(data, cursor);
-            cursor += data.length;
-        }
-        return halfFloat ? ret.data : ret;
-    };
-    CurveValue.prototype.onCreate = function (props) {
-        var min = Infinity;
-        var max = -Infinity;
-        //formatted number
-        if (Number.isFinite(props[0]) && Number.isFinite(props[1])) {
-            var keys = [];
-            for (var i = 2; i < props.length; i++) {
-                // FIXME
-                keys.push(props[i].slice(0, 4));
-            }
-            this.keys = keys;
-            this.min = props[0];
-            this.dist = props[1] - props[0];
-        }
-        else {
-            var keys = props.map(function (item) {
-                if (isArray(item)) {
-                    min = Math.min(min, item[1]);
-                    max = Math.max(max, item[1]);
-                    return item.slice(0, 4);
-                }
-                else if (typeof item === 'object' && item) {
-                    var _a = item, time = _a.time, value = _a.value, _b = _a.inTangent, inTangent = _b === void 0 ? 0 : _b, _c = _a.outTangent, outTangent = _c === void 0 ? 0 : _c;
-                    min = Math.min(min, value);
-                    max = Math.max(max, value);
-                    return [time, value, inTangent, outTangent];
-                }
-                throw new Error('invalid keyframe');
-            });
-            var dist = max - min;
-            this.keys = keys;
-            if (dist !== 0) {
-                for (var i = 0; i < keys.length; i++) {
-                    var key = keys[i];
-                    key[1] = (key[1] - min) / dist;
-                }
-            }
-            var key0 = keys[0];
-            if (key0[0] > 0) {
-                key0[2] = 0;
-                keys.unshift([0, key0[1], 0, 0]);
-            }
-            var key1 = keys[keys.length - 1];
-            if (key1[0] < 1) {
-                key1[3] = 0;
-                keys.push([1, key1[1], 0, 0]);
-            }
-            this.min = min;
-            this.dist = dist;
-        }
-        this.isCurveValue = true;
-    };
-    CurveValue.prototype.getValue = function (time) {
-        var _a = this, keys = _a.keys, min = _a.min, dist = _a.dist;
-        var keysNumerArray = keys;
-        if (time <= keysNumerArray[0][CURVE_PRO_TIME]) {
-            return keysNumerArray[0][CURVE_PRO_VALUE] * dist + min;
-        }
-        var end = keysNumerArray.length - 1;
-        for (var i = 0; i < end; i++) {
-            var key = keysNumerArray[i];
-            var k2 = keysNumerArray[i + 1];
-            if (time > key[CURVE_PRO_TIME] && time <= k2[CURVE_PRO_TIME]) {
-                return curveValueEvaluate(time, key, k2) * dist + min;
-            }
-        }
-        return keysNumerArray[end][CURVE_PRO_VALUE] * dist + min;
-    };
-    CurveValue.prototype.getIntegrateByTime = function (t0, t1) {
-        var d = this.integrate(t1, true) - this.integrate(t0, true);
-        return this.min * 0.5 * (t1 - t0) * (t1 - t0) + d * this.dist;
-    };
-    CurveValue.prototype.getIntegrateValue = function (t0, t1, ts) {
-        ts = ts || 1;
-        var d = (this.integrate(t1 / ts, false) - this.integrate(t0 / ts, false)) * ts;
-        var dt = (t1 - t0) / ts;
-        return this.min * dt + d * this.dist;
-    };
-    CurveValue.prototype.integrate = function (time, byTime) {
-        var keys = this.keys;
-        if (time <= keys[0][CURVE_PRO_TIME]) {
-            return 0;
-        }
-        var ret = 0;
-        var end = keys.length - 1;
-        var func = byTime ? curveValueIntegrateByTime : curveValueIntegrate;
-        for (var i = 0; i < end; i++) {
-            var key = keys[i];
-            var k2 = keys[i + 1];
-            var t1 = key[CURVE_PRO_TIME];
-            var t2 = k2[CURVE_PRO_TIME];
-            if (time > t1 && time <= t2) {
-                return ret + func(time, key, k2);
-            }
-            else {
-                ret += func(t2, key, k2);
-            }
-        }
-        return ret;
-    };
-    CurveValue.prototype.toData = function () {
-        var keys = this.keys;
-        var data = new Float32Array(keys.length * 4);
-        for (var i = 0, cursor = 0; i < keys.length; i++, cursor += 4) {
-            data.set(keys[i], cursor);
-        }
-        return data;
-    };
-    CurveValue.prototype.toUniform = function (meta) {
-        var index = meta.index;
-        var keys = this.keys;
-        meta.curves.push(this);
-        meta.index += keys.length;
-        meta.max = Math.max(meta.max, keys.length);
-        meta.curveCount += keys.length;
-        return new Float32Array([2, index + 1 / keys.length, this.min, this.dist]);
-    };
-    CurveValue.prototype.map = function (func) {
-        this.keys.forEach(function (k) {
-            k[CURVE_PRO_VALUE] = func(k[CURVE_PRO_VALUE]);
-        });
-        return this;
-    };
-    CurveValue.prototype.scaleXCoord = function (scale) {
-        this.keys.forEach(function (k) { return k[CURVE_PRO_TIME] = scale * k[CURVE_PRO_TIME]; });
-        return this;
-    };
-    return CurveValue;
-}(ValueGetter));
 var LineSegments = /** @class */ (function (_super) {
     __extends(LineSegments, _super);
     function LineSegments() {
@@ -16564,77 +10978,199 @@ var LineSegments = /** @class */ (function (_super) {
     };
     return LineSegments;
 }(ValueGetter));
-var PathSegments = /** @class */ (function (_super) {
-    __extends(PathSegments, _super);
-    function PathSegments() {
+var BezierCurve = /** @class */ (function (_super) {
+    __extends(BezierCurve, _super);
+    function BezierCurve() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    PathSegments.prototype.onCreate = function (props) {
-        this.keys = props[0];
-        this.values = props[1];
+    BezierCurve.prototype.onCreate = function (props) {
+        var keyframes = props;
+        this.curveMap = {};
+        this.keys = [];
+        for (var i = 0; i < keyframes.length - 1; i++) {
+            var leftKeyframe = keyframes[i];
+            var rightKeyframe = keyframes[i + 1];
+            var _a = buildEasingCurve(leftKeyframe, rightKeyframe), points = _a.points, curve = _a.curve, timeInterval = _a.timeInterval, valueInterval = _a.valueInterval;
+            var s = points[0];
+            var e = points[points.length - 1];
+            this.keys.push(__spreadArray$2(__spreadArray$2([], __read$3(s.toArray()), false), __read$3(points[1].toArray()), false));
+            this.keys.push(__spreadArray$2(__spreadArray$2([], __read$3(e.toArray()), false), __read$3(points[2].toArray()), false));
+            this.curveMap["".concat(s.x, "&").concat(e.x)] = {
+                points: points,
+                timeInterval: timeInterval,
+                valueInterval: valueInterval,
+                curve: curve,
+            };
+        }
     };
-    PathSegments.prototype.getValue = function (time) {
-        var keys = this.keys;
-        var values = this.values;
-        for (var i = 0; i < keys.length - 1; i++) {
-            var k0 = keys[i];
-            var k1 = keys[i + 1];
-            if (k0[0] <= time && k1[0] >= time) {
-                var dis = k1[1] - k0[1];
-                var dt = void 0;
-                if (dis === 0) {
-                    dt = (time - k0[0]) / (k1[0] - k0[0]);
-                }
-                else {
-                    var val = curveValueEvaluate(time, k0, k1);
-                    dt = (val - k0[1]) / dis;
-                }
-                return this.calculateVec(i, dt);
+    BezierCurve.prototype.getValue = function (time) {
+        var result = 0;
+        var keyTimeData = Object.keys(this.curveMap);
+        var keyTimeStart = Number(keyTimeData[0].split('&')[0]);
+        var keyTimeEnd = Number(keyTimeData[keyTimeData.length - 1].split('&')[1]);
+        if (time <= keyTimeStart) {
+            return this.getCurveValue(keyTimeData[0], keyTimeStart);
+        }
+        if (time >= keyTimeEnd) {
+            return this.getCurveValue(keyTimeData[keyTimeData.length - 1], keyTimeEnd);
+        }
+        for (var i = 0; i < keyTimeData.length; i++) {
+            var _a = __read$3(keyTimeData[i].split('&'), 2), xMin = _a[0], xMax = _a[1];
+            if (time >= Number(xMin) && time < Number(xMax)) {
+                result = this.getCurveValue(keyTimeData[i], time);
+                break;
             }
         }
-        if (time <= keys[0][0]) {
-            return values[0].slice();
-        }
-        return values[values.length - 1].slice();
+        return result;
     };
-    PathSegments.prototype.calculateVec = function (i, dt) {
-        var vec0 = this.values[i];
-        var vec1 = this.values[i + 1];
-        var ret = [0, 0, 0];
-        for (var j = 0; j < vec0.length; j++) {
-            ret[j] = vec0[j] * (1 - dt) + vec1[j] * dt;
+    BezierCurve.prototype.getIntegrateValue = function (t0, t1, ts) {
+        if (ts === void 0) { ts = 1; }
+        var time = (t1 - t0) / ts;
+        var result = 0;
+        var keyTimeData = Object.keys(this.curveMap);
+        var keyTimeStart = Number(keyTimeData[0].split('&')[0]);
+        if (time <= keyTimeStart) {
+            return 0;
         }
-        return ret;
+        for (var i = 0; i < keyTimeData.length; i++) {
+            var _a = __read$3(keyTimeData[i].split('&'), 2), xMin = _a[0], xMax = _a[1];
+            if (time >= Number(xMax)) {
+                result += ts * this.getCurveIntegrateValue(keyTimeData[i], Number(xMax));
+            }
+            if (time >= Number(xMin) && time < Number(xMax)) {
+                result += ts * this.getCurveIntegrateValue(keyTimeData[i], time);
+                break;
+            }
+        }
+        return result;
     };
-    return PathSegments;
+    BezierCurve.prototype.getIntegrateByTime = function (t0, t1) {
+        return this.getIntegrateValue(0, t1) - this.getIntegrateValue(0, t0);
+    };
+    // 速度变化曲线面板移除后下线
+    BezierCurve.prototype.getCurveIntegrateValue = function (curveKey, time) {
+        var curveInfo = this.curveMap[curveKey];
+        var _a = __read$3(curveInfo.points, 1), p0 = _a[0];
+        var timeInterval = curveInfo.timeInterval;
+        var valueInterval = curveInfo.valueInterval;
+        var segments = 20;
+        var total = 0;
+        var h = (time - p0.x) / segments;
+        for (var i = 0; i <= segments; i++) {
+            var t = i * h;
+            var normalizeTime = t / timeInterval;
+            var y = p0.y + valueInterval * curveInfo.curve.getValue(normalizeTime);
+            if (i === 0 || i === segments) {
+                total += y;
+            }
+            else if (i % 2 === 1) {
+                total += 4 * y;
+            }
+            else {
+                total += 2 * y;
+            }
+        }
+        total *= h / 3;
+        return total;
+    };
+    BezierCurve.prototype.getCurveValue = function (curveKey, time) {
+        var curveInfo = this.curveMap[curveKey];
+        var _a = __read$3(curveInfo.points, 1), p0 = _a[0];
+        var timeInterval = curveInfo.timeInterval;
+        var valueInterval = curveInfo.valueInterval;
+        var normalizeTime = (time - p0.x) / timeInterval;
+        var value = curveInfo.curve.getValue(normalizeTime);
+        return p0.y + valueInterval * value;
+    };
+    BezierCurve.prototype.toUniform = function (meta) {
+        var index = meta.index;
+        var count = this.keys.length;
+        meta.curves.push(this);
+        meta.index = index + count;
+        // 兼容 WebGL1
+        meta.max = Math.max(meta.max, count);
+        meta.curveCount += count;
+        return new Float32Array([5, index + 1 / count, index, count]);
+    };
+    BezierCurve.prototype.toData = function () {
+        var keys = this.keys;
+        var data = new Float32Array(keys.length * 4);
+        for (var i = 0, cursor = 0; i < keys.length; i++, cursor += 4) {
+            data.set(keys[i], cursor);
+        }
+        return data;
+    };
+    return BezierCurve;
 }(ValueGetter));
-var BezierSegments = /** @class */ (function (_super) {
-    __extends(BezierSegments, _super);
-    function BezierSegments() {
+var BezierCurvePath = /** @class */ (function (_super) {
+    __extends(BezierCurvePath, _super);
+    function BezierCurvePath() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    BezierSegments.prototype.onCreate = function (props) {
-        _super.prototype.onCreate.call(this, props);
-        this.cps = props[2];
-    };
-    BezierSegments.prototype.calculateVec = function (i, t) {
-        var vec0 = this.values[i];
-        var vec1 = this.values[i + 1];
-        var outCp = this.cps[i + i];
-        var inCp = this.cps[i + i + 1];
-        var ret = [0, 0, 0];
-        var ddt = 1 - t;
-        var a = ddt * ddt * ddt;
-        var b = 3 * t * ddt * ddt;
-        var c = 3 * t * t * ddt;
-        var d = t * t * t;
-        for (var j = 0; j < vec0.length; j++) {
-            ret[j] = a * vec0[j] + b * outCp[j] + c * inCp[j] + d * vec1[j];
+    BezierCurvePath.prototype.onCreate = function (props) {
+        var _a = __read$3(props, 3), keyframes = _a[0], points = _a[1], controlPoints = _a[2];
+        this.curveSegments = {};
+        if (!controlPoints.length) {
+            return;
         }
-        return ret;
+        for (var i = 0; i < keyframes.length - 1; i++) {
+            var leftKeyframe = keyframes[i];
+            var rightKeyframe = keyframes[i + 1];
+            var ps1 = new Vector3(points[i][0], points[i][1], points[i][2]), ps2 = new Vector3(points[i + 1][0], points[i + 1][1], points[i + 1][2]);
+            var cp1 = new Vector3(controlPoints[2 * i][0], controlPoints[2 * i][1], controlPoints[2 * i][2]), cp2 = new Vector3(controlPoints[2 * i + 1][0], controlPoints[2 * i + 1][1], controlPoints[2 * i + 1][2]);
+            var _b = buildEasingCurve(leftKeyframe, rightKeyframe), ps = _b.points, easingCurve = _b.curve, timeInterval = _b.timeInterval, valueInterval = _b.valueInterval;
+            var s = ps[0];
+            var e = ps[ps.length - 1];
+            var pathCurve = new BezierPath(ps1, ps2, cp1, cp2);
+            this.curveSegments["".concat(s.x, "&").concat(e.x)] = {
+                points: ps,
+                timeInterval: timeInterval,
+                valueInterval: valueInterval,
+                easingCurve: easingCurve,
+                pathCurve: pathCurve,
+            };
+        }
     };
-    return BezierSegments;
-}(PathSegments));
+    BezierCurvePath.prototype.getValue = function (time) {
+        var t = numberToFix(time, 5);
+        var perc = 0, point = new Vector3();
+        var keyTimeData = Object.keys(this.curveSegments);
+        if (!keyTimeData.length) {
+            return point;
+        }
+        var keyTimeStart = Number(keyTimeData[0].split('&')[0]);
+        var keyTimeEnd = Number(keyTimeData[keyTimeData.length - 1].split('&')[1]);
+        if (t <= keyTimeStart) {
+            var pathCurve = this.curveSegments[keyTimeData[0]].pathCurve;
+            point = pathCurve.getPointInPercent(0);
+            return point;
+        }
+        if (t >= keyTimeEnd) {
+            var pathCurve = this.curveSegments[keyTimeData[keyTimeData.length - 1]].pathCurve;
+            point = pathCurve.getPointInPercent(1);
+            return point;
+        }
+        for (var i = 0; i < keyTimeData.length; i++) {
+            var _a = __read$3(keyTimeData[i].split('&'), 2), xMin = _a[0], xMax = _a[1];
+            if (t >= Number(xMin) && t < Number(xMax)) {
+                var bezierPath = this.curveSegments[keyTimeData[i]].pathCurve;
+                perc = this.getPercValue(keyTimeData[i], t);
+                point = bezierPath.getPointInPercent(perc);
+            }
+        }
+        return point;
+    };
+    BezierCurvePath.prototype.getPercValue = function (curveKey, time) {
+        var curveInfo = this.curveSegments[curveKey];
+        var _a = __read$3(curveInfo.points, 1), p0 = _a[0];
+        var timeInterval = curveInfo.timeInterval;
+        var normalizeTime = numberToFix((time - p0.x) / timeInterval, 4);
+        var value = curveInfo.easingCurve.getValue(normalizeTime);
+        // TODO 测试用 编辑器限制值域后移除clamp
+        return clamp$1(value, 0, 1);
+    };
+    return BezierCurvePath;
+}(ValueGetter));
 var map$2 = (_a$8 = {},
     _a$8[ValueType$1.RANDOM] = function (props) {
         if (props[0] instanceof Array) {
@@ -16654,9 +11190,6 @@ var map$2 = (_a$8 = {},
     _a$8[ValueType$1.CONSTANT_VEC4] = function (props) {
         return new StaticValue(props);
     },
-    _a$8[ValueType$1.CURVE] = function (props) {
-        return new CurveValue(props);
-    },
     _a$8[ValueType$1.RGBA_COLOR] = function (props) {
         return new StaticValue(props);
     },
@@ -16672,11 +11205,20 @@ var map$2 = (_a$8 = {},
     _a$8[ValueType$1.GRADIENT_COLOR] = function (props) {
         return new GradientValue(props);
     },
-    _a$8[ValueType$1.LINEAR_PATH] = function (pros) {
-        return new PathSegments(pros);
+    // [spec.ValueType.LINEAR_PATH] (pros: number[][][]) {
+    //   return new PathSegments(pros);
+    // },
+    _a$8[ValueType$1.BEZIER_CURVE] = function (props) {
+        if (props.length === 1) {
+            return new StaticValue(props[0][1][1]);
+        }
+        return new BezierCurve(props);
     },
-    _a$8[ValueType$1.BEZIER_PATH] = function (pros) {
-        return new BezierSegments(pros);
+    _a$8[ValueType$1.BEZIER_CURVE_PATH] = function (props) {
+        if (props[0].length === 1) {
+            return new StaticValue(new (Vector3.bind.apply(Vector3, __spreadArray$2([void 0], __read$3(props[1][0]), false)))());
+        }
+        return new BezierCurvePath(props);
     },
     _a$8);
 function createValueGetter(args) {
@@ -16703,53 +11245,6 @@ function lineSegIntegrateByTime(t, t0, t1, y0, y1) {
     var t02 = t0 * t0;
     var t03 = t02 * t0;
     return (2 * t3 * (y0 - y1) + 3 * t2 * (t0 * y1 - t1 * y0) - t03 * (2 * y0 + y1) + 3 * t02 * t1 * y0) / (6 * (t0 - t1));
-}
-function curveValueEvaluate(time, keyframe0, keyframe1) {
-    var dt = keyframe1[CURVE_PRO_TIME] - keyframe0[CURVE_PRO_TIME];
-    var m0 = keyframe0[CURVE_PRO_OUT_TANGENT] * dt;
-    var m1 = keyframe1[CURVE_PRO_IN_TANGENT] * dt;
-    var t = (time - keyframe0[CURVE_PRO_TIME]) / dt;
-    var t2 = t * t;
-    var t3 = t2 * t;
-    var a = 2 * t3 - 3 * t2 + 1;
-    var b = t3 - 2 * t2 + t;
-    var c = t3 - t2;
-    var d = -2 * t3 + 3 * t2;
-    //(2*v0+m0+m1-2*v1)*(t-t0)^3/k^3+(3*v1-3*v0-2*m0-m1)*(t-t0)^2/k^2+m0 *(t-t0)/k+v0
-    return a * keyframe0[CURVE_PRO_VALUE] + b * m0 + c * m1 + d * keyframe1[CURVE_PRO_VALUE];
-}
-function curveValueIntegrate(time, keyframe0, keyframe1) {
-    var k = keyframe1[CURVE_PRO_TIME] - keyframe0[CURVE_PRO_TIME];
-    var m0 = keyframe0[CURVE_PRO_OUT_TANGENT] * k;
-    var m1 = keyframe1[CURVE_PRO_IN_TANGENT] * k;
-    var t0 = keyframe0[CURVE_PRO_TIME];
-    var v0 = keyframe0[CURVE_PRO_VALUE];
-    var v1 = keyframe1[CURVE_PRO_VALUE];
-    var dt = t0 - time;
-    var dt2 = dt * dt;
-    var dt3 = dt2 * dt;
-    return (m0 + m1 + 2 * v0 - 2 * v1) * dt3 * dt / (4 * k * k * k) +
-        (2 * m0 + m1 + 3 * v0 - 3 * v1) * dt3 / (3 * k * k) +
-        m0 * dt2 / 2 / k - v0 * dt;
-}
-function curveValueIntegrateByTime(t1, keyframe0, keyframe1) {
-    var k = keyframe1[CURVE_PRO_TIME] - keyframe0[CURVE_PRO_TIME];
-    var m0 = keyframe0[CURVE_PRO_OUT_TANGENT] * k;
-    var m1 = keyframe1[CURVE_PRO_IN_TANGENT] * k;
-    var t0 = keyframe0[CURVE_PRO_TIME];
-    var v0 = keyframe0[CURVE_PRO_VALUE];
-    var v1 = keyframe1[CURVE_PRO_VALUE];
-    var dt = t0 - t1;
-    var dt2 = dt * dt;
-    var dt3 = dt2 * dt;
-    var k2 = k * k;
-    var k3 = k2 * k;
-    //(30 k^3 v0 (t1^2 - t0^2) + 10 k^2 m0 (t0 + 2 t1) (t0 - t1)^2 + 5 k (t0 + 3 t1) (t0 - t1)^3 (2 m0 + m1 + 3 v0 - 3 v1) + 3 (t0 + 4 t1) (t0 - t1)^4 (m0 + m1 + 2 v0 - 2 v1))/(60 k^3)
-    var ret = -30 * k3 * v0 * (t0 + t1) * dt +
-        10 * k2 * m0 * (t0 + 2 * t1) * dt2 +
-        5 * k * (t0 + 3 * t1) * (2 * m0 + m1 + 3 * v0 - 3 * v1) * dt3 +
-        3 * (t0 + 4 * t1) * (m0 + m1 + 2 * v0 - 2 * v1) * dt3 * dt;
-    return ret / 60 / k3;
 }
 function getKeyFrameMetaByRawValue(meta, value) {
     if (value) {
@@ -16784,6 +11279,13 @@ function getKeyFrameMetaByRawValue(meta, value) {
             meta.curves.push(keys);
             meta.index += uniformCount;
             meta.max = Math.max(meta.max, uniformCount);
+        }
+        else if (type === ValueType$1.BEZIER_CURVE) {
+            var keyLen = keys.length - 1;
+            meta.index += 2 * keyLen;
+            meta.curves.push(keys);
+            meta.max = Math.max(meta.max, 2 * keyLen);
+            meta.curveCount += 2 * keyLen;
         }
     }
 }
@@ -16960,6 +11462,61 @@ var TimelineComponent = /** @class */ (function () {
     };
     return TimelineComponent;
 }());
+
+var prefix = '[Galacean Effects]';
+var localLogger;
+function format(message) {
+    return [
+        "%c".concat(prefix),
+        'background: #AA0100; color: white',
+        "".concat(message),
+    ];
+}
+function error(message) {
+    var args = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        args[_i - 1] = arguments[_i];
+    }
+    console.error.apply(console, __spreadArray$2(__spreadArray$2([], __read$3(format(message)), false), [args], false));
+    localLogger === null || localLogger === void 0 ? void 0 : localLogger('error', message, args);
+}
+/**
+ * info 会转换成浏览器的 console.debug
+ * @param message
+ * @param args
+ */
+function info(message) {
+    var args = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        args[_i - 1] = arguments[_i];
+    }
+    console.debug.apply(console, __spreadArray$2([], __read$3(format(message)), false));
+    localLogger === null || localLogger === void 0 ? void 0 : localLogger('info', message, args);
+}
+function warn(message) {
+    var args = [];
+    for (var _i = 1; _i < arguments.length; _i++) {
+        args[_i - 1] = arguments[_i];
+    }
+    console.warn.apply(console, __spreadArray$2([], __read$3(format(message)), false));
+    localLogger === null || localLogger === void 0 ? void 0 : localLogger('warn', message, args);
+}
+/**
+ * 注册自定义埋点函数
+ *
+ * @param fn
+ */
+function register(fn) {
+    if (fn && isFunction(fn)) {
+        localLogger = fn;
+    }
+}
+var logger = {
+    error: error,
+    info: info,
+    warn: warn,
+    register: register,
+};
 
 exports.DestroyOptions = void 0;
 (function (DestroyOptions) {
@@ -17772,7 +12329,7 @@ var VFXItem = /** @class */ (function () {
                         this.transform.setValid(false);
                         if (this.endBehavior === END_BEHAVIOR_PAUSE$1 ||
                             this.endBehavior === END_BEHAVIOR_PAUSE_AND_DESTROY$1) {
-                            (_b = (_a = this.composition).handlePlayerPause) === null || _b === void 0 ? void 0 : _b.call(_a, this);
+                            (_b = (_a = this.composition).onPlayerPause) === null || _b === void 0 ? void 0 : _b.call(_a, this);
                         }
                         else if (this.endBehavior === END_BEHAVIOR_FREEZE$1) {
                             this.transform.setValid(true);
@@ -17940,7 +12497,7 @@ var VFXItem = /** @class */ (function () {
         this.transform.scaleBy(x, y, z);
     };
     /**
-     * 设置元素的在画布上的像素位置
+     * 设置元素的在画布上的像素位置, 坐标原点在 canvas 中心，x 正方向水平向右， y 正方向垂直向下
      */
     VFXItem.prototype.setPositionByPixel = function (x, y) {
         if (this.composition) {
@@ -18026,10 +12583,10 @@ var VFXItem = /** @class */ (function () {
     };
     VFXItem.prototype.translateByPixel = function (x, y) {
         if (this.composition) {
+            // @ts-expect-error
+            var _a = this.composition.renderer.canvas.getBoundingClientRect(), width = _a.width, height = _a.height;
             var z = this.transform.getWorldPosition().z;
-            var _a = this.composition.camera.getInverseVPRatio(z), rx = _a.x, ry = _a.y;
-            var width = this.composition.renderer.getWidth() / 2;
-            var height = this.composition.renderer.getHeight() / 2;
+            var _b = this.composition.camera.getInverseVPRatio(z), rx = _b.x, ry = _b.y;
             this.transform.translate(2 * x * rx / width, -2 * y * ry / height, 0);
         }
     };
@@ -18322,9 +12879,7 @@ var CameraController = /** @class */ (function () {
             position.z += translateOverLifetime.z.getValue(lifetime);
             if (translateOverLifetime.path) {
                 var val = translateOverLifetime.path.getValue(lifetime);
-                position.x += val[0];
-                position.y += val[1];
-                position.z += val[2];
+                position.add(val);
             }
         }
         if (rotationOverLifetime) {
@@ -18892,7 +13447,7 @@ function loadImage(source) {
                         if (revokeURL) {
                             weapp.URL.revokeObjectURL(url);
                         }
-                        return reject("Load image fail: ".concat(JSON.stringify(e)));
+                        return reject("Load image fail: ".concat(url, ", reason: ").concat(JSON.stringify(e)));
                     };
                     img.src = url;
                 })];
@@ -18932,10 +13487,8 @@ function loadBlob(url) {
 /**
  * 异步加载一个视频文件
  * @param url - 视频文件的 URL 或 MediaProvider 对象
- * @param options - 加载参数
  */
-function loadVideo(url, options) {
-    if (options === void 0) { options = {}; }
+function loadVideo(url) {
     return __awaiter(this, void 0, void 0, function () {
         var video;
         return __generator(this, function (_a) {
@@ -18948,9 +13501,6 @@ function loadVideo(url, options) {
             }
             video.crossOrigin = 'anonymous';
             video.muted = true;
-            if (options.loop) {
-                video.addEventListener('ended', function () { return video.play(); });
-            }
             if (isAndroid()) {
                 video.setAttribute('renderer', 'standard');
             }
@@ -19134,21 +13684,6 @@ function generateHalfFloatTexture(engine, data, width, height) {
     });
 }
 
-var RUNTIME_ENV = 'runtime_env';
-var LOG_TYPE = 'galacean-effects';
-var RENDER_PREFER_LOOKUP_TEXTURE = 'lookup_texture';
-// 数据模板使用 offscreen canvas 绘制
-var TEMPLATE_USE_OFFSCREEN_CANVAS = 'offscreen_canvas';
-// 后处理配置相关
-var POST_PROCESS_SETTINGS = 'post_process_settings';
-var config = {};
-function getConfig(name) {
-    return config[name];
-}
-function setConfig(name, value) {
-    return config[name] = value;
-}
-
 var HEADER_LEN = 12 + 13 * 4; // identifier + header elements (not including key value meta-data pairs)
 var COMPRESSED_2D = 0; // uses a gl.compressedTexImage2D()
 //const COMPRESSED_3D = 1; // uses a gl.compressedTexImage3D()
@@ -19197,24 +13732,15 @@ var KTXTexture = /** @class */ (function () {
         // value of zero is an indication to generate mipmaps @ runtime.  Not usually allowed for compressed, so disregard.
         this.numberOfMipmapLevels = Math.max(1, this.numberOfMipmapLevels);
         if (this.pixelHeight === 0 || this.pixelDepth !== 0) {
-            console.warn({
-                content: 'only 2D textures currently supported',
-                type: LOG_TYPE,
-            });
+            logger.warn('Only 2D textures currently supported');
             return;
         }
         if (this.numberOfArrayElements !== 0) {
-            console.warn({
-                content: 'texture arrays not currently supported',
-                type: LOG_TYPE,
-            });
+            logger.warn('Texture arrays not currently supported');
             return;
         }
         if (this.numberOfFaces !== facesExpected) {
-            console.warn({
-                content: 'number of faces expected' + facesExpected + ', but found ' + this.numberOfFaces,
-                type: LOG_TYPE,
-            });
+            logger.warn('Number of faces expected' + facesExpected + ', but found ' + this.numberOfFaces);
             return;
         }
         // we now have a completely validated file, so could use existence of loadType as success
@@ -19810,11 +14336,13 @@ var PassTextureCache = /** @class */ (function () {
         }
     };
     PassTextureCache.prototype.dispose = function () {
-        Object.values(this.textureCache).forEach(function (tex) {
+        var _this = this;
+        Object.keys(this.textureCache).forEach(function (key) {
+            var texture = _this.textureCache[key];
             // @ts-expect-error
-            tex[disposeSymbol]();
+            texture[disposeSymbol]();
             // @ts-expect-error
-            tex.dispose = tex[disposeSymbol];
+            texture.dispose = texture[disposeSymbol];
         });
         this.textureCache = {};
         this.textureRef = {};
@@ -19899,6 +14427,20 @@ function generateEmptyTypedArray(type) {
         return new Int16Array(0);
     }
     return new Float32Array(0);
+}
+
+var RUNTIME_ENV = 'runtime_env';
+var RENDER_PREFER_LOOKUP_TEXTURE = 'lookup_texture';
+// 数据模板使用 offscreen canvas 绘制
+var TEMPLATE_USE_OFFSCREEN_CANVAS = 'offscreen_canvas';
+// 后处理配置相关
+var POST_PROCESS_SETTINGS = 'post_process_settings';
+var config = {};
+function getConfig(name) {
+    return config[name];
+}
+function setConfig(name, value) {
+    return config[name] = value;
 }
 
 var seed$b = 1;
@@ -20473,21 +15015,19 @@ var compatible_vert = "#version 300 es\n#ifdef WEBGL2\n#define texture2D texture
 
 var itemFrameFrag = "#version 300 es\nprecision highp float;\n#version 300 es\n#ifdef WEBGL2\n#define texture2D texture\n#define textureCube texture\n#define textureCubeLodEXT textureLod\nlayout(location=0)out vec4 fragColor;\n#else\n#define fragColor gl_FragColor\n#endif\nvec4 blendColor(vec4 color,vec4 vc,float mode){vec4 ret=color*vc;\n#ifdef PRE_MULTIPLY_ALPHA\nfloat alpha=vc.a;\n#else\nfloat alpha=ret.a;\n#endif\nif(mode==1.){ret.rgb*=alpha;}else if(mode==2.){ret.rgb*=alpha;ret.a=dot(ret.rgb,vec3(0.33333333));}else if(mode==3.){alpha=color.r*alpha;ret=vec4(vc.rgb*alpha,alpha);}return ret;}in vec4 vColor;in vec4 vTexCoord;in highp vec2 vParams;uniform vec3 uFrameColor;void main(){fragColor=vec4(uFrameColor.xyz,1.0);}";
 
-var integrate = "float integrateCurveFrames(float t1,vec4 k0,vec4 k1){float k=k1.x-k0.x;float m0=k0.w*k;float m1=k1.z*k;float t0=k0.x;float v0=k0.y;float v1=k1.y;float dt=t0-t1;float dt2=dt*dt;float dt3=dt2*dt;vec4 a=vec4(dt3*dt,dt3,dt2,dt)/vec4(4.*k*k*k,3.*k*k,2.*k,1.);vec4 b=vec4(m0+m1+2.*v0-2.*v1,2.*m0+m1+3.*v0-3.*v1,m0,-v0);return dot(a,b);}float integrateByTimeCurveFrames(float t1,vec4 k0,vec4 k1){float k=k1.x-k0.x;float m0=k0.w*k;float m1=k1.z*k;float t0=k0.x;float v0=k0.y;float v1=k1.y;float dt=t0-t1;float dt2=dt*dt;float dt3=dt2*dt;float k2=k*k;float k3=k2*k;vec4 a=vec4(-30.*k3,10.*k2,5.*k,3.)*vec4(dt,dt2,dt3,dt3*dt);vec4 b=vec4(v0,m0,2.*m0+m1+3.*v0-3.*v1,m0+m1+2.*v0-2.*v1)*vec4(t0+t1,t0+2.*t1,t0+3.*t1,t0+4.*t1);return dot(a,b)/60./k3;}float integrateByTimeFromCurveFrames(float t1,float frameStart,float frameCount){if(t1==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i==count){return ret;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(t1>k0.x&&t1<=k1.x){return ret+integrateByTimeCurveFrames(t1,k0,k1);}ret+=integrateByTimeCurveFrames(k1.x,k0,k1);}return ret;}float integrateFromCurveFrames(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i==count){return ret;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(time>k0.x&&time<=k1.x){return ret+integrateCurveFrames(time,k0,k1);}ret+=integrateCurveFrames(k1.x,k0,k1);}return ret;}float integrateByTimeLineSeg(float t,vec2 p0,vec2 p1){float t0=p0.x;float t1=p1.x;float y0=p0.y;float y1=p1.y;float r=dot(vec4(2.*t*t*t,3.*t*t,-t0*t0*t0,3.*t0*t0),vec4(y0-y1,t0*y1-t1*y0,2.*y0+y1,t1*y0));return r/(t0-t1)/6.;}float integrateLineSeg(float time,vec2 p0,vec2 p1){float h=time-p0.x;float y0=p0.y;return(y0+y0+(p1.y-y0)*h/(p1.x-p0.x))*h/2.;}float integrateFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateLineSeg(time,k0,k1);}ret+=integrateLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateLineSeg(time,k1,k2);}ret+=integrateLineSeg(k2.x,k1,k2);}return ret;}float integrateByTimeFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateByTimeLineSeg(time,k0,k1);}ret+=integrateByTimeLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateByTimeLineSeg(time,k1,k2);}ret+=integrateByTimeLineSeg(k2.x,k1,k2);}return ret;}float getIntegrateFromTime0(float t1,vec4 value){float type=value.x;if(type==0.){return value.y*t1;}else if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateLineSeg(t1,p0,p1);}if(type==3.){return integrateFromLineSeg(t1,value.y,value.z);}if(type==2.){float idx=floor(value.y);float ilen=floor(1./fract(value.y)+0.5);float d=integrateFromCurveFrames(t1,idx,ilen);return d*value.w+value.z*t1;}if(type==4.){return mix(value.y,value.z,aSeed)*t1;}return 0.;}float getIntegrateByTimeFromTime(float t0,float t1,vec4 value){float type=value.x;if(type==0.){return value.y*(t1*t1-t0*t0)/2.;}else if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateByTimeLineSeg(t1,p0,p1)-integrateByTimeLineSeg(t0,p0,p1);}if(type==2.){float idx=floor(value.y);float ilen=floor(1./fract(value.y)+0.5);float d=integrateByTimeFromCurveFrames(t1,idx,ilen)-integrateByTimeFromCurveFrames(t0,idx,ilen);return d*value.w+value.z*pow(t1-t0,2.)*0.5;}if(type==3.){return integrateByTimeFromLineSeg(t1,value.y,value.z)-integrateByTimeFromLineSeg(t0,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*(t1*t1-t0*t0)/2.;}return 0.;}";
+var integrate = "float calculateMovement(float t,vec2 p1,vec2 p2,vec2 p3,vec2 p4){float movement=0.0;float h=(t-p1.x)*0.05;for(int i=0;i<=20;i++){float t=float(i)*h;float nt=binarySearchT(t,p1.x,p2.x,p3.x,p4.x);float y=cubicBezier(nt,p1.y,p2.y,p3.y,p4.y);float weight=(i==0||i==20)? 1.0 :(mod(float(i),2.)!=0.)? 4.0 : 2.0;movement+=weight*y;}movement*=h/3.;return movement;}float integrateFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i+=2){vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return ret;}vec2 p1=vec2(k0.x,k0.y);vec2 p2=vec2(k0.z,k0.w);vec2 p3=vec2(k1.z,k1.w);vec2 p4=vec2(k1.x,k1.y);if(time>=k1.x){ret+=calculateMovement(k1.x,p1,p2,p3,p4);}if(time>=k0.x&&time<k1.x){return ret+calculateMovement(time,p1,p2,p3,p4);}}return ret;}float integrateByTimeLineSeg(float t,vec2 p0,vec2 p1){float t0=p0.x;float t1=p1.x;float y0=p0.y;float y1=p1.y;vec4 tSqr=vec4(t,t,t0,t0);tSqr=tSqr*tSqr;vec4 a=vec4(2.*t,3.,-t0,3.)*tSqr;float t1y0=t1*y0;vec4 b=vec4(y0-y1,t0*y1-t1y0,2.*y0+y1,t1y0);float r=dot(a,b);return r/(t0-t1)*0.16666667;}float integrateLineSeg(float time,vec2 p0,vec2 p1){float h=time-p0.x;float y0=p0.y;return(y0+y0+(p1.y-y0)*h/(p1.x-p0.x))*h/2.;}float integrateFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateLineSeg(time,k0,k1);}ret+=integrateLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateLineSeg(time,k1,k2);}ret+=integrateLineSeg(k2.x,k1,k2);}return ret;}float integrateByTimeFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateByTimeLineSeg(time,k0,k1);}ret+=integrateByTimeLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateByTimeLineSeg(time,k1,k2);}ret+=integrateByTimeLineSeg(k2.x,k1,k2);}return ret;}float getIntegrateFromTime0(float t1,vec4 value){float type=value.x;if(type==0.){return value.y*t1;}if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateLineSeg(t1,p0,p1);}if(type==3.){return integrateFromLineSeg(t1,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*t1;}if(type==5.){return integrateFromBezierCurveFrames(t1,value.z,value.w);}return 0.;}float getIntegrateByTimeFromTime(float t0,float t1,vec4 value){float type=value.x;if(type==0.){return value.y*(t1*t1-t0*t0)/2.;}else if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateByTimeLineSeg(t1,p0,p1)-integrateByTimeLineSeg(t0,p0,p1);}if(type==3.){return integrateByTimeFromLineSeg(t1,value.y,value.z)-integrateByTimeFromLineSeg(t0,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*(t1*t1-t0*t0)/2.;}if(type==5.){return integrateFromBezierCurveFrames(t1,value.z,value.w)-integrateFromBezierCurveFrames(t0,value.z,value.w);}return 0.;}";
 
 var itemVert = "#version 300 es\nprecision highp float;\n#define SHADER_VERTEX 1\n#define SPRITE_SHADER 1\nin vec4 aPoint;in vec2 aIndex;uniform mat4 uMainData[MAX_ITEM_COUNT];uniform vec4 uTexParams[MAX_ITEM_COUNT];uniform vec4 uTexOffset[MAX_ITEM_COUNT];uniform mat4 effects_ObjectToWorld;uniform mat4 effects_MatrixInvV;uniform mat4 effects_MatrixVP;out vec4 vColor;out vec4 vTexCoord;\n#ifdef ADJUST_LAYER\nout vec2 vFeatherCoord;\n#endif\nout highp vec3 vParams;const float d2r=3.141592653589793/180.;\n#ifdef ENV_EDITOR\nuniform vec4 uEditorTransform;\n#endif\nvec4 filterMain(float t,vec4 position);\n#pragma FILTER_VERT\nvec3 rotateByQuat(vec3 a,vec4 quat){vec3 qvec=quat.xyz;vec3 uv=cross(qvec,a);vec3 uuv=cross(qvec,uv)*2.;return a+(uv*2.*quat.w+uuv);}void main(){int index=int(aIndex.x);vec4 texParams=uTexParams[index];mat4 mainData=uMainData[index];float life=mainData[1].z;if(life<0.||life>1.){gl_Position=vec4(3.,3.,3.,1.);}else{vec4 _pos=mainData[0];vec2 size=mainData[1].xy;vec3 point=rotateByQuat(vec3(aPoint.xy*size,0.),mainData[2]);vec4 pos=vec4(_pos.xyz,1.0);float renderMode=texParams.z;if(renderMode==0.){pos=effects_ObjectToWorld*pos;pos.xyz+=effects_MatrixInvV[0].xyz*point.x+effects_MatrixInvV[1].xyz*point.y;}else if(renderMode==1.){pos.xyz+=point;pos=effects_ObjectToWorld*pos;}else if(renderMode==2.){pos=effects_ObjectToWorld*pos;pos.xy+=point.xy;}else if(renderMode==3.){pos=effects_ObjectToWorld*pos;pos.xyz+=effects_MatrixInvV[0].xyz*point.x+effects_MatrixInvV[2].xyz*point.y;}gl_Position=effects_MatrixVP*pos;\n#ifdef ADJUST_LAYER\nvec4 filter_Position=filterMain(life,pos);\n#endif\ngl_PointSize=6.0;\n#ifdef ENV_EDITOR\ngl_Position=vec4(gl_Position.xy*uEditorTransform.xy+uEditorTransform.zw*gl_Position.w,gl_Position.zw);\n#ifdef ADJUST_LAYER\nfilter_Position=vec4(filter_Position.xy*uEditorTransform.xy+uEditorTransform.zw*filter_Position.w,filter_Position.zw);\n#endif\n#endif\n#ifdef ADJUST_LAYER\nvTexCoord=vec4(filter_Position.xy/filter_Position.w+1.,gl_Position.xy/gl_Position.w+1.)/2.;vFeatherCoord=aPoint.zw;\n#else\nvec4 texOffset=uTexOffset[index];vTexCoord=vec4(aPoint.zw*texOffset.zw+texOffset.xy,texParams.xy);\n#endif\nvColor=mainData[3];vParams=vec3(aIndex.y,texParams.y,texParams.x);}}";
-
-var item_define = "uniform mat4 uMainData[MAX_ITEM_COUNT];uniform vec4 uTexParams[MAX_ITEM_COUNT];uniform vec4 uTexOffset[MAX_ITEM_COUNT];";
 
 var itemFrag = "#version 300 es\nprecision highp float;\n#version 300 es\n#ifdef WEBGL2\n#define texture2D texture\n#define textureCube texture\n#define textureCubeLodEXT textureLod\nlayout(location=0)out vec4 fragColor;\n#else\n#define fragColor gl_FragColor\n#endif\nvec4 blendColor(vec4 color,vec4 vc,float mode){vec4 ret=color*vc;\n#ifdef PRE_MULTIPLY_ALPHA\nfloat alpha=vc.a;\n#else\nfloat alpha=ret.a;\n#endif\nif(mode==1.){ret.rgb*=alpha;}else if(mode==2.){ret.rgb*=alpha;ret.a=dot(ret.rgb,vec3(0.33333333));}else if(mode==3.){alpha=color.r*alpha;ret=vec4(vc.rgb*alpha,alpha);}return ret;}\n#define SPRITE_SHADER 1\nin vec4 vColor;in vec4 vTexCoord;in highp vec3 vParams;\n#ifdef ADJUST_LAYER\nuniform sampler2D uSamplerPre;vec4 filterMain(vec2 coord,sampler2D tex);in vec2 vFeatherCoord;uniform sampler2D uFeatherSampler;\n#endif\nuniform sampler2D uSampler0;uniform sampler2D uSampler1;uniform sampler2D uSampler2;uniform sampler2D uSampler3;uniform sampler2D uSampler4;uniform sampler2D uSampler5;uniform sampler2D uSampler6;uniform sampler2D uSampler7;\n#if MAX_FRAG_TEX == 16\nuniform sampler2D uSampler8;uniform sampler2D uSampler9;uniform sampler2D uSampler10;uniform sampler2D uSampler11;uniform sampler2D uSampler12;uniform sampler2D uSampler13;uniform sampler2D uSampler14;uniform sampler2D uSampler15;\n#endif\nvec4 texture2DbyIndex(float index,vec2 coord);\n#pragma FILTER_FRAG\n#ifndef WEBGL2\n#define round(a) floor(0.5+a)\n#endif\nvoid main(){vec4 color=vec4(0.);\n#ifdef ADJUST_LAYER\nvec2 featherCoord=abs(vFeatherCoord-vec2(0.5))/0.5;float cc=sqrt(max(featherCoord.x,featherCoord.y));float blend=vColor.a*texture2D(uFeatherSampler,vec2(cc,0.)).r;if(blend>=1.){color=filterMain(vTexCoord.xy,uSamplerPre);}else if(blend<=0.){color=texture2D(uSamplerPre,vTexCoord.zw);}else{color=mix(texture2D(uSamplerPre,vTexCoord.zw),filterMain(vTexCoord.xy,uSamplerPre),blend);}\n#else\nvec4 texColor=texture2DbyIndex(round(vParams.x),vTexCoord.xy);color=blendColor(texColor,vColor,round(vParams.y));if(vParams.z==0.&&color.a<0.04){discard;}\n#endif\ncolor.a=clamp(color.a,0.0,1.0);fragColor=color;}vec4 texture2DbyIndex(float index,vec2 coord){\n#ifndef ADJUST_LAYER\nif(index==0.){return texture2D(uSampler0,coord);}if(index==1.){return texture2D(uSampler1,coord);}if(index==2.){return texture2D(uSampler2,coord);}if(index==3.){return texture2D(uSampler3,coord);}if(index==4.){return texture2D(uSampler4,coord);}if(index==5.){return texture2D(uSampler5,coord);}if(index==6.){return texture2D(uSampler6,coord);}if(index==7.){return texture2D(uSampler7,coord);}\n#if MAX_FRAG_TEX == 16\nif(index==8.){return texture2D(uSampler8,coord);}if(index==9.){return texture2D(uSampler9,coord);}if(index==10.){return texture2D(uSampler10,coord);}if(index==11.){return texture2D(uSampler11,coord);}if(index==12.){return texture2D(uSampler12,coord);}if(index==13.){return texture2D(uSampler13,coord);}if(index==14.){return texture2D(uSampler14,coord);}if(index==15.){return texture2D(uSampler15,coord);}\n#endif\nreturn texture2D(uSampler0,coord);\n#else\nreturn vec4(0.);\n#endif\n}";
 
 var particleFrag = "#version 300 es\nprecision mediump float;\n#version 300 es\n#ifdef WEBGL2\n#define texture2D texture\n#define textureCube texture\n#define textureCubeLodEXT textureLod\nlayout(location=0)out vec4 fragColor;\n#else\n#define fragColor gl_FragColor\n#endif\nvec4 blendColor(vec4 color,vec4 vc,float mode){vec4 ret=color*vc;\n#ifdef PRE_MULTIPLY_ALPHA\nfloat alpha=vc.a;\n#else\nfloat alpha=ret.a;\n#endif\nif(mode==1.){ret.rgb*=alpha;}else if(mode==2.){ret.rgb*=alpha;ret.a=dot(ret.rgb,vec3(0.33333333));}else if(mode==3.){alpha=color.r*alpha;ret=vec4(vc.rgb*alpha,alpha);}return ret;}\n#define PATICLE_SHADER 1\nin float vLife;in vec2 vTexCoord;in vec4 vColor;uniform vec3 emissionColor;uniform float emissionIntensity;uniform sampler2D uMaskTex;uniform vec4 uColorParams;uniform vec2 uTexOffset;\n#ifdef COLOR_OVER_LIFETIME\nuniform sampler2D uColorOverLifetime;\n#endif\n#ifdef USE_SPRITE\nin vec4 vTexCoordBlend;\n#ifdef USE_FILTER\nuniform vec4 uFSprite;\n#endif\n#endif\nin float vSeed;\n#ifdef PREVIEW_BORDER\nuniform vec4 uPreviewColor;\n#endif\n#ifdef USE_SPRITE\nvec4 getTextureColor(sampler2D tex,vec2 texCoord){if(vTexCoordBlend.w>0.){return mix(texture2D(tex,texCoord),texture2D(tex,vTexCoordBlend.xy+texCoord),vTexCoordBlend.z);}return texture2D(tex,texCoord);}\n#else\n#define getTextureColor texture2D\n#endif\n#ifndef WEBGL2\n#define round(a) floor(0.5+a)\n#endif\n#ifdef PREVIEW_BORDER\nvoid main(){fragColor=uPreviewColor;}\n#else\n#pragma FILTER_FRAG\nvoid main(){vec4 color=vec4(1.0);vec4 tempColor=vColor;vec2 texOffset=uTexOffset;if(vLife<0.){discard;}\n#ifdef USE_FILTER\n#ifdef USE_SPRITE\ntexOffset=uTexOffset/uFSprite.xy;\n#endif\ncolor=filterMain(vTexCoord,uMaskTex);\n#else\nif(uColorParams.x>0.0){color=getTextureColor(uMaskTex,vTexCoord);}\n#endif\n#ifdef COLOR_OVER_LIFETIME\n#ifndef ENABLE_VERTEX_TEXTURE\ntempColor*=texture2D(uColorOverLifetime,vec2(vLife,0.));\n#endif\n#endif\ncolor=blendColor(color,tempColor,round(uColorParams.y));if(color.a<=0.01&&uColorParams.w>0.){float _at=texture2D(uMaskTex,vTexCoord+texOffset).a+texture2D(uMaskTex,vTexCoord+texOffset*-1.).a;if(_at<=0.02){discard;}}vec3 emission=emissionColor*pow(2.0,emissionIntensity);color=vec4(pow(pow(color.rgb,vec3(2.2))+emission,vec3(1.0/2.2)),color.a);fragColor=color;}\n#endif\n";
 
-var particleVert = "#version 300 es\nprecision highp float;\n#define SHADER_VERTEX 1\n#define PATICLE_SHADER 1\n#version 300 es\n#ifdef WEBGL2\n#define texture2D texture\n#else\n#endif\n#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n#ifdef SHADER_VERTEX\nin float aSeed;out float vSeed;\n#define NONE_CONST_INDEX 1\n#else\n#if LOOKUP_TEXTURE_CURVE\n#define NONE_CONST_INDEX 1\n#endif\n#endif\n#ifdef NONE_CONST_INDEX\n#ifdef SHADER_VERTEX\n#define MAX_C VERT_MAX_KEY_FRAME_COUNT\n#else\n#define MAX_C FRAG_MAX_KEY_FRAME_COUNT\n#endif\n#else\n#define MAX_C CURVE_VALUE_COUNT\n#endif\nfloat evaluateCurveFrames(float time,vec4 keyframe0,vec4 keyframe1){float dt=keyframe1.x-keyframe0.x;float m0=keyframe0.w*dt;float m1=keyframe1.z*dt;float t=(time-keyframe0.x)/dt;float t2=t*t;float t3=t2*t;return dot(vec4(dot(vec3(2.,-3.,1.),vec3(t3,t2,1.)),dot(vec3(1,-2.,1),vec3(t3,t2,t)),t3-t2,dot(vec2(-2,3),vec2(t3,t2))),vec4(keyframe0.y,m0,m1,keyframe1.y));}float valueFromCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){\n#ifdef NONE_CONST_INDEX\nif(i==count){return lookup_curve(count).y;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);\n#else\nif(i<start){continue;}vec4 k0=lookup_curve(i);vec4 k1=lookup_curve(i+1);if(i==end){return k0.y;}\n#endif\nif(time>=k0.x&&time<=k1.x){return evaluateCurveFrames(time,k0,k1);}}return lookup_curve(0).y;}float evaluteLineSeg(float t,vec2 p0,vec2 p1){return p0.y+(p1.y-p0.y)*(t-p0.x)/(p1.x-p0.x);}float valueFromLineSegs(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){\n#ifdef NONE_CONST_INDEX\nif(i>count){return lookup_curve(i).w;}\n#else\nif(i<start){continue;}if(i>end){return lookup_curve(i-2).w;}\n#endif\n#ifdef NONE_CONST_INDEX\nvec4 seg=lookup_curve(i+start);\n#else\nvec4 seg=lookup_curve(i);\n#endif\nvec2 p0=seg.xy;vec2 p1=seg.zw;if(time>=p0.x&&time<=p1.x){return evaluteLineSeg(time,p0,p1);}\n#ifdef NONE_CONST_INDEX\nvec2 p2=lookup_curve(i+start+1).xy;\n#else\nvec2 p2=lookup_curve(i+1).xy;\n#endif\nif(time>p1.x&&time<=p2.x){return evaluteLineSeg(time,p1,p2);}}return lookup_curve(0).y;}float getValueFromTime(float time,vec4 value){float type=value.x;if(type==0.){return value.y;}else if(type==1.){return mix(value.y,value.z,time/value.w);}if(type==2.){return valueFromCurveFrames(time,floor(value.y),floor(1./fract(value.y)+0.5))*value.w+value.z;}if(type==3.){return valueFromLineSegs(time,value.y,value.z);}if(type==4.){\n#ifdef SHADER_VERTEX\nfloat seed=aSeed;\n#else\nfloat seed=vSeed;\n#endif\nreturn mix(value.y,value.z,seed);}return 0.;}float integrateCurveFrames(float t1,vec4 k0,vec4 k1){float k=k1.x-k0.x;float m0=k0.w*k;float m1=k1.z*k;float t0=k0.x;float v0=k0.y;float v1=k1.y;float dt=t0-t1;float dt2=dt*dt;float dt3=dt2*dt;vec4 a=vec4(dt3*dt,dt3,dt2,dt)/vec4(4.*k*k*k,3.*k*k,2.*k,1.);vec4 b=vec4(m0+m1+2.*v0-2.*v1,2.*m0+m1+3.*v0-3.*v1,m0,-v0);return dot(a,b);}float integrateByTimeCurveFrames(float t1,vec4 k0,vec4 k1){float k=k1.x-k0.x;float m0=k0.w*k;float m1=k1.z*k;float t0=k0.x;float v0=k0.y;float v1=k1.y;float dt=t0-t1;float dt2=dt*dt;float dt3=dt2*dt;float k2=k*k;float k3=k2*k;vec4 a=vec4(-30.*k3,10.*k2,5.*k,3.)*vec4(dt,dt2,dt3,dt3*dt);vec4 b=vec4(v0,m0,2.*m0+m1+3.*v0-3.*v1,m0+m1+2.*v0-2.*v1)*vec4(t0+t1,t0+2.*t1,t0+3.*t1,t0+4.*t1);return dot(a,b)/60./k3;}float integrateByTimeFromCurveFrames(float t1,float frameStart,float frameCount){if(t1==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i==count){return ret;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(t1>k0.x&&t1<=k1.x){return ret+integrateByTimeCurveFrames(t1,k0,k1);}ret+=integrateByTimeCurveFrames(k1.x,k0,k1);}return ret;}float integrateFromCurveFrames(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i==count){return ret;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(time>k0.x&&time<=k1.x){return ret+integrateCurveFrames(time,k0,k1);}ret+=integrateCurveFrames(k1.x,k0,k1);}return ret;}float integrateByTimeLineSeg(float t,vec2 p0,vec2 p1){float t0=p0.x;float t1=p1.x;float y0=p0.y;float y1=p1.y;float r=dot(vec4(2.*t*t*t,3.*t*t,-t0*t0*t0,3.*t0*t0),vec4(y0-y1,t0*y1-t1*y0,2.*y0+y1,t1*y0));return r/(t0-t1)/6.;}float integrateLineSeg(float time,vec2 p0,vec2 p1){float h=time-p0.x;float y0=p0.y;return(y0+y0+(p1.y-y0)*h/(p1.x-p0.x))*h/2.;}float integrateFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateLineSeg(time,k0,k1);}ret+=integrateLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateLineSeg(time,k1,k2);}ret+=integrateLineSeg(k2.x,k1,k2);}return ret;}float integrateByTimeFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateByTimeLineSeg(time,k0,k1);}ret+=integrateByTimeLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateByTimeLineSeg(time,k1,k2);}ret+=integrateByTimeLineSeg(k2.x,k1,k2);}return ret;}float getIntegrateFromTime0(float t1,vec4 value){float type=value.x;if(type==0.){return value.y*t1;}else if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateLineSeg(t1,p0,p1);}if(type==3.){return integrateFromLineSeg(t1,value.y,value.z);}if(type==2.){float idx=floor(value.y);float ilen=floor(1./fract(value.y)+0.5);float d=integrateFromCurveFrames(t1,idx,ilen);return d*value.w+value.z*t1;}if(type==4.){return mix(value.y,value.z,aSeed)*t1;}return 0.;}float getIntegrateByTimeFromTime(float t0,float t1,vec4 value){float type=value.x;if(type==0.){return value.y*(t1*t1-t0*t0)/2.;}else if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateByTimeLineSeg(t1,p0,p1)-integrateByTimeLineSeg(t0,p0,p1);}if(type==2.){float idx=floor(value.y);float ilen=floor(1./fract(value.y)+0.5);float d=integrateByTimeFromCurveFrames(t1,idx,ilen)-integrateByTimeFromCurveFrames(t0,idx,ilen);return d*value.w+value.z*pow(t1-t0,2.)*0.5;}if(type==3.){return integrateByTimeFromLineSeg(t1,value.y,value.z)-integrateByTimeFromLineSeg(t0,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*(t1*t1-t0*t0)/2.;}return 0.;}const float d2r=3.141592653589793/180.;in vec3 aPos;in vec4 aOffset;in vec3 aVel;in vec3 aRot;in vec4 aColor;in vec3 aDirX;in vec3 aDirY;\n#ifdef USE_SPRITE\nin vec3 aSprite;uniform vec4 uSprite;struct UVDetail{vec2 uv0;vec3 uv1;};UVDetail getSpriteUV(vec2 uv,float lifeTime);out vec4 vTexCoordBlend;\n#endif\n#pragma EDITOR_VERT_DEFINE\n#ifdef FINAL_TARGET\nuniform vec3 uFinalTarget;uniform vec4 uForceCurve;\n#endif\nuniform mat4 effects_ObjectToWorld;uniform mat4 effects_MatrixV;uniform mat4 effects_MatrixVP;uniform vec4 uParams;uniform vec4 uAcceleration;uniform vec4 uGravityModifierValue;uniform vec4 uOpacityOverLifetimeValue;\n#ifdef ROT_X_LIFETIME\nuniform vec4 uRXByLifeTimeValue;\n#endif\n#ifdef ROT_Y_LIFETIME\nuniform vec4 uRYByLifeTimeValue;\n#endif\n#ifdef ROT_Z_LIFETIME\nuniform vec4 uRZByLifeTimeValue;\n#endif\n#ifdef COLOR_OVER_LIFETIME\nuniform sampler2D uColorOverLifetime;\n#endif\n#if LINEAR_VEL_X + LINEAR_VEL_Y + LINEAR_VEL_Z\n#if LINEAR_VEL_X\nuniform vec4 uLinearXByLifetimeValue;\n#endif\n#if LINEAR_VEL_Y\nuniform vec4 uLinearYByLifetimeValue;\n#endif\n#if LINEAR_VEL_Z\nuniform vec4 uLinearZByLifetimeValue;\n#endif\n#endif\n#ifdef SPEED_OVER_LIFETIME\nuniform vec4 uSpeedLifetimeValue;\n#endif\n#if ORB_VEL_X + ORB_VEL_Y + ORB_VEL_Z\n#if ORB_VEL_X\nuniform vec4 uOrbXByLifetimeValue;\n#endif\n#if ORB_VEL_Y\nuniform vec4 uOrbYByLifetimeValue;\n#endif\n#if ORB_VEL_Z\nuniform vec4 uOrbZByLifetimeValue;\n#endif\nuniform vec3 uOrbCenter;\n#endif\nuniform vec4 uSizeByLifetimeValue;\n#ifdef SIZE_Y_BY_LIFE\nuniform vec4 uSizeYByLifetimeValue;\n#endif\nout float vLife;out vec4 vColor;out vec2 vTexCoord;\n#ifdef USE_FILTER\n#pragma FILTER_VERT\n#endif\n#ifdef ENV_EDITOR\nuniform vec4 uEditorTransform;\n#endif\nvec3 calOrbitalMov(float _life,float _dur){vec3 orb=vec3(0.0);\n#ifdef AS_ORBITAL_MOVEMENT\n#define FUNC(a) getValueFromTime(_life,a)\n#else\n#define FUNC(a) getIntegrateFromTime0(_life,a) * _dur\n#endif\n#if ORB_VEL_X\norb.x=FUNC(uOrbXByLifetimeValue);\n#endif\n#if ORB_VEL_Y\norb.y=FUNC(uOrbYByLifetimeValue);\n#endif\n#if ORB_VEL_Z\norb.z=FUNC(uOrbZByLifetimeValue);\n#endif\n#undef FUNC\nreturn orb;}vec3 calLinearMov(float _life,float _dur){vec3 mov=vec3(0.0);\n#ifdef AS_LINEAR_MOVEMENT\n#define FUNC(a) getValueFromTime(_life,a)\n#else\n#define FUNC(a) getIntegrateFromTime0(_life,a) * _dur\n#endif\n#if LINEAR_VEL_X\nmov.x=FUNC(uLinearXByLifetimeValue);\n#endif\n#if LINEAR_VEL_Y\nmov.y=FUNC(uLinearYByLifetimeValue);\n#endif\n#if LINEAR_VEL_Z\nmov.z=FUNC(uLinearZByLifetimeValue);\n#endif\n#undef FUNC\nreturn mov;}mat3 mat3FromRotation(vec3 rotation){vec3 sinR=sin(rotation*d2r);vec3 cosR=cos(rotation*d2r);return mat3(cosR.z,-sinR.z,0.,sinR.z,cosR.z,0.,0.,0.,1.)*mat3(cosR.y,0.,sinR.y,0.,1.,0.,-sinR.y,0,cosR.y)*mat3(1.,0.,0.,0,cosR.x,-sinR.x,0.,sinR.x,cosR.x);}\n#ifdef USE_SPRITE\nUVDetail getSpriteUV(vec2 uv,float lifeTime){float t=fract(clamp((lifeTime-aSprite.x)/aSprite.y,0.0,1.)*aSprite.z);float frame=uSprite.z*t;float frameIndex=max(ceil(frame)-1.,0.);float row=floor((frameIndex+0.1)/uSprite.x);float col=frameIndex-row*uSprite.x;vec2 retUV=(vec2(col,row)+uv)/uSprite.xy;UVDetail ret;if(uSprite.w>0.){float blend=frame-frameIndex;float frameIndex1=min(ceil(frame),uSprite.z-1.);float row1=floor((frameIndex1+0.1)/uSprite.x);float col1=frameIndex1-row1*uSprite.x;vec2 coord=(vec2(col1,row1)+uv)/uSprite.xy-retUV;ret.uv1=vec3(coord.x,1.-coord.y,blend);}ret.uv0=vec2(retUV.x,1.-retUV.y);return ret;}\n#endif\nvec3 calculateTranslation(vec3 vel,float t0,float t1,float dur){float dt=t1-t0;float d=getIntegrateByTimeFromTime(0.,dt,uGravityModifierValue);vec3 acc=uAcceleration.xyz*d;\n#ifdef SPEED_OVER_LIFETIME\nreturn vel*getIntegrateFromTime0(dt/dur,uSpeedLifetimeValue)*dur+acc;\n#endif\nreturn vel*dt+acc;}mat3 transformFromRotation(vec3 rot,float _life,float _dur){vec3 rotation=rot;\n#ifdef ROT_LIFETIME_AS_MOVEMENT\n#define FUNC1(a) getValueFromTime(_life,a)\n#else\n#define FUNC1(a) getIntegrateFromTime0(_life,a) * _dur\n#endif\n#ifdef ROT_X_LIFETIME\nrotation.x+=FUNC1(uRXByLifeTimeValue);\n#endif\n#ifdef ROT_Y_LIFETIME\nrotation.y+=FUNC1(uRYByLifeTimeValue);\n#endif\n#ifdef ROT_Z_LIFETIME\nrotation.z+=FUNC1(uRZByLifeTimeValue);\n#endif\nif(dot(rotation,rotation)==0.0){return mat3(1.0);}\n#undef FUNC1\nreturn mat3FromRotation(rotation);}void main(){float time=uParams.x-aOffset.z;float dur=aOffset.w;if(time<0.||time>dur){gl_Position=vec4(-3.,-3.,-3.,1.);}else{float life=clamp(time/dur,0.0,1.0);vLife=life;\n#ifdef USE_SPRITE\nUVDetail uvD=getSpriteUV(aOffset.xy,time);vTexCoord=uvD.uv0;vTexCoordBlend=vec4(uvD.uv1,uSprite.w);\n#else\nvTexCoord=aOffset.xy;\n#endif\nvColor=aColor;\n#ifdef COLOR_OVER_LIFETIME\n#ifdef ENABLE_VERTEX_TEXTURE\nvColor*=texture2D(uColorOverLifetime,vec2(life,0.));\n#endif\n#endif\nvColor.a*=clamp(getValueFromTime(life,uOpacityOverLifetimeValue),0.,1.);vec3 size=vec3(vec2(getValueFromTime(life,uSizeByLifetimeValue)),1.0);\n#ifdef SIZE_Y_BY_LIFE\nsize.y=getValueFromTime(life,uSizeYByLifetimeValue);\n#endif\nvec3 point=transformFromRotation(aRot,life,dur)*(aDirX*size.x+aDirY*size.y);vec3 pt=calculateTranslation(aVel,aOffset.z,uParams.x,dur);vec3 _pos=aPos+pt;\n#if ORB_VEL_X + ORB_VEL_Y + ORB_VEL_Z\n_pos=mat3FromRotation(calOrbitalMov(life,dur))*(_pos-uOrbCenter);_pos+=uOrbCenter;\n#endif\n#if LINEAR_VEL_X + LINEAR_VEL_Y + LINEAR_VEL_Z\n_pos.xyz+=calLinearMov(life,dur);\n#endif\n#ifdef FINAL_TARGET\nfloat force=getValueFromTime(life,uForceCurve);vec4 pos=vec4(mix(_pos,uFinalTarget,force),1.);\n#else\nvec4 pos=vec4(_pos,1.0);\n#endif\n#if RENDER_MODE == 1\npos.xyz+=point;pos=effects_ObjectToWorld*pos;\n#elif RENDER_MODE == 3\npos=effects_ObjectToWorld*pos;pos.xyz+=effects_MatrixV[0].xyz*point.x+effects_MatrixV[2].xyz*point.y;\n#elif RENDER_MODE == 2\npos=effects_ObjectToWorld*pos;pos.xy+=point.xy;\n#elif RENDER_MODE == 0\npos=effects_ObjectToWorld*pos;pos.xyz+=effects_MatrixV[0].xyz*point.x+effects_MatrixV[1].xyz*point.y;\n#endif\ngl_Position=effects_MatrixVP*pos;vSeed=aSeed;gl_PointSize=6.0;\n#ifdef USE_FILTER\nfilterMain(life);\n#endif\n#ifdef ENV_EDITOR\ngl_Position=vec4(gl_Position.xy*uEditorTransform.xy+uEditorTransform.zw*gl_Position.w,gl_Position.zw);\n#endif\n#pragma EDITOR_VERT_TRANSFORM\n}}";
+var particleVert = "#version 300 es\nprecision mediump float;\n#define SHADER_VERTEX 1\n#define PATICLE_SHADER 1\n#version 300 es\n#ifdef WEBGL2\n#define texture2D texture\n#else\n#endif\n#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n#define NONE_CONST_INDEX 1\n#ifdef SHADER_VERTEX\nin float aSeed;out float vSeed;\n#endif\n#ifdef SHADER_VERTEX\n#define MAX_C VERT_MAX_KEY_FRAME_COUNT\n#else\n#define MAX_C FRAG_MAX_KEY_FRAME_COUNT\n#endif\nmat4 cubicBezierMatrix=mat4(1.0,-3.0,3.0,-1.0,0.0,3.0,-6.0,3.0,0.0,0.0,3.0,-3.0,0.0,0.0,0.0,1.0);float cubicBezier(float t,float y1,float y2,float y3,float y4){vec4 tVec=vec4(1.0,t,t*t,t*t*t);vec4 yVec=vec4(y1,y2,y3,y4);vec4 result=tVec*cubicBezierMatrix*yVec;return result.x+result.y+result.z+result.w;}float binarySearchT(float x,float x1,float x2,float x3,float x4){float left=0.0;float right=1.0;float mid=0.0;float computedX;for(int i=0;i<8;i++){mid=(left+right)*0.5;computedX=cubicBezier(mid,x1,x2,x3,x4);if(abs(computedX-x)<0.0001){break;}else if(computedX>x){right=mid;}else{left=mid;}}return mid;}float valueFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);for(int i=0;i<ITR_END;i+=2){if(i>=count){break;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return k0.y;}if(i==int(frameCount-2.)&&time>=k1.x){return k1.y;}if(time>=k0.x&&time<=k1.x){float t=(time-k0.x)/(k1.x-k0.x);float nt=binarySearchT(time,k0.x,k0.z,k1.z,k1.x);return cubicBezier(nt,k0.y,k0.w,k1.w,k1.y);}}}float evaluteLineSeg(float t,vec2 p0,vec2 p1){return p0.y+(p1.y-p0.y)*(t-p0.x)/(p1.x-p0.x);}float valueFromLineSegs(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){if(i>count){return lookup_curve(i).w;}vec4 seg=lookup_curve(i+start);vec2 p0=seg.xy;vec2 p1=seg.zw;if(time>=p0.x&&time<=p1.x){return evaluteLineSeg(time,p0,p1);}vec2 p2=lookup_curve(i+start+1).xy;if(time>p1.x&&time<=p2.x){return evaluteLineSeg(time,p1,p2);}}return lookup_curve(0).y;}float getValueFromTime(float time,vec4 value){float type=value.x;if(type==0.){return value.y;}if(type==1.){return mix(value.y,value.z,time/value.w);}if(type==3.){return valueFromLineSegs(time,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed);}if(type==5.){return valueFromBezierCurveFrames(time,value.z,value.w);}return 0.;}float calculateMovement(float t,vec2 p1,vec2 p2,vec2 p3,vec2 p4){float movement=0.0;float h=(t-p1.x)*0.05;for(int i=0;i<=20;i++){float t=float(i)*h;float nt=binarySearchT(t,p1.x,p2.x,p3.x,p4.x);float y=cubicBezier(nt,p1.y,p2.y,p3.y,p4.y);float weight=(i==0||i==20)? 1.0 :(mod(float(i),2.)!=0.)? 4.0 : 2.0;movement+=weight*y;}movement*=h/3.;return movement;}float integrateFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i+=2){vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return ret;}vec2 p1=vec2(k0.x,k0.y);vec2 p2=vec2(k0.z,k0.w);vec2 p3=vec2(k1.z,k1.w);vec2 p4=vec2(k1.x,k1.y);if(time>=k1.x){ret+=calculateMovement(k1.x,p1,p2,p3,p4);}if(time>=k0.x&&time<k1.x){return ret+calculateMovement(time,p1,p2,p3,p4);}}return ret;}float integrateByTimeLineSeg(float t,vec2 p0,vec2 p1){float t0=p0.x;float t1=p1.x;float y0=p0.y;float y1=p1.y;vec4 tSqr=vec4(t,t,t0,t0);tSqr=tSqr*tSqr;vec4 a=vec4(2.*t,3.,-t0,3.)*tSqr;float t1y0=t1*y0;vec4 b=vec4(y0-y1,t0*y1-t1y0,2.*y0+y1,t1y0);float r=dot(a,b);return r/(t0-t1)*0.16666667;}float integrateLineSeg(float time,vec2 p0,vec2 p1){float h=time-p0.x;float y0=p0.y;return(y0+y0+(p1.y-y0)*h/(p1.x-p0.x))*h/2.;}float integrateFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateLineSeg(time,k0,k1);}ret+=integrateLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateLineSeg(time,k1,k2);}ret+=integrateLineSeg(k2.x,k1,k2);}return ret;}float integrateByTimeFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateByTimeLineSeg(time,k0,k1);}ret+=integrateByTimeLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateByTimeLineSeg(time,k1,k2);}ret+=integrateByTimeLineSeg(k2.x,k1,k2);}return ret;}float getIntegrateFromTime0(float t1,vec4 value){float type=value.x;if(type==0.){return value.y*t1;}if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateLineSeg(t1,p0,p1);}if(type==3.){return integrateFromLineSeg(t1,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*t1;}if(type==5.){return integrateFromBezierCurveFrames(t1,value.z,value.w);}return 0.;}float getIntegrateByTimeFromTime(float t0,float t1,vec4 value){float type=value.x;if(type==0.){return value.y*(t1*t1-t0*t0)/2.;}else if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateByTimeLineSeg(t1,p0,p1)-integrateByTimeLineSeg(t0,p0,p1);}if(type==3.){return integrateByTimeFromLineSeg(t1,value.y,value.z)-integrateByTimeFromLineSeg(t0,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*(t1*t1-t0*t0)/2.;}if(type==5.){return integrateFromBezierCurveFrames(t1,value.z,value.w)-integrateFromBezierCurveFrames(t0,value.z,value.w);}return 0.;}const float d2r=3.141592653589793/180.;in vec3 aPos;in vec4 aOffset;in vec3 aVel;in vec3 aRot;in vec4 aColor;in vec3 aDirX;in vec3 aDirY;\n#ifdef USE_SPRITE\nin vec3 aSprite;uniform vec4 uSprite;struct UVDetail{vec2 uv0;vec3 uv1;};UVDetail getSpriteUV(vec2 uv,float lifeTime);out vec4 vTexCoordBlend;\n#endif\n#ifdef FINAL_TARGET\nuniform vec3 uFinalTarget;uniform vec4 uForceCurve;\n#endif\nuniform mat4 effects_ObjectToWorld;uniform mat4 effects_MatrixV;uniform mat4 effects_MatrixVP;uniform vec4 uParams;uniform vec4 uAcceleration;uniform vec4 uGravityModifierValue;uniform vec4 uOpacityOverLifetimeValue;\n#ifdef ROT_X_LIFETIME\nuniform vec4 uRXByLifeTimeValue;\n#endif\n#ifdef ROT_Y_LIFETIME\nuniform vec4 uRYByLifeTimeValue;\n#endif\n#ifdef ROT_Z_LIFETIME\nuniform vec4 uRZByLifeTimeValue;\n#endif\n#ifdef COLOR_OVER_LIFETIME\nuniform sampler2D uColorOverLifetime;\n#endif\n#if LINEAR_VEL_X + LINEAR_VEL_Y + LINEAR_VEL_Z\n#if LINEAR_VEL_X\nuniform vec4 uLinearXByLifetimeValue;\n#endif\n#if LINEAR_VEL_Y\nuniform vec4 uLinearYByLifetimeValue;\n#endif\n#if LINEAR_VEL_Z\nuniform vec4 uLinearZByLifetimeValue;\n#endif\n#endif\n#ifdef SPEED_OVER_LIFETIME\nuniform vec4 uSpeedLifetimeValue;\n#endif\n#if ORB_VEL_X + ORB_VEL_Y + ORB_VEL_Z\n#if ORB_VEL_X\nuniform vec4 uOrbXByLifetimeValue;\n#endif\n#if ORB_VEL_Y\nuniform vec4 uOrbYByLifetimeValue;\n#endif\n#if ORB_VEL_Z\nuniform vec4 uOrbZByLifetimeValue;\n#endif\nuniform vec3 uOrbCenter;\n#endif\nuniform vec4 uSizeByLifetimeValue;\n#ifdef SIZE_Y_BY_LIFE\nuniform vec4 uSizeYByLifetimeValue;\n#endif\nout float vLife;out vec4 vColor;out vec2 vTexCoord;\n#ifdef USE_FILTER\n#pragma FILTER_VERT\n#endif\n#ifdef ENV_EDITOR\nuniform vec4 uEditorTransform;\n#endif\nvec3 calOrbitalMov(float _life,float _dur){vec3 orb=vec3(0.0);\n#ifdef AS_ORBITAL_MOVEMENT\n#define FUNC(a) getValueFromTime(_life,a)\n#else\n#define FUNC(a) getIntegrateFromTime0(_life,a) * _dur\n#endif\n#if ORB_VEL_X\norb.x=FUNC(uOrbXByLifetimeValue);\n#endif\n#if ORB_VEL_Y\norb.y=FUNC(uOrbYByLifetimeValue);\n#endif\n#if ORB_VEL_Z\norb.z=FUNC(uOrbZByLifetimeValue);\n#endif\n#undef FUNC\nreturn orb;}vec3 calLinearMov(float _life,float _dur){vec3 mov=vec3(0.0);\n#ifdef AS_LINEAR_MOVEMENT\n#define FUNC(a) getValueFromTime(_life,a)\n#else\n#define FUNC(a) getIntegrateFromTime0(_life,a) * _dur\n#endif\n#if LINEAR_VEL_X\nmov.x=FUNC(uLinearXByLifetimeValue);\n#endif\n#if LINEAR_VEL_Y\nmov.y=FUNC(uLinearYByLifetimeValue);\n#endif\n#if LINEAR_VEL_Z\nmov.z=FUNC(uLinearZByLifetimeValue);\n#endif\n#undef FUNC\nreturn mov;}mat3 mat3FromRotation(vec3 rotation){vec3 sinR=sin(rotation*d2r);vec3 cosR=cos(rotation*d2r);return mat3(cosR.z,-sinR.z,0.,sinR.z,cosR.z,0.,0.,0.,1.)*mat3(cosR.y,0.,sinR.y,0.,1.,0.,-sinR.y,0,cosR.y)*mat3(1.,0.,0.,0,cosR.x,-sinR.x,0.,sinR.x,cosR.x);}\n#ifdef USE_SPRITE\nUVDetail getSpriteUV(vec2 uv,float lifeTime){float t=fract(clamp((lifeTime-aSprite.x)/aSprite.y,0.0,1.)*aSprite.z);float frame=uSprite.z*t;float frameIndex=max(ceil(frame)-1.,0.);float row=floor((frameIndex+0.1)/uSprite.x);float col=frameIndex-row*uSprite.x;vec2 retUV=(vec2(col,row)+uv)/uSprite.xy;UVDetail ret;if(uSprite.w>0.){float blend=frame-frameIndex;float frameIndex1=min(ceil(frame),uSprite.z-1.);float row1=floor((frameIndex1+0.1)/uSprite.x);float col1=frameIndex1-row1*uSprite.x;vec2 coord=(vec2(col1,row1)+uv)/uSprite.xy-retUV;ret.uv1=vec3(coord.x,1.-coord.y,blend);}ret.uv0=vec2(retUV.x,1.-retUV.y);return ret;}\n#endif\nvec3 calculateTranslation(vec3 vel,float t0,float t1,float dur){float dt=t1-t0;float d=getIntegrateByTimeFromTime(0.,dt,uGravityModifierValue);vec3 acc=uAcceleration.xyz*d;\n#ifdef SPEED_OVER_LIFETIME\nreturn vel*getIntegrateFromTime0(dt/dur,uSpeedLifetimeValue)*dur+acc;\n#endif\nreturn vel*dt+acc;}mat3 transformFromRotation(vec3 rot,float _life,float _dur){vec3 rotation=rot;\n#ifdef ROT_LIFETIME_AS_MOVEMENT\n#define FUNC1(a) getValueFromTime(_life,a)\n#else\n#define FUNC1(a) getIntegrateFromTime0(_life,a) * _dur\n#endif\n#ifdef ROT_X_LIFETIME\nrotation.x+=FUNC1(uRXByLifeTimeValue);\n#endif\n#ifdef ROT_Y_LIFETIME\nrotation.y+=FUNC1(uRYByLifeTimeValue);\n#endif\n#ifdef ROT_Z_LIFETIME\nrotation.z+=FUNC1(uRZByLifeTimeValue);\n#endif\nif(dot(rotation,rotation)==0.0){return mat3(1.0);}\n#undef FUNC1\nreturn mat3FromRotation(rotation);}void main(){float time=uParams.x-aOffset.z;float dur=aOffset.w;if(time<0.||time>dur){gl_Position=vec4(-3.,-3.,-3.,1.);}else{float life=clamp(time/dur,0.0,1.0);vLife=life;\n#ifdef USE_SPRITE\nUVDetail uvD=getSpriteUV(aOffset.xy,time);vTexCoord=uvD.uv0;vTexCoordBlend=vec4(uvD.uv1,uSprite.w);\n#else\nvTexCoord=aOffset.xy;\n#endif\nvColor=aColor;\n#ifdef COLOR_OVER_LIFETIME\n#ifdef ENABLE_VERTEX_TEXTURE\nvColor*=texture2D(uColorOverLifetime,vec2(life,0.));\n#endif\n#endif\nvColor.a*=clamp(getValueFromTime(life,uOpacityOverLifetimeValue),0.,1.);vec3 size=vec3(vec2(getValueFromTime(life,uSizeByLifetimeValue)),1.0);\n#ifdef SIZE_Y_BY_LIFE\nsize.y=getValueFromTime(life,uSizeYByLifetimeValue);\n#endif\nvec3 point=transformFromRotation(aRot,life,dur)*(aDirX*size.x+aDirY*size.y);vec3 pt=calculateTranslation(aVel,aOffset.z,uParams.x,dur);vec3 _pos=aPos+pt;\n#if ORB_VEL_X + ORB_VEL_Y + ORB_VEL_Z\n_pos=mat3FromRotation(calOrbitalMov(life,dur))*(_pos-uOrbCenter);_pos+=uOrbCenter;\n#endif\n#if LINEAR_VEL_X + LINEAR_VEL_Y + LINEAR_VEL_Z\n_pos.xyz+=calLinearMov(life,dur);\n#endif\n#ifdef FINAL_TARGET\nfloat force=getValueFromTime(life,uForceCurve);vec4 pos=vec4(mix(_pos,uFinalTarget,force),1.);\n#else\nvec4 pos=vec4(_pos,1.0);\n#endif\n#if RENDER_MODE == 1\npos.xyz+=point;pos=effects_ObjectToWorld*pos;\n#elif RENDER_MODE == 3\npos=effects_ObjectToWorld*pos;pos.xyz+=effects_MatrixV[0].xyz*point.x+effects_MatrixV[2].xyz*point.y;\n#elif RENDER_MODE == 2\npos=effects_ObjectToWorld*pos;pos.xy+=point.xy;\n#elif RENDER_MODE == 0\npos=effects_ObjectToWorld*pos;pos.xyz+=effects_MatrixV[0].xyz*point.x+effects_MatrixV[1].xyz*point.y;\n#endif\ngl_Position=effects_MatrixVP*pos;vSeed=aSeed;gl_PointSize=6.0;\n#ifdef USE_FILTER\nfilterMain(life);\n#endif\n#ifdef ENV_EDITOR\ngl_Position=vec4(gl_Position.xy*uEditorTransform.xy+uEditorTransform.zw*gl_Position.w,gl_Position.zw);\n#endif\n}}";
 
-var trailVert = "#version 300 es\nprecision mediump float;\n#define SHADER_VERTEX 1\n#version 300 es\n#ifdef WEBGL2\n#define texture2D texture\n#else\n#endif\n#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n#ifdef SHADER_VERTEX\nin float aSeed;out float vSeed;\n#define NONE_CONST_INDEX 1\n#else\n#if LOOKUP_TEXTURE_CURVE\n#define NONE_CONST_INDEX 1\n#endif\n#endif\n#ifdef NONE_CONST_INDEX\n#ifdef SHADER_VERTEX\n#define MAX_C VERT_MAX_KEY_FRAME_COUNT\n#else\n#define MAX_C FRAG_MAX_KEY_FRAME_COUNT\n#endif\n#else\n#define MAX_C CURVE_VALUE_COUNT\n#endif\nfloat evaluateCurveFrames(float time,vec4 keyframe0,vec4 keyframe1){float dt=keyframe1.x-keyframe0.x;float m0=keyframe0.w*dt;float m1=keyframe1.z*dt;float t=(time-keyframe0.x)/dt;float t2=t*t;float t3=t2*t;return dot(vec4(dot(vec3(2.,-3.,1.),vec3(t3,t2,1.)),dot(vec3(1,-2.,1),vec3(t3,t2,t)),t3-t2,dot(vec2(-2,3),vec2(t3,t2))),vec4(keyframe0.y,m0,m1,keyframe1.y));}float valueFromCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){\n#ifdef NONE_CONST_INDEX\nif(i==count){return lookup_curve(count).y;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);\n#else\nif(i<start){continue;}vec4 k0=lookup_curve(i);vec4 k1=lookup_curve(i+1);if(i==end){return k0.y;}\n#endif\nif(time>=k0.x&&time<=k1.x){return evaluateCurveFrames(time,k0,k1);}}return lookup_curve(0).y;}float evaluteLineSeg(float t,vec2 p0,vec2 p1){return p0.y+(p1.y-p0.y)*(t-p0.x)/(p1.x-p0.x);}float valueFromLineSegs(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){\n#ifdef NONE_CONST_INDEX\nif(i>count){return lookup_curve(i).w;}\n#else\nif(i<start){continue;}if(i>end){return lookup_curve(i-2).w;}\n#endif\n#ifdef NONE_CONST_INDEX\nvec4 seg=lookup_curve(i+start);\n#else\nvec4 seg=lookup_curve(i);\n#endif\nvec2 p0=seg.xy;vec2 p1=seg.zw;if(time>=p0.x&&time<=p1.x){return evaluteLineSeg(time,p0,p1);}\n#ifdef NONE_CONST_INDEX\nvec2 p2=lookup_curve(i+start+1).xy;\n#else\nvec2 p2=lookup_curve(i+1).xy;\n#endif\nif(time>p1.x&&time<=p2.x){return evaluteLineSeg(time,p1,p2);}}return lookup_curve(0).y;}float getValueFromTime(float time,vec4 value){float type=value.x;if(type==0.){return value.y;}else if(type==1.){return mix(value.y,value.z,time/value.w);}if(type==2.){return valueFromCurveFrames(time,floor(value.y),floor(1./fract(value.y)+0.5))*value.w+value.z;}if(type==3.){return valueFromLineSegs(time,value.y,value.z);}if(type==4.){\n#ifdef SHADER_VERTEX\nfloat seed=aSeed;\n#else\nfloat seed=vSeed;\n#endif\nreturn mix(value.y,value.z,seed);}return 0.;}in vec4 aPos;in vec3 aDir;in vec3 aInfo;in vec4 aColor;in float aTime;\n#ifdef ATTR_TRAIL_START\nin float aTrailStart;\n#else\nuniform float uTrailStart[64];in float aTrailStartIndex;\n#endif\nuniform mat4 effects_MatrixInvV;uniform mat4 effects_ObjectToWorld;uniform mat4 effects_MatrixVP;uniform vec4 uTextureMap;uniform float uTime;uniform vec4 uParams;uniform vec4 uColorParams;uniform vec4 uOpacityOverLifetimeValue;uniform vec4 uWidthOverTrail;\n#ifdef COLOR_OVER_TRAIL\nuniform sampler2D uColorOverTrail;\n#endif\n#ifdef COLOR_OVER_LIFETIME\nuniform sampler2D uColorOverLifetime;\n#endif\nout float vLife;out vec2 vTexCoord;out vec4 vColor;\n#ifdef ENV_EDITOR\nuniform vec4 uEditorTransform;\n#endif\nvoid main(){vec4 _pa=effects_MatrixVP*vec4(aPos.xyz,1.);vec4 _pb=effects_MatrixVP*vec4(aPos.xyz+aDir,1.);vec2 dir=normalize(_pb.xy/_pb.w-_pa.xy/_pa.w);vec2 screen_xy=vec2(-dir.y,dir.x);vec4 pos=effects_ObjectToWorld*vec4(aPos.xyz,1.);\n#ifdef ATTR_TRAIL_START\nfloat ts=aTrailStart;\n#else\nfloat ts=uTrailStart[int(aTrailStartIndex)];\n#endif\nfloat trail=(ts-aInfo.y)/uParams.y;float width=aPos.w*getValueFromTime(trail,uWidthOverTrail)/max(abs(screen_xy.x),abs(screen_xy.y));pos.xyz+=(effects_MatrixInvV[0].xyz*screen_xy.x+effects_MatrixInvV[1].xyz*screen_xy.y)*width;float time=min((uTime-aTime)/aInfo.x,1.0);gl_Position=effects_MatrixVP*pos;vColor=aColor;\n#ifdef COLOR_OVER_LIFETIME\n#ifdef ENABLE_VERTEX_TEXTURE\nvColor*=texture2D(uColorOverLifetime,vec2(time,0.));\n#endif\n#endif\n#ifdef COLOR_OVER_TRAIL\nvColor*=texture2D(uColorOverTrail,vec2(trail,0.));\n#endif\nvColor.a*=clamp(getValueFromTime(time,uOpacityOverLifetimeValue),0.,1.);vLife=time;vTexCoord=uTextureMap.xy+vec2(trail,aInfo.z)*uTextureMap.zw;vSeed=aSeed;\n#ifdef ENV_EDITOR\ngl_Position=vec4(gl_Position.xy*uEditorTransform.xy+uEditorTransform.zw*gl_Position.w,gl_Position.zw);\n#endif\n}";
+var trailVert = "#version 300 es\nprecision mediump float;\n#define SHADER_VERTEX 1\n#version 300 es\n#ifdef WEBGL2\n#define texture2D texture\n#else\n#endif\n#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n#define NONE_CONST_INDEX 1\n#ifdef SHADER_VERTEX\nin float aSeed;out float vSeed;\n#endif\n#ifdef SHADER_VERTEX\n#define MAX_C VERT_MAX_KEY_FRAME_COUNT\n#else\n#define MAX_C FRAG_MAX_KEY_FRAME_COUNT\n#endif\nmat4 cubicBezierMatrix=mat4(1.0,-3.0,3.0,-1.0,0.0,3.0,-6.0,3.0,0.0,0.0,3.0,-3.0,0.0,0.0,0.0,1.0);float cubicBezier(float t,float y1,float y2,float y3,float y4){vec4 tVec=vec4(1.0,t,t*t,t*t*t);vec4 yVec=vec4(y1,y2,y3,y4);vec4 result=tVec*cubicBezierMatrix*yVec;return result.x+result.y+result.z+result.w;}float binarySearchT(float x,float x1,float x2,float x3,float x4){float left=0.0;float right=1.0;float mid=0.0;float computedX;for(int i=0;i<8;i++){mid=(left+right)*0.5;computedX=cubicBezier(mid,x1,x2,x3,x4);if(abs(computedX-x)<0.0001){break;}else if(computedX>x){right=mid;}else{left=mid;}}return mid;}float valueFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);for(int i=0;i<ITR_END;i+=2){if(i>=count){break;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return k0.y;}if(i==int(frameCount-2.)&&time>=k1.x){return k1.y;}if(time>=k0.x&&time<=k1.x){float t=(time-k0.x)/(k1.x-k0.x);float nt=binarySearchT(time,k0.x,k0.z,k1.z,k1.x);return cubicBezier(nt,k0.y,k0.w,k1.w,k1.y);}}}float evaluteLineSeg(float t,vec2 p0,vec2 p1){return p0.y+(p1.y-p0.y)*(t-p0.x)/(p1.x-p0.x);}float valueFromLineSegs(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){if(i>count){return lookup_curve(i).w;}vec4 seg=lookup_curve(i+start);vec2 p0=seg.xy;vec2 p1=seg.zw;if(time>=p0.x&&time<=p1.x){return evaluteLineSeg(time,p0,p1);}vec2 p2=lookup_curve(i+start+1).xy;if(time>p1.x&&time<=p2.x){return evaluteLineSeg(time,p1,p2);}}return lookup_curve(0).y;}float getValueFromTime(float time,vec4 value){float type=value.x;if(type==0.){return value.y;}if(type==1.){return mix(value.y,value.z,time/value.w);}if(type==3.){return valueFromLineSegs(time,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed);}if(type==5.){return valueFromBezierCurveFrames(time,value.z,value.w);}return 0.;}in vec4 aPos;in vec3 aDir;in vec3 aInfo;in vec4 aColor;in float aTime;\n#ifdef ATTR_TRAIL_START\nin float aTrailStart;\n#else\nuniform float uTrailStart[64];in float aTrailStartIndex;\n#endif\nuniform mat4 effects_MatrixInvV;uniform mat4 effects_ObjectToWorld;uniform mat4 effects_MatrixVP;uniform vec4 uTextureMap;uniform float uTime;uniform vec4 uParams;uniform vec4 uColorParams;uniform vec4 uOpacityOverLifetimeValue;uniform vec4 uWidthOverTrail;\n#ifdef COLOR_OVER_TRAIL\nuniform sampler2D uColorOverTrail;\n#endif\n#ifdef COLOR_OVER_LIFETIME\nuniform sampler2D uColorOverLifetime;\n#endif\nout float vLife;out vec2 vTexCoord;out vec4 vColor;\n#ifdef ENV_EDITOR\nuniform vec4 uEditorTransform;\n#endif\nvoid main(){vec4 _pa=effects_MatrixVP*vec4(aPos.xyz,1.);vec4 _pb=effects_MatrixVP*vec4(aPos.xyz+aDir,1.);vec2 dir=normalize(_pb.xy/_pb.w-_pa.xy/_pa.w);vec2 screen_xy=vec2(-dir.y,dir.x);vec4 pos=effects_ObjectToWorld*vec4(aPos.xyz,1.);\n#ifdef ATTR_TRAIL_START\nfloat ts=aTrailStart;\n#else\nfloat ts=uTrailStart[int(aTrailStartIndex)];\n#endif\nfloat trail=(ts-aInfo.y)/uParams.y;float width=aPos.w*getValueFromTime(trail,uWidthOverTrail)/max(abs(screen_xy.x),abs(screen_xy.y));pos.xyz+=(effects_MatrixInvV[0].xyz*screen_xy.x+effects_MatrixInvV[1].xyz*screen_xy.y)*width;float time=min((uTime-aTime)/aInfo.x,1.0);gl_Position=effects_MatrixVP*pos;vColor=aColor;\n#ifdef COLOR_OVER_LIFETIME\n#ifdef ENABLE_VERTEX_TEXTURE\nvColor*=texture2D(uColorOverLifetime,vec2(time,0.));\n#endif\n#endif\n#ifdef COLOR_OVER_TRAIL\nvColor*=texture2D(uColorOverTrail,vec2(trail,0.));\n#endif\nvColor.a*=clamp(getValueFromTime(time,uOpacityOverLifetimeValue),0.,1.);vLife=time;vTexCoord=uTextureMap.xy+vec2(trail,aInfo.z)*uTextureMap.zw;vSeed=aSeed;\n#ifdef ENV_EDITOR\ngl_Position=vec4(gl_Position.xy*uEditorTransform.xy+uEditorTransform.zw*gl_Position.w,gl_Position.zw);\n#endif\n}";
 
-var value = "#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n#ifdef SHADER_VERTEX\nin float aSeed;out float vSeed;\n#define NONE_CONST_INDEX 1\n#else\n#if LOOKUP_TEXTURE_CURVE\n#define NONE_CONST_INDEX 1\n#endif\n#endif\n#ifdef NONE_CONST_INDEX\n#ifdef SHADER_VERTEX\n#define MAX_C VERT_MAX_KEY_FRAME_COUNT\n#else\n#define MAX_C FRAG_MAX_KEY_FRAME_COUNT\n#endif\n#else\n#define MAX_C CURVE_VALUE_COUNT\n#endif\nfloat evaluateCurveFrames(float time,vec4 keyframe0,vec4 keyframe1){float dt=keyframe1.x-keyframe0.x;float m0=keyframe0.w*dt;float m1=keyframe1.z*dt;float t=(time-keyframe0.x)/dt;float t2=t*t;float t3=t2*t;return dot(vec4(dot(vec3(2.,-3.,1.),vec3(t3,t2,1.)),dot(vec3(1,-2.,1),vec3(t3,t2,t)),t3-t2,dot(vec2(-2,3),vec2(t3,t2))),vec4(keyframe0.y,m0,m1,keyframe1.y));}float valueFromCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){\n#ifdef NONE_CONST_INDEX\nif(i==count){return lookup_curve(count).y;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);\n#else\nif(i<start){continue;}vec4 k0=lookup_curve(i);vec4 k1=lookup_curve(i+1);if(i==end){return k0.y;}\n#endif\nif(time>=k0.x&&time<=k1.x){return evaluateCurveFrames(time,k0,k1);}}return lookup_curve(0).y;}float evaluteLineSeg(float t,vec2 p0,vec2 p1){return p0.y+(p1.y-p0.y)*(t-p0.x)/(p1.x-p0.x);}float valueFromLineSegs(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){\n#ifdef NONE_CONST_INDEX\nif(i>count){return lookup_curve(i).w;}\n#else\nif(i<start){continue;}if(i>end){return lookup_curve(i-2).w;}\n#endif\n#ifdef NONE_CONST_INDEX\nvec4 seg=lookup_curve(i+start);\n#else\nvec4 seg=lookup_curve(i);\n#endif\nvec2 p0=seg.xy;vec2 p1=seg.zw;if(time>=p0.x&&time<=p1.x){return evaluteLineSeg(time,p0,p1);}\n#ifdef NONE_CONST_INDEX\nvec2 p2=lookup_curve(i+start+1).xy;\n#else\nvec2 p2=lookup_curve(i+1).xy;\n#endif\nif(time>p1.x&&time<=p2.x){return evaluteLineSeg(time,p1,p2);}}return lookup_curve(0).y;}float getValueFromTime(float time,vec4 value){float type=value.x;if(type==0.){return value.y;}else if(type==1.){return mix(value.y,value.z,time/value.w);}if(type==2.){return valueFromCurveFrames(time,floor(value.y),floor(1./fract(value.y)+0.5))*value.w+value.z;}if(type==3.){return valueFromLineSegs(time,value.y,value.z);}if(type==4.){\n#ifdef SHADER_VERTEX\nfloat seed=aSeed;\n#else\nfloat seed=vSeed;\n#endif\nreturn mix(value.y,value.z,seed);}return 0.;}";
+var value = "#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n#define NONE_CONST_INDEX 1\n#ifdef SHADER_VERTEX\nin float aSeed;out float vSeed;\n#endif\n#ifdef SHADER_VERTEX\n#define MAX_C VERT_MAX_KEY_FRAME_COUNT\n#else\n#define MAX_C FRAG_MAX_KEY_FRAME_COUNT\n#endif\nmat4 cubicBezierMatrix=mat4(1.0,-3.0,3.0,-1.0,0.0,3.0,-6.0,3.0,0.0,0.0,3.0,-3.0,0.0,0.0,0.0,1.0);float cubicBezier(float t,float y1,float y2,float y3,float y4){vec4 tVec=vec4(1.0,t,t*t,t*t*t);vec4 yVec=vec4(y1,y2,y3,y4);vec4 result=tVec*cubicBezierMatrix*yVec;return result.x+result.y+result.z+result.w;}float binarySearchT(float x,float x1,float x2,float x3,float x4){float left=0.0;float right=1.0;float mid=0.0;float computedX;for(int i=0;i<8;i++){mid=(left+right)*0.5;computedX=cubicBezier(mid,x1,x2,x3,x4);if(abs(computedX-x)<0.0001){break;}else if(computedX>x){right=mid;}else{left=mid;}}return mid;}float valueFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);for(int i=0;i<ITR_END;i+=2){if(i>=count){break;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return k0.y;}if(i==int(frameCount-2.)&&time>=k1.x){return k1.y;}if(time>=k0.x&&time<=k1.x){float t=(time-k0.x)/(k1.x-k0.x);float nt=binarySearchT(time,k0.x,k0.z,k1.z,k1.x);return cubicBezier(nt,k0.y,k0.w,k1.w,k1.y);}}}float evaluteLineSeg(float t,vec2 p0,vec2 p1){return p0.y+(p1.y-p0.y)*(t-p0.x)/(p1.x-p0.x);}float valueFromLineSegs(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){if(i>count){return lookup_curve(i).w;}vec4 seg=lookup_curve(i+start);vec2 p0=seg.xy;vec2 p1=seg.zw;if(time>=p0.x&&time<=p1.x){return evaluteLineSeg(time,p0,p1);}vec2 p2=lookup_curve(i+start+1).xy;if(time>p1.x&&time<=p2.x){return evaluteLineSeg(time,p1,p2);}}return lookup_curve(0).y;}float getValueFromTime(float time,vec4 value){float type=value.x;if(type==0.){return value.y;}if(type==1.){return mix(value.y,value.z,time/value.w);}if(type==3.){return valueFromLineSegs(time,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed);}if(type==5.){return valueFromBezierCurveFrames(time,value.z,value.w);}return 0.;}";
 
 var valueDefine = "#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n";
 
@@ -21502,14 +16042,14 @@ var RenderBuffer = /** @class */ (function () {
     return RenderBuffer;
 }());
 
-var isWebGL2Available = typeof WebGL2RenderingContext === 'function';
+var isWebGL2Available = typeof weapp.WebGL2RenderingContext === 'function';
 var GPUCapability = /** @class */ (function () {
     function GPUCapability(gl) {
         this.setupCapability(gl);
     }
     GPUCapability.prototype.setupCapability = function (gl) {
         var _a;
-        var level = isWebGL2Available && gl instanceof WebGL2RenderingContext ? 2 : 1;
+        var level = isWebGL2Available && gl instanceof weapp.WebGL2RenderingContext ? 2 : 1;
         var level2 = level === 2;
         var textureAnisotropicExt = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
         var depthTextureExtension = gl.getExtension('WEBGL_depth_texture');
@@ -21533,7 +16073,7 @@ var GPUCapability = /** @class */ (function () {
         this.internalFormatDepth16 = level2 ? gl.DEPTH_COMPONENT16 : gl.DEPTH_COMPONENT;
         this.internalFormatDepth24_stencil8 = level2 ? gl.DEPTH24_STENCIL8 : gl.DEPTH_STENCIL;
         var floatTexture = (level2 || gl.getExtension('OES_texture_float')) ? gl.FLOAT : 0;
-        var halfFloatTexture = level2 ? WebGL2RenderingContext.HALF_FLOAT : (((_a = gl.getExtension('OES_texture_half_float')) === null || _a === void 0 ? void 0 : _a.HALF_FLOAT_OES) || 0);
+        var halfFloatTexture = level2 ? weapp.WebGL2RenderingContext.HALF_FLOAT : (((_a = gl.getExtension('OES_texture_half_float')) === null || _a === void 0 ? void 0 : _a.HALF_FLOAT_OES) || 0);
         var detail = {
             floatTexture: floatTexture,
             halfFloatTexture: halfFloatTexture,
@@ -21933,9 +16473,13 @@ var InteractVFXItem = /** @class */ (function (_super) {
             this.handleDragMove(this.dragEvent, this.bouncingArg);
         }
     };
-    InteractVFXItem.prototype.onItemRemoved = function (composition) {
+    InteractVFXItem.prototype.onEnd = function () {
+        if (this.composition) {
+            this.composition.removeInteractiveItem(this, this.ui.options.type);
+        }
+    };
+    InteractVFXItem.prototype.onItemRemoved = function () {
         var _a;
-        composition.removeInteractiveItem(this, this.ui.options.type);
         this.clickable = false;
         (_a = this.previewContent) === null || _a === void 0 ? void 0 : _a.mesh.dispose();
         this.endDragTarget();
@@ -23727,7 +18271,6 @@ var SpriteItem = /** @class */ (function (_super) {
             ret.texOffset = [0, 0, 1, 1];
         }
         ret.visible = this.vfxItem.contentVisible;
-        // 图层元素作为父节点时，除了k的大小变换，自身的尺寸也需要传递给子元素，子元素可以通过startSize读取
         ret.startSize = this.startSize;
         return ret;
     };
@@ -23825,7 +18368,9 @@ var SpriteVFXItem = /** @class */ (function (_super) {
     };
     SpriteVFXItem.prototype.doCreateContent = function (composition) {
         var emptyTexture = composition.getRendererOptions().emptyTexture;
-        return new SpriteItem(this.sprite, { emptyTexture: emptyTexture }, this);
+        var content = new SpriteItem(this.sprite, { emptyTexture: emptyTexture }, this);
+        content.getRenderData(0, true);
+        return content;
     };
     SpriteVFXItem.prototype.createWireframeMesh = function (item, color) {
         var spMesh = new SpriteMesh(this.composition.getEngine(), __assign$1({ wireframe: true }, item.renderInfo), this.composition);
@@ -23917,679 +18462,6 @@ var FilterSpriteVFXItem = /** @class */ (function (_super) {
     };
     return FilterSpriteVFXItem;
 }(SpriteVFXItem));
-
-var ParticleMesh = /** @class */ (function () {
-    function ParticleMesh(props, rendererOptions) {
-        var _a, _b, _c, _d;
-        this.particleCount = 0;
-        var engine = rendererOptions.composition.getEngine();
-        var env = ((_a = engine.renderer) !== null && _a !== void 0 ? _a : {}).env;
-        var speedOverLifetime = props.speedOverLifetime, colorOverLifetime = props.colorOverLifetime, linearVelOverLifetime = props.linearVelOverLifetime, orbitalVelOverLifetime = props.orbitalVelOverLifetime, sizeOverLifetime = props.sizeOverLifetime, rotationOverLifetime = props.rotationOverLifetime, sprite = props.sprite, gravityModifier = props.gravityModifier, maxCount = props.maxCount, duration = props.duration, textureFlip = props.textureFlip, useSprite = props.useSprite, name = props.name, filter = props.filter, gravity = props.gravity, forceTarget = props.forceTarget, side = props.side, occlusion = props.occlusion, anchor = props.anchor, blending = props.blending, maskMode = props.maskMode, mask = props.mask, transparentOcclusion = props.transparentOcclusion, listIndex = props.listIndex, meshSlots = props.meshSlots, _e = props.renderMode, renderMode = _e === void 0 ? 0 : _e, _f = props.diffuse, diffuse = _f === void 0 ? Texture.createWithData(engine) : _f;
-        var detail = engine.gpuCapability.detail;
-        var halfFloatTexture = detail.halfFloatTexture, maxVertexUniforms = detail.maxVertexUniforms;
-        var marcos = [
-            ['RENDER_MODE', +renderMode],
-            ['PRE_MULTIPLY_ALPHA', false],
-            ['ENV_EDITOR', env === PLAYER_OPTIONS_ENV_EDITOR],
-        ];
-        var level = engine.gpuCapability.level;
-        var vertexKeyFrameMeta = createKeyFrameMeta();
-        var fragmentKeyFrameMeta = createKeyFrameMeta();
-        var enableVertexTexture = maxVertexUniforms > 0;
-        var uniformValues = {};
-        var vertex_lookup_texture = 0;
-        var shaderCacheId = 0;
-        var particleDefine;
-        var useOrbitalVel;
-        this.useSprite = useSprite;
-        if (enableVertexTexture) {
-            marcos.push(['ENABLE_VERTEX_TEXTURE', true]);
-        }
-        if (speedOverLifetime) {
-            marcos.push(['SPEED_OVER_LIFETIME', true]);
-            shaderCacheId |= 1 << 1;
-            uniformValues.uSpeedLifetimeValue = speedOverLifetime.toUniform(vertexKeyFrameMeta);
-        }
-        if (sprite === null || sprite === void 0 ? void 0 : sprite.animate) {
-            marcos.push(['USE_SPRITE', true]);
-            shaderCacheId |= 1 << 2;
-            uniformValues.uFSprite = uniformValues.uSprite = new Float32Array([sprite.col, sprite.row, sprite.total, sprite.blend ? 1 : 0]);
-            this.useSprite = true;
-        }
-        if (filter && filter.name !== FILTER_NAME_NONE) {
-            marcos.push(['USE_FILTER', true]);
-            shaderCacheId |= 1 << 3;
-            var filterDefine = createFilter(filter, rendererOptions.composition);
-            if (!filterDefine.particle) {
-                throw new Error("particle filter ".concat(filter.name, " not implement"));
-            }
-            particleDefine = filterDefine.particle;
-            Object.keys((_b = particleDefine.uniforms) !== null && _b !== void 0 ? _b : {}).forEach(function (uName) {
-                var _a;
-                var getter = (_a = particleDefine.uniforms) === null || _a === void 0 ? void 0 : _a[uName];
-                if (uniformValues[uName]) {
-                    throw new Error('conflict uniform name:' + uName);
-                }
-                uniformValues[uName] = getter === null || getter === void 0 ? void 0 : getter.toUniform(vertexKeyFrameMeta);
-            });
-            Object.keys((_c = particleDefine.uniformValues) !== null && _c !== void 0 ? _c : {}).forEach(function (uName) {
-                var _a;
-                var val = (_a = particleDefine.uniformValues) === null || _a === void 0 ? void 0 : _a[uName];
-                if (uniformValues[uName]) {
-                    throw new Error('conflict uniform name:' + uName);
-                }
-                uniformValues[uName] = val;
-            });
-        }
-        if (colorOverLifetime === null || colorOverLifetime === void 0 ? void 0 : colorOverLifetime.color) {
-            marcos.push(['COLOR_OVER_LIFETIME', true]);
-            shaderCacheId |= 1 << 4;
-            uniformValues.uColorOverLifetime = colorOverLifetime.color instanceof Texture ? colorOverLifetime.color : Texture.createWithData(engine, imageDataFromGradient(colorOverLifetime.color));
-        }
-        if (colorOverLifetime === null || colorOverLifetime === void 0 ? void 0 : colorOverLifetime.opacity) {
-            uniformValues.uOpacityOverLifetimeValue = colorOverLifetime.opacity.toUniform(vertexKeyFrameMeta);
-        }
-        else {
-            uniformValues.uOpacityOverLifetimeValue = createValueGetter(1).toUniform(vertexKeyFrameMeta);
-        }
-        ['x', 'y', 'z'].forEach(function (pro, i) {
-            var defL = 0;
-            var defO = 0;
-            if (linearVelOverLifetime === null || linearVelOverLifetime === void 0 ? void 0 : linearVelOverLifetime[pro]) {
-                uniformValues["uLinear".concat(pro.toUpperCase(), "ByLifetimeValue")] = linearVelOverLifetime[pro].toUniform(vertexKeyFrameMeta);
-                defL = 1;
-                shaderCacheId |= 1 << (7 + i);
-                linearVelOverLifetime.enabled = true;
-            }
-            marcos.push(["LINEAR_VEL_".concat(pro.toUpperCase()), defL]);
-            if (orbitalVelOverLifetime === null || orbitalVelOverLifetime === void 0 ? void 0 : orbitalVelOverLifetime[pro]) {
-                uniformValues["uOrb".concat(pro.toUpperCase(), "ByLifetimeValue")] = orbitalVelOverLifetime[pro].toUniform(vertexKeyFrameMeta);
-                defO = 1;
-                shaderCacheId |= 1 << (10 + i);
-                useOrbitalVel = true;
-                orbitalVelOverLifetime.enabled = true;
-            }
-            marcos.push(["ORB_VEL_".concat(pro.toUpperCase()), defO]);
-        });
-        if (linearVelOverLifetime === null || linearVelOverLifetime === void 0 ? void 0 : linearVelOverLifetime.asMovement) {
-            marcos.push(['AS_LINEAR_MOVEMENT', true]);
-            shaderCacheId |= 1 << 5;
-        }
-        if (useOrbitalVel) {
-            if (orbitalVelOverLifetime === null || orbitalVelOverLifetime === void 0 ? void 0 : orbitalVelOverLifetime.asRotation) {
-                marcos.push(['AS_ORBITAL_MOVEMENT', true]);
-                shaderCacheId |= 1 << 6;
-            }
-            uniformValues.uOrbCenter = new Float32Array((orbitalVelOverLifetime === null || orbitalVelOverLifetime === void 0 ? void 0 : orbitalVelOverLifetime.center) || [0, 0, 0]);
-        }
-        uniformValues.uSizeByLifetimeValue = sizeOverLifetime === null || sizeOverLifetime === void 0 ? void 0 : sizeOverLifetime.x.toUniform(vertexKeyFrameMeta);
-        if (sizeOverLifetime === null || sizeOverLifetime === void 0 ? void 0 : sizeOverLifetime.separateAxes) {
-            marcos.push(['SIZE_Y_BY_LIFE', 1]);
-            shaderCacheId |= 1 << 14;
-            uniformValues.uSizeYByLifetimeValue = (_d = sizeOverLifetime === null || sizeOverLifetime === void 0 ? void 0 : sizeOverLifetime.y) === null || _d === void 0 ? void 0 : _d.toUniform(vertexKeyFrameMeta);
-        }
-        if (rotationOverLifetime === null || rotationOverLifetime === void 0 ? void 0 : rotationOverLifetime.z) {
-            uniformValues.uRZByLifeTimeValue = rotationOverLifetime.z.toUniform(vertexKeyFrameMeta);
-            shaderCacheId |= 1 << 15;
-            marcos.push(['ROT_Z_LIFETIME', 1]);
-        }
-        if (rotationOverLifetime === null || rotationOverLifetime === void 0 ? void 0 : rotationOverLifetime.x) {
-            uniformValues.uRXByLifeTimeValue = rotationOverLifetime.x.toUniform(vertexKeyFrameMeta);
-            shaderCacheId |= 1 << 16;
-            marcos.push(['ROT_X_LIFETIME', 1]);
-        }
-        if (rotationOverLifetime === null || rotationOverLifetime === void 0 ? void 0 : rotationOverLifetime.y) {
-            uniformValues.uRYByLifeTimeValue = rotationOverLifetime.y.toUniform(vertexKeyFrameMeta);
-            shaderCacheId |= 1 << 17;
-            marcos.push(['ROT_Y_LIFETIME', 1]);
-        }
-        if (rotationOverLifetime === null || rotationOverLifetime === void 0 ? void 0 : rotationOverLifetime.asRotation) {
-            marcos.push(['ROT_LIFETIME_AS_MOVEMENT', 1]);
-            shaderCacheId |= 1 << 18;
-        }
-        uniformValues.uGravityModifierValue = gravityModifier.toUniform(vertexKeyFrameMeta);
-        if (forceTarget) {
-            marcos.push(['FINAL_TARGET', true]);
-            shaderCacheId |= 1 << 19;
-            uniformValues.uFinalTarget = new Float32Array(forceTarget.target || [0, 0, 0]);
-            uniformValues.uForceCurve = forceTarget.curve.toUniform(vertexKeyFrameMeta);
-        }
-        if (halfFloatTexture && fragmentKeyFrameMeta.max) {
-            shaderCacheId |= 1 << 20;
-            uniformValues.uFCurveValueTexture = generateHalfFloatTexture(engine, CurveValue.getAllData(fragmentKeyFrameMeta, true), fragmentKeyFrameMeta.index, 1);
-        }
-        else {
-            uniformValues.uFCurveValues = CurveValue.getAllData(fragmentKeyFrameMeta);
-        }
-        var vertexCurveTexture = vertexKeyFrameMeta.max + vertexKeyFrameMeta.curves.length - 32 > maxVertexUniforms;
-        // if (getConfig(RENDER_PREFER_LOOKUP_TEXTURE)) {
-        //   vertexCurveTexture = true;
-        // }
-        if (level === 2) {
-            vertexKeyFrameMeta.max = -1;
-            vertexKeyFrameMeta.index = meshSlots ? meshSlots[0] : getSlot(vertexKeyFrameMeta.index);
-            if (fragmentKeyFrameMeta.index > 0) {
-                fragmentKeyFrameMeta.max = -1;
-                fragmentKeyFrameMeta.index = meshSlots ? meshSlots[1] : getSlot(fragmentKeyFrameMeta.index);
-            }
-        }
-        if (vertexCurveTexture && halfFloatTexture && enableVertexTexture) {
-            var tex = generateHalfFloatTexture(engine, CurveValue.getAllData(vertexKeyFrameMeta, true), vertexKeyFrameMeta.index, 1);
-            uniformValues.uVCurveValueTexture = tex;
-            vertex_lookup_texture = 1;
-        }
-        else {
-            uniformValues.uVCurveValues = CurveValue.getAllData(vertexKeyFrameMeta);
-        }
-        var shaderCache = ['-p:', renderMode, shaderCacheId, vertexKeyFrameMeta.index, vertexKeyFrameMeta.max, fragmentKeyFrameMeta.index, fragmentKeyFrameMeta.max].join('+');
-        marcos.push(['VERT_CURVE_VALUE_COUNT', vertexKeyFrameMeta.index], ['FRAG_CURVE_VALUE_COUNT', fragmentKeyFrameMeta.index], ['VERT_MAX_KEY_FRAME_COUNT', vertexKeyFrameMeta.max], ['FRAG_MAX_KEY_FRAME_COUNT', fragmentKeyFrameMeta.max]);
-        var fragment = filter ? particleFrag.replace(/#pragma\s+FILTER_FRAG/, particleDefine.fragment) : particleFrag;
-        var originalVertex = "#define LOOKUP_TEXTURE_CURVE ".concat(vertex_lookup_texture, "\n").concat(particleVert);
-        var vertex = filter ? originalVertex.replace(/#pragma\s+FILTER_VERT/, particleDefine.vertex || 'void filterMain(float t){}\n') : originalVertex;
-        var shader = {
-            fragment: createShaderWithMarcos(marcos, fragment, exports.ShaderType.fragment, level),
-            vertex: createShaderWithMarcos(marcos, vertex, exports.ShaderType.vertex, level),
-            glslVersion: level === 1 ? exports.GLSLVersion.GLSL1 : exports.GLSLVersion.GLSL3,
-            shared: true,
-            cacheId: shaderCache,
-            marcos: marcos,
-            name: "particle#".concat(name),
-        };
-        if (filter) {
-            shader.cacheId += filter.name;
-        }
-        var mtlOptions = {
-            shader: shader,
-            uniformSemantics: {
-                effects_MatrixV: 'VIEW',
-                effects_MatrixVP: 'VIEWPROJECTION',
-                uEditorTransform: 'EDITOR_TRANSFORM',
-                effects_ObjectToWorld: 'MODEL',
-            },
-        };
-        var preMulAlpha = getPreMultiAlpha(blending);
-        uniformValues.uTexOffset = new Float32Array(diffuse ? [1 / diffuse.getWidth(), 1 / diffuse.getHeight()] : [0, 0]);
-        uniformValues.uMaskTex = diffuse;
-        uniformValues.uColorParams = new Float32Array([diffuse ? 1 : 0, +preMulAlpha, 0, +(!!occlusion && !transparentOcclusion)]);
-        uniformValues.uParams = [0, duration, 0, 0];
-        uniformValues.uAcceleration = [(gravity === null || gravity === void 0 ? void 0 : gravity[0]) || 0, (gravity === null || gravity === void 0 ? void 0 : gravity[1]) || 0, (gravity === null || gravity === void 0 ? void 0 : gravity[2]) || 0, 0];
-        // mtlOptions.uniformValues = uniformValues;
-        var material = Material.create(engine, mtlOptions);
-        material.blending = true;
-        material.depthTest = true;
-        material.depthMask = !!(occlusion);
-        material.stencilRef = mask ? [mask, mask] : undefined;
-        setMaskMode(material, maskMode);
-        setBlendMode(material, blending);
-        setSideMode(material, side);
-        var typeMap = {
-            'uSprite': 'vec4',
-            'uParams': 'vec4',
-            'uAcceleration': 'vec4',
-            'uGravityModifierValue': 'vec4',
-            'uOpacityOverLifetimeValue': 'vec4',
-            'uRXByLifeTimeValue': 'vec4',
-            'uRYByLifeTimeValue': 'vec4',
-            'uRZByLifeTimeValue': 'vec4',
-            'uLinearXByLifetimeValue': 'vec4',
-            'uLinearYByLifetimeValue': 'vec4',
-            'uLinearZByLifetimeValue': 'vec4',
-            'uSpeedLifetimeValue': 'vec4',
-            'uOrbXByLifetimeValue': 'vec4',
-            'uOrbYByLifetimeValue': 'vec4',
-            'uOrbZByLifetimeValue': 'vec4',
-            'uSizeByLifetimeValue': 'vec4',
-            'uSizeYByLifetimeValue': 'vec4',
-            'uColorParams': 'vec4',
-            'uFSprite': 'vec4',
-            'uPreviewColor': 'vec4',
-            'uVCurveValues': 'vec4Array',
-            'uFCurveValues': 'vec4',
-            'uFinalTarget': 'vec3',
-            'uForceCurve': 'vec4',
-            'uOrbCenter': 'vec3',
-            'uTexOffset': 'vec2',
-            'uPeriodValue': 'vec4',
-            'uMovementValue': 'vec4',
-            'uStrengthValue': 'vec4',
-            'uWaveParams': 'vec4',
-        };
-        Object.keys(uniformValues).map(function (name) {
-            var value = uniformValues[name];
-            if (value instanceof Texture) {
-                material.setTexture(name, value);
-                return;
-            }
-            var res = [];
-            switch (typeMap[name]) {
-                case 'vec4':
-                    material.setVector4(name, Vector4$1.fromArray(value));
-                    break;
-                case 'vec3':
-                    material.setVector3(name, Vector3.fromArray(value));
-                    break;
-                case 'vec2':
-                    material.setVector2(name, Vector2.fromArray(value));
-                    break;
-                case 'vec4Array':
-                    for (var i = 0; i < value.length; i = i + 4) {
-                        var v = new Vector4$1(value[i], value[i + 1], value[i + 2], value[i + 3]);
-                        res.push(v);
-                    }
-                    material.setVector4Array(name, res);
-                    res.length = 0;
-                    break;
-                default:
-                    console.warn("uniform ".concat(name, "'s type not in typeMap"));
-            }
-        });
-        material.setVector3('emissionColor', new Vector3(0, 0, 0));
-        material.setFloat('emissionIntensity', 0.0);
-        var geometry = Geometry.create(engine, generateGeometryProps(maxCount * 4, this.useSprite, "particle#".concat(name)));
-        var mesh = Mesh.create(engine, {
-            name: "MParticle_".concat(name),
-            priority: listIndex,
-            material: material,
-            geometry: geometry,
-        });
-        this.anchor = anchor;
-        this.mesh = mesh;
-        this.geometry = mesh.firstGeometry();
-        this.forceTarget = forceTarget;
-        this.sizeOverLifetime = sizeOverLifetime;
-        this.speedOverLifetime = speedOverLifetime;
-        this.linearVelOverLifetime = linearVelOverLifetime;
-        this.orbitalVelOverLifetime = orbitalVelOverLifetime;
-        this.orbitalVelOverLifetime = orbitalVelOverLifetime;
-        this.gravityModifier = gravityModifier;
-        this.maxCount = maxCount;
-        this.duration = duration;
-        this.textureOffsets = textureFlip ? [0, 0, 1, 0, 0, 1, 1, 1] : [0, 1, 0, 0, 1, 1, 1, 0];
-    }
-    Object.defineProperty(ParticleMesh.prototype, "time", {
-        get: function () {
-            var value = this.mesh.material.getVector4('uParams');
-            return value.x;
-        },
-        set: function (v) {
-            this.mesh.material.setVector4('uParams', new Vector4$1(+v, this.duration, 0, 0));
-        },
-        enumerable: false,
-        configurable: true
-    });
-    ParticleMesh.prototype.getPointColor = function (index) {
-        var data = this.geometry.getAttributeData('aRot');
-        var i = index * 32 + 4;
-        return [data[i], data[i + 1], data[i + 2], data[i + 3]];
-    };
-    /**
-     * 待废弃
-     * @deprecated - 使用 `particle-system.getPointPosition` 替代
-     */
-    ParticleMesh.prototype.getPointPosition = function (index) {
-        var geo = this.geometry;
-        var posIndex = index * 48;
-        var posData = geo.getAttributeData('aPos');
-        var offsetData = geo.getAttributeData('aOffset');
-        var time = this.time - offsetData[index * 16 + 2];
-        var pointDur = offsetData[index * 16 + 3];
-        var mtl = this.mesh.material;
-        var acc = mtl.getVector4('uAcceleration').toVector3();
-        var pos = Vector3.fromArray(posData, posIndex);
-        var vel = Vector3.fromArray(posData, posIndex + 3);
-        var ret = calculateTranslation(new Vector3(), this, acc, time, pointDur, pos, vel);
-        if (this.forceTarget) {
-            var target = mtl.getVector3('uFinalTarget');
-            var life = this.forceTarget.curve.getValue(time / pointDur);
-            var dl = 1 - life;
-            ret.x = ret.x * dl + target.x * life;
-            ret.y = ret.y * dl + target.y * life;
-            ret.z = ret.z * dl + target.z * life;
-        }
-        return ret;
-    };
-    ParticleMesh.prototype.clearPoints = function () {
-        this.resetGeometryData(this.geometry);
-        this.particleCount = 0;
-        this.geometry.setDrawCount(0);
-        this.maxParticleBufferCount = 0;
-    };
-    ParticleMesh.prototype.resetGeometryData = function (geometry) {
-        var names = geometry.getAttributeNames();
-        var index = geometry.getIndexData();
-        for (var i = 0; i < names.length; i++) {
-            var name_1 = names[i];
-            var data = geometry.getAttributeData(name_1);
-            if (data) {
-                // @ts-expect-error
-                geometry.setAttributeData(name_1, new data.constructor(0));
-            }
-        }
-        // @ts-expect-error
-        geometry.setIndexData(new index.constructor(0));
-    };
-    ParticleMesh.prototype.minusTime = function (time) {
-        var data = this.geometry.getAttributeData('aOffset');
-        for (var i = 0; i < data.length; i += 4) {
-            data[i + 2] -= time;
-        }
-        this.geometry.setAttributeData('aOffset', data);
-        this.time -= time;
-    };
-    ParticleMesh.prototype.removePoint = function (index) {
-        if (index < this.particleCount) {
-            this.geometry.setAttributeSubData('aOffset', index * 16, new Float32Array(16));
-        }
-    };
-    ParticleMesh.prototype.setPoint = function (point, index) {
-        var maxCount = this.maxCount;
-        if (index < maxCount) {
-            var particleCount = index + 1;
-            var vertexCount_1 = particleCount * 4;
-            var geometry_1 = this.geometry;
-            var increaseBuffer_1 = particleCount > this.maxParticleBufferCount;
-            var inc_1 = 1;
-            if (this.particleCount > 300) {
-                inc_1 = (this.particleCount + 100) / this.particleCount;
-            }
-            else if (this.particleCount > 100) {
-                inc_1 = 1.4;
-            }
-            else if (this.particleCount > 0) {
-                inc_1 = 2;
-            }
-            var pointData_1 = {
-                aPos: new Float32Array(48),
-                aRot: new Float32Array(32),
-                aOffset: new Float32Array(16),
-            };
-            var useSprite = this.useSprite;
-            if (useSprite) {
-                pointData_1.aSprite = new Float32Array(12);
-            }
-            var tempPos = new Vector3();
-            var tempQuat = new Quaternion();
-            var scale = new Vector3(1, 1, 1);
-            point.transform.assignWorldTRS(tempPos, tempQuat, scale);
-            var tempEuler = Transform.getRotation(tempQuat, new Euler());
-            var position = tempPos.toArray();
-            var rotation = tempEuler.toArray();
-            var offsets = this.textureOffsets;
-            var off = [0, 0, point.delay, point.lifetime];
-            var wholeUV = [0, 0, 1, 1];
-            var vel = point.vel;
-            var color = point.color;
-            var sizeOffsets = [-.5, .5, -.5, -.5, .5, .5, .5, -.5];
-            var seed = Math.random();
-            var sprite = void 0;
-            if (useSprite) {
-                sprite = point.sprite;
-            }
-            for (var j = 0; j < 4; j++) {
-                var offset = j * 2;
-                var j3 = j * 3;
-                var j4 = j * 4;
-                var j12 = j * 12;
-                var j8 = j * 8;
-                pointData_1.aPos.set(position, j12);
-                vel.fill(pointData_1.aPos, j12 + 3);
-                pointData_1.aRot.set(rotation, j8);
-                pointData_1.aRot[j8 + 3] = seed;
-                pointData_1.aRot.set(color, j8 + 4);
-                if (useSprite) {
-                    // @ts-expect-error
-                    pointData_1.aSprite.set(sprite, j3);
-                }
-                var uv = point.uv || wholeUV;
-                if (uv) {
-                    var uvy = useSprite ? (1 - offsets[offset + 1]) : offsets[offset + 1];
-                    off[0] = uv[0] + offsets[offset] * uv[2];
-                    off[1] = uv[1] + uvy * uv[3];
-                }
-                pointData_1.aOffset.set(off, j4);
-                var ji = (j + j);
-                var sx = (sizeOffsets[ji] - this.anchor.x) * scale.x;
-                var sy = (sizeOffsets[ji + 1] - this.anchor.y) * scale.y;
-                for (var k = 0; k < 3; k++) {
-                    pointData_1.aPos[j12 + 6 + k] = point.dirX.getElement(k) * sx;
-                    pointData_1.aPos[j12 + 9 + k] = point.dirY.getElement(k) * sy;
-                }
-            }
-            var indexData = new Uint16Array([0, 1, 2, 2, 1, 3].map(function (x) { return x + index * 4; }));
-            if (increaseBuffer_1) {
-                var baseIndexData = geometry_1.getIndexData();
-                var idx = enlargeBuffer(baseIndexData, particleCount * 6, inc_1, maxCount * 6);
-                idx.set(indexData, index * 6);
-                geometry_1.setIndexData(idx);
-                this.maxParticleBufferCount = idx.length / 6;
-            }
-            else {
-                geometry_1.setIndexSubData(index * 6, indexData);
-            }
-            Object.keys(pointData_1).forEach(function (name) {
-                var data = pointData_1[name];
-                var attrSize = geometry_1.getAttributeStride(name) / Float32Array.BYTES_PER_ELEMENT;
-                if (increaseBuffer_1) {
-                    var baseData = geometry_1.getAttributeData(name);
-                    var geoData = enlargeBuffer(baseData, vertexCount_1 * attrSize, inc_1, maxCount * 4 * attrSize);
-                    geoData.set(data, data.length * index);
-                    geometry_1.setAttributeData(name, geoData);
-                }
-                else {
-                    geometry_1.setAttributeSubData(name, data.length * index, data);
-                }
-            });
-            this.particleCount = Math.max(particleCount, this.particleCount);
-            geometry_1.setDrawCount(this.particleCount * 6);
-        }
-    };
-    return ParticleMesh;
-}());
-var gl2UniformSlots = [10, 32, 64, 160];
-function getSlot(count) {
-    for (var w = 0; w < gl2UniformSlots.length; w++) {
-        var slot = gl2UniformSlots[w];
-        if (slot > count) {
-            return slot;
-        }
-    }
-    return count || gl2UniformSlots[0];
-}
-function generateGeometryProps(maxVertex, useSprite, name) {
-    var bpe = Float32Array.BYTES_PER_ELEMENT;
-    var j12 = bpe * 12;
-    var attributes = {
-        aPos: { size: 3, offset: 0, stride: j12, data: new Float32Array(0) },
-        aVel: { size: 3, offset: 3 * bpe, stride: j12, dataSource: 'aPos' },
-        aDirX: { size: 3, offset: 6 * bpe, stride: j12, dataSource: 'aPos' },
-        aDirY: { size: 3, offset: 9 * bpe, stride: j12, dataSource: 'aPos' },
-        //
-        aRot: { size: 3, offset: 0, stride: 8 * bpe, data: new Float32Array(0) },
-        aSeed: { size: 1, offset: 3 * bpe, stride: 8 * bpe, dataSource: 'aRot' },
-        aColor: { size: 4, offset: 4 * bpe, stride: 8 * bpe, dataSource: 'aRot' },
-        //
-        aOffset: { size: 4, stride: 4 * bpe, data: new Float32Array(0) },
-    };
-    if (useSprite) {
-        attributes['aSprite'] = { size: 3, data: new Float32Array(0) };
-    }
-    return { attributes: attributes, indices: { data: new Uint16Array(0) }, name: name, maxVertex: maxVertex };
-}
-function getParticleMeshShader(item, env, gpuCapability) {
-    var _a, _b, _c, _d, _e;
-    if (env === void 0) { env = ''; }
-    var props = item.content;
-    var renderMode = +(((_a = props.renderer) === null || _a === void 0 ? void 0 : _a.renderMode) || 0);
-    var marcos = [
-        ['RENDER_MODE', renderMode],
-        ['PRE_MULTIPLY_ALPHA', false],
-        ['ENV_EDITOR', env === PLAYER_OPTIONS_ENV_EDITOR],
-    ];
-    var level = gpuCapability.level, detail = gpuCapability.detail;
-    var vertexKeyFrameMeta = createKeyFrameMeta();
-    var fragmentKeyFrameMeta = createKeyFrameMeta();
-    var enableVertexTexture = detail.maxVertexUniforms > 0;
-    var speedOverLifetime = ((_b = props.positionOverLifetime) !== null && _b !== void 0 ? _b : {}).speedOverLifetime;
-    var vertex_lookup_texture = 0;
-    var shaderCacheId = 0;
-    if (enableVertexTexture) {
-        marcos.push(['ENABLE_VERTEX_TEXTURE', true]);
-    }
-    if (speedOverLifetime) {
-        marcos.push(['SPEED_OVER_LIFETIME', true]);
-        shaderCacheId |= 1 << 1;
-        getKeyFrameMetaByRawValue(vertexKeyFrameMeta, speedOverLifetime);
-    }
-    var sprite = props.textureSheetAnimation;
-    if (sprite && sprite.animate) {
-        marcos.push(['USE_SPRITE', true]);
-        shaderCacheId |= 1 << 2;
-    }
-    var filter = undefined;
-    if (props.filter && props.filter.name !== FILTER_NAME_NONE) {
-        marcos.push(['USE_FILTER', true]);
-        shaderCacheId |= 1 << 3;
-        var f = createFilterShaders(props.filter).find(function (f) { return f.isParticle; });
-        if (!f) {
-            throw Error("particle filter ".concat(props.filter.name, " not implement"));
-        }
-        filter = f;
-        (_c = f.uniforms) === null || _c === void 0 ? void 0 : _c.forEach(function (val) { return getKeyFrameMetaByRawValue(vertexKeyFrameMeta, val); });
-        // filter = processFilter(props.filter, fragmentKeyFrameMeta, vertexKeyFrameMeta, options);
-    }
-    var colorOverLifetime = props.colorOverLifetime;
-    if (colorOverLifetime && colorOverLifetime.color) {
-        marcos.push(['COLOR_OVER_LIFETIME', true]);
-        shaderCacheId |= 1 << 4;
-    }
-    var opacity = colorOverLifetime && colorOverLifetime.opacity;
-    if (opacity) {
-        getKeyFrameMetaByRawValue(vertexKeyFrameMeta, opacity);
-    }
-    var positionOverLifetime = props.positionOverLifetime;
-    var useOrbitalVel;
-    ['x', 'y', 'z'].forEach(function (pro, i) {
-        var defL = 0;
-        var linearPro = 'linear' + pro.toUpperCase();
-        var orbitalPro = 'orbital' + pro.toUpperCase();
-        if (positionOverLifetime === null || positionOverLifetime === void 0 ? void 0 : positionOverLifetime[linearPro]) {
-            getKeyFrameMetaByRawValue(vertexKeyFrameMeta, positionOverLifetime[linearPro]);
-            defL = 1;
-            shaderCacheId |= 1 << (7 + i);
-        }
-        marcos.push(["LINEAR_VEL_".concat(pro.toUpperCase()), defL]);
-        var defO = 0;
-        if (positionOverLifetime === null || positionOverLifetime === void 0 ? void 0 : positionOverLifetime[orbitalPro]) {
-            getKeyFrameMetaByRawValue(vertexKeyFrameMeta, positionOverLifetime[orbitalPro]);
-            defO = 1;
-            shaderCacheId |= 1 << (10 + i);
-            useOrbitalVel = true;
-        }
-        marcos.push(["ORB_VEL_".concat(pro.toUpperCase()), defO]);
-    });
-    if (positionOverLifetime === null || positionOverLifetime === void 0 ? void 0 : positionOverLifetime.asMovement) {
-        marcos.push(['AS_LINEAR_MOVEMENT', true]);
-        shaderCacheId |= 1 << 5;
-    }
-    if (useOrbitalVel) {
-        if (positionOverLifetime === null || positionOverLifetime === void 0 ? void 0 : positionOverLifetime.asRotation) {
-            marcos.push(['AS_ORBITAL_MOVEMENT', true]);
-            shaderCacheId |= 1 << 6;
-        }
-    }
-    var sizeOverLifetime = props.sizeOverLifetime;
-    getKeyFrameMetaByRawValue(vertexKeyFrameMeta, sizeOverLifetime === null || sizeOverLifetime === void 0 ? void 0 : sizeOverLifetime.x);
-    if (sizeOverLifetime === null || sizeOverLifetime === void 0 ? void 0 : sizeOverLifetime.separateAxes) {
-        marcos.push(['SIZE_Y_BY_LIFE', 1]);
-        shaderCacheId |= 1 << 14;
-        getKeyFrameMetaByRawValue(vertexKeyFrameMeta, sizeOverLifetime === null || sizeOverLifetime === void 0 ? void 0 : sizeOverLifetime.y);
-    }
-    var rot = props.rotationOverLifetime;
-    if (rot === null || rot === void 0 ? void 0 : rot.z) {
-        getKeyFrameMetaByRawValue(vertexKeyFrameMeta, rot === null || rot === void 0 ? void 0 : rot.z);
-        shaderCacheId |= 1 << 15;
-        marcos.push(['ROT_Z_LIFETIME', 1]);
-    }
-    if (rot === null || rot === void 0 ? void 0 : rot.separateAxes) {
-        if (rot.x) {
-            getKeyFrameMetaByRawValue(vertexKeyFrameMeta, rot.x);
-            shaderCacheId |= 1 << 16;
-            marcos.push(['ROT_X_LIFETIME', 1]);
-        }
-        if (rot.y) {
-            getKeyFrameMetaByRawValue(vertexKeyFrameMeta, rot.y);
-            shaderCacheId |= 1 << 17;
-            marcos.push(['ROT_Y_LIFETIME', 1]);
-        }
-    }
-    if (rot === null || rot === void 0 ? void 0 : rot.asRotation) {
-        marcos.push(['ROT_LIFETIME_AS_MOVEMENT', 1]);
-        shaderCacheId |= 1 << 18;
-    }
-    getKeyFrameMetaByRawValue(vertexKeyFrameMeta, positionOverLifetime === null || positionOverLifetime === void 0 ? void 0 : positionOverLifetime.gravityOverLifetime);
-    var forceOpt = positionOverLifetime === null || positionOverLifetime === void 0 ? void 0 : positionOverLifetime.forceTarget;
-    if (forceOpt) {
-        marcos.push(['FINAL_TARGET', true]);
-        shaderCacheId |= 1 << 19;
-        getKeyFrameMetaByRawValue(vertexKeyFrameMeta, positionOverLifetime.forceCurve);
-    }
-    var HALF_FLOAT = detail.halfFloatTexture;
-    if (HALF_FLOAT && fragmentKeyFrameMeta.max) {
-        shaderCacheId |= 1 << 20;
-    }
-    var maxVertexUniforms = detail.maxVertexUniforms;
-    var vertexCurveTexture = vertexKeyFrameMeta.max + vertexKeyFrameMeta.curves.length - 32 > maxVertexUniforms;
-    if (getConfig(RENDER_PREFER_LOOKUP_TEXTURE)) {
-        vertexCurveTexture = true;
-    }
-    if (level === 2) {
-        vertexKeyFrameMeta.max = -1;
-        // vertexKeyFrameMeta.index = getSlot(vertexKeyFrameMeta.index);
-        if (fragmentKeyFrameMeta.index > 0) {
-            fragmentKeyFrameMeta.max = -1;
-            // fragmentKeyFrameMeta.index = getSlot(fragmentKeyFrameMeta.index);
-        }
-    }
-    if (vertexCurveTexture && HALF_FLOAT && enableVertexTexture) {
-        vertex_lookup_texture = 1;
-    }
-    var shaderCache = ['-p:', renderMode, shaderCacheId, vertexKeyFrameMeta.index, vertexKeyFrameMeta.max, fragmentKeyFrameMeta.index, fragmentKeyFrameMeta.max].join('+');
-    var shader = {
-        fragment: particleFrag,
-        vertex: "#define LOOKUP_TEXTURE_CURVE ".concat(vertex_lookup_texture, "\n").concat(particleVert),
-        shared: true,
-        cacheId: shaderCache,
-        marcos: marcos,
-        name: "particle#".concat(item.name),
-    };
-    if (filter) {
-        shader.fragment = shader.fragment.replace(/#pragma\s+FILTER_FRAG/, (_d = filter.fragment) !== null && _d !== void 0 ? _d : '');
-        shader.vertex = shader.vertex.replace(/#pragma\s+FILTER_VERT/, filter.vertex || 'void filterMain(float t){}\n');
-        shader.cacheId += '+' + ((_e = props.filter) === null || _e === void 0 ? void 0 : _e.name);
-    }
-    marcos.push(['VERT_CURVE_VALUE_COUNT', vertexKeyFrameMeta.index], ['FRAG_CURVE_VALUE_COUNT', fragmentKeyFrameMeta.index], ['VERT_MAX_KEY_FRAME_COUNT', vertexKeyFrameMeta.max], ['FRAG_MAX_KEY_FRAME_COUNT', fragmentKeyFrameMeta.max]);
-    return { shader: shader, vertex: vertexKeyFrameMeta.index, fragment: fragmentKeyFrameMeta.index };
-}
-function modifyMaxKeyframeShader(shader, maxVertex, maxFrag) {
-    var _a;
-    var shaderIds = (_a = shader.cacheId) === null || _a === void 0 ? void 0 : _a.split('+');
-    shaderIds[3] = maxVertex;
-    shaderIds[5] = maxFrag;
-    shader.cacheId = shaderIds.join('+');
-    if (!shader.marcos) {
-        return;
-    }
-    for (var i = 0; i < shader.marcos.length; i++) {
-        var marco = shader.marcos[i];
-        if (marco[0] === 'VERT_CURVE_VALUE_COUNT') {
-            marco[1] = maxVertex;
-        }
-        else if (marco[0] === 'FRAG_CURVE_VALUE_COUNT') {
-            marco[1] = maxFrag;
-            break;
-        }
-    }
-}
 
 var LinkNode = /** @class */ (function () {
     function LinkNode(content) {
@@ -25821,11 +19693,11 @@ var TrailMesh = /** @class */ (function () {
         var uWidthOverTrail = widthOverTrail.toUniform(keyFrameMeta);
         marcos.push(['VERT_CURVE_VALUE_COUNT', keyFrameMeta.index], ['VERT_MAX_KEY_FRAME_COUNT', keyFrameMeta.max]);
         if (enableVertexTexture && lookUpTexture) {
-            var tex = generateHalfFloatTexture(engine, CurveValue.getAllData(keyFrameMeta, true), keyFrameMeta.index, 1);
+            var tex = generateHalfFloatTexture(engine, ValueGetter.getAllData(keyFrameMeta, true), keyFrameMeta.index, 1);
             uniformValues.uVCurveValueTexture = tex;
         }
         else {
-            uniformValues.uVCurveValues = CurveValue.getAllData(keyFrameMeta);
+            uniformValues.uVCurveValues = ValueGetter.getAllData(keyFrameMeta);
         }
         var vertex = createShaderWithMarcos(marcos, trailVert, exports.ShaderType.vertex, level);
         var fragment = createShaderWithMarcos(marcos, particleFrag, exports.ShaderType.fragment, level);
@@ -25904,8 +19776,10 @@ var TrailMesh = /** @class */ (function () {
             }
             else if (name === 'uVCurveValues') {
                 var array = [];
-                array.push(new Vector4$1(value[0], value[1], value[2], value[3]));
-                array.push(new Vector4$1(value[4], value[5], value[6], value[7]));
+                for (var i = 0; i < value.length; i = i + 4) {
+                    var v = new Vector4$1(value[i], value[i + 1], value[i + 2], value[i + 3]);
+                    array.push(v);
+                }
                 material.setVector4Array(name, array);
             }
             else {
@@ -26506,37 +20380,18 @@ var ParticleSystem = /** @class */ (function () {
         // this.parentTransform = transform;
     };
     ParticleSystem.prototype.getTextures = function () {
-        var e_1, _a, e_2, _b;
         var textures = [];
-        try {
-            // @ts-expect-error
-            for (var _c = __values$1(Object.values(this.particleMesh.mesh.material.textures)), _d = _c.next(); !_d.done; _d = _c.next()) {
-                var texture = _d.value;
-                textures.push(texture);
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
-            }
-            finally { if (e_1) throw e_1.error; }
-        }
+        // @ts-expect-error textures 是否可以考虑挂在 Material 上
+        var particleMeshTextures = this.particleMesh.mesh.material.textures;
+        Object.keys(particleMeshTextures).forEach(function (key) {
+            textures.push(particleMeshTextures[key]);
+        });
         if (this.trailMesh) {
-            try {
-                // @ts-expect-error
-                for (var _e = __values$1(Object.values(this.trailMesh.mesh.material.textures)), _f = _e.next(); !_f.done; _f = _e.next()) {
-                    var texture = _f.value;
-                    textures.push(texture);
-                }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
-                }
-                finally { if (e_2) throw e_2.error; }
-            }
+            // @ts-expect-error 同上
+            var trailMeshTextures_1 = this.trailMesh.mesh.material.textures;
+            Object.keys(trailMeshTextures_1).forEach(function (key) {
+                textures.push(trailMeshTextures_1[key]);
+            });
         }
         return textures;
     };
@@ -27022,6 +20877,9 @@ var ParticleVFXItem = /** @class */ (function (_super) {
     });
     ParticleVFXItem.prototype.onConstructed = function (props) {
         this.particle = props.content;
+        if (this.composition) {
+            this._content = new ParticleSystem(this.particle, this.composition.getRendererOptions(), this);
+        }
     };
     ParticleVFXItem.prototype.onLifetimeBegin = function (composition, particleSystem) {
         var _this = this;
@@ -27082,8 +20940,12 @@ var ParticleVFXItem = /** @class */ (function (_super) {
         }
     };
     ParticleVFXItem.prototype.doCreateContent = function (composition) {
-        assertExist(this.particle);
-        return new ParticleSystem(this.particle, composition.getRendererOptions(), this);
+        if (!this.content) {
+            return new ParticleSystem(this.particle, composition.getRendererOptions(), this);
+        }
+        else {
+            return this.content;
+        }
     };
     ParticleVFXItem.prototype.isEnded = function (now) {
         return _super.prototype.isEnded.call(this, now) && this.destroyed;
@@ -27122,6 +20984,687 @@ var ParticleVFXItem = /** @class */ (function (_super) {
     };
     return ParticleVFXItem;
 }(VFXItem));
+var particleUniformTypeMap = {
+    'uSprite': 'vec4',
+    'uParams': 'vec4',
+    'uAcceleration': 'vec4',
+    'uGravityModifierValue': 'vec4',
+    'uOpacityOverLifetimeValue': 'vec4',
+    'uRXByLifeTimeValue': 'vec4',
+    'uRYByLifeTimeValue': 'vec4',
+    'uRZByLifeTimeValue': 'vec4',
+    'uLinearXByLifetimeValue': 'vec4',
+    'uLinearYByLifetimeValue': 'vec4',
+    'uLinearZByLifetimeValue': 'vec4',
+    'uSpeedLifetimeValue': 'vec4',
+    'uOrbXByLifetimeValue': 'vec4',
+    'uOrbYByLifetimeValue': 'vec4',
+    'uOrbZByLifetimeValue': 'vec4',
+    'uSizeByLifetimeValue': 'vec4',
+    'uSizeYByLifetimeValue': 'vec4',
+    'uColorParams': 'vec4',
+    'uFSprite': 'vec4',
+    'uPreviewColor': 'vec4',
+    'uVCurveValues': 'vec4Array',
+    'uFCurveValues': 'vec4',
+    'uFinalTarget': 'vec3',
+    'uForceCurve': 'vec4',
+    'uOrbCenter': 'vec3',
+    'uTexOffset': 'vec2',
+    'uPeriodValue': 'vec4',
+    'uMovementValue': 'vec4',
+    'uStrengthValue': 'vec4',
+    'uWaveParams': 'vec4',
+};
+
+var ParticleMesh = /** @class */ (function () {
+    function ParticleMesh(props, rendererOptions) {
+        var _a, _b, _c, _d;
+        this.particleCount = 0;
+        var engine = rendererOptions.composition.getEngine();
+        var env = ((_a = engine.renderer) !== null && _a !== void 0 ? _a : {}).env;
+        var speedOverLifetime = props.speedOverLifetime, colorOverLifetime = props.colorOverLifetime, linearVelOverLifetime = props.linearVelOverLifetime, orbitalVelOverLifetime = props.orbitalVelOverLifetime, sizeOverLifetime = props.sizeOverLifetime, rotationOverLifetime = props.rotationOverLifetime, sprite = props.sprite, gravityModifier = props.gravityModifier, maxCount = props.maxCount, duration = props.duration, textureFlip = props.textureFlip, useSprite = props.useSprite, name = props.name, filter = props.filter, gravity = props.gravity, forceTarget = props.forceTarget, side = props.side, occlusion = props.occlusion, anchor = props.anchor, blending = props.blending, maskMode = props.maskMode, mask = props.mask, transparentOcclusion = props.transparentOcclusion, listIndex = props.listIndex, meshSlots = props.meshSlots, _e = props.renderMode, renderMode = _e === void 0 ? 0 : _e, _f = props.diffuse, diffuse = _f === void 0 ? Texture.createWithData(engine) : _f;
+        var detail = engine.gpuCapability.detail;
+        var halfFloatTexture = detail.halfFloatTexture, maxVertexUniforms = detail.maxVertexUniforms;
+        var marcos = [
+            ['RENDER_MODE', +renderMode],
+            ['PRE_MULTIPLY_ALPHA', false],
+            ['ENV_EDITOR', env === PLAYER_OPTIONS_ENV_EDITOR],
+        ];
+        var level = engine.gpuCapability.level;
+        var vertexKeyFrameMeta = createKeyFrameMeta();
+        var fragmentKeyFrameMeta = createKeyFrameMeta();
+        var enableVertexTexture = maxVertexUniforms > 0;
+        var uniformValues = {};
+        var vertex_lookup_texture = 0;
+        var shaderCacheId = 0;
+        var particleDefine;
+        var useOrbitalVel;
+        this.useSprite = useSprite;
+        if (enableVertexTexture) {
+            marcos.push(['ENABLE_VERTEX_TEXTURE', true]);
+        }
+        if (speedOverLifetime) {
+            marcos.push(['SPEED_OVER_LIFETIME', true]);
+            shaderCacheId |= 1 << 1;
+            uniformValues.uSpeedLifetimeValue = speedOverLifetime.toUniform(vertexKeyFrameMeta);
+        }
+        if (sprite === null || sprite === void 0 ? void 0 : sprite.animate) {
+            marcos.push(['USE_SPRITE', true]);
+            shaderCacheId |= 1 << 2;
+            uniformValues.uFSprite = uniformValues.uSprite = new Float32Array([sprite.col, sprite.row, sprite.total, sprite.blend ? 1 : 0]);
+            this.useSprite = true;
+        }
+        if (filter && filter.name !== FILTER_NAME_NONE) {
+            marcos.push(['USE_FILTER', true]);
+            shaderCacheId |= 1 << 3;
+            var filterDefine = createFilter(filter, rendererOptions.composition);
+            if (!filterDefine.particle) {
+                throw new Error("particle filter ".concat(filter.name, " not implement"));
+            }
+            particleDefine = filterDefine.particle;
+            Object.keys((_b = particleDefine.uniforms) !== null && _b !== void 0 ? _b : {}).forEach(function (uName) {
+                var _a;
+                var getter = (_a = particleDefine.uniforms) === null || _a === void 0 ? void 0 : _a[uName];
+                if (uniformValues[uName]) {
+                    throw new Error('conflict uniform name:' + uName);
+                }
+                uniformValues[uName] = getter === null || getter === void 0 ? void 0 : getter.toUniform(vertexKeyFrameMeta);
+            });
+            Object.keys((_c = particleDefine.uniformValues) !== null && _c !== void 0 ? _c : {}).forEach(function (uName) {
+                var _a;
+                var val = (_a = particleDefine.uniformValues) === null || _a === void 0 ? void 0 : _a[uName];
+                if (uniformValues[uName]) {
+                    throw new Error('conflict uniform name:' + uName);
+                }
+                uniformValues[uName] = val;
+            });
+        }
+        if (colorOverLifetime === null || colorOverLifetime === void 0 ? void 0 : colorOverLifetime.color) {
+            marcos.push(['COLOR_OVER_LIFETIME', true]);
+            shaderCacheId |= 1 << 4;
+            uniformValues.uColorOverLifetime = colorOverLifetime.color instanceof Texture ? colorOverLifetime.color : Texture.createWithData(engine, imageDataFromGradient(colorOverLifetime.color));
+        }
+        if (colorOverLifetime === null || colorOverLifetime === void 0 ? void 0 : colorOverLifetime.opacity) {
+            uniformValues.uOpacityOverLifetimeValue = colorOverLifetime.opacity.toUniform(vertexKeyFrameMeta);
+        }
+        else {
+            uniformValues.uOpacityOverLifetimeValue = createValueGetter(1).toUniform(vertexKeyFrameMeta);
+        }
+        ['x', 'y', 'z'].forEach(function (pro, i) {
+            var defL = 0;
+            var defO = 0;
+            if (linearVelOverLifetime === null || linearVelOverLifetime === void 0 ? void 0 : linearVelOverLifetime[pro]) {
+                uniformValues["uLinear".concat(pro.toUpperCase(), "ByLifetimeValue")] = linearVelOverLifetime[pro].toUniform(vertexKeyFrameMeta);
+                defL = 1;
+                shaderCacheId |= 1 << (7 + i);
+                linearVelOverLifetime.enabled = true;
+            }
+            marcos.push(["LINEAR_VEL_".concat(pro.toUpperCase()), defL]);
+            if (orbitalVelOverLifetime === null || orbitalVelOverLifetime === void 0 ? void 0 : orbitalVelOverLifetime[pro]) {
+                uniformValues["uOrb".concat(pro.toUpperCase(), "ByLifetimeValue")] = orbitalVelOverLifetime[pro].toUniform(vertexKeyFrameMeta);
+                defO = 1;
+                shaderCacheId |= 1 << (10 + i);
+                useOrbitalVel = true;
+                orbitalVelOverLifetime.enabled = true;
+            }
+            marcos.push(["ORB_VEL_".concat(pro.toUpperCase()), defO]);
+        });
+        if (linearVelOverLifetime === null || linearVelOverLifetime === void 0 ? void 0 : linearVelOverLifetime.asMovement) {
+            marcos.push(['AS_LINEAR_MOVEMENT', true]);
+            shaderCacheId |= 1 << 5;
+        }
+        if (useOrbitalVel) {
+            if (orbitalVelOverLifetime === null || orbitalVelOverLifetime === void 0 ? void 0 : orbitalVelOverLifetime.asRotation) {
+                marcos.push(['AS_ORBITAL_MOVEMENT', true]);
+                shaderCacheId |= 1 << 6;
+            }
+            uniformValues.uOrbCenter = new Float32Array((orbitalVelOverLifetime === null || orbitalVelOverLifetime === void 0 ? void 0 : orbitalVelOverLifetime.center) || [0, 0, 0]);
+        }
+        uniformValues.uSizeByLifetimeValue = sizeOverLifetime === null || sizeOverLifetime === void 0 ? void 0 : sizeOverLifetime.x.toUniform(vertexKeyFrameMeta);
+        if (sizeOverLifetime === null || sizeOverLifetime === void 0 ? void 0 : sizeOverLifetime.separateAxes) {
+            marcos.push(['SIZE_Y_BY_LIFE', 1]);
+            shaderCacheId |= 1 << 14;
+            uniformValues.uSizeYByLifetimeValue = (_d = sizeOverLifetime === null || sizeOverLifetime === void 0 ? void 0 : sizeOverLifetime.y) === null || _d === void 0 ? void 0 : _d.toUniform(vertexKeyFrameMeta);
+        }
+        if (rotationOverLifetime === null || rotationOverLifetime === void 0 ? void 0 : rotationOverLifetime.z) {
+            uniformValues.uRZByLifeTimeValue = rotationOverLifetime.z.toUniform(vertexKeyFrameMeta);
+            shaderCacheId |= 1 << 15;
+            marcos.push(['ROT_Z_LIFETIME', 1]);
+        }
+        if (rotationOverLifetime === null || rotationOverLifetime === void 0 ? void 0 : rotationOverLifetime.x) {
+            uniformValues.uRXByLifeTimeValue = rotationOverLifetime.x.toUniform(vertexKeyFrameMeta);
+            shaderCacheId |= 1 << 16;
+            marcos.push(['ROT_X_LIFETIME', 1]);
+        }
+        if (rotationOverLifetime === null || rotationOverLifetime === void 0 ? void 0 : rotationOverLifetime.y) {
+            uniformValues.uRYByLifeTimeValue = rotationOverLifetime.y.toUniform(vertexKeyFrameMeta);
+            shaderCacheId |= 1 << 17;
+            marcos.push(['ROT_Y_LIFETIME', 1]);
+        }
+        if (rotationOverLifetime === null || rotationOverLifetime === void 0 ? void 0 : rotationOverLifetime.asRotation) {
+            marcos.push(['ROT_LIFETIME_AS_MOVEMENT', 1]);
+            shaderCacheId |= 1 << 18;
+        }
+        uniformValues.uGravityModifierValue = gravityModifier.toUniform(vertexKeyFrameMeta);
+        if (forceTarget) {
+            marcos.push(['FINAL_TARGET', true]);
+            shaderCacheId |= 1 << 19;
+            uniformValues.uFinalTarget = new Float32Array(forceTarget.target || [0, 0, 0]);
+            uniformValues.uForceCurve = forceTarget.curve.toUniform(vertexKeyFrameMeta);
+        }
+        if (halfFloatTexture && fragmentKeyFrameMeta.max) {
+            shaderCacheId |= 1 << 20;
+            uniformValues.uFCurveValueTexture = generateHalfFloatTexture(engine, ValueGetter.getAllData(fragmentKeyFrameMeta, true), fragmentKeyFrameMeta.index, 1);
+        }
+        else {
+            uniformValues.uFCurveValues = ValueGetter.getAllData(fragmentKeyFrameMeta);
+        }
+        var vertexCurveTexture = vertexKeyFrameMeta.max + vertexKeyFrameMeta.curves.length - 32 > maxVertexUniforms;
+        // if (getConfig(RENDER_PREFER_LOOKUP_TEXTURE)) {
+        //   vertexCurveTexture = true;
+        // }
+        if (level === 2) {
+            vertexKeyFrameMeta.max = -1;
+            vertexKeyFrameMeta.index = meshSlots ? meshSlots[0] : getSlot(vertexKeyFrameMeta.index);
+            if (fragmentKeyFrameMeta.index > 0) {
+                fragmentKeyFrameMeta.max = -1;
+                fragmentKeyFrameMeta.index = meshSlots ? meshSlots[1] : getSlot(fragmentKeyFrameMeta.index);
+            }
+        }
+        if (vertexCurveTexture && halfFloatTexture && enableVertexTexture) {
+            var tex = generateHalfFloatTexture(engine, ValueGetter.getAllData(vertexKeyFrameMeta, true), vertexKeyFrameMeta.index, 1);
+            uniformValues.uVCurveValueTexture = tex;
+            vertex_lookup_texture = 1;
+        }
+        else {
+            uniformValues.uVCurveValues = ValueGetter.getAllData(vertexKeyFrameMeta);
+        }
+        var shaderCache = ['-p:', renderMode, shaderCacheId, vertexKeyFrameMeta.index, vertexKeyFrameMeta.max, fragmentKeyFrameMeta.index, fragmentKeyFrameMeta.max].join('+');
+        marcos.push(['VERT_CURVE_VALUE_COUNT', vertexKeyFrameMeta.index], ['FRAG_CURVE_VALUE_COUNT', fragmentKeyFrameMeta.index], ['VERT_MAX_KEY_FRAME_COUNT', vertexKeyFrameMeta.max], ['FRAG_MAX_KEY_FRAME_COUNT', fragmentKeyFrameMeta.max]);
+        var fragment = filter ? particleFrag.replace(/#pragma\s+FILTER_FRAG/, particleDefine.fragment) : particleFrag;
+        var originalVertex = "#define LOOKUP_TEXTURE_CURVE ".concat(vertex_lookup_texture, "\n").concat(particleVert);
+        var vertex = filter ? originalVertex.replace(/#pragma\s+FILTER_VERT/, particleDefine.vertex || 'void filterMain(float t){}\n') : originalVertex;
+        var shader = {
+            fragment: createShaderWithMarcos(marcos, fragment, exports.ShaderType.fragment, level),
+            vertex: createShaderWithMarcos(marcos, vertex, exports.ShaderType.vertex, level),
+            glslVersion: level === 1 ? exports.GLSLVersion.GLSL1 : exports.GLSLVersion.GLSL3,
+            shared: true,
+            cacheId: shaderCache,
+            marcos: marcos,
+            name: "particle#".concat(name),
+        };
+        if (filter) {
+            shader.cacheId += filter.name;
+        }
+        var mtlOptions = {
+            shader: shader,
+            uniformSemantics: {
+                effects_MatrixV: 'VIEW',
+                effects_MatrixVP: 'VIEWPROJECTION',
+                uEditorTransform: 'EDITOR_TRANSFORM',
+                effects_ObjectToWorld: 'MODEL',
+            },
+        };
+        var preMulAlpha = getPreMultiAlpha(blending);
+        uniformValues.uTexOffset = new Float32Array(diffuse ? [1 / diffuse.getWidth(), 1 / diffuse.getHeight()] : [0, 0]);
+        uniformValues.uMaskTex = diffuse;
+        uniformValues.uColorParams = new Float32Array([diffuse ? 1 : 0, +preMulAlpha, 0, +(!!occlusion && !transparentOcclusion)]);
+        uniformValues.uParams = [0, duration, 0, 0];
+        uniformValues.uAcceleration = [(gravity === null || gravity === void 0 ? void 0 : gravity[0]) || 0, (gravity === null || gravity === void 0 ? void 0 : gravity[1]) || 0, (gravity === null || gravity === void 0 ? void 0 : gravity[2]) || 0, 0];
+        // mtlOptions.uniformValues = uniformValues;
+        var material = Material.create(engine, mtlOptions);
+        material.blending = true;
+        material.depthTest = true;
+        material.depthMask = !!(occlusion);
+        material.stencilRef = mask ? [mask, mask] : undefined;
+        setMaskMode(material, maskMode);
+        setBlendMode(material, blending);
+        setSideMode(material, side);
+        Object.keys(uniformValues).map(function (name) {
+            var value = uniformValues[name];
+            if (value instanceof Texture) {
+                material.setTexture(name, value);
+                return;
+            }
+            var res = [];
+            switch (particleUniformTypeMap[name]) {
+                case 'vec4':
+                    material.setVector4(name, Vector4$1.fromArray(value));
+                    break;
+                case 'vec3':
+                    material.setVector3(name, Vector3.fromArray(value));
+                    break;
+                case 'vec2':
+                    material.setVector2(name, Vector2.fromArray(value));
+                    break;
+                case 'vec4Array':
+                    for (var i = 0; i < value.length; i = i + 4) {
+                        var v = new Vector4$1(value[i], value[i + 1], value[i + 2], value[i + 3]);
+                        res.push(v);
+                    }
+                    material.setVector4Array(name, res);
+                    res.length = 0;
+                    break;
+                default:
+                    console.warn("uniform ".concat(name, "'s type not in typeMap"));
+            }
+        });
+        material.setVector3('emissionColor', new Vector3(0, 0, 0));
+        material.setFloat('emissionIntensity', 0.0);
+        var geometry = Geometry.create(engine, generateGeometryProps(maxCount * 4, this.useSprite, "particle#".concat(name)));
+        var mesh = Mesh.create(engine, {
+            name: "MParticle_".concat(name),
+            priority: listIndex,
+            material: material,
+            geometry: geometry,
+        });
+        this.anchor = anchor;
+        this.mesh = mesh;
+        this.geometry = mesh.firstGeometry();
+        this.forceTarget = forceTarget;
+        this.sizeOverLifetime = sizeOverLifetime;
+        this.speedOverLifetime = speedOverLifetime;
+        this.linearVelOverLifetime = linearVelOverLifetime;
+        this.orbitalVelOverLifetime = orbitalVelOverLifetime;
+        this.orbitalVelOverLifetime = orbitalVelOverLifetime;
+        this.gravityModifier = gravityModifier;
+        this.maxCount = maxCount;
+        this.duration = duration;
+        this.textureOffsets = textureFlip ? [0, 0, 1, 0, 0, 1, 1, 1] : [0, 1, 0, 0, 1, 1, 1, 0];
+    }
+    Object.defineProperty(ParticleMesh.prototype, "time", {
+        get: function () {
+            var value = this.mesh.material.getVector4('uParams');
+            return value.x;
+        },
+        set: function (v) {
+            this.mesh.material.setVector4('uParams', new Vector4$1(+v, this.duration, 0, 0));
+        },
+        enumerable: false,
+        configurable: true
+    });
+    ParticleMesh.prototype.getPointColor = function (index) {
+        var data = this.geometry.getAttributeData('aRot');
+        var i = index * 32 + 4;
+        return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+    };
+    /**
+     * 待废弃
+     * @deprecated - 使用 `particle-system.getPointPosition` 替代
+     */
+    ParticleMesh.prototype.getPointPosition = function (index) {
+        var geo = this.geometry;
+        var posIndex = index * 48;
+        var posData = geo.getAttributeData('aPos');
+        var offsetData = geo.getAttributeData('aOffset');
+        var time = this.time - offsetData[index * 16 + 2];
+        var pointDur = offsetData[index * 16 + 3];
+        var mtl = this.mesh.material;
+        var acc = mtl.getVector4('uAcceleration').toVector3();
+        var pos = Vector3.fromArray(posData, posIndex);
+        var vel = Vector3.fromArray(posData, posIndex + 3);
+        var ret = calculateTranslation(new Vector3(), this, acc, time, pointDur, pos, vel);
+        if (this.forceTarget) {
+            var target = mtl.getVector3('uFinalTarget');
+            var life = this.forceTarget.curve.getValue(time / pointDur);
+            var dl = 1 - life;
+            ret.x = ret.x * dl + target.x * life;
+            ret.y = ret.y * dl + target.y * life;
+            ret.z = ret.z * dl + target.z * life;
+        }
+        return ret;
+    };
+    ParticleMesh.prototype.clearPoints = function () {
+        this.resetGeometryData(this.geometry);
+        this.particleCount = 0;
+        this.geometry.setDrawCount(0);
+        this.maxParticleBufferCount = 0;
+    };
+    ParticleMesh.prototype.resetGeometryData = function (geometry) {
+        var names = geometry.getAttributeNames();
+        var index = geometry.getIndexData();
+        for (var i = 0; i < names.length; i++) {
+            var name_1 = names[i];
+            var data = geometry.getAttributeData(name_1);
+            if (data) {
+                // @ts-expect-error
+                geometry.setAttributeData(name_1, new data.constructor(0));
+            }
+        }
+        // @ts-expect-error
+        geometry.setIndexData(new index.constructor(0));
+    };
+    ParticleMesh.prototype.minusTime = function (time) {
+        var data = this.geometry.getAttributeData('aOffset');
+        for (var i = 0; i < data.length; i += 4) {
+            data[i + 2] -= time;
+        }
+        this.geometry.setAttributeData('aOffset', data);
+        this.time -= time;
+    };
+    ParticleMesh.prototype.removePoint = function (index) {
+        if (index < this.particleCount) {
+            this.geometry.setAttributeSubData('aOffset', index * 16, new Float32Array(16));
+        }
+    };
+    ParticleMesh.prototype.setPoint = function (point, index) {
+        var maxCount = this.maxCount;
+        if (index < maxCount) {
+            var particleCount = index + 1;
+            var vertexCount_1 = particleCount * 4;
+            var geometry_1 = this.geometry;
+            var increaseBuffer_1 = particleCount > this.maxParticleBufferCount;
+            var inc_1 = 1;
+            if (this.particleCount > 300) {
+                inc_1 = (this.particleCount + 100) / this.particleCount;
+            }
+            else if (this.particleCount > 100) {
+                inc_1 = 1.4;
+            }
+            else if (this.particleCount > 0) {
+                inc_1 = 2;
+            }
+            var pointData_1 = {
+                aPos: new Float32Array(48),
+                aRot: new Float32Array(32),
+                aOffset: new Float32Array(16),
+            };
+            var useSprite = this.useSprite;
+            if (useSprite) {
+                pointData_1.aSprite = new Float32Array(12);
+            }
+            var tempPos = new Vector3();
+            var tempQuat = new Quaternion();
+            var scale = new Vector3(1, 1, 1);
+            point.transform.assignWorldTRS(tempPos, tempQuat, scale);
+            var tempEuler = Transform.getRotation(tempQuat, new Euler());
+            var position = tempPos.toArray();
+            var rotation = tempEuler.toArray();
+            var offsets = this.textureOffsets;
+            var off = [0, 0, point.delay, point.lifetime];
+            var wholeUV = [0, 0, 1, 1];
+            var vel = point.vel;
+            var color = point.color;
+            var sizeOffsets = [-.5, .5, -.5, -.5, .5, .5, .5, -.5];
+            var seed = Math.random();
+            var sprite = void 0;
+            if (useSprite) {
+                sprite = point.sprite;
+            }
+            for (var j = 0; j < 4; j++) {
+                var offset = j * 2;
+                var j3 = j * 3;
+                var j4 = j * 4;
+                var j12 = j * 12;
+                var j8 = j * 8;
+                pointData_1.aPos.set(position, j12);
+                vel.fill(pointData_1.aPos, j12 + 3);
+                pointData_1.aRot.set(rotation, j8);
+                pointData_1.aRot[j8 + 3] = seed;
+                pointData_1.aRot.set(color, j8 + 4);
+                if (useSprite) {
+                    // @ts-expect-error
+                    pointData_1.aSprite.set(sprite, j3);
+                }
+                var uv = point.uv || wholeUV;
+                if (uv) {
+                    var uvy = useSprite ? (1 - offsets[offset + 1]) : offsets[offset + 1];
+                    off[0] = uv[0] + offsets[offset] * uv[2];
+                    off[1] = uv[1] + uvy * uv[3];
+                }
+                pointData_1.aOffset.set(off, j4);
+                var ji = (j + j);
+                var sx = (sizeOffsets[ji] - this.anchor.x) * scale.x;
+                var sy = (sizeOffsets[ji + 1] - this.anchor.y) * scale.y;
+                for (var k = 0; k < 3; k++) {
+                    pointData_1.aPos[j12 + 6 + k] = point.dirX.getElement(k) * sx;
+                    pointData_1.aPos[j12 + 9 + k] = point.dirY.getElement(k) * sy;
+                }
+            }
+            var indexData = new Uint16Array([0, 1, 2, 2, 1, 3].map(function (x) { return x + index * 4; }));
+            if (increaseBuffer_1) {
+                var baseIndexData = geometry_1.getIndexData();
+                var idx = enlargeBuffer(baseIndexData, particleCount * 6, inc_1, maxCount * 6);
+                idx.set(indexData, index * 6);
+                geometry_1.setIndexData(idx);
+                this.maxParticleBufferCount = idx.length / 6;
+            }
+            else {
+                geometry_1.setIndexSubData(index * 6, indexData);
+            }
+            Object.keys(pointData_1).forEach(function (name) {
+                var data = pointData_1[name];
+                var attrSize = geometry_1.getAttributeStride(name) / Float32Array.BYTES_PER_ELEMENT;
+                if (increaseBuffer_1) {
+                    var baseData = geometry_1.getAttributeData(name);
+                    var geoData = enlargeBuffer(baseData, vertexCount_1 * attrSize, inc_1, maxCount * 4 * attrSize);
+                    geoData.set(data, data.length * index);
+                    geometry_1.setAttributeData(name, geoData);
+                }
+                else {
+                    geometry_1.setAttributeSubData(name, data.length * index, data);
+                }
+            });
+            this.particleCount = Math.max(particleCount, this.particleCount);
+            geometry_1.setDrawCount(this.particleCount * 6);
+        }
+    };
+    return ParticleMesh;
+}());
+var gl2UniformSlots = [10, 32, 64, 160];
+function getSlot(count) {
+    for (var w = 0; w < gl2UniformSlots.length; w++) {
+        var slot = gl2UniformSlots[w];
+        if (slot > count) {
+            return slot;
+        }
+    }
+    return count || gl2UniformSlots[0];
+}
+function generateGeometryProps(maxVertex, useSprite, name) {
+    var bpe = Float32Array.BYTES_PER_ELEMENT;
+    var j12 = bpe * 12;
+    var attributes = {
+        aPos: { size: 3, offset: 0, stride: j12, data: new Float32Array(0) },
+        aVel: { size: 3, offset: 3 * bpe, stride: j12, dataSource: 'aPos' },
+        aDirX: { size: 3, offset: 6 * bpe, stride: j12, dataSource: 'aPos' },
+        aDirY: { size: 3, offset: 9 * bpe, stride: j12, dataSource: 'aPos' },
+        //
+        aRot: { size: 3, offset: 0, stride: 8 * bpe, data: new Float32Array(0) },
+        aSeed: { size: 1, offset: 3 * bpe, stride: 8 * bpe, dataSource: 'aRot' },
+        aColor: { size: 4, offset: 4 * bpe, stride: 8 * bpe, dataSource: 'aRot' },
+        //
+        aOffset: { size: 4, stride: 4 * bpe, data: new Float32Array(0) },
+    };
+    if (useSprite) {
+        attributes['aSprite'] = { size: 3, data: new Float32Array(0) };
+    }
+    return { attributes: attributes, indices: { data: new Uint16Array(0) }, name: name, maxVertex: maxVertex };
+}
+function getParticleMeshShader(item, env, gpuCapability) {
+    var _a, _b, _c, _d, _e;
+    if (env === void 0) { env = ''; }
+    var props = item.content;
+    var renderMode = +(((_a = props.renderer) === null || _a === void 0 ? void 0 : _a.renderMode) || 0);
+    var marcos = [
+        ['RENDER_MODE', renderMode],
+        ['PRE_MULTIPLY_ALPHA', false],
+        ['ENV_EDITOR', env === PLAYER_OPTIONS_ENV_EDITOR],
+    ];
+    var level = gpuCapability.level, detail = gpuCapability.detail;
+    var vertexKeyFrameMeta = createKeyFrameMeta();
+    var fragmentKeyFrameMeta = createKeyFrameMeta();
+    var enableVertexTexture = detail.maxVertexUniforms > 0;
+    var speedOverLifetime = ((_b = props.positionOverLifetime) !== null && _b !== void 0 ? _b : {}).speedOverLifetime;
+    var vertex_lookup_texture = 0;
+    var shaderCacheId = 0;
+    if (enableVertexTexture) {
+        marcos.push(['ENABLE_VERTEX_TEXTURE', true]);
+    }
+    if (speedOverLifetime) {
+        marcos.push(['SPEED_OVER_LIFETIME', true]);
+        shaderCacheId |= 1 << 1;
+        getKeyFrameMetaByRawValue(vertexKeyFrameMeta, speedOverLifetime);
+    }
+    var sprite = props.textureSheetAnimation;
+    if (sprite && sprite.animate) {
+        marcos.push(['USE_SPRITE', true]);
+        shaderCacheId |= 1 << 2;
+    }
+    var filter = undefined;
+    if (props.filter && props.filter.name !== FILTER_NAME_NONE) {
+        marcos.push(['USE_FILTER', true]);
+        shaderCacheId |= 1 << 3;
+        var f = createFilterShaders(props.filter).find(function (f) { return f.isParticle; });
+        if (!f) {
+            throw Error("particle filter ".concat(props.filter.name, " not implement"));
+        }
+        filter = f;
+        (_c = f.uniforms) === null || _c === void 0 ? void 0 : _c.forEach(function (val) { return getKeyFrameMetaByRawValue(vertexKeyFrameMeta, val); });
+        // filter = processFilter(props.filter, fragmentKeyFrameMeta, vertexKeyFrameMeta, options);
+    }
+    var colorOverLifetime = props.colorOverLifetime;
+    if (colorOverLifetime && colorOverLifetime.color) {
+        marcos.push(['COLOR_OVER_LIFETIME', true]);
+        shaderCacheId |= 1 << 4;
+    }
+    var opacity = colorOverLifetime && colorOverLifetime.opacity;
+    if (opacity) {
+        getKeyFrameMetaByRawValue(vertexKeyFrameMeta, opacity);
+    }
+    var positionOverLifetime = props.positionOverLifetime;
+    var useOrbitalVel;
+    ['x', 'y', 'z'].forEach(function (pro, i) {
+        var defL = 0;
+        var linearPro = 'linear' + pro.toUpperCase();
+        var orbitalPro = 'orbital' + pro.toUpperCase();
+        if (positionOverLifetime === null || positionOverLifetime === void 0 ? void 0 : positionOverLifetime[linearPro]) {
+            getKeyFrameMetaByRawValue(vertexKeyFrameMeta, positionOverLifetime[linearPro]);
+            defL = 1;
+            shaderCacheId |= 1 << (7 + i);
+        }
+        marcos.push(["LINEAR_VEL_".concat(pro.toUpperCase()), defL]);
+        var defO = 0;
+        if (positionOverLifetime === null || positionOverLifetime === void 0 ? void 0 : positionOverLifetime[orbitalPro]) {
+            getKeyFrameMetaByRawValue(vertexKeyFrameMeta, positionOverLifetime[orbitalPro]);
+            defO = 1;
+            shaderCacheId |= 1 << (10 + i);
+            useOrbitalVel = true;
+        }
+        marcos.push(["ORB_VEL_".concat(pro.toUpperCase()), defO]);
+    });
+    if (positionOverLifetime === null || positionOverLifetime === void 0 ? void 0 : positionOverLifetime.asMovement) {
+        marcos.push(['AS_LINEAR_MOVEMENT', true]);
+        shaderCacheId |= 1 << 5;
+    }
+    if (useOrbitalVel) {
+        if (positionOverLifetime === null || positionOverLifetime === void 0 ? void 0 : positionOverLifetime.asRotation) {
+            marcos.push(['AS_ORBITAL_MOVEMENT', true]);
+            shaderCacheId |= 1 << 6;
+        }
+    }
+    if (props.sizeOverLifetime) {
+        var sizeOverLifetime = props.sizeOverLifetime;
+        var separateAxes = sizeOverLifetime.separateAxes;
+        if (separateAxes) {
+            getKeyFrameMetaByRawValue(vertexKeyFrameMeta, sizeOverLifetime.x);
+            marcos.push(['SIZE_Y_BY_LIFE', 1]);
+            shaderCacheId |= 1 << 14;
+            getKeyFrameMetaByRawValue(vertexKeyFrameMeta, sizeOverLifetime.y);
+        }
+        else {
+            getKeyFrameMetaByRawValue(vertexKeyFrameMeta, sizeOverLifetime.size);
+        }
+    }
+    if (props.rotationOverLifetime) {
+        var rot = props.rotationOverLifetime;
+        if (rot.z) {
+            getKeyFrameMetaByRawValue(vertexKeyFrameMeta, rot === null || rot === void 0 ? void 0 : rot.z);
+            shaderCacheId |= 1 << 15;
+            marcos.push(['ROT_Z_LIFETIME', 1]);
+        }
+        if (rot.separateAxes) {
+            if (rot.x) {
+                getKeyFrameMetaByRawValue(vertexKeyFrameMeta, rot.x);
+                shaderCacheId |= 1 << 16;
+                marcos.push(['ROT_X_LIFETIME', 1]);
+            }
+            if (rot.y) {
+                getKeyFrameMetaByRawValue(vertexKeyFrameMeta, rot.y);
+                shaderCacheId |= 1 << 17;
+                marcos.push(['ROT_Y_LIFETIME', 1]);
+            }
+        }
+        if (rot === null || rot === void 0 ? void 0 : rot.asRotation) {
+            marcos.push(['ROT_LIFETIME_AS_MOVEMENT', 1]);
+            shaderCacheId |= 1 << 18;
+        }
+    }
+    getKeyFrameMetaByRawValue(vertexKeyFrameMeta, positionOverLifetime === null || positionOverLifetime === void 0 ? void 0 : positionOverLifetime.gravityOverLifetime);
+    var forceOpt = positionOverLifetime === null || positionOverLifetime === void 0 ? void 0 : positionOverLifetime.forceTarget;
+    if (forceOpt) {
+        marcos.push(['FINAL_TARGET', true]);
+        shaderCacheId |= 1 << 19;
+        getKeyFrameMetaByRawValue(vertexKeyFrameMeta, positionOverLifetime.forceCurve);
+    }
+    var HALF_FLOAT = detail.halfFloatTexture;
+    if (HALF_FLOAT && fragmentKeyFrameMeta.max) {
+        shaderCacheId |= 1 << 20;
+    }
+    var maxVertexUniforms = detail.maxVertexUniforms;
+    var vertexCurveTexture = vertexKeyFrameMeta.max + vertexKeyFrameMeta.curves.length - 32 > maxVertexUniforms;
+    if (getConfig(RENDER_PREFER_LOOKUP_TEXTURE)) {
+        vertexCurveTexture = true;
+    }
+    if (level === 2) {
+        vertexKeyFrameMeta.max = -1;
+        // vertexKeyFrameMeta.index = getSlot(vertexKeyFrameMeta.index);
+        if (fragmentKeyFrameMeta.index > 0) {
+            fragmentKeyFrameMeta.max = -1;
+            // fragmentKeyFrameMeta.index = getSlot(fragmentKeyFrameMeta.index);
+        }
+    }
+    if (vertexCurveTexture && HALF_FLOAT && enableVertexTexture) {
+        vertex_lookup_texture = 1;
+    }
+    var shaderCache = ['-p:', renderMode, shaderCacheId, vertexKeyFrameMeta.index, vertexKeyFrameMeta.max, fragmentKeyFrameMeta.index, fragmentKeyFrameMeta.max].join('+');
+    var shader = {
+        fragment: particleFrag,
+        vertex: "#define LOOKUP_TEXTURE_CURVE ".concat(vertex_lookup_texture, "\n").concat(particleVert),
+        shared: true,
+        cacheId: shaderCache,
+        marcos: marcos,
+        name: "particle#".concat(item.name),
+    };
+    if (filter) {
+        shader.fragment = shader.fragment.replace(/#pragma\s+FILTER_FRAG/, (_d = filter.fragment) !== null && _d !== void 0 ? _d : '');
+        shader.vertex = shader.vertex.replace(/#pragma\s+FILTER_VERT/, filter.vertex || 'void filterMain(float t){}\n');
+        shader.cacheId += '+' + ((_e = props.filter) === null || _e === void 0 ? void 0 : _e.name);
+    }
+    marcos.push(['VERT_CURVE_VALUE_COUNT', vertexKeyFrameMeta.index], ['FRAG_CURVE_VALUE_COUNT', fragmentKeyFrameMeta.index], ['VERT_MAX_KEY_FRAME_COUNT', vertexKeyFrameMeta.max], ['FRAG_MAX_KEY_FRAME_COUNT', fragmentKeyFrameMeta.max]);
+    return { shader: shader, vertex: vertexKeyFrameMeta.index, fragment: fragmentKeyFrameMeta.index };
+}
+function modifyMaxKeyframeShader(shader, maxVertex, maxFrag) {
+    var _a;
+    var shaderIds = (_a = shader.cacheId) === null || _a === void 0 ? void 0 : _a.split('+');
+    shaderIds[3] = maxVertex;
+    shaderIds[5] = maxFrag;
+    shader.cacheId = shaderIds.join('+');
+    if (!shader.marcos) {
+        return;
+    }
+    for (var i = 0; i < shader.marcos.length; i++) {
+        var marco = shader.marcos[i];
+        if (marco[0] === 'VERT_CURVE_VALUE_COUNT') {
+            marco[1] = maxVertex;
+        }
+        else if (marco[0] === 'FRAG_CURVE_VALUE_COUNT') {
+            marco[1] = maxFrag;
+            break;
+        }
+    }
+}
 
 var ParticleLoader = /** @class */ (function (_super) {
     __extends(ParticleLoader, _super);
@@ -27131,104 +21674,24 @@ var ParticleLoader = /** @class */ (function (_super) {
         return _this;
     }
     ParticleLoader.precompile = function (compositions, renderer, options) {
-        var composition = compositions[0];
-        // 计算Shader编译的最大合集
-        var compileOptions = {
-            rotationOverLifetime: {
-                x: false,
-                y: false,
-                z: false,
-            },
-            positionOverLifetime: {
-                speedOverLifetime: false,
-                linearX: false,
-                linearY: false,
-                linearZ: false,
-                orbitalX: false,
-                orbitalY: false,
-                orbitalZ: false,
-                forceCurve: false,
-            },
-            colorOverLifetime: {
-                opacity: false,
-                color: false,
-            },
-            sizeOverLifetime: {
-                x: false,
-                y: false,
-            },
-        };
-        var defValue = {
-            colorOverLifetime: {
-                opacity: 1,
-                color: [ValueType$1.RGBA_COLOR, [255, 255, 255, 255]],
-            },
-            positionOverLifetime: {
-                speedOverLifetime: 1,
-            },
-            sizeOverLifetime: {
-                x: 1,
-                y: 1,
-            },
-        };
         var gpuCapability = renderer.engine.gpuCapability;
         var level = gpuCapability.level;
         var env = (options !== null && options !== void 0 ? options : {}).env;
         var shaderLibrary = renderer.getShaderLibrary();
-        var pros = [];
         var items = [];
         var shaders = [];
         var maxFragmentCount = 0;
         var maxVertexCount = 0;
-        composition.items.forEach(function (item) {
-            if (exports.Item.isParticle(item)) {
-                items.push(item);
-                assignDefValue(item);
-                if (level === 2) {
-                    Object.keys(compileOptions).forEach(function (name) {
-                        var content = compileOptions[name];
-                        var target = item.content[name];
-                        if (target) {
-                            Object.keys(content).forEach(function (pro) {
-                                // @ts-expect-error
-                                if (target[pro]) {
-                                    content[pro] = true;
-                                    addItem(pros, name);
-                                }
-                            });
-                        }
-                    });
+        // 增加预合成中的粒子处理
+        compositions.forEach(function (comp) {
+            comp.items.forEach(function (item) {
+                if (exports.Item.isParticle(item)) {
+                    items.push(item);
                 }
-            }
+            });
         });
         items.forEach(function (item) {
             var _a, _b;
-            var options = item.content;
-            if (level === 2) {
-                pros.forEach(function (name) {
-                    var content = compileOptions[name];
-                    // @ts-expect-error
-                    var target = options[name] || (options[name] = {});
-                    Object.keys(content).forEach(function (pro) {
-                        if (content[pro] && !target[pro]) {
-                            var df = (defValue[name] && defValue[name][pro]) || 0;
-                            target[pro] = isNaN(df) ? df : [ValueType$1.CONSTANT, df];
-                        }
-                    });
-                });
-                if (compileOptions.positionOverLifetime.forceCurve) {
-                    // @ts-expect-error
-                    options.positionOverLifetime.forceTarget = true;
-                }
-                if (compileOptions.rotationOverLifetime.x || compileOptions.rotationOverLifetime.y) {
-                    // @ts-expect-error
-                    options.rotationOverLifetime.separateAxes = true;
-                }
-                if (compileOptions.sizeOverLifetime.y) {
-                    // @ts-expect-error
-                    options.sizeOverLifetime.separateAxes = true;
-                }
-            }
             var _c = getParticleMeshShader(item, env, gpuCapability), shader = _c.shader, fragment = _c.fragment, vertex = _c.vertex;
             shaders.push(shader);
             maxFragmentCount = Math.max(maxFragmentCount, fragment);
@@ -27293,36 +21756,6 @@ var ParticleLoader = /** @class */ (function (_super) {
     };
     return ParticleLoader;
 }(AbstractPlugin));
-function assignDefValue(item) {
-    if (exports.Item.isParticle(item)) {
-        var options = item.content;
-        if (!options.rotationOverLifetime) {
-            options.rotationOverLifetime = {};
-        }
-        var rot = options.rotationOverLifetime;
-        if (!rot.z) {
-            rot.z = [ValueType$1.CONSTANT, 0];
-        }
-        if (!rot.separateAxes) {
-            delete rot.y;
-            delete rot.x;
-        }
-        if (!options.sizeOverLifetime) {
-            options.sizeOverLifetime = {};
-        }
-        var size = options.sizeOverLifetime;
-        if (!size.separateAxes) {
-            delete size.y;
-        }
-        if (size.size) {
-            size.x = size.size;
-            delete size.size;
-        }
-        if (!size.x) {
-            size.x = [ValueType$1.CONSTANT, 1];
-        }
-    }
-}
 
 var CalculateLoader = /** @class */ (function (_super) {
     __extends(CalculateLoader, _super);
@@ -28461,6 +22894,26 @@ function getBackgroundImage(template, variables) {
     }
     return templateBackground;
 }
+function loadMedia(url, loadFn) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!Array.isArray(url)) return [3 /*break*/, 5];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 5]);
+                    return [4 /*yield*/, loadFn(url[0])];
+                case 2: return [2 /*return*/, _a.sent()];
+                case 3:
+                    _a.sent();
+                    return [4 /*yield*/, loadFn(url[1])];
+                case 4: return [2 /*return*/, _a.sent()];
+                case 5: return [2 /*return*/, loadFn(url)];
+            }
+        });
+    });
+}
 function drawImageAndTemplate(viewer, image, template, variables, opt) {
     var _a;
     return __awaiter(this, void 0, void 0, function () {
@@ -28778,9 +23231,10 @@ var TextItem = /** @class */ (function (_super) {
         if (this.textStyle.fontSize === value) {
             return;
         }
+        // 保证字号变化后位置正常
+        var diff = this.textStyle.fontSize - value;
+        this.textLayout.lineHeight += diff;
         this.textStyle.fontSize = value;
-        // 1.5175 = 31.43 / 20
-        this.textLayout.lineHeight = this.textStyle.fontSize * 1.5175;
         this.isDirty = true;
     };
     /**
@@ -28861,7 +23315,8 @@ var TextItem = /** @class */ (function (_super) {
      * @returns
      */
     TextItem.prototype.setFontFamily = function (value) {
-        if (this.textStyle.fontFamily === value) {
+        if (this.textStyle.fontFamily === value && !isValidFontFamily(value)) {
+            console.warn('The font is either the current font or an risky font family.');
             return;
         }
         this.textStyle.fontFamily = value;
@@ -30161,8 +24616,9 @@ var Camera = /** @class */ (function () {
     Camera.prototype.getInverseVPRatio = function (z) {
         var pos = new Vector3(0, 0, z);
         var mat = this.getViewProjectionMatrix();
-        var nz = pos.applyMatrix(mat).z;
-        return new Vector3(1, 1, nz).applyMatrix(mat);
+        var inverseVP = this.getInverseViewProjectionMatrix();
+        var nz = mat.projectPoint(pos).z;
+        return inverseVP.projectPoint(new Vector3(1, 1, nz));
     };
     /**
      * 设置相机的旋转四元数
@@ -30174,7 +24630,6 @@ var Camera = /** @class */ (function () {
             this.dirty = true;
         }
         else {
-            this.options.quat;
             if (!this.options.quat.equals(value)) {
                 this.options.quat.copyFrom(value);
                 this.dirty = true;
@@ -30351,7 +24806,7 @@ var filters = {
  * Name: @galacean/effects-specification
  * Description: Galacean Effects JSON Specification
  * Author: Ant Group CO., Ltd.
- * Version: v1.0.0
+ * Version: v1.3.0
  */
 
 /*********************************************/
@@ -30730,6 +25185,16 @@ var CompositionEndBehavior;
     CompositionEndBehavior[CompositionEndBehavior["pause_destroy"] = END_BEHAVIOR_PAUSE_AND_DESTROY] = "pause_destroy";
 })(CompositionEndBehavior || (CompositionEndBehavior = {}));
 
+/**
+ * 动态换图类型
+ * @since 1.3.0
+ */
+var BackgroundType;
+(function (BackgroundType) {
+    BackgroundType["video"] = "video";
+    BackgroundType["image"] = "image";
+})(BackgroundType || (BackgroundType = {}));
+
 /*********************************************/
 /*               基本数值属性参数              */
 /*********************************************/
@@ -31102,15 +25567,27 @@ function ensureFixedNumber(a) {
         return [ValueType.CONSTANT, a];
     }
     if (a) {
-        if (a[0] === 'lines') {
-            return [ValueType.LINE, a[1]];
+        var valueType = a[0];
+        var valueData = a[1];
+        if (Array.isArray(valueType)) {
+            // 没有数据类型的数据
+            return;
         }
-        if (a[0] === 'curve') {
-            return [ValueType.CURVE, a[1]];
-        }
-        if (a[0] === 'static') {
+        if (valueType === 'static' || valueType === ValueType.CONSTANT) {
             return [ValueType.CONSTANT, a[1]];
         }
+        if (valueType === 'lines') {
+            return [ValueType.LINE, a[1]];
+        }
+        if (valueType === ValueType.LINE) {
+            // @ts-expect-error
+            var keyframes = valueData.map(function (data) { return [BezierKeyframeType.LINE, data]; });
+            return [ValueType.BEZIER_CURVE, keyframes];
+        }
+        if (valueType === 'curve' || valueType === ValueType.CURVE) {
+            return [ValueType.BEZIER_CURVE, getBezierCurveFromHermiteInGE(valueData)];
+        }
+        return a;
     }
 }
 function ensureFixedNumberWithRandom(a, p) {
@@ -31136,6 +25613,7 @@ function ensureColorExpression(a, normalized) {
         else if (a[0] === 'color') {
             return [ValueType.RGBA_COLOR, colorToArr(a[1], normalized)];
         }
+        return a;
     }
 }
 function ensureNumberExpression(a) {
@@ -31203,6 +25681,9 @@ function parsePercent(c) {
 }
 function getGradientColor(color, normalized) {
     if (Array.isArray(color)) {
+        if (color[0] === ValueType.GRADIENT_COLOR) {
+            return color;
+        }
         // @ts-expect-error
         return (color[0] === 'gradient' || color[0] === 'color') && ensureGradient(color[1], normalized);
     }
@@ -31215,20 +25696,44 @@ function ensureFixedVec3(a) {
         if (a.length === 3) {
             return [ValueType.CONSTANT_VEC3, a];
         }
-        if (a[0] === 'path') {
-            return [ValueType.LINEAR_PATH, a[1]];
+        var valueType = a[0];
+        if (valueType === 'path' ||
+            valueType === 'bezier' ||
+            valueType === ValueType.BEZIER_PATH ||
+            valueType === ValueType.LINEAR_PATH) {
+            var valueData = a[1];
+            var easing = valueData[0];
+            var points = valueData[1];
+            var controlPoints = valueData[2];
+            var bezierEasing = getBezierCurveFromHermiteInGE(easing);
+            // linear path没有controlPoints
+            if (!controlPoints) {
+                controlPoints = [];
+                for (var keyframeIndex = 0; keyframeIndex < points.length; keyframeIndex++) {
+                    var point = points[keyframeIndex].slice();
+                    if (keyframeIndex === 0) {
+                        controlPoints.push(point);
+                    }
+                    else if (keyframeIndex < points.length - 1) {
+                        controlPoints.push(point);
+                        controlPoints.push(point);
+                    }
+                    else {
+                        controlPoints.push(point);
+                    }
+                }
+            }
+            return [ValueType.BEZIER_CURVE_PATH, [bezierEasing, points, controlPoints]];
         }
-        if (a[0] === 'bezier') {
-            return [ValueType.BEZIER_PATH, a[1]];
-        }
+        return a;
     }
 }
 function objectValueToNumber(o) {
     var e_1, _a;
     try {
-        for (var _b = __values(Object.entries(o)), _c = _b.next(); !_c.done; _c = _b.next()) {
-            var _d = __read(_c.value, 2), key = _d[0], value = _d[1];
-            o[key] = Number(value);
+        for (var _b = __values(Object.keys(o)), _c = _b.next(); !_c.done; _c = _b.next()) {
+            var key = _c.value;
+            o[key] = Number(o[key]);
         }
     }
     catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -31309,6 +25814,50 @@ function rotationZYXFromQuat(out, quat) {
         out[2] = Math.atan2(-m12, m22) * r2d;
     }
     return out;
+}
+function getBezierCurveFromHermite(m0, m1, p0, p3) {
+    var xStart = p0[0];
+    var yStart = p0[1];
+    var xEnd = p3[0];
+    var yEnd = p3[1];
+    var dt = xEnd - xStart;
+    m0 = m0 * dt;
+    m1 = m1 * dt;
+    var bezierControlPoints = [[xStart + (xEnd - xStart) / 3, yStart + m0 / 3], [xEnd - (xEnd - xStart) / 3, yEnd - m1 / 3]];
+    return bezierControlPoints;
+}
+function getBezierCurveFromHermiteInGE(geHermiteCurves) {
+    var ymax = -1000000;
+    var ymin = 1000000;
+    for (var i = 0; i < geHermiteCurves.length; i++) {
+        ymax = Math.max(ymax, geHermiteCurves[i][1]);
+        ymin = Math.min(ymin, geHermiteCurves[i][1]);
+    }
+    var geBezierCurves = [[geHermiteCurves[0][0], geHermiteCurves[0][1]]];
+    for (var i = 0; i < geHermiteCurves.length - 1; i++) {
+        var m0 = geHermiteCurves[i][3] * (ymax - ymin);
+        var m1 = geHermiteCurves[i + 1][2] * (ymax - ymin);
+        var p0 = [geHermiteCurves[i][0], geHermiteCurves[i][1]];
+        var p3 = [geHermiteCurves[i + 1][0], geHermiteCurves[i + 1][1]];
+        if (p0[0] != p3[0]) {
+            var bezierControlPoints = getBezierCurveFromHermite(m0, m1, p0, p3);
+            var p1 = bezierControlPoints[0];
+            var p2 = bezierControlPoints[1];
+            geBezierCurves[geBezierCurves.length - 1].push(p1[0]);
+            geBezierCurves[geBezierCurves.length - 1].push(p1[1]);
+            geBezierCurves.push([p2[0], p2[1], p3[0], p3[1]]);
+        }
+        else {
+            geBezierCurves[geBezierCurves.length - 1].push(p3[0]);
+            geBezierCurves[geBezierCurves.length - 1].push(p3[1]);
+        }
+    }
+    // 添加关键帧类型
+    return geBezierCurves.map(function (curve, index) {
+        return index === 0 ? [BezierKeyframeType.EASE_OUT, curve]
+            : index === geBezierCurves.length - 1 ? [BezierKeyframeType.EASE_IN, curve]
+                : [BezierKeyframeType.EASE, curve];
+    });
 }
 
 function getStandardParticleContent(particle) {
@@ -31721,12 +26270,66 @@ function version22Migration(json) {
     });
     return json;
 }
+/**
+ * 2.5 以下版本 赫尔米特数据转换成贝塞尔数据
+ */
+function version24Migration(json) {
+    // 曲线转换成贝塞尔
+    json.compositions.map(function (comp) {
+        var e_1, _a;
+        try {
+            for (var _b = __values(comp.items), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var item = _c.value;
+                convertParam(item.content);
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+    });
+    return json;
+}
+function convertParam(content) {
+    var e_2, _a;
+    if (!content) {
+        return;
+    }
+    try {
+        for (var _b = __values(Object.keys(content)), _c = _b.next(); !_c.done; _c = _b.next()) {
+            var key = _c.value;
+            var value = content[key];
+            var isArray = Array.isArray(value);
+            if (isArray && value.length === 2 && Array.isArray(value[1])) {
+                if (key === 'path') {
+                    content[key] = ensureFixedVec3(value);
+                }
+                else {
+                    content[key] = ensureFixedNumber(value);
+                }
+            }
+            else if (!isArray && typeof value === 'object') {
+                convertParam(value);
+            }
+        }
+    }
+    catch (e_2_1) { e_2 = { error: e_2_1 }; }
+    finally {
+        try {
+            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+        }
+        finally { if (e_2) throw e_2.error; }
+    }
+}
 
 var v0 = /^(\d+)\.(\d+)\.(\d+)(-(\w+)\.\d+)?$/;
 var standardVersion = /^(\d+)\.(\d+)$/;
 var reverseParticle = false;
 function getStandardJSON(json) {
-    var _a, _b;
+    var _a;
     if (!json || typeof json !== 'object') {
         throw Error('expect a json object');
     }
@@ -31736,9 +26339,14 @@ function getStandardJSON(json) {
         reverseParticle = ((_a = (/^(\d+)/).exec(json.version)) === null || _a === void 0 ? void 0 : _a[0]) === '0';
         return version21Migration(getStandardJSONFromV0(json));
     }
-    var mainVersion = (_b = standardVersion.exec(json.version)) === null || _b === void 0 ? void 0 : _b[1];
+    var vs = standardVersion.exec(json.version) || [];
+    var mainVersion = Number(vs[1]);
+    var minorVersion = Number(vs[2]);
     if (mainVersion) {
-        if (Number(mainVersion) < 2) {
+        if (mainVersion < 2 || (mainVersion === 2 && minorVersion < 4)) {
+            version24Migration(json);
+        }
+        if (mainVersion < 2) {
             return version21Migration(json);
         }
         return json;
@@ -31814,11 +26422,9 @@ function getStandardImage(image, index, imageTags) {
     else if (image.url) {
         return {
             url: image.url,
-            type: image.type,
             webp: image.webp,
             renderLevel: renderLevel,
             oriY: oriY,
-            loop: image.loop,
         };
     }
     else if (image && image.sourceType) {
@@ -32157,7 +26763,7 @@ var CompositionSourceManager = /** @class */ (function () {
                     }
                     // 处理预合成的渲染顺序
                     if (option.type === ItemType$1.composition) {
-                        ++_this.mask;
+                        _this.mask++;
                         var refId = item.content.options.refId;
                         if (!_this.refCompositions.get(refId)) {
                             throw new Error('Invalid Ref Composition id: ' + refId);
@@ -32167,7 +26773,6 @@ var CompositionSourceManager = /** @class */ (function () {
                             _this.refCompositionProps.set(refId, ref);
                         }
                         ref.items.forEach(function (item) {
-                            item.listIndex = listOrder++;
                             _this.processMask(item.content);
                         });
                         option.items = ref.items;
@@ -32261,6 +26866,10 @@ var AssetManager = /** @class */ (function () {
          */
         this.assets = {};
         this.id = seed$5++;
+        /**
+         * 场景加载的超时定时器
+         */
+        this.timers = [];
         this.updateOptions(options);
     }
     AssetManager.prototype.updateOptions = function (options) {
@@ -32273,6 +26882,26 @@ var AssetManager = /** @class */ (function () {
         this.timeout = timeout;
     };
     /**
+     * 根据用户传入的参数修改场景数据
+     */
+    AssetManager.prototype.updateSceneData = function (compositions) {
+        var variables = this.options.variables;
+        if (!variables || Object.keys(variables).length <= 0) {
+            return compositions;
+        }
+        compositions.forEach(function (composition) {
+            composition.items.forEach(function (item) {
+                if (item.type === ItemType$1.text) {
+                    var textVariable = variables[item.name];
+                    if (textVariable) {
+                        item.content.options.text = textVariable;
+                    }
+                }
+            });
+        });
+        return compositions;
+    };
+    /**
      * 场景创建，通过 json 创建出场景对象，并进行提前编译等工作
      * @param url - json 的 URL 链接或者 json 对象
      * @param renderer - renderer 对象，用于获取管理、编译 shader 及 GPU 上下文的参数
@@ -32282,10 +26911,10 @@ var AssetManager = /** @class */ (function () {
     AssetManager.prototype.loadScene = function (url, renderer, options) {
         var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function () {
-            var rawJSON, timeLabel, startTime, timeInfos, gpuInstance, asyncShaderCompile, compressedTexture, loadTimer, cancelLoading, waitPromise, hookTimeInfo, loadResourcePromise;
+            var rawJSON, assetUrl, startTime, timeInfos, gpuInstance, asyncShaderCompile, compressedTexture, loadTimer, cancelLoading, waitPromise, hookTimeInfo, loadResourcePromise;
             var _this = this;
             return __generator(this, function (_d) {
-                timeLabel = "Load asset: ".concat(isString(url) ? url : this.id);
+                assetUrl = isString(url) ? url : this.id;
                 startTime = weapp.performance.now();
                 timeInfos = [];
                 gpuInstance = renderer === null || renderer === void 0 ? void 0 : renderer.engine.gpuCapability;
@@ -32293,24 +26922,33 @@ var AssetManager = /** @class */ (function () {
                 compressedTexture = (_c = gpuInstance === null || gpuInstance === void 0 ? void 0 : gpuInstance.detail.compressedTexture) !== null && _c !== void 0 ? _c : 0;
                 cancelLoading = false;
                 waitPromise = new Promise(function (resolve, reject) {
-                    return loadTimer = weapp.window.setTimeout(function () {
+                    loadTimer = weapp.window.setTimeout(function () {
                         cancelLoading = true;
-                        reject("Load time out: ".concat(JSON.stringify(url)));
+                        _this.removeTimer(loadTimer);
+                        var totalTime = weapp.performance.now() - startTime;
+                        reject("Load time out: totalTime: ".concat(totalTime.toFixed(4), "ms ").concat(timeInfos.join(' '), ", url: ").concat(assetUrl));
                     }, _this.timeout * 1000);
+                    _this.timers.push(loadTimer);
                 });
                 hookTimeInfo = function (label, func) { return __awaiter(_this, void 0, void 0, function () {
-                    var st, result;
+                    var st, result, e_1;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
-                                if (!!cancelLoading) return [3 /*break*/, 2];
+                                if (!!cancelLoading) return [3 /*break*/, 4];
                                 st = weapp.performance.now();
-                                return [4 /*yield*/, func()];
+                                _a.label = 1;
                             case 1:
+                                _a.trys.push([1, 3, , 4]);
+                                return [4 /*yield*/, func()];
+                            case 2:
                                 result = _a.sent();
                                 timeInfos.push("[".concat(label, ": ").concat((weapp.performance.now() - st).toFixed(2), "]"));
                                 return [2 /*return*/, result];
-                            case 2: throw new Error('load canceled.');
+                            case 3:
+                                e_1 = _a.sent();
+                                throw new Error("load error in ".concat(label, ", ").concat(e_1));
+                            case 4: throw new Error('load canceled.');
                         }
                     });
                 }); };
@@ -32354,6 +26992,7 @@ var AssetManager = /** @class */ (function () {
                                 for (i = 0; i < scene.images.length; i++) {
                                     scene.textureOptions[i].image = scene.images[i];
                                 }
+                                scene.jsonScene.compositions = this.updateSceneData(scene.jsonScene.compositions);
                                 _e.label = 5;
                             case 5: return [3 /*break*/, 12];
                             case 6: return [4 /*yield*/, hookTimeInfo('processJSON', function () { return _this.processJSON(rawJSON); })];
@@ -32373,6 +27012,7 @@ var AssetManager = /** @class */ (function () {
                                 return [4 /*yield*/, hookTimeInfo('processTextures', function () { return _this.processTextures(loadedImages_1, loadedBins_1, jsonScene_1); })];
                             case 10:
                                 loadedTextures = _e.sent();
+                                jsonScene_1.compositions = this.updateSceneData(jsonScene_1.compositions);
                                 scene = {
                                     url: url,
                                     renderLevel: this.options.renderLevel,
@@ -32392,11 +27032,9 @@ var AssetManager = /** @class */ (function () {
                                 _e.label = 12;
                             case 12:
                                 totalTime = weapp.performance.now() - startTime;
-                                console.info({
-                                    content: "".concat(timeLabel, ": ").concat(totalTime.toFixed(4), "ms, ").concat(timeInfos.join(' ')),
-                                    type: LOG_TYPE,
-                                });
+                                logger.info("Load asset: totalTime: ".concat(totalTime.toFixed(4), "ms ").concat(timeInfos.join(' '), ", url: ").concat(assetUrl));
                                 weapp.window.clearTimeout(loadTimer);
+                                this.removeTimer(loadTimer);
                                 scene.totalTime = totalTime;
                                 scene.startTime = startTime;
                                 return [2 /*return*/, scene];
@@ -32474,16 +27112,17 @@ var AssetManager = /** @class */ (function () {
     };
     AssetManager.prototype.processBins = function (bins) {
         return __awaiter(this, void 0, void 0, function () {
-            var renderLevel, jobs;
+            var renderLevel, baseUrl, jobs;
             var _this = this;
             return __generator(this, function (_a) {
                 renderLevel = this.options.renderLevel;
+                baseUrl = this.baseUrl;
                 jobs = bins.map(function (bin) {
                     if (bin instanceof ArrayBuffer) {
                         return bin;
                     }
                     if (passRenderLevel(bin.renderLevel, renderLevel)) {
-                        return _this.loadBins(bin.url);
+                        return _this.loadBins(new weapp.URL(bin.url, baseUrl).href);
                     }
                     throw new Error("Invalid bins source: ".concat(JSON.stringify(bins)));
                 });
@@ -32501,16 +27140,21 @@ var AssetManager = /** @class */ (function () {
                     return [2 /*return*/];
                 }
                 jobs = fonts.map(function (font) { return __awaiter(_this, void 0, void 0, function () {
-                    var fontFace;
+                    var url, fontFace;
                     var _a;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
                             case 0:
                                 if (!(font.fontURL && !AssetManager.fonts.has(font.fontFamily))) return [3 /*break*/, 4];
-                                fontFace = new FontFace((_a = font.fontFamily) !== null && _a !== void 0 ? _a : '', 'url(' + font.fontURL + ')');
+                                if (!isValidFontFamily(font.fontFamily)) {
+                                    // 在所有设备上提醒开发者
+                                    console.warn("Risky font family: ".concat(font.fontFamily));
+                                }
                                 _b.label = 1;
                             case 1:
                                 _b.trys.push([1, 3, , 4]);
+                                url = new weapp.URL(font.fontURL, this.baseUrl).href;
+                                fontFace = new FontFace((_a = font.fontFamily) !== null && _a !== void 0 ? _a : '', 'url(' + url + ')');
                                 return [4 /*yield*/, fontFace.load()];
                             case 2:
                                 _b.sent();
@@ -32520,10 +27164,7 @@ var AssetManager = /** @class */ (function () {
                                 return [3 /*break*/, 4];
                             case 3:
                                 _b.sent();
-                                console.warn({
-                                    content: "Invalid fonts source: ".concat(JSON.stringify(font.fontURL)),
-                                    type: LOG_TYPE,
-                                });
+                                logger.warn("Invalid font family or font source: ".concat(JSON.stringify(font.fontURL)));
                                 return [3 /*break*/, 4];
                             case 4: return [2 /*return*/];
                         }
@@ -32541,79 +27182,61 @@ var AssetManager = /** @class */ (function () {
                 _a = this.options, useCompressedTexture = _a.useCompressedTexture, variables = _a.variables;
                 baseUrl = this.baseUrl;
                 jobs = images.map(function (img, idx) { return __awaiter(_this, void 0, void 0, function () {
-                    var png, webp, imageURL, webpURL, template, result, url_1, name_1, templateImage, loop, compressed, src, bufferURL, _a, url, image;
-                    var _b, _c, _d;
-                    return __generator(this, function (_e) {
-                        switch (_e.label) {
+                    var png, webp, imageURL, webpURL, template, isTemplateV2, background, url_1, isVideo, loadFn, resultImage, e_3, resultImage, compressed, src, bufferURL, _a, url, image;
+                    return __generator(this, function (_b) {
+                        switch (_b.label) {
                             case 0:
-                                if (!usage[idx]) return [3 /*break*/, 19];
+                                if (!usage[idx]) {
+                                    return [2 /*return*/, undefined];
+                                }
                                 png = img.url, webp = img.webp;
                                 imageURL = new weapp.URL(png, baseUrl).href;
                                 webpURL = webp && new weapp.URL(webp, baseUrl).href;
-                                if (!('template' in img)) return [3 /*break*/, 16];
+                                if (!('template' in img)) return [3 /*break*/, 13];
                                 template = img.template;
-                                result = void 0;
-                                if (!('v' in template && template.v === 2 && template.background)) return [3 /*break*/, 9];
+                                isTemplateV2 = 'v' in template && template.v === 2 && template.background;
+                                background = isTemplateV2 ? template.background : undefined;
+                                if (!(isTemplateV2 && background)) return [3 /*break*/, 8];
                                 url_1 = getBackgroundImage(template, variables);
-                                if (!(url_1 instanceof Array)) return [3 /*break*/, 6];
-                                name_1 = template.background.name;
-                                _e.label = 1;
+                                isVideo = background.type === BackgroundType$1.video;
+                                loadFn = background && isVideo ? loadVideo : loadImage;
+                                _b.label = 1;
                             case 1:
-                                _e.trys.push([1, 3, , 5]);
-                                _b = {};
-                                return [4 /*yield*/, loadImage(url_1[0])];
+                                _b.trys.push([1, 6, , 7]);
+                                return [4 /*yield*/, loadMedia(url_1, loadFn)];
                             case 2:
-                                result = (_b.image = _e.sent(),
-                                    _b.url = url_1[0],
-                                    _b);
-                                return [3 /*break*/, 5];
+                                resultImage = _b.sent();
+                                if (!(resultImage instanceof weapp.HTMLVideoElement)) return [3 /*break*/, 3];
+                                return [2 /*return*/, resultImage];
                             case 3:
-                                _e.sent();
-                                _c = {};
-                                return [4 /*yield*/, loadImage(url_1[1])];
-                            case 4:
-                                result = (_c.image = _e.sent(),
-                                    _c.url = url_1[1],
-                                    _c);
-                                return [3 /*break*/, 5];
-                            case 5:
-                                if (variables) {
-                                    variables[name_1] = result.url;
+                                // 如果是加载图片且是数组，设置变量，视频情况下不需要
+                                if (background && Array.isArray(url_1) && variables) {
+                                    variables[background.name] = resultImage.src;
                                 }
-                                return [3 /*break*/, 8];
+                                return [4 /*yield*/, combineImageTemplate(resultImage, template, variables, this.options, img.oriY === -1)];
+                            case 4: return [2 /*return*/, _b.sent()];
+                            case 5: return [3 /*break*/, 7];
                             case 6:
-                                if (!(typeof url_1 === 'string')) return [3 /*break*/, 8];
-                                _d = {};
-                                return [4 /*yield*/, loadImage(url_1)];
-                            case 7:
-                                result = (_d.image = _e.sent(),
-                                    _d.url = url_1,
-                                    _d);
-                                _e.label = 8;
-                            case 8: return [3 /*break*/, 11];
-                            case 9: return [4 /*yield*/, loadWebPOptional(imageURL, webpURL)];
-                            case 10:
-                                // 测试场景：'年兽大爆炸——8个彩蛋t1'
-                                result = _e.sent();
-                                _e.label = 11;
+                                e_3 = _b.sent();
+                                throw new Error("Failed to load. Check the template or if the URL is ".concat(isVideo ? 'video' : 'image', " type, URL: ").concat(url_1, ", Error: ").concat(e_3.message));
+                            case 7: return [3 /*break*/, 12];
+                            case 8:
+                                _b.trys.push([8, 11, , 12]);
+                                return [4 /*yield*/, loadWebPOptional(imageURL, webpURL)];
+                            case 9:
+                                resultImage = _b.sent();
+                                return [4 /*yield*/, combineImageTemplate(resultImage.image, template, variables, this.options, img.oriY === -1)];
+                            case 10: return [2 /*return*/, _b.sent()];
                             case 11:
-                                templateImage = void 0;
-                                _e.label = 12;
-                            case 12:
-                                _e.trys.push([12, 14, , 15]);
-                                return [4 /*yield*/, combineImageTemplate(result.image, template, variables, this.options, img.oriY === -1)];
+                                _b.sent();
+                                throw new Error("Failed to load. Check the template, URL: ".concat(imageURL, "."));
+                            case 12: return [3 /*break*/, 14];
                             case 13:
-                                templateImage = _e.sent();
-                                return [3 /*break*/, 15];
-                            case 14:
-                                _e.sent();
-                                throw new Error("image template fail: ".concat(imageURL));
-                            case 15: return [2 /*return*/, templateImage];
-                            case 16:
                                 if ('type' in img && img.type === 'video') {
-                                    loop = img.loop;
                                     // 视频
-                                    return [2 /*return*/, loadVideo(img.url, { loop: loop })];
+                                    // TODO: 2024.03.28 后面考虑下掉非推荐的视频元素使用方式
+                                    console.warn('The video element is deprecated. Use template BackgroundType.video instead.');
+                                    return [2 /*return*/, loadVideo(img.url)];
                                 }
                                 else if ('compressed' in img && useCompressedTexture && compressedTexture) {
                                     compressed = img.compressed;
@@ -32639,13 +27262,12 @@ var AssetManager = /** @class */ (function () {
                                     img instanceof Texture) {
                                     return [2 /*return*/, img];
                                 }
-                                _e.label = 17;
-                            case 17: return [4 /*yield*/, loadWebPOptional(imageURL, webpURL)];
-                            case 18:
-                                _a = _e.sent(), url = _a.url, image = _a.image;
+                                _b.label = 14;
+                            case 14: return [4 /*yield*/, loadWebPOptional(imageURL, webpURL)];
+                            case 15:
+                                _a = _b.sent(), url = _a.url, image = _a.image;
                                 this.assets[idx] = { url: url, type: exports.TextureSourceType.image };
                                 return [2 /*return*/, image];
-                            case 19: return [2 /*return*/, undefined];
                         }
                     });
                 }); });
@@ -32708,16 +27330,26 @@ var AssetManager = /** @class */ (function () {
             });
         });
     };
+    AssetManager.prototype.removeTimer = function (id) {
+        var index = this.timers.indexOf(id);
+        if (index !== -1) {
+            this.timers.splice(index, 1);
+        }
+    };
     /**
      * 销毁方法
      */
     AssetManager.prototype.dispose = function () {
         var _a;
+        if (this.timers.length) {
+            this.timers.map(function (id) { return weapp.window.clearTimeout(id); });
+        }
         for (var key in this.assets) {
             var asset = this.assets[key];
             (_a = asset === null || asset === void 0 ? void 0 : asset.dispose) === null || _a === void 0 ? void 0 : _a.call(asset);
         }
         this.assets = {};
+        this.timers = [];
     };
     /**
      * 自定义文本缓存，随页面销毁而销毁
@@ -32745,7 +27377,7 @@ function createTextureOptionsBySource(image, sourceFrom) {
         return image.source;
     }
     else if (image instanceof weapp.HTMLImageElement ||
-        image instanceof weapp.HTMLCanvasElement) {
+        isCanvas(image)) {
         return {
             image: image,
             sourceType: exports.TextureSourceType.image,
@@ -32781,6 +27413,11 @@ function createTextureOptionsBySource(image, sourceFrom) {
         };
     }
     throw new Error('Invalid texture options');
+}
+function isCanvas(canvas) {
+    var _a;
+    // 小程序 Canvas 无法使用 instanceof HTMLCanvasElement 判断
+    return typeof canvas === 'object' && canvas !== null && ((_a = canvas.tagName) === null || _a === void 0 ? void 0 : _a.toUpperCase()) === 'CANVAS';
 }
 
 var CompVFXItem = /** @class */ (function (_super) {
@@ -32835,18 +27472,14 @@ var CompVFXItem = /** @class */ (function (_super) {
                 // 设置预合成作为元素时的时长、结束行为和渲染延时
                 if (exports.Item.isComposition(itemProps)) {
                     var refId = itemProps.content.options.refId;
-                    var props = this.composition.refCompositionProps.get(refId);
-                    if (!props) {
-                        throw new Error("\u5F15\u7528\u7684Id: ".concat(refId, " \u7684\u9884\u5408\u6210\u4E0D\u5B58\u5728"));
-                    }
-                    props.content = itemProps.content;
-                    item = new CompVFXItem(__assign$1(__assign$1({}, props), { refId: refId, delay: itemProps.delay, id: itemProps.id, name: itemProps.name, duration: itemProps.duration, endBehavior: itemProps.endBehavior, parentId: itemProps.parentId, transform: itemProps.transform }), this.composition);
+                    item = new CompVFXItem(__assign$1({ refId: refId }, itemProps), this.composition);
                     item.contentProps = itemProps.content;
                     item.transform.parentTransform = this.transform;
                     this.composition.refContent.push(item);
                     if (item.endBehavior === END_BEHAVIOR_RESTART$1) {
                         this.composition.autoRefTex = false;
                     }
+                    item.createContent();
                 }
                 else {
                     item = createVFXItem(this.itemProps[i], this.composition);
@@ -32977,6 +27610,17 @@ var CompVFXItem = /** @class */ (function (_super) {
     };
     CompVFXItem.prototype.handleVisibleChanged = function (visible) {
         this.items.forEach(function (item) { return item.setVisible(visible); });
+    };
+    CompVFXItem.prototype.setScale = function (x, y, z) {
+        if (this.content) {
+            this.content.startSize = new Vector3(x, y, z);
+        }
+    };
+    CompVFXItem.prototype.scale = function (x, y, z) {
+        if (this.content) {
+            var startSize = this.content.startSize.clone();
+            this.content.startSize = new Vector3(x * startSize.x, y * startSize.y, z * startSize.z);
+        }
     };
     CompVFXItem.prototype.getUpdateTime = function (t) {
         var startTime = this.startTimeInms;
@@ -33269,7 +27913,7 @@ var Composition = /** @class */ (function () {
         this.paused = false;
         this.lastVideoUpdateTime = 0;
         this.postLoaders = [];
-        var _b = props.reusable, reusable = _b === void 0 ? false : _b, _c = props.speed, speed = _c === void 0 ? 1 : _c, _d = props.baseRenderOrder, baseRenderOrder = _d === void 0 ? 0 : _d, renderer = props.renderer, handlePlayerPause = props.handlePlayerPause, handleMessageItem = props.handleMessageItem, handleEnd = props.handleEnd, event = props.event, width = props.width, height = props.height;
+        var _b = props.reusable, reusable = _b === void 0 ? false : _b, _c = props.speed, speed = _c === void 0 ? 1 : _c, _d = props.baseRenderOrder, baseRenderOrder = _d === void 0 ? 0 : _d, renderer = props.renderer, onPlayerPause = props.onPlayerPause, onMessageItem = props.onMessageItem, onEnd = props.onEnd, event = props.event, width = props.width, height = props.height;
         this.compositionSourceManager = new CompositionSourceManager(scene, renderer.engine);
         scene.jsonScene.imgUsage = undefined;
         if (reusable) {
@@ -33306,12 +27950,25 @@ var Composition = /** @class */ (function () {
         this.camera = new Camera(this.name, __assign$1(__assign$1({}, sourceContent === null || sourceContent === void 0 ? void 0 : sourceContent.camera), { aspect: width / height }));
         this.url = scene.url;
         this.assigned = true;
-        this.handlePlayerPause = handlePlayerPause;
-        this.handleMessageItem = handleMessageItem;
-        this.handleEnd = handleEnd;
+        this.onPlayerPause = onPlayerPause;
+        this.onMessageItem = onMessageItem;
+        this.onEnd = onEnd;
         this.createRenderFrame();
         this.reset();
     }
+    Object.defineProperty(Composition.prototype, "handleEnd", {
+        /**
+         * 合成结束回调
+         * @param {(composition: Composition) => void} func
+         * @deprecated since 2.0 - use `onEnd` instead
+         */
+        set: function (func) {
+            console.warn('The handleEnd property is deprecated. Use onEnd instead.');
+            this.onEnd = func;
+        },
+        enumerable: false,
+        configurable: true
+    });
     Object.defineProperty(Composition.prototype, "textures", {
         /**
          * 获取场景中的纹理数组
@@ -33510,7 +28167,7 @@ var Composition = /** @class */ (function () {
         this.content.onEnd = function () {
             weapp.window.setTimeout(function () {
                 var _a;
-                (_a = _this.handleEnd) === null || _a === void 0 ? void 0 : _a.call(_this, _this);
+                (_a = _this.onEnd) === null || _a === void 0 ? void 0 : _a.call(_this, _this);
             }, 0);
         };
         this.pluginSystem.resetComposition(this, this.renderFrame);
@@ -33691,7 +28348,7 @@ var Composition = /** @class */ (function () {
     Composition.prototype.addInteractiveItem = function (item, type) {
         var _a;
         if (type === InteractType$1.MESSAGE) {
-            (_a = this.handleMessageItem) === null || _a === void 0 ? void 0 : _a.call(this, {
+            (_a = this.onMessageItem) === null || _a === void 0 ? void 0 : _a.call(this, {
                 name: item.name,
                 phrase: MESSAGE_ITEM_PHRASE_BEGIN,
                 id: item.id,
@@ -33709,7 +28366,7 @@ var Composition = /** @class */ (function () {
         var _a;
         // MESSAGE ITEM的结束行为
         if (type === InteractType$1.MESSAGE) {
-            (_a = this.handleMessageItem) === null || _a === void 0 ? void 0 : _a.call(this, {
+            (_a = this.onMessageItem) === null || _a === void 0 ? void 0 : _a.call(this, {
                 name: item.name,
                 phrase: MESSAGE_ITEM_PHRASE_END,
                 id: item.id,
@@ -33806,12 +28463,9 @@ var Composition = /** @class */ (function () {
         (_a = this.rendererOptions) === null || _a === void 0 ? void 0 : _a.emptyTexture.dispose();
         (_b = this.pluginSystem) === null || _b === void 0 ? void 0 : _b.destroyComposition(this);
         this.update = function () {
-            console.error({
-                content: "Update disposed composition: ".concat(_this.name, "."),
-                type: LOG_TYPE,
-            });
+            logger.error("Update disposed composition: ".concat(_this.name, "."));
         };
-        this.handlePlayerPause = noop;
+        this.onPlayerPause = noop;
         this.dispose = noop;
         if (textures && this.keepResource) {
             textures.forEach(function (tex) { return tex.dispose = textureDisposes[tex.id]; });
@@ -33916,7 +28570,7 @@ var Composition = /** @class */ (function () {
 }());
 
 /**
- * Engine 基类，负责维护所有 GPU 资源的销毁
+ * Engine 基类，负责维护所有 GPU 资源的管理及销毁
  */
 var Engine = /** @class */ (function () {
     function Engine() {
@@ -33926,6 +28580,10 @@ var Engine = /** @class */ (function () {
         this.geometries = [];
         this.meshes = [];
         this.renderPasses = [];
+        /**
+         * 渲染过程中错误队列
+         */
+        this.renderErrors = new Set();
     }
     Engine.prototype.addTexture = function (tex) {
         if (this.destroyed) {
@@ -34019,10 +28677,7 @@ var Engine = /** @class */ (function () {
             info.push("Tex ".concat(this.textures.length));
         }
         if (info.length > 0) {
-            console.warn({
-                content: "Release GPU memory: ".concat(info.join(', ')),
-                type: LOG_TYPE,
-            });
+            logger.warn("Release GPU memory: ".concat(info.join(', ')));
         }
         this.renderPasses.forEach(function (pass) {
             pass.dispose();
@@ -34285,10 +28940,7 @@ var GLTexture = /** @class */ (function (_super) {
         if (type === glContext.HALF_FLOAT) {
             type = detail.halfFloatTexture;
             if (!type) {
-                console.error({
-                    content: 'half float texture is not support',
-                    type: LOG_TYPE,
-                });
+                logger.error('Half float texture is not support.');
             }
             if (isWebGL2(gl) && internalFormat === format) {
                 if (format === glContext.LUMINANCE) {
@@ -34298,19 +28950,13 @@ var GLTexture = /** @class */ (function (_super) {
             }
             if (!detail.halfFloatLinear) {
                 source.minFilter = source.magFilter = gl.NEAREST;
-                console.warn({
-                    content: 'half float linear not support,change to NEAREST',
-                    type: LOG_TYPE,
-                });
+                logger.warn('Half float linear not support, change to NEAREST.');
             }
         }
         else if (type === gl.FLOAT) {
             type = detail.floatTexture;
             if (!type) {
-                console.error({
-                    content: 'float texture is not support',
-                    type: LOG_TYPE,
-                });
+                logger.error('Float texture is not support.');
             }
             if (isWebGL2(gl) && internalFormat === format) {
                 if (format === glContext.LUMINANCE) {
@@ -34321,10 +28967,7 @@ var GLTexture = /** @class */ (function (_super) {
             if (!detail.floatLinear) {
                 source.minFilter = gl.NEAREST;
                 source.magFilter = gl.NEAREST;
-                console.warn({
-                    content: 'float linear not support,change to NEAREST',
-                    type: LOG_TYPE,
-                });
+                logger.warn('Float linear not support, change to NEAREST.');
             }
         }
         // 处理是否RGB透明度相乘和Y轴反转, 默认值都为false。
@@ -34583,10 +29226,7 @@ var GLTexture = /** @class */ (function (_super) {
         this.textureBuffer = null;
         this.destroyed = true;
         this.update = function () {
-            console.error({
-                content: 'this this texture has been destroyed',
-                type: LOG_TYPE,
-            });
+            logger.error('This texture has been destroyed.');
         };
         this.initialize = throwDestroyedError$1;
         if (this.engine !== undefined) {
@@ -34605,10 +29245,7 @@ function resizeImageByCanvas(image, maxSize, targetWidth, targetHeight) {
         canvas.width = nw;
         canvas.height = nh;
         ctx === null || ctx === void 0 ? void 0 : ctx.drawImage(image, 0, 0, width, height, 0, 0, nw, nh);
-        console.warn({
-            content: "image resize from ".concat(width, "x").concat(height, " to ").concat(nw, "x").concat(nh),
-            type: LOG_TYPE,
-        });
+        logger.warn("Image resize from ".concat(width, "x").concat(height, " to ").concat(nw, "x").concat(nh));
         return canvas;
     }
 }
@@ -34790,7 +29427,6 @@ var GLRendererInternal = /** @class */ (function () {
         var glMaterial = material;
         var program = glMaterial.shader.program;
         if (!program) {
-            console.warn('Material ' + glMaterial.name + ' 的shader着色器程序未初始化。');
             return;
         }
         var vao = program.setupAttributes(glGeometry);
@@ -34871,19 +29507,11 @@ var GLRendererInternal = /** @class */ (function () {
         }
     };
     GLRendererInternal.prototype.lost = function (e) {
-        console.error({
-            content: 'gl lost, destroy glRenderer by default',
-            type: LOG_TYPE,
-        }, e.target);
+        logger.error('gl lost, destroy glRenderer by default', e.target);
         this.deleteResource();
     };
-    GLRendererInternal.prototype.dispose = function (haltGL) {
+    GLRendererInternal.prototype.dispose = function () {
         this.deleteResource();
-        var gl = this.gl;
-        if (gl && haltGL) {
-            var ex = gl.getExtension('WEBGL_lose_context');
-            ex === null || ex === void 0 ? void 0 : ex.loseContext();
-        }
         // @ts-expect-error safe to assign
         this.emptyTexture2D = this.emptyTextureCube = this.pipelineContext = this.gpu = this.gl = null;
         this.destroyed = true;
@@ -35875,7 +30503,7 @@ var GLMaterial = /** @class */ (function (_super) {
     });
     /**shader和texture的GPU资源初始化。 */
     GLMaterial.prototype.initialize = function () {
-        var e_1, _a;
+        var _this = this;
         if (this.initialized) {
             return;
         }
@@ -35886,68 +30514,61 @@ var GLMaterial = /** @class */ (function (_super) {
             this.shader = pipelineContext.shaderLibrary.createShader(this.shaderSource);
         }
         this.shader.initialize(glEngine);
-        try {
-            for (var _b = __values$1(Object.values(this.textures)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var texture = _c.value;
-                if (!isFunction(texture.initialize)) {
-                    console.error({
-                        content: "".concat(JSON.stringify(texture), " is not valid Texture to initialize"),
-                        type: LOG_TYPE,
-                    });
-                    return;
-                }
-                texture.initialize();
+        Object.keys(this.textures).forEach(function (key) {
+            var texture = _this.textures[key];
+            if (!isFunction(texture.initialize)) {
+                logger.error("".concat(JSON.stringify(texture), " is not valid Texture to initialize"));
+                return;
             }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_1) throw e_1.error; }
-        }
+            texture.initialize();
+        });
         this.initialized = true;
     };
     GLMaterial.prototype.setupStates = function (pipelineContext) {
         this.glMaterialState.apply(pipelineContext);
     };
     GLMaterial.prototype.use = function (renderer, globalUniforms) {
-        var e_2, _a, e_3, _b;
+        var e_1, _a, e_2, _b;
+        var _c;
         var engine = renderer.engine;
         var pipelineContext = engine.getGLPipelineContext();
+        if (!this.shader.program) {
+            (_c = this.engine) === null || _c === void 0 ? void 0 : _c.renderErrors.add(new Error('Shader program is not initialized'));
+            return;
+        }
         this.shader.program.bind();
         this.setupStates(pipelineContext);
         var name;
         if (globalUniforms) {
             try {
                 // 加入全局 uniform 名称
-                for (var _c = __values$1(globalUniforms.uniforms), _d = _c.next(); !_d.done; _d = _c.next()) {
-                    name = _d.value;
+                for (var _d = __values$1(globalUniforms.uniforms), _e = _d.next(); !_e.done; _e = _d.next()) {
+                    name = _e.value;
                     this.checkUniform(name);
                 }
             }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
             finally {
                 try {
-                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                    if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
                 }
-                finally { if (e_2) throw e_2.error; }
+                finally { if (e_1) throw e_1.error; }
             }
             try {
-                for (var _e = __values$1(globalUniforms.samplers), _f = _e.next(); !_f.done; _f = _e.next()) {
-                    name = _f.value;
+                for (var _f = __values$1(globalUniforms.samplers), _g = _f.next(); !_g.done; _g = _f.next()) {
+                    name = _g.value;
                     if (!this.samplers.includes(name)) {
                         this.samplers.push(name);
                         this.uniformDirtyFlag = true;
                     }
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
-                    if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                    if (_g && !_g.done && (_b = _f.return)) _b.call(_f);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_2) throw e_2.error; }
             }
         }
         // 更新 cached uniform location
@@ -36074,7 +30695,7 @@ var GLMaterial = /** @class */ (function (_super) {
         return this.vector4Arrays[name];
     };
     GLMaterial.prototype.setVector4Array = function (name, array) {
-        var e_4, _a;
+        var e_3, _a;
         this.checkUniform(name);
         this.vector4Arrays[name] = [];
         try {
@@ -36083,19 +30704,19 @@ var GLMaterial = /** @class */ (function (_super) {
                 this.vector4Arrays[name].push(v.x, v.y, v.z, v.w);
             }
         }
-        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
         finally {
             try {
                 if (array_1_1 && !array_1_1.done && (_a = array_1.return)) _a.call(array_1);
             }
-            finally { if (e_4) throw e_4.error; }
+            finally { if (e_3) throw e_3.error; }
         }
     };
     GLMaterial.prototype.getMatrixArray = function (name) {
         return this.matrixArrays[name];
     };
     GLMaterial.prototype.setMatrixArray = function (name, array) {
-        var e_5, _a;
+        var e_4, _a;
         this.checkUniform(name);
         this.matrixArrays[name] = [];
         try {
@@ -36106,12 +30727,12 @@ var GLMaterial = /** @class */ (function (_super) {
                 }
             }
         }
-        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
         finally {
             try {
                 if (array_2_1 && !array_2_1.done && (_a = array_2.return)) _a.call(array_2);
             }
-            finally { if (e_5) throw e_5.error; }
+            finally { if (e_4) throw e_4.error; }
         }
     };
     GLMaterial.prototype.setMatrixNumberArray = function (name, array) {
@@ -36210,26 +30831,16 @@ var GLMaterial = /** @class */ (function (_super) {
         }
     };
     GLMaterial.prototype.dispose = function (options) {
-        var e_6, _a;
-        var _b;
+        var _this = this;
+        var _a;
         if (this.destroyed) {
             return;
         }
-        (_b = this.shader) === null || _b === void 0 ? void 0 : _b.dispose();
+        (_a = this.shader) === null || _a === void 0 ? void 0 : _a.dispose();
         if ((options === null || options === void 0 ? void 0 : options.textures) !== exports.DestroyOptions.keep) {
-            try {
-                for (var _c = __values$1(Object.values(this.textures)), _d = _c.next(); !_d.done; _d = _c.next()) {
-                    var texture = _d.value;
-                    texture.dispose();
-                }
-            }
-            catch (e_6_1) { e_6 = { error: e_6_1 }; }
-            finally {
-                try {
-                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
-                }
-                finally { if (e_6) throw e_6.error; }
-            }
+            Object.keys(this.textures).forEach(function (key) {
+                _this.textures[key].dispose();
+            });
         }
         // @ts-expect-error
         this.shaderSource = null;
@@ -36475,6 +31086,31 @@ var GLContextManager = /** @class */ (function () {
     return GLContextManager;
 }());
 
+var GLEngine = /** @class */ (function (_super) {
+    __extends(GLEngine, _super);
+    function GLEngine(gl) {
+        var _this = _super.call(this) || this;
+        _this.gpuCapability = new GPUCapability(gl);
+        return _this;
+    }
+    GLEngine.prototype.dispose = function () {
+        if (this.isDestroyed) {
+            return;
+        }
+        _super.prototype.dispose.call(this);
+    };
+    GLEngine.prototype.getGLRenderer = function () {
+        return this.renderer;
+    };
+    GLEngine.prototype.getGLRendererInternal = function () {
+        return this.getGLRenderer().glRenderer;
+    };
+    GLEngine.prototype.getGLPipelineContext = function () {
+        return this.getGLRenderer().pipelineContext;
+    };
+    return GLEngine;
+}(Engine));
+
 var GLRenderBuffer = /** @class */ (function (_super) {
     __extends(GLRenderBuffer, _super);
     function GLRenderBuffer(props, renderer) {
@@ -36495,10 +31131,7 @@ var GLRenderBuffer = /** @class */ (function (_super) {
     };
     GLRenderBuffer.prototype.setSize = function (width, height) {
         if (!this.initialized) {
-            console.error({
-                content: 'Can\'t set size for uninitialized render buffer',
-                type: LOG_TYPE,
-            });
+            logger.error('Can\'t set size for uninitialized render buffer');
             return;
         }
         if (width !== this.size[0] || height !== this.size[1]) {
@@ -36508,10 +31141,7 @@ var GLRenderBuffer = /** @class */ (function (_super) {
                 gl.renderbufferStorage(gl.RENDERBUFFER, this.format, this.size[0] = width, this.size[1] = height);
             }
             else {
-                console.error({
-                    content: "Invalid render buffer size: ".concat(width, "x").concat(height),
-                    type: LOG_TYPE,
-                });
+                logger.error("Invalid render buffer size: ".concat(width, "x").concat(height));
             }
         }
     };
@@ -37081,7 +31711,8 @@ var GLProgram = /** @class */ (function () {
             }
             geometry.vaos[programId] = vao;
         }
-        if (vao) {
+        // 兼容小程序下不支持vao
+        if (vao && vao.vao) {
             vao.bind();
             if (vao.ready) {
                 return vao;
@@ -37442,7 +32073,9 @@ var GLShaderLibrary = /** @class */ (function () {
         // TODO
     };
     GLShaderLibrary.prototype.dispose = function () {
-        Object.values(this.programMap).forEach(function (program) {
+        var _this = this;
+        Object.keys(this.programMap).forEach(function (key) {
+            var program = _this.programMap[key];
             program.dispose();
         });
         this.programMap = {};
@@ -38018,31 +32651,6 @@ var GLPipelineContext = /** @class */ (function () {
     return GLPipelineContext;
 }());
 
-var GLEngine = /** @class */ (function (_super) {
-    __extends(GLEngine, _super);
-    function GLEngine(gl) {
-        var _this = _super.call(this) || this;
-        _this.gpuCapability = new GPUCapability(gl);
-        return _this;
-    }
-    GLEngine.prototype.dispose = function () {
-        if (this.isDestroyed) {
-            return;
-        }
-        _super.prototype.dispose.call(this);
-    };
-    GLEngine.prototype.getGLRenderer = function () {
-        return this.renderer;
-    };
-    GLEngine.prototype.getGLRendererInternal = function () {
-        return this.getGLRenderer().glRenderer;
-    };
-    GLEngine.prototype.getGLPipelineContext = function () {
-        return this.getGLRenderer().pipelineContext;
-    };
-    return GLEngine;
-}(Engine));
-
 var GLRenderer = /** @class */ (function (_super) {
     __extends(GLRenderer, _super);
     function GLRenderer(canvas, framework, renderOptions) {
@@ -38320,12 +32928,12 @@ var GLRenderer = /** @class */ (function (_super) {
     GLRenderer.prototype.getHeight = function () {
         return this.height;
     };
-    GLRenderer.prototype.dispose = function (haltGL) {
+    GLRenderer.prototype.dispose = function () {
         var _a;
         this.context.dispose();
         this.extension.dispose();
         this.pipelineContext.dispose();
-        (_a = this.glRenderer) === null || _a === void 0 ? void 0 : _a.dispose(haltGL);
+        (_a = this.glRenderer) === null || _a === void 0 ? void 0 : _a.dispose();
         // @ts-expect-error
         this.canvas = null;
         this.engine.dispose();
@@ -38404,6 +33012,7 @@ var Player = /** @class */ (function () {
         this.displayScale = 1;
         this.resumePending = false;
         this.disposed = false;
+        this.assetManagers = [];
         this.speed = 1;
         this.baseCompositionIndex = 0;
         /**
@@ -38540,10 +33149,7 @@ var Player = /** @class */ (function () {
             this.canvas = gl.canvas;
             var version = gl instanceof weapp.WebGLRenderingContext ? 'webgl' : 'webgl2';
             if (framework !== version) {
-                console.error({
-                    content: "The gl context(".concat(version, ") is inconsistent with renderFramework or default version(").concat(framework, ")"),
-                    type: LOG_TYPE,
-                });
+                logger.error("The gl context(".concat(version, ") is inconsistent with renderFramework or default version(").concat(framework, ")"));
                 framework = version;
             }
         }
@@ -38552,12 +33158,6 @@ var Player = /** @class */ (function () {
             this.canvas = weapp.document.createElement('canvas');
             container.appendChild(this.canvas);
         }
-        // 不允许同时存在WebGL和WebGL2的Player
-        playerMap.forEach(function (player) {
-            if (player.gpuCapability.type !== framework) {
-                throw new Error("Initialize player with different webgl version: old=".concat(player.gpuCapability.type, ", new=").concat(framework));
-            }
-        });
         this.renderer = Renderer.create(this.canvas, framework, {
             preserveDrawingBuffer: willCaptureImage,
             premultipliedAlpha: premultiplyAlpha,
@@ -38569,10 +33169,7 @@ var Player = /** @class */ (function () {
         // 如果存在WebGL和WebGL2的Player，需要给出警告
         playerMap.forEach(function (player) {
             if (player.gpuCapability.type !== _this.gpuCapability.type) {
-                console.warn({
-                    content: "Create player with different webgl version: old=".concat(player.gpuCapability.type, ", new=").concat(_this.gpuCapability.type),
-                    type: LOG_TYPE,
-                });
+                logger.warn("Create player with different webgl version: old=".concat(player.gpuCapability.type, ", new=").concat(_this.gpuCapability.type));
             }
         });
         if (!manualRender) {
@@ -38698,7 +33295,7 @@ var Player = /** @class */ (function () {
     Player.prototype.createComposition = function (url, options) {
         if (options === void 0) { options = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var renderer, last, opts, source, scene, composition, firstFrameTime;
+            var renderer, last, opts, source, assetManager, scene, composition, firstFrameTime;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -38713,16 +33310,16 @@ var Player = /** @class */ (function () {
                         else {
                             source = url;
                         }
-                        if (this.assetManager) {
-                            this.assetManager.updateOptions(opts);
-                        }
-                        else {
-                            this.assetManager = new AssetManager(opts);
-                        }
-                        return [4 /*yield*/, this.assetManager.loadScene(source, this.renderer, { env: this.env })];
+                        assetManager = new AssetManager(opts);
+                        this.assetManagers.push(assetManager);
+                        return [4 /*yield*/, assetManager.loadScene(source, this.renderer, { env: this.env })];
                     case 1:
                         scene = _a.sent();
-                        composition = new Composition(__assign$1(__assign$1({}, opts), { renderer: renderer, width: renderer.getWidth(), height: renderer.getHeight(), event: this.event, handlePlayerPause: this.handlePlayerPause, handleMessageItem: this.handleMessageItem }), scene);
+                        // 加载期间 player 销毁
+                        if (this.disposed) {
+                            throw new Error('Disposed player can not used to create Composition');
+                        }
+                        composition = new Composition(__assign$1(__assign$1({}, opts), { renderer: renderer, width: renderer.getWidth(), height: renderer.getHeight(), event: this.event, onPlayerPause: this.handlePlayerPause, onMessageItem: this.handleMessageItem }), scene);
                         if (this.ticker) {
                             if (composition.renderLevel === RenderLevel$1.B) {
                                 this.ticker.setFPS(Math.min(this.ticker.getFPS(), 30));
@@ -38744,10 +33341,7 @@ var Player = /** @class */ (function () {
                         }
                         firstFrameTime = (weapp.performance.now() - last) + composition.statistic.loadTime;
                         composition.statistic.firstFrameTime = firstFrameTime;
-                        console.info({
-                            content: "first frame: [".concat(composition.name, "]").concat(firstFrameTime.toFixed(4), "ms"),
-                            type: LOG_TYPE,
-                        });
+                        logger.info("first frame: [".concat(composition.name, "]").concat(firstFrameTime.toFixed(4), "ms"));
                         this.compositions.push(composition);
                         return [2 /*return*/, composition];
                 }
@@ -38819,8 +33413,8 @@ var Player = /** @class */ (function () {
         var _a;
         var _loop_1 = function (i) {
             var composition = compositions[i];
-            var preEndHandler = composition.handleEnd;
-            composition.handleEnd = function () {
+            var preEndHandler = composition.onEnd;
+            composition.onEnd = function () {
                 preEndHandler === null || preEndHandler === void 0 ? void 0 : preEndHandler.call(composition, composition);
                 compositions[i + 1].play();
             };
@@ -38889,7 +33483,14 @@ var Player = /** @class */ (function () {
     };
     Player.prototype.doTick = function (dt, forceRender) {
         var _this = this;
-        var _a, _b, _c;
+        var _a, _b, _c, _d, _e;
+        var renderErrors = this.renderer.engine.renderErrors;
+        // TODO: 临时处理，2.0.0 做优化
+        if (renderErrors.size > 0) {
+            (_a = this.handleRenderError) === null || _a === void 0 ? void 0 : _a.call(this, renderErrors.values().next().value);
+            // 有渲染错误时暂停播放
+            (_b = this.ticker) === null || _b === void 0 ? void 0 : _b.pause();
+        }
         dt = Math.min(dt, 33) * this.speed;
         var comps = this.compositions;
         var skipRender = false;
@@ -38899,10 +33500,7 @@ var Player = /** @class */ (function () {
             var composition = comps[i];
             if (composition.textureOffloaded) {
                 skipRender = true;
-                console.error({
-                    content: "Composition ".concat(composition.name, " texture offloaded, skip render."),
-                    type: LOG_TYPE,
-                });
+                logger.error("Composition ".concat(composition.name, " texture offloaded, skip render."));
                 this.compositions.push(composition);
                 continue;
             }
@@ -38915,8 +33513,8 @@ var Player = /** @class */ (function () {
         }
         this.baseCompositionIndex = this.compositions.length;
         if (skipRender) {
-            (_a = this.handleRenderError) === null || _a === void 0 ? void 0 : _a.call(this, new Error('play when texture offloaded'));
-            return (_b = this.ticker) === null || _b === void 0 ? void 0 : _b.pause();
+            (_c = this.handleRenderError) === null || _c === void 0 ? void 0 : _c.call(this, new Error('play when texture offloaded'));
+            return (_d = this.ticker) === null || _d === void 0 ? void 0 : _d.pause();
         }
         if (!this.paused || forceRender) {
             var level = this.gpuCapability.level;
@@ -38940,7 +33538,7 @@ var Player = /** @class */ (function () {
             time === null || time === void 0 ? void 0 : time.end();
             time === null || time === void 0 ? void 0 : time.getTime().then(function (t) { var _a; return (_a = _this.reportGPUTime) === null || _a === void 0 ? void 0 : _a.call(_this, t !== null && t !== void 0 ? t : 0); }).catch;
             if (this.autoPlaying) {
-                (_c = this.handlePlayableUpdate) === null || _c === void 0 ? void 0 : _c.call(this, {
+                (_e = this.handlePlayableUpdate) === null || _e === void 0 ? void 0 : _e.call(this, {
                     player: this,
                     playing: true,
                 });
@@ -38987,17 +33585,11 @@ var Player = /** @class */ (function () {
         if (containerWidth && containerHeight) {
             var documentWidth = weapp.document.documentElement.clientWidth;
             if (canvasWidth > documentWidth * 2) {
-                console.error({
-                    content: "DPI overflowed, width ".concat(canvasWidth, " is more than 2x document width ").concat(documentWidth, ", see ").concat(HELP_LINK['DPI overflowed']),
-                    type: LOG_TYPE,
-                });
+                logger.error("DPI overflowed, width ".concat(canvasWidth, " is more than 2x document width ").concat(documentWidth, ", see ").concat(HELP_LINK['DPI overflowed']));
             }
             var maxSize = this.env ? this.gpuCapability.detail.maxTextureSize : 2048;
             if ((canvasWidth > maxSize || canvasHeight > maxSize)) {
-                console.error({
-                    content: "Container size overflowed ".concat(canvasWidth, "x").concat(canvasHeight, ", see ").concat(HELP_LINK['Container size overflowed']),
-                    type: LOG_TYPE,
-                });
+                logger.error("Container size overflowed ".concat(canvasWidth, "x").concat(canvasHeight, ", see ").concat(HELP_LINK['Container size overflowed']));
                 if (aspect > 1) {
                     canvasWidth = Math.round(maxSize);
                     canvasHeight = Math.round(maxSize / aspect);
@@ -39011,7 +33603,7 @@ var Player = /** @class */ (function () {
             this.renderer.resize(canvasWidth, canvasHeight);
             this.canvas.style.width = containerWidth + 'px';
             this.canvas.style.height = containerHeight + 'px';
-            console.debug("Resize player ".concat(this.name, " [").concat(canvasWidth, ",").concat(canvasHeight, ",").concat(containerWidth, ",").concat(containerHeight, "]."));
+            logger.info("Resize player ".concat(this.name, " [").concat(canvasWidth, ",").concat(canvasHeight, ",").concat(containerWidth, ",").concat(containerHeight, "]."));
             (_a = this.compositions) === null || _a === void 0 ? void 0 : _a.forEach(function (comp) {
                 comp.camera.aspect = aspect;
             });
@@ -39057,15 +33649,15 @@ var Player = /** @class */ (function () {
      * @param keepCanvas - 是否保留 canvas 画面，默认不保留，canvas 不能再被使用
      */
     Player.prototype.dispose = function (keepCanvas) {
-        var _a, _b;
-        console.debug("call player destroy: ".concat(this.name));
+        var _a;
+        logger.info("call player destroy: ".concat(this.name));
         if (this.disposed) {
             return;
         }
         playerMap.delete(this.canvas);
         this.pause();
         (_a = this.ticker) === null || _a === void 0 ? void 0 : _a.stop();
-        (_b = this.assetManager) === null || _b === void 0 ? void 0 : _b.dispose();
+        this.assetManagers.forEach(function (assetManager) { return assetManager.dispose(); });
         this.compositions.forEach(function (comp) { return comp.dispose(); });
         this.compositions.length = 0;
         this.renderer.context.removeLostHandler({ lost: this.lost });
@@ -39092,6 +33684,10 @@ var Player = /** @class */ (function () {
         this.resize = throwErrorFunc;
         this.loadScene = throwErrorPromiseFunc;
         this.play = throwErrorPromiseFunc;
+        this.gotoAndPlay = throwErrorPromiseFunc;
+        this.gotoAndStop = throwErrorPromiseFunc;
+        this.playSequence = throwErrorFunc;
+        this.destroyCurrentCompositions = throwErrorFunc;
         this.resume = throwErrorPromiseFunc;
         this.disposed = true;
     };
@@ -39137,7 +33733,7 @@ var Player = /** @class */ (function () {
 }());
 function isSceneWithOptions(scene) {
     // TODO: 判断不太优雅，后期试情况优化
-    return isObject(scene) && 'scene' in scene;
+    return isObject(scene) && 'scene' in scene && 'options' in scene;
 }
 /**
  * 禁止/允许创建新的播放器，已创建的不受影响
@@ -39175,7 +33771,8 @@ function getActivePlayers() {
  * @param isCreate - 是否处于实例化时
  */
 function broadcastPlayerEvent(player, isCreate) {
-    Object.values(pluginLoaderMap).forEach(function (ctrl) {
+    Object.keys(pluginLoaderMap).forEach(function (key) {
+        var ctrl = pluginLoaderMap[key];
         var func = isCreate ? ctrl.onPlayerCreated : ctrl.onPlayerDestroy;
         func === null || func === void 0 ? void 0 : func(player);
     });
@@ -39202,10 +33799,7 @@ function assertNoConcurrentPlayers() {
         finally { if (e_1) throw e_1.error; }
     }
     if (runningPlayers.length > 1) {
-        console.error({
-            content: "Current running player count: ".concat(runningPlayers.length, ", see ").concat(HELP_LINK['Current running player count']),
-            type: LOG_TYPE,
-        }, runningPlayers);
+        logger.error("Current running player count: ".concat(runningPlayers.length, ", see ").concat(HELP_LINK['Current running player count']), runningPlayers);
     }
 }
 /**
@@ -39269,16 +33863,14 @@ Renderer.create = function (canvas, framework, renderOptions) {
 Engine.create = function (gl) {
     return new GLEngine(gl);
 };
-var version = "1.1.5";
-console.info({
-    content: '[Galacean Effects Player] version: ' + "1.1.5",
-    type: LOG_TYPE,
-});
+var version = "1.5.1";
+logger.info('player version: ' + version);
 
 exports.AbstractPlugin = AbstractPlugin;
 exports.AssetManager = AssetManager;
 exports.BYTES_TYPE_MAP = BYTES_TYPE_MAP;
-exports.BezierSegments = BezierSegments;
+exports.BezierCurve = BezierCurve;
+exports.BezierCurvePath = BezierCurvePath;
 exports.COMPRESSED_TEXTURE = COMPRESSED_TEXTURE;
 exports.COPY_FRAGMENT_SHADER = COPY_FRAGMENT_SHADER;
 exports.COPY_MESH_SHADER_ID = COPY_MESH_SHADER_ID;
@@ -39292,7 +33884,6 @@ exports.CameraVFXItem = CameraVFXItem;
 exports.CameraVFXItemLoader = CameraVFXItemLoader;
 exports.Composition = Composition;
 exports.CompositionSourceManager = CompositionSourceManager;
-exports.CurveValue = CurveValue;
 exports.DEFAULT_FONTS = DEFAULT_FONTS;
 exports.Downloader = Downloader;
 exports.EFFECTS_COPY_MESH_NAME = EFFECTS_COPY_MESH_NAME;
@@ -39320,7 +33911,6 @@ exports.InteractLoader = InteractLoader;
 exports.InteractMesh = InteractMesh;
 exports.InteractVFXItem = InteractVFXItem;
 exports.KTXTexture = KTXTexture;
-exports.LOG_TYPE = LOG_TYPE;
 exports.LineSegments = LineSegments;
 exports.LinearValue = LinearValue;
 exports.Material = Material;
@@ -39333,7 +33923,6 @@ exports.ParticleMesh = ParticleMesh;
 exports.ParticleSystem = ParticleSystem;
 exports.ParticleVFXItem = ParticleVFXItem;
 exports.PassTextureCache = PassTextureCache;
-exports.PathSegments = PathSegments;
 exports.Player = Player;
 exports.PluginSystem = PluginSystem;
 exports.QCanvasViewer = QCanvasViewer;
@@ -39413,6 +34002,7 @@ exports.createShaderWithMarcos = createShaderWithMarcos;
 exports.createShape = createShape;
 exports.createVFXItem = createVFXItem;
 exports.createValueGetter = createValueGetter;
+exports.decimalEqual = decimalEqual;
 exports.deepClone = deepClone;
 exports.defaultGlobalVolume = defaultGlobalVolume;
 exports.defaultPlugins = defaultPlugins;
@@ -39460,6 +34050,7 @@ exports.initErrors = initErrors;
 exports.initGLContext = initGLContext;
 exports.integrate = integrate;
 exports.interpolateColor = interpolateColor;
+exports.isAlipayMiniApp = isAlipayMiniApp;
 exports.isAndroid = isAndroid;
 exports.isArray = isArray;
 exports.isCanvasUsedByPlayer = isCanvasUsedByPlayer;
@@ -39472,25 +34063,30 @@ exports.isSimulatorCellPhone = isSimulatorCellPhone;
 exports.isString = isString;
 exports.isUniformStruct = isUniformStruct;
 exports.isUniformStructArray = isUniformStructArray;
+exports.isValidFontFamily = isValidFontFamily;
 exports.isWebGL2 = isWebGL2;
-exports.itemDefine = item_define;
 exports.itemFrag = itemFrag;
 exports.itemFrameFrag = itemFrameFrag;
 exports.itemVert = itemVert;
 exports.loadBinary = loadBinary;
 exports.loadBlob = loadBlob;
 exports.loadImage = loadImage;
+exports.loadMedia = loadMedia;
 exports.loadVideo = loadVideo;
 exports.loadWebPOptional = loadWebPOptional;
+exports.logger = logger;
 exports.math = index;
 exports.modifyMaxKeyframeShader = modifyMaxKeyframeShader;
 exports.nearestPowerOfTwo = nearestPowerOfTwo;
 exports.noop = noop;
+exports.numberToFix = numberToFix;
 exports.parsePercent = parsePercent$1;
 exports.particleFrag = particleFrag;
 exports.particleOriginTranslateMap = particleOriginTranslateMap;
+exports.particleUniformTypeMap = particleUniformTypeMap;
 exports.particleVert = particleVert;
 exports.pluginLoaderMap = pluginLoaderMap;
+exports.pointOnLine = pointOnLine;
 exports.random = random;
 exports.registerFilter = registerFilter;
 exports.registerFilters = registerFilters;
