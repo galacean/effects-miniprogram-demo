@@ -1,15 +1,15 @@
-node_modules
+# Windows
+[Dd]esktop.ini
+Thumbs.db
+$RECYCLE.BIN/
+
+# macOS
 .DS_Store
-dist
-lib
-*.local
-*.tgz
-.eslintcache
-*.tsbuildinfo
-.vscode
-.idea
-.pnpm-debug.log
-*-warn.log
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
 .history
-miniprogram_npm
-miniprogram/pages/**/*.js
+
+# Node.js
+node_modules/

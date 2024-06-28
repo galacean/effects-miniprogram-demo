@@ -1,59 +1,16 @@
-import { registerCanvas } from '@galacean/appx-adapter/weapp';
-import { Player, AbstractPlugin, registerPlugin } from '@galacean/effects/weapp';
-import inspireList from '../../assets/inspire-list';
+import { adapter, Player } from '../../libs/mp-weapp-galacean-effects';
 
-// 假装注册陀螺仪插件，兼容有陀螺仪的合成报错
-// @ts-expect-error
-registerPlugin('orientation-transformer', AbstractPlugin, AbstractPlugin, false);
+Page({
+  async onLoad() {
+    const canvas = await adapter.registerCanvas({ id: '#J-webglCanvas' });
 
-const jsons = Object.values(inspireList);
-const downgradeImage = 'https://gw.alipayobjects.com/mdn/lifeNews_f/afts/img/A*_GFMTpUWjwsAAAAAAAAAAAAAARQnAQ';
-
-Page<{}, WechatMiniprogram.Page.CustomOption>({
-  canvas: null,
-  player: null,
-  data: {
-    names: Object.values(inspireList).map(item => item.name),
-    index: 0,
-  },
-  async onLoad () {
-    const canvas = await registerCanvas({ id: '#J-webglCanvas' });
-
-    this.canvas = canvas;
     // 实例化一个播放器
-    this.player = new Player({
+    const player = new Player({
       transparentBackground: true,
       canvas,
       pixelRatio: 2,
-      renderFramework: 'webgl',
+      renderFramework: 'webgl'
     });
-    this.playByUrl(inspireList.text.url);
+    void player.loadScene('https://gw.alipayobjects.com/os/gltf-asset/mars-cli/MNJVBYCSYDWN/1425978492-8d707.json');
   },
-  bindPickerChange (e: WechatMiniprogram.TouchEvent) {
-    const index = e.detail.value;
-
-    this.setData({
-      index,
-    });
-    void this.playByUrl(jsons[index].url);
-  },
-  async playByUrl (url: string) {
-    try {
-      this.player.destroyCurrentCompositions();
-      void this.player.loadScene(url);
-    } catch (e) {
-      console.error(e);
-      this.player.useDowngradeImage(downgradeImage);
-    }
-  },
-  touchStart (e: Event) {
-    this.canvas.dispatchTouchEvent({ ...e, type: 'touchstart' })
-  },
-  touchMove (e: Event) {
-    this.canvas.dispatchTouchEvent({ ...e, type: 'touchmove' })
-  },
-  touchEnd (e: Event) {
-    this.canvas.dispatchTouchEvent({ ...e, type: 'touchend' })
-  }
-});
-
+})
