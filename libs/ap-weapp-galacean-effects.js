@@ -21,7 +21,7 @@ function getDefaultExportFromCjs (x) {
 	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 }
 
-var weapp = {};
+var alipay = {};
 
 var core = {};
 
@@ -2912,26 +2912,24 @@ exports.window = {
         core_1.document.dispatchEvent(event);
     },
 };
-core_1.platform.createCanvas = wx.createCanvas;
-core_1.platform.createImage = wx.createImage;
-core_1.platform.createOffscreenCanvas = wx.createOffscreenCanvas;
-core_1.platform.createSelectorQuery = wx.createSelectorQuery;
-core_1.platform.getSystemInfoSync = wx.getSystemInfoSync;
-core_1.platform.request = wx.request;
-core_1.platform.createVideoContext = wx.createVideoContext;
-core_1.platform.downloadFile = wx.downloadFile;
-core_1.platform.startDeviceMotionListening = wx.startDeviceMotionListening;
-core_1.platform.stopDeviceMotionListening = wx.stopDeviceMotionListening;
-core_1.platform.onDeviceMotionChange = wx.onDeviceMotionChange;
-core_1.platform.offDeviceMotionChange = wx.offDeviceMotionChange;
-}(weapp));
+core_1.platform.createCanvas = my.createCanvas;
+core_1.platform.createImage = my.createImage;
+core_1.platform.createOffscreenCanvas = my.createOffscreenCanvas;
+core_1.platform.createSelectorQuery = my.createSelectorQuery;
+core_1.platform.getSystemInfoSync = my.getSystemInfoSync;
+core_1.platform.request = my.request;
+core_1.platform.startDeviceMotionListening = my.startDeviceMotionListening;
+core_1.platform.stopDeviceMotionListening = my.stopDeviceMotionListening;
+core_1.platform.onDeviceMotionChange = my.onDeviceMotionChange;
+core_1.platform.offDeviceMotionChange = my.offDeviceMotionChange;
+}(alipay));
 
-var index$2 = /*@__PURE__*/getDefaultExportFromCjs(weapp);
+var index$2 = /*@__PURE__*/getDefaultExportFromCjs(alipay);
 
 var index$3 = /*#__PURE__*/_mergeNamespaces({
 	__proto__: null,
 	'default': index$2
-}, [weapp]);
+}, [alipay]);
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -3118,7 +3116,7 @@ function gpuTimer(gl) {
                                 gl.deleteQuery(query_1); // Don't re-enter this polling loop.
                                 query_1 = null;
                             }
-                            available !== null && query_1 && weapp.window.setTimeout(function () {
+                            available !== null && query_1 && alipay.window.setTimeout(function () {
                                 getTime_1().then(resolve).catch;
                             }, 1);
                         }
@@ -3148,12 +3146,12 @@ if (!initErrors.length) {
 }
 function initGLContext() {
     // 重要：iOS 9/10 低版本需要拷贝 gl context 的 prototype，要不然会有属性值的缺失
-    if (typeof weapp.WebGL2RenderingContext === 'function') {
-        copy(weapp.WebGL2RenderingContext);
+    if (typeof alipay.WebGL2RenderingContext === 'function') {
+        copy(alipay.WebGL2RenderingContext);
     }
-    else if (typeof weapp.WebGLRenderingContext !== 'undefined') {
-        copy(weapp.WebGLRenderingContext);
-        copy(weapp.WebGLRenderingContext.prototype);
+    else if (typeof alipay.WebGLRenderingContext !== 'undefined') {
+        copy(alipay.WebGLRenderingContext);
+        copy(alipay.WebGLRenderingContext.prototype);
     }
     else {
         initErrors.push(
@@ -3166,7 +3164,7 @@ function initGLContext() {
     }
 }
 function isWebGL2(gl) {
-    return typeof weapp.WebGL2RenderingContext !== 'undefined' && gl.constructor.name === 'WebGL2RenderingContext';
+    return typeof alipay.WebGL2RenderingContext !== 'undefined' && gl.constructor.name === 'WebGL2RenderingContext';
 }
 function copy(target) {
     for (var name_1 in target) {
@@ -3414,9 +3412,9 @@ function parsePercent$1(c) {
 }
 
 function getPixelRatio() {
-    if (typeof weapp.screen === 'object' && typeof weapp.document === 'object') {
-        var viewportWidth = Math.max(weapp.document.documentElement.clientWidth, weapp.window.innerWidth || 0);
-        var screenWidth = weapp.screen.width;
+    if (typeof alipay.screen === 'object' && typeof alipay.document === 'object') {
+        var viewportWidth = Math.max(alipay.document.documentElement.clientWidth, alipay.window.innerWidth || 0);
+        var screenWidth = alipay.screen.width;
         var viewportScale = screenWidth / viewportWidth;
         return Math.min(2 * viewportScale, 2);
     }
@@ -3424,13 +3422,13 @@ function getPixelRatio() {
 }
 function isIOS() {
     // real ios device not in simulator
-    return !!weapp.navigator.platform && /iPad|iPhone|iPod/.test(weapp.navigator.platform);
+    return !!alipay.navigator.platform && /iPad|iPhone|iPod/.test(alipay.navigator.platform);
 }
 function isAndroid() {
-    return /\b[Aa]ndroid\b/.test(weapp.navigator.userAgent);
+    return /\b[Aa]ndroid\b/.test(alipay.navigator.userAgent);
 }
 function isSimulatorCellPhone() {
-    return isAndroid() || /\b(iPad|iPhone|iPod)\b/.test(weapp.navigator.userAgent);
+    return isAndroid() || /\b(iPad|iPhone|iPod)\b/.test(alipay.navigator.userAgent);
 }
 function isAlipayMiniApp() {
     //@ts-expect-error
@@ -12997,7 +12995,7 @@ var EventSystem = /** @class */ (function () {
             if (dx === void 0) { dx = 0; }
             if (dy === void 0) { dy = 0; }
             var _a = _this.target, width = _a.width, height = _a.height;
-            var ts = weapp.performance.now();
+            var ts = alipay.performance.now();
             var vx = 0;
             var vy = 0;
             if (lastTouch) {
@@ -13027,7 +13025,7 @@ var EventSystem = /** @class */ (function () {
                     lastTouch = currentTouch = {
                         clientX: touch.clientX,
                         clientY: touch.clientY,
-                        ts: weapp.performance.now(),
+                        ts: alipay.performance.now(),
                         x: x,
                         y: y,
                     };
@@ -13328,7 +13326,7 @@ var Downloader = /** @class */ (function () {
         if (this.start(url, onSuccess, onError)) {
             return;
         }
-        var xhr = new weapp.XMLHttpRequest();
+        var xhr = new alipay.XMLHttpRequest();
         var handleError = function () {
             _this.finish(url, xhr.status, xhr.response);
         };
@@ -13413,14 +13411,14 @@ function loadImage(source) {
         return __generator(this, function (_a) {
             url = '';
             // 1. string | Blob | HTMLImageElement 处理逻辑
-            if (source instanceof weapp.HTMLImageElement) {
+            if (source instanceof alipay.HTMLImageElement) {
                 if (source.complete) {
                     return [2 /*return*/, source];
                 }
                 url = source.src;
             }
-            else if (source instanceof weapp.Blob) {
-                url = weapp.URL.createObjectURL(source);
+            else if (source instanceof alipay.Blob) {
+                url = alipay.URL.createObjectURL(source);
                 revokeURL = true;
             }
             else if (typeof source === 'string') {
@@ -13431,21 +13429,21 @@ function loadImage(source) {
                 throw new Error("Invalid url type: ".concat(JSON.stringify(source)));
             }
             return [2 /*return*/, new Promise(function (resolve, reject) {
-                    var img = new weapp.Image();
+                    var img = new alipay.Image();
                     if (!/^data:/.test(url)) {
                         img.crossOrigin = '*';
                     }
                     img.onload = function () {
                         img.onload = null;
                         if (revokeURL) {
-                            weapp.URL.revokeObjectURL(url);
+                            alipay.URL.revokeObjectURL(url);
                         }
                         return resolve(img);
                     };
                     img.onerror = function (e) {
                         img.onerror = null;
                         if (revokeURL) {
-                            weapp.URL.revokeObjectURL(url);
+                            alipay.URL.revokeObjectURL(url);
                         }
                         return reject("Load image fail: ".concat(url, ", reason: ").concat(JSON.stringify(e)));
                     };
@@ -13492,7 +13490,7 @@ function loadVideo(url) {
     return __awaiter(this, void 0, void 0, function () {
         var video;
         return __generator(this, function (_a) {
-            video = weapp.document.createElement('video');
+            video = alipay.document.createElement('video');
             if (typeof url === 'string') {
                 video.src = url;
             }
@@ -13577,7 +13575,7 @@ function loadMipmapImage(pointer, bins) {
             if (!bin) {
                 throw new Error("invalid bin pointer: ".concat(JSON.stringify(pointer)));
             }
-            return [2 /*return*/, loadImage(new weapp.Blob([new Uint8Array(bin, start, length)]))];
+            return [2 /*return*/, loadImage(new alipay.Blob([new Uint8Array(bin, start, length)]))];
         });
     });
 }
@@ -13922,7 +13920,7 @@ var TextureFactory = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 return [2 /*return*/, Promise.all(pointers.map(function (pointer) {
-                        var blob = new weapp.Blob([new Uint8Array(bin, pointer[0], pointer[1])]);
+                        var blob = new alipay.Blob([new Uint8Array(bin, pointer[0], pointer[1])]);
                         return loadImage(blob);
                     }))];
             });
@@ -16042,14 +16040,14 @@ var RenderBuffer = /** @class */ (function () {
     return RenderBuffer;
 }());
 
-var isWebGL2Available = typeof weapp.WebGL2RenderingContext === 'function';
+var isWebGL2Available = typeof alipay.WebGL2RenderingContext === 'function';
 var GPUCapability = /** @class */ (function () {
     function GPUCapability(gl) {
         this.setupCapability(gl);
     }
     GPUCapability.prototype.setupCapability = function (gl) {
         var _a;
-        var level = isWebGL2Available && gl instanceof weapp.WebGL2RenderingContext ? 2 : 1;
+        var level = isWebGL2Available && gl instanceof alipay.WebGL2RenderingContext ? 2 : 1;
         var level2 = level === 2;
         var textureAnisotropicExt = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
         var depthTextureExtension = gl.getExtension('WEBGL_depth_texture');
@@ -16073,7 +16071,7 @@ var GPUCapability = /** @class */ (function () {
         this.internalFormatDepth16 = level2 ? gl.DEPTH_COMPONENT16 : gl.DEPTH_COMPONENT;
         this.internalFormatDepth24_stencil8 = level2 ? gl.DEPTH24_STENCIL8 : gl.DEPTH_STENCIL;
         var floatTexture = (level2 || gl.getExtension('OES_texture_float')) ? gl.FLOAT : 0;
-        var halfFloatTexture = level2 ? weapp.WebGL2RenderingContext.HALF_FLOAT : (((_a = gl.getExtension('OES_texture_half_float')) === null || _a === void 0 ? void 0 : _a.HALF_FLOAT_OES) || 0);
+        var halfFloatTexture = level2 ? alipay.WebGL2RenderingContext.HALF_FLOAT : (((_a = gl.getExtension('OES_texture_half_float')) === null || _a === void 0 ? void 0 : _a.HALF_FLOAT_OES) || 0);
         var detail = {
             floatTexture: floatTexture,
             halfFloatTexture: halfFloatTexture,
@@ -22054,11 +22052,11 @@ var TextMetrics = /** @class */ (function () {
             var canvas;
             if (getConfig(TEMPLATE_USE_OFFSCREEN_CANVAS)) {
                 // @ts-expect-error
-                canvas = weapp.window._createOffscreenCanvas(10, 10);
+                canvas = alipay.window._createOffscreenCanvas(10, 10);
                 TextMetrics.__canvas = canvas;
             }
             else if (!TextMetrics.__canvas) {
-                canvas = weapp.document.createElement('canvas');
+                canvas = alipay.document.createElement('canvas');
                 canvas.width = canvas.height = 10;
                 TextMetrics.__canvas = canvas;
             }
@@ -22489,7 +22487,7 @@ var QCanvasViewer = /** @class */ (function () {
         this.textList = [];
         var renderCanvas;
         if (typeof canvas === 'string') {
-            renderCanvas = weapp.document.getElementById(canvas);
+            renderCanvas = alipay.document.getElementById(canvas);
         }
         else {
             renderCanvas = canvas;
@@ -22570,7 +22568,7 @@ var QCanvasViewer = /** @class */ (function () {
 function requestAsync(url, opt) {
     opt = opt || {};
     return new Promise(function (resolve, reject) {
-        var xhr = new weapp.XMLHttpRequest();
+        var xhr = new alipay.XMLHttpRequest();
         xhr.responseType = (opt === null || opt === void 0 ? void 0 : opt.responseType) || 'json';
         xhr.addEventListener('load', function () { return resolve(xhr.response); });
         xhr.addEventListener('error', function () { return reject(Error("load ".concat(url, " fail"))); });
@@ -22601,7 +22599,7 @@ function combineImageTemplate1(url, template, variables, opts, flipY) {
                         name_1 = template.content.replace(/\$/g, '');
                         replaceURL = variables[name_1] || template.variables[name_1];
                         onImage = function (image) {
-                            var canvas = (opts === null || opts === void 0 ? void 0 : opts.canvas) || weapp.document.createElement('canvas');
+                            var canvas = (opts === null || opts === void 0 ? void 0 : opts.canvas) || alipay.document.createElement('canvas');
                             var width = canvas.width = template.backgroundWidth;
                             var height = canvas.height = template.backgroundHeight;
                             var ctx = canvas.getContext('2d');
@@ -22650,7 +22648,7 @@ function combineImageTemplate1(url, template, variables, opts, flipY) {
                     return [4 /*yield*/, loadImage("data:image/svg+xml,".concat(encodeURIComponent(content)))];
                 case 3:
                     fg = _a.sent();
-                    canvas = (opts === null || opts === void 0 ? void 0 : opts.canvas) || weapp.document.createElement('canvas');
+                    canvas = (opts === null || opts === void 0 ? void 0 : opts.canvas) || alipay.document.createElement('canvas');
                     canvas.width = bg.width * imageScale;
                     canvas.height = bg.height * imageScale;
                     return [2 /*return*/, new Promise(function (resolve, reject) {
@@ -22735,11 +22733,11 @@ var CanvasPool = /** @class */ (function () {
         }
         if (getConfig(TEMPLATE_USE_OFFSCREEN_CANVAS)) {
             // @ts-expect-error
-            return weapp.window._createOffscreenCanvas(10, 10);
+            return alipay.window._createOffscreenCanvas(10, 10);
         }
         else {
             // in hongmeng system,create too many canvas will case render error
-            var defCanvas = weapp.document.createElement('canvas');
+            var defCanvas = alipay.document.createElement('canvas');
             defCanvas.getContext('2d', { willReadFrequently: true });
             return defCanvas;
         }
@@ -23010,8 +23008,8 @@ function prepareFontResources(template) {
                                         hasFontAdd = true;
                                     }
                                     else {
-                                        if (weapp.document.fonts !== undefined) {
-                                            weapp.document.fonts.forEach(function (fontFace) {
+                                        if (alipay.document.fonts !== undefined) {
+                                            alipay.document.fonts.forEach(function (fontFace) {
                                                 if (fontFace.family === name_2) {
                                                     hasFontAdd = true;
                                                 }
@@ -23020,13 +23018,13 @@ function prepareFontResources(template) {
                                     }
                                     if (!(!hasFontAdd && url !== undefined && url !== '')) return [3 /*break*/, 2];
                                     source = "url(".concat(url, ")");
-                                    if (!(weapp.document.fonts !== undefined)) return [3 /*break*/, 2];
+                                    if (!(alipay.document.fonts !== undefined)) return [3 /*break*/, 2];
                                     fontFace = new FontFace("".concat(name_2), source);
                                     return [4 /*yield*/, fontFace.load()];
                                 case 1:
                                     _b.sent();
                                     // @ts-expect-error
-                                    weapp.document.fonts.add(fontFace);
+                                    alipay.document.fonts.add(fontFace);
                                     _b.label = 2;
                                 case 2: return [2 /*return*/];
                             }
@@ -26915,17 +26913,17 @@ var AssetManager = /** @class */ (function () {
             var _this = this;
             return __generator(this, function (_d) {
                 assetUrl = isString(url) ? url : this.id;
-                startTime = weapp.performance.now();
+                startTime = alipay.performance.now();
                 timeInfos = [];
                 gpuInstance = renderer === null || renderer === void 0 ? void 0 : renderer.engine.gpuCapability;
                 asyncShaderCompile = (_b = (_a = gpuInstance === null || gpuInstance === void 0 ? void 0 : gpuInstance.detail) === null || _a === void 0 ? void 0 : _a.asyncShaderCompile) !== null && _b !== void 0 ? _b : false;
                 compressedTexture = (_c = gpuInstance === null || gpuInstance === void 0 ? void 0 : gpuInstance.detail.compressedTexture) !== null && _c !== void 0 ? _c : 0;
                 cancelLoading = false;
                 waitPromise = new Promise(function (resolve, reject) {
-                    loadTimer = weapp.window.setTimeout(function () {
+                    loadTimer = alipay.window.setTimeout(function () {
                         cancelLoading = true;
                         _this.removeTimer(loadTimer);
-                        var totalTime = weapp.performance.now() - startTime;
+                        var totalTime = alipay.performance.now() - startTime;
                         reject("Load time out: totalTime: ".concat(totalTime.toFixed(4), "ms ").concat(timeInfos.join(' '), ", url: ").concat(assetUrl));
                     }, _this.timeout * 1000);
                     _this.timers.push(loadTimer);
@@ -26936,14 +26934,14 @@ var AssetManager = /** @class */ (function () {
                         switch (_a.label) {
                             case 0:
                                 if (!!cancelLoading) return [3 /*break*/, 4];
-                                st = weapp.performance.now();
+                                st = alipay.performance.now();
                                 _a.label = 1;
                             case 1:
                                 _a.trys.push([1, 3, , 4]);
                                 return [4 /*yield*/, func()];
                             case 2:
                                 result = _a.sent();
-                                timeInfos.push("[".concat(label, ": ").concat((weapp.performance.now() - st).toFixed(2), "]"));
+                                timeInfos.push("[".concat(label, ": ").concat((alipay.performance.now() - st).toFixed(2), "]"));
                                 return [2 /*return*/, result];
                             case 3:
                                 e_1 = _a.sent();
@@ -26961,11 +26959,11 @@ var AssetManager = /** @class */ (function () {
                                 if (!isObject(url)) return [3 /*break*/, 1];
                                 // TODO: 原 JSONLoader contructor 判断是否兼容
                                 rawJSON = url;
-                                this.baseUrl = weapp.location.href;
+                                this.baseUrl = alipay.location.href;
                                 return [3 /*break*/, 3];
                             case 1:
                                 // 兼容相对路径
-                                url = new weapp.URL(url, weapp.location.href).href;
+                                url = new alipay.URL(url, alipay.location.href).href;
                                 this.baseUrl = url;
                                 return [4 /*yield*/, hookTimeInfo('loadJSON', function () { return _this.loadJSON(url); })];
                             case 2:
@@ -26980,7 +26978,7 @@ var AssetManager = /** @class */ (function () {
                                 images_1 = scene.images;
                                 for (i = 0; i < rawImages.length; i++) {
                                     // 仅重新加载数据模板对应的图片
-                                    if (images_1[i] instanceof weapp.HTMLCanvasElement) {
+                                    if (images_1[i] instanceof alipay.HTMLCanvasElement) {
                                         images_1[i] = rawImages[i];
                                     }
                                 }
@@ -27031,9 +27029,9 @@ var AssetManager = /** @class */ (function () {
                                 _e.sent();
                                 _e.label = 12;
                             case 12:
-                                totalTime = weapp.performance.now() - startTime;
+                                totalTime = alipay.performance.now() - startTime;
                                 logger.info("Load asset: totalTime: ".concat(totalTime.toFixed(4), "ms ").concat(timeInfos.join(' '), ", url: ").concat(assetUrl));
-                                weapp.window.clearTimeout(loadTimer);
+                                alipay.window.clearTimeout(loadTimer);
                                 this.removeTimer(loadTimer);
                                 scene.totalTime = totalTime;
                                 scene.startTime = startTime;
@@ -27122,7 +27120,7 @@ var AssetManager = /** @class */ (function () {
                         return bin;
                     }
                     if (passRenderLevel(bin.renderLevel, renderLevel)) {
-                        return _this.loadBins(new weapp.URL(bin.url, baseUrl).href);
+                        return _this.loadBins(new alipay.URL(bin.url, baseUrl).href);
                     }
                     throw new Error("Invalid bins source: ".concat(JSON.stringify(bins)));
                 });
@@ -27153,13 +27151,13 @@ var AssetManager = /** @class */ (function () {
                                 _b.label = 1;
                             case 1:
                                 _b.trys.push([1, 3, , 4]);
-                                url = new weapp.URL(font.fontURL, this.baseUrl).href;
+                                url = new alipay.URL(font.fontURL, this.baseUrl).href;
                                 fontFace = new FontFace((_a = font.fontFamily) !== null && _a !== void 0 ? _a : '', 'url(' + url + ')');
                                 return [4 /*yield*/, fontFace.load()];
                             case 2:
                                 _b.sent();
                                 //@ts-expect-error
-                                weapp.document.fonts.add(fontFace);
+                                alipay.document.fonts.add(fontFace);
                                 AssetManager.fonts.add(font.fontFamily);
                                 return [3 /*break*/, 4];
                             case 3:
@@ -27190,8 +27188,8 @@ var AssetManager = /** @class */ (function () {
                                     return [2 /*return*/, undefined];
                                 }
                                 png = img.url, webp = img.webp;
-                                imageURL = new weapp.URL(png, baseUrl).href;
-                                webpURL = webp && new weapp.URL(webp, baseUrl).href;
+                                imageURL = new alipay.URL(png, baseUrl).href;
+                                webpURL = webp && new alipay.URL(webp, baseUrl).href;
                                 if (!('template' in img)) return [3 /*break*/, 13];
                                 template = img.template;
                                 isTemplateV2 = 'v' in template && template.v === 2 && template.background;
@@ -27206,7 +27204,7 @@ var AssetManager = /** @class */ (function () {
                                 return [4 /*yield*/, loadMedia(url_1, loadFn)];
                             case 2:
                                 resultImage = _b.sent();
-                                if (!(resultImage instanceof weapp.HTMLVideoElement)) return [3 /*break*/, 3];
+                                if (!(resultImage instanceof alipay.HTMLVideoElement)) return [3 /*break*/, 3];
                                 return [2 /*return*/, resultImage];
                             case 3:
                                 // 如果是加载图片且是数组，设置变量，视频情况下不需要
@@ -27248,7 +27246,7 @@ var AssetManager = /** @class */ (function () {
                                         src = compressed.pvrtc;
                                     }
                                     if (src) {
-                                        bufferURL = new weapp.URL(src, baseUrl).href;
+                                        bufferURL = new alipay.URL(src, baseUrl).href;
                                         this.assets[idx] = { url: bufferURL, type: exports.TextureSourceType.compressed };
                                         return [2 /*return*/, this.loadBins(bufferURL)];
                                     }
@@ -27256,9 +27254,9 @@ var AssetManager = /** @class */ (function () {
                                 else if ('sourceType' in img) {
                                     return [2 /*return*/, img];
                                 }
-                                else if (img instanceof weapp.HTMLImageElement ||
-                                    img instanceof weapp.HTMLCanvasElement ||
-                                    img instanceof weapp.HTMLVideoElement ||
+                                else if (img instanceof alipay.HTMLImageElement ||
+                                    img instanceof alipay.HTMLCanvasElement ||
+                                    img instanceof alipay.HTMLVideoElement ||
                                     img instanceof Texture) {
                                     return [2 /*return*/, img];
                                 }
@@ -27342,7 +27340,7 @@ var AssetManager = /** @class */ (function () {
     AssetManager.prototype.dispose = function () {
         var _a;
         if (this.timers.length) {
-            this.timers.map(function (id) { return weapp.window.clearTimeout(id); });
+            this.timers.map(function (id) { return alipay.window.clearTimeout(id); });
         }
         for (var key in this.assets) {
             var asset = this.assets[key];
@@ -27376,7 +27374,7 @@ function createTextureOptionsBySource(image, sourceFrom) {
     if (image instanceof Texture) {
         return image.source;
     }
-    else if (image instanceof weapp.HTMLImageElement ||
+    else if (image instanceof alipay.HTMLImageElement ||
         isCanvas(image)) {
         return {
             image: image,
@@ -27387,7 +27385,7 @@ function createTextureOptionsBySource(image, sourceFrom) {
             magFilter: glContext.LINEAR,
         };
     }
-    else if (image instanceof weapp.HTMLVideoElement) {
+    else if (image instanceof alipay.HTMLVideoElement) {
         // 视频
         return {
             sourceType: exports.TextureSourceType.video,
@@ -28165,7 +28163,7 @@ var Composition = /** @class */ (function () {
         this.pluginSystem.plugins.forEach(function (p) { return p.onCompositionWillReset(_this, _this.renderFrame); });
         this.content.createContent();
         this.content.onEnd = function () {
-            weapp.window.setTimeout(function () {
+            alipay.window.setTimeout(function () {
                 var _a;
                 (_a = _this.onEnd) === null || _a === void 0 ? void 0 : _a.call(_this, _this);
             }, 0);
@@ -28236,7 +28234,7 @@ var Composition = /** @class */ (function () {
      */
     Composition.prototype.updateVideo = function () {
         var _a;
-        var now = weapp.performance.now();
+        var now = alipay.performance.now();
         // 视频固定30帧更新
         if (now - this.lastVideoUpdateTime > 33) {
             ((_a = this.textures) !== null && _a !== void 0 ? _a : []).forEach(function (tex) { return tex === null || tex === void 0 ? void 0 : tex.uploadCurrentVideoFrame(); });
@@ -28743,9 +28741,9 @@ var Ticker = /** @class */ (function () {
         var _this = this;
         this.paused = false;
         if (!this.intervalId) {
-            this.lastTime = weapp.performance.now();
-            var raf_1 = weapp.requestAnimationFrame || function (func) {
-                return weapp.window.setTimeout(func, 16.7);
+            this.lastTime = alipay.performance.now();
+            var raf_1 = alipay.requestAnimationFrame || function (func) {
+                return alipay.window.setTimeout(func, 16.7);
             };
             var runLoop_1 = function () {
                 _this.intervalId = raf_1(runLoop_1);
@@ -28760,7 +28758,7 @@ var Ticker = /** @class */ (function () {
      * 定时器停止方法
      */
     Ticker.prototype.stop = function () {
-        (weapp.cancelAnimationFrame || weapp.window.clearTimeout)(this.intervalId);
+        (alipay.cancelAnimationFrame || alipay.window.clearTimeout)(this.intervalId);
         this.intervalId = 0;
         this.lastTime = 0;
         this.paused = true;
@@ -28785,7 +28783,7 @@ var Ticker = /** @class */ (function () {
         if (this.paused) {
             return;
         }
-        var startTime = weapp.performance.now();
+        var startTime = alipay.performance.now();
         var deltaTime = startTime - this.lastTime;
         if (deltaTime >= this.interval) {
             this.lastTime = startTime;
@@ -31946,10 +31944,10 @@ var GLShaderLibrary = /** @class */ (function () {
         var result = { shared: shaderData.shared, status: exports.ShaderCompileResultStatus.compiling };
         var linkProgram = this.createProgram(gl, shaderData.vertex, shaderData.fragment, result);
         var ext = this.glAsyncCompileExt;
-        var startTime = weapp.performance.now();
+        var startTime = alipay.performance.now();
         var setupProgram = function (glProgram) {
             result.status = exports.ShaderCompileResultStatus.success;
-            result.compileTime = weapp.performance.now() - startTime;
+            result.compileTime = alipay.performance.now() - startTime;
             shader.program = glProgram;
             shader.initialized = true;
             shader.pipelineContext = _this.pipelineContext;
@@ -31991,7 +31989,7 @@ var GLShaderLibrary = /** @class */ (function () {
                 }
             }
             else if (asyncCallback) {
-                weapp.requestAnimationFrame(checkComplete);
+                alipay.requestAnimationFrame(checkComplete);
             }
         };
         shader.compileResult = result;
@@ -32984,7 +32982,7 @@ var HELP_LINK = {
 
 function isDowngradeIOS() {
     var iOSVersionRegex = /iPhone OS (\d+)_(\d+)/;
-    var match = iOSVersionRegex.exec(weapp.navigator.userAgent);
+    var match = iOSVersionRegex.exec(alipay.navigator.userAgent);
     if (match) {
         return match[1] === '13' || (match[1] === '16' && match[2] === '5');
     }
@@ -33147,7 +33145,7 @@ var Player = /** @class */ (function () {
         }
         else if (gl) {
             this.canvas = gl.canvas;
-            var version = gl instanceof weapp.WebGLRenderingContext ? 'webgl' : 'webgl2';
+            var version = gl instanceof alipay.WebGLRenderingContext ? 'webgl' : 'webgl2';
             if (framework !== version) {
                 logger.error("The gl context(".concat(version, ") is inconsistent with renderFramework or default version(").concat(framework, ")"));
                 framework = version;
@@ -33155,7 +33153,7 @@ var Player = /** @class */ (function () {
         }
         else {
             assertContainer(container);
-            this.canvas = weapp.document.createElement('canvas');
+            this.canvas = alipay.document.createElement('canvas');
             container.appendChild(this.canvas);
         }
         this.renderer = Renderer.create(this.canvas, framework, {
@@ -33301,7 +33299,7 @@ var Player = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         renderer = this.renderer;
-                        last = weapp.performance.now();
+                        last = alipay.performance.now();
                         opts = __assign$1({ autoplay: true }, options);
                         if (isSceneWithOptions(url)) {
                             source = url.scene;
@@ -33339,7 +33337,7 @@ var Player = /** @class */ (function () {
                         else {
                             composition.pause();
                         }
-                        firstFrameTime = (weapp.performance.now() - last) + composition.statistic.loadTime;
+                        firstFrameTime = (alipay.performance.now() - last) + composition.statistic.loadTime;
                         composition.statistic.firstFrameTime = firstFrameTime;
                         logger.info("first frame: [".concat(composition.name, "]").concat(firstFrameTime.toFixed(4), "ms"));
                         this.compositions.push(composition);
@@ -33583,7 +33581,7 @@ var Player = /** @class */ (function () {
         }
         var aspect = containerWidth / containerHeight;
         if (containerWidth && containerHeight) {
-            var documentWidth = weapp.document.documentElement.clientWidth;
+            var documentWidth = alipay.document.documentElement.clientWidth;
             if (canvasWidth > documentWidth * 2) {
                 logger.error("DPI overflowed, width ".concat(canvasWidth, " is more than 2x document width ").concat(documentWidth, ", see ").concat(HELP_LINK['DPI overflowed']));
             }
@@ -33665,7 +33663,7 @@ var Player = /** @class */ (function () {
         this.event.dispose();
         this.renderer.dispose(!keepCanvas);
         broadcastPlayerEvent(this, false);
-        if (this.canvas instanceof weapp.HTMLCanvasElement &&
+        if (this.canvas instanceof alipay.HTMLCanvasElement &&
             !keepCanvas &&
             this.renderer.context) {
             // TODO: 数据模版下掉可以由文本模块单独管理

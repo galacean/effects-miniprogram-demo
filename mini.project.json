@@ -1,0 +1,10 @@
+{
+  "format": 2,
+  "compileOptions": {
+    "less": true,
+    "typescript": true
+  },
+  "developOptions": {
+    "skipTranspile": false
+  }
+}
