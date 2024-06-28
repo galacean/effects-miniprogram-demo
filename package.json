@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "@galacean/appx-adapter": "0.2.1",
-    "@galacean/effects": "^1.5.1"
+    "@galacean/effects": "^1.6.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.0.3",
