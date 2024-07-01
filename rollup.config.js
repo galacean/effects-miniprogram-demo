@@ -11,11 +11,11 @@ const plugins = [
 ];
 
 export default [
-  'ap',
-  'mp'
+  'alipay',
+  'weapp'
 ].map(platform => {
   return {
-    input: [`./libs/${platform}-weapp-galacean-effects.ts`],
+    input: [`./libs/mp-${platform}-galacean-effects.ts`],
     output: {
       format: 'cjs',
       dir: 'libs/',

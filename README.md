@@ -18,12 +18,12 @@
 在 **main** 分支下的 `libs` 目录，提供了编译打包原生 js/ts 小程序的库代码，如下：
 
 1. 执行 `npm install` 和 `npm run build` 生成 `.js` 文件
-2. 使用编译好的 js 库，即上一步生成的：`ap-weapp-galacean-effects.js`（支付宝小程序）和 `mp-weapp-galacean-effects.js`（微信小程序）
+2. 使用编译好的 js 库，即上一步生成的：`mp-alipay-galacean-effects.js`（支付宝小程序）和 `mp-weapp-galacean-effects.js`（微信小程序）
 3. 放到自己的原生小程序项目中，并在业务代码中引入并使用（如支付宝小程序下）：
 ``` ts
-import { adapter, Player } from '~/libs/ap-weapp-galacean-effects';
+import { adapter, Player } from '~/libs/mp-alipay-galacean-effects';
 
-// 与完整示例代码不同是 registerCanvas 要从 adapter 命名空间下获取
+// 与完整示例代码不同的是 registerCanvas 要从 adapter 命名空间下获取
 const canvas = await adapter.registerCanvas({ id: '#J-webglCanvas' });
 ```
 
