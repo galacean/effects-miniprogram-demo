@@ -20,8 +20,8 @@ $ npm i @galacean/effects --save
 ```
 
 ``` ts
-import { registerCanvas } from '@galacean/appx-adapter/weapp';
-import { Player } from '@galacean/effects/weapp';
+import { registerCanvas } from '@galacean/appx-adapter/alipay';
+import { Player } from '@galacean/effects/alipay';
 
 // 1. 使用 adapter 方法注册 canvas
 const canvas = await registerCanvas({ id: '#J-webglCanvas' });
@@ -56,4 +56,4 @@ npm run build
 ```
 
 > Tips
-> - `npm run dev/build` 会把 `miniprogram/pages` 下的 `.ts` 编译成 `.js`，然后通过微信开发者工具即可编译或预览
+> - `npm run dev/build` 会把 `miniprogram/pages` 下的 `.ts` 编译成 `.js`，然后通过支付宝开发者工具即可编译或预览
