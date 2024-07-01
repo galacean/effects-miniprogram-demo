@@ -1,2 +1,3 @@
 .history
+*.log
 node_modules
