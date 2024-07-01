@@ -1,4 +1,4 @@
-import { adapter, Player } from '../../libs/ap-weapp-galacean-effects';
+import { adapter, Player } from '../../libs/mp-alipay-galacean-effects';
 
 Page({
   async onLoad(query) {

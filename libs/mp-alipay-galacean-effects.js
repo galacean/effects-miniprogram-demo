@@ -12994,10 +12994,23 @@ var EventSystem = /** @class */ (function () {
         var getTouchEventValue = function (event, x, y, dx, dy) {
             if (dx === void 0) { dx = 0; }
             if (dy === void 0) { dy = 0; }
-            var _a = _this.target, width = _a.width, height = _a.height;
-            var ts = alipay.performance.now();
             var vx = 0;
             var vy = 0;
+            var ts = alipay.performance.now();
+            if (!_this.target) {
+                logger.error('Trigger TouchEvent after EventSystem is disposed');
+                return {
+                    x: x,
+                    y: y,
+                    vx: 0,
+                    vy: vy,
+                    dx: dx,
+                    dy: dy,
+                    ts: ts,
+                    width: 0, height: 0, origin: event,
+                };
+            }
+            var _a = _this.target, width = _a.width, height = _a.height;
             if (lastTouch) {
                 var dt = ts - lastTouch.ts;
                 vx = ((dx - lastTouch.dx) / dt) || 0;
@@ -16428,6 +16441,14 @@ var InteractVFXItem = /** @class */ (function (_super) {
     function InteractVFXItem(props, composition) {
         var _a;
         var _this = _super.call(this, props, composition) || this;
+        /**
+         * 拖拽的惯性衰减系数，范围[0, 1], 越大惯性越强
+         */
+        _this.downgrade = 0.95;
+        /**
+         * 拖拽的距离映射系数，越大越容易拖动
+         */
+        _this.dragRatio = [1, 1];
         _this.engine = (_a = _this.composition) === null || _a === void 0 ? void 0 : _a.getEngine();
         return _this;
     }
@@ -16438,8 +16459,23 @@ var InteractVFXItem = /** @class */ (function (_super) {
         enumerable: false,
         configurable: true
     });
+    Object.defineProperty(InteractVFXItem.prototype, "enable", {
+        get: function () {
+            return this.enabled;
+        },
+        set: function (enable) {
+            this.enabled = enable;
+            if (!enable) {
+                // 立刻停止惯性滑动
+                this.bouncingArg = null;
+            }
+        },
+        enumerable: false,
+        configurable: true
+    });
     InteractVFXItem.prototype.onConstructed = function (options) {
         this.ui = options.content;
+        this.enabled = true;
     };
     InteractVFXItem.prototype.onLifetimeBegin = function (composition) {
         var _a, _b, _c;
@@ -16458,9 +16494,8 @@ var InteractVFXItem = /** @class */ (function (_super) {
         if (!this.dragEvent || !this.bouncingArg) {
             return;
         }
-        var downgrade = 0.95;
-        this.bouncingArg.vx *= downgrade;
-        this.bouncingArg.vy *= downgrade;
+        this.bouncingArg.vx *= this.downgrade;
+        this.bouncingArg.vy *= this.downgrade;
         this.bouncingArg.dy += this.bouncingArg.vy;
         this.bouncingArg.dx += this.bouncingArg.vx;
         if (shouldIgnoreBouncing(this.bouncingArg)) {
@@ -16496,7 +16531,7 @@ var InteractVFXItem = /** @class */ (function (_super) {
         };
     };
     InteractVFXItem.prototype.getHitTestParams = function () {
-        if (!this.clickable) {
+        if (!this.clickable || !this.canInteract()) {
             return;
         }
         var behavior = this.ui.options.behavior;
@@ -16533,6 +16568,9 @@ var InteractVFXItem = /** @class */ (function (_super) {
         var handlerMap = {
             touchstart: function (event) {
                 var _a;
+                if (!_this.canInteract()) {
+                    return;
+                }
                 _this.dragEvent = null;
                 _this.bouncingArg = null;
                 var camera = (_a = _this.composition) === null || _a === void 0 ? void 0 : _a.camera;
@@ -16550,6 +16588,9 @@ var InteractVFXItem = /** @class */ (function (_super) {
                 _this.bouncingArg = event;
             },
             touchend: function (event) {
+                if (!_this.canInteract()) {
+                    return;
+                }
                 var bouncingArg = _this.bouncingArg;
                 if (!shouldIgnoreBouncing(bouncingArg, 3) && bouncingArg) {
                     var speed = 5;
@@ -16575,7 +16616,7 @@ var InteractVFXItem = /** @class */ (function (_super) {
     };
     InteractVFXItem.prototype.handleDragMove = function (evt, event) {
         var _a, _b;
-        if (!(evt && evt.cameraParam) || !this.composition) {
+        if (!(evt === null || evt === void 0 ? void 0 : evt.cameraParam) || !this.canInteract() || !this.composition) {
             return;
         }
         var options = this.ui.options;
@@ -16586,8 +16627,8 @@ var InteractVFXItem = /** @class */ (function (_super) {
         var sp = Math.tan(fov * Math.PI / 180 / 2) * Math.abs(depth);
         var height = dy * sp;
         var width = dx * sp;
-        var nx = position[0] - width;
-        var ny = position[1] - height;
+        var nx = position[0] - this.dragRatio[0] * width;
+        var ny = position[1] - this.dragRatio[1] * height;
         if (options.dxRange) {
             var _d = __read$3(options.dxRange, 2), min = _d[0], max = _d[1];
             nx = clamp$1(nx, min, max);
@@ -16603,6 +16644,10 @@ var InteractVFXItem = /** @class */ (function (_super) {
             }
         }
         this.composition.camera.position = new Vector3(nx, ny, depth);
+    };
+    InteractVFXItem.prototype.canInteract = function () {
+        var _a;
+        return Boolean((_a = this.composition) === null || _a === void 0 ? void 0 : _a.interactive) && this.enabled;
     };
     return InteractVFXItem;
 }(VFXItem));
@@ -23160,32 +23205,37 @@ var TextLayout = /** @class */ (function () {
         this.textAlign = textAlign;
         this.lineHeight = lineHeight;
     }
-    TextLayout.prototype.getOffsetY = function (style) {
-        var offsetY = 0;
-        var offset = (style.fontSize + style.outlineWidth) * style.fontScale;
+    TextLayout.prototype.getOffsetY = function (style, lineCount, lineHeight) {
+        var offsetResult = 0;
+        var fontSize = style.fontSize, outlineWidth = style.outlineWidth, fontScale = style.fontScale;
+        // 计算基础偏移量
+        var baseOffset = (fontSize + outlineWidth) * fontScale;
+        // /3 计算Y轴偏移量，以匹配编辑器行为
+        var offsetY = (lineHeight - fontSize) / 3;
+        var commonCalculation = lineHeight * (lineCount - 1);
         switch (this.textBaseline) {
-            case 0:
-                offsetY = offset;
+            case TextBaseline$1.top:
+                offsetResult = baseOffset + offsetY;
                 break;
-            case 1:
-                offsetY = (this.height + offset) / 2; // fonSize;
+            case TextBaseline$1.middle:
+                offsetResult = (this.height * fontScale - commonCalculation + baseOffset) / 2;
                 break;
-            case 2:
-                offsetY = this.height - offset / 2;
+            case TextBaseline$1.bottom:
+                offsetResult = (this.height * fontScale - commonCalculation) - offsetY;
                 break;
         }
-        return offsetY;
+        return offsetResult;
     };
     TextLayout.prototype.getOffsetX = function (style, maxWidth) {
         var offsetX = 0;
         switch (this.textAlign) {
-            case 0:
+            case TextAlignment$1.left:
                 offsetX = style.outlineWidth * style.fontScale;
                 break;
-            case 1:
+            case TextAlignment$1.middle:
                 offsetX = (this.width * style.fontScale - maxWidth) / 2;
                 break;
-            case 2:
+            case TextAlignment$1.right:
                 offsetX = (this.width * style.fontScale - maxWidth);
                 break;
         }
@@ -23208,6 +23258,10 @@ var TextItem = /** @class */ (function (_super) {
     function TextItem(props, opts, vfxItem) {
         var _this = _super.call(this, props, opts, vfxItem) || this;
         _this.isDirty = true;
+        /**
+         * 文本行数
+         */
+        _this.lineCount = 0;
         var options = props.options;
         _this.canvas = canvasPool.getCanvas();
         canvasPool.saveCanvas(_this.canvas);
@@ -23216,10 +23270,34 @@ var TextItem = /** @class */ (function (_super) {
         _this.textStyle = new TextStyle(options);
         _this.textLayout = new TextLayout(options);
         _this.text = options.text;
+        _this.lineCount = _this.getLineCount(options.text, true);
         // Text
         _this.mesh = new TextMesh(_this.engine, _this.renderInfo, vfxItem.composition);
         return _this;
     }
+    TextItem.prototype.getLineCount = function (text, init) {
+        var _a, _b;
+        var context = this.context;
+        var letterSpace = this.textLayout.letterSpace;
+        var fontScale = init ? this.textStyle.fontSize / 10 : 1 / this.textStyle.fontScale;
+        var width = (this.textLayout.width + this.textStyle.fontOffset);
+        var lineCount = 1;
+        var x = 0;
+        for (var i = 0; i < text.length; i++) {
+            var str = text[i];
+            var textMetrics = ((_b = (_a = context === null || context === void 0 ? void 0 : context.measureText(str)) === null || _a === void 0 ? void 0 : _a.width) !== null && _b !== void 0 ? _b : 0) * fontScale;
+            // 和浏览器行为保持一致
+            x += letterSpace;
+            if (((x + textMetrics) > width && i > 0) || str === '\n') {
+                lineCount++;
+                x = 0;
+            }
+            if (str !== '\n') {
+                x += textMetrics;
+            }
+        }
+        return lineCount;
+    };
     /**
      * 设置字号大小
      * @param value - 字号
@@ -23269,6 +23347,7 @@ var TextItem = /** @class */ (function (_super) {
             return;
         }
         this.text = value;
+        this.lineCount = this.getLineCount(value, false);
         this.isDirty = true;
     };
     /**
@@ -23419,7 +23498,7 @@ var TextItem = /** @class */ (function (_super) {
         var fontScale = style.fontScale;
         var width = (layout.width + style.fontOffset) * fontScale;
         var height = layout.height * fontScale;
-        var fontSize = style.fontSize * fontScale;
+        style.fontSize * fontScale;
         var lineHeight = layout.lineHeight * fontScale;
         this.char = (this.text || '').split('');
         this.canvas.width = width;
@@ -23439,10 +23518,8 @@ var TextItem = /** @class */ (function (_super) {
         // 文本颜色
         context.fillStyle = "rgba(".concat(style.textColor[0], ", ").concat(style.textColor[1], ", ").concat(style.textColor[2], ", ").concat(style.textColor[3], ")");
         var charsInfo = [];
-        // /3 为了和编辑器行为保持一致
-        var offsetY = (lineHeight - fontSize) / 3;
         var x = 0;
-        var y = layout.getOffsetY(style) + offsetY;
+        var y = layout.getOffsetY(style, this.lineCount, lineHeight);
         var charsArray = [];
         var charOffsetX = [];
         for (var i = 0; i < this.char.length; i++) {
@@ -26909,27 +26986,28 @@ var AssetManager = /** @class */ (function () {
     AssetManager.prototype.loadScene = function (url, renderer, options) {
         var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function () {
-            var rawJSON, assetUrl, startTime, timeInfos, gpuInstance, asyncShaderCompile, compressedTexture, loadTimer, cancelLoading, waitPromise, hookTimeInfo, loadResourcePromise;
+            var rawJSON, assetUrl, startTime, timeInfoMessages, gpuInstance, asyncShaderCompile, compressedTexture, timeInfos, loadTimer, cancelLoading, waitPromise, hookTimeInfo, loadResourcePromise;
             var _this = this;
             return __generator(this, function (_d) {
                 assetUrl = isString(url) ? url : this.id;
                 startTime = alipay.performance.now();
-                timeInfos = [];
+                timeInfoMessages = [];
                 gpuInstance = renderer === null || renderer === void 0 ? void 0 : renderer.engine.gpuCapability;
                 asyncShaderCompile = (_b = (_a = gpuInstance === null || gpuInstance === void 0 ? void 0 : gpuInstance.detail) === null || _a === void 0 ? void 0 : _a.asyncShaderCompile) !== null && _b !== void 0 ? _b : false;
                 compressedTexture = (_c = gpuInstance === null || gpuInstance === void 0 ? void 0 : gpuInstance.detail.compressedTexture) !== null && _c !== void 0 ? _c : 0;
+                timeInfos = {};
                 cancelLoading = false;
                 waitPromise = new Promise(function (resolve, reject) {
                     loadTimer = alipay.window.setTimeout(function () {
                         cancelLoading = true;
                         _this.removeTimer(loadTimer);
                         var totalTime = alipay.performance.now() - startTime;
-                        reject("Load time out: totalTime: ".concat(totalTime.toFixed(4), "ms ").concat(timeInfos.join(' '), ", url: ").concat(assetUrl));
+                        reject("Load time out: totalTime: ".concat(totalTime.toFixed(4), "ms ").concat(timeInfoMessages.join(' '), ", url: ").concat(assetUrl));
                     }, _this.timeout * 1000);
                     _this.timers.push(loadTimer);
                 });
                 hookTimeInfo = function (label, func) { return __awaiter(_this, void 0, void 0, function () {
-                    var st, result, e_1;
+                    var st, result, time, e_1;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
@@ -26941,7 +27019,9 @@ var AssetManager = /** @class */ (function () {
                                 return [4 /*yield*/, func()];
                             case 2:
                                 result = _a.sent();
-                                timeInfos.push("[".concat(label, ": ").concat((alipay.performance.now() - st).toFixed(2), "]"));
+                                time = alipay.performance.now() - st;
+                                timeInfoMessages.push("[".concat(label, ": ").concat(time.toFixed(2), "]"));
+                                timeInfos[label] = time;
                                 return [2 /*return*/, result];
                             case 3:
                                 e_1 = _a.sent();
@@ -27000,7 +27080,7 @@ var AssetManager = /** @class */ (function () {
                                 return [4 /*yield*/, Promise.all([
                                         hookTimeInfo('processBins', function () { return _this.processBins(bins_1); }),
                                         hookTimeInfo('processImages', function () { return _this.processImages(images_2, usedImages_1, compressedTexture); }),
-                                        hookTimeInfo("".concat(asyncShaderCompile ? 'async' : 'sync', " compile"), function () { return _this.precompile(compositions_1, pluginSystem_1, renderer, options); }),
+                                        hookTimeInfo("".concat(asyncShaderCompile ? 'async' : 'sync', "Compile"), function () { return _this.precompile(compositions_1, pluginSystem_1, renderer, options); }),
                                     ])];
                             case 8:
                                 _d = __read$3.apply(void 0, [_e.sent(), 2]), loadedBins_1 = _d[0], loadedImages_1 = _d[1];
@@ -27012,6 +27092,7 @@ var AssetManager = /** @class */ (function () {
                                 loadedTextures = _e.sent();
                                 jsonScene_1.compositions = this.updateSceneData(jsonScene_1.compositions);
                                 scene = {
+                                    timeInfos: timeInfos,
                                     url: url,
                                     renderLevel: this.options.renderLevel,
                                     storage: {},
@@ -27030,11 +27111,13 @@ var AssetManager = /** @class */ (function () {
                                 _e.label = 12;
                             case 12:
                                 totalTime = alipay.performance.now() - startTime;
-                                logger.info("Load asset: totalTime: ".concat(totalTime.toFixed(4), "ms ").concat(timeInfos.join(' '), ", url: ").concat(assetUrl));
+                                logger.info("Load asset: totalTime: ".concat(totalTime.toFixed(4), "ms ").concat(timeInfoMessages.join(' '), ", url: ").concat(assetUrl));
                                 alipay.window.clearTimeout(loadTimer);
                                 this.removeTimer(loadTimer);
                                 scene.totalTime = totalTime;
                                 scene.startTime = startTime;
+                                // 各部分分段时长
+                                scene.timeInfos = timeInfos;
                                 return [2 /*return*/, scene];
                         }
                     });
@@ -27882,7 +27965,7 @@ var Composition = /** @class */ (function () {
      * @param props - composition 的创建参数
      */
     function Composition(props, scene) {
-        var _a;
+        var _a, _b;
         /**
          * 动画播放速度
          */
@@ -27911,7 +27994,7 @@ var Composition = /** @class */ (function () {
         this.paused = false;
         this.lastVideoUpdateTime = 0;
         this.postLoaders = [];
-        var _b = props.reusable, reusable = _b === void 0 ? false : _b, _c = props.speed, speed = _c === void 0 ? 1 : _c, _d = props.baseRenderOrder, baseRenderOrder = _d === void 0 ? 0 : _d, renderer = props.renderer, onPlayerPause = props.onPlayerPause, onMessageItem = props.onMessageItem, onEnd = props.onEnd, event = props.event, width = props.width, height = props.height;
+        var _c = props.reusable, reusable = _c === void 0 ? false : _c, _d = props.speed, speed = _d === void 0 ? 1 : _d, _e = props.baseRenderOrder, baseRenderOrder = _e === void 0 ? 0 : _e, renderer = props.renderer, onPlayerPause = props.onPlayerPause, onMessageItem = props.onMessageItem, onEnd = props.onEnd, event = props.event, width = props.width, height = props.height;
         this.compositionSourceManager = new CompositionSourceManager(scene, renderer.engine);
         scene.jsonScene.imgUsage = undefined;
         if (reusable) {
@@ -27919,7 +28002,7 @@ var Composition = /** @class */ (function () {
             scene.textures = undefined;
             scene.consumed = true;
         }
-        var _e = this.compositionSourceManager, sourceContent = _e.sourceContent, pluginSystem = _e.pluginSystem, imgUsage = _e.imgUsage, totalTime = _e.totalTime, renderLevel = _e.renderLevel, refCompositionProps = _e.refCompositionProps;
+        var _f = this.compositionSourceManager, sourceContent = _f.sourceContent, pluginSystem = _f.pluginSystem, imgUsage = _f.imgUsage, totalTime = _f.totalTime, renderLevel = _f.renderLevel, refCompositionProps = _f.refCompositionProps;
         assertExist(sourceContent);
         this.refCompositionProps = refCompositionProps;
         var vfxItem = new CompVFXItem(sourceContent, this);
@@ -27936,7 +28019,7 @@ var Composition = /** @class */ (function () {
         this.renderer = renderer;
         this.texInfo = imageUsage !== null && imageUsage !== void 0 ? imageUsage : {};
         this.event = event;
-        this.statistic = { loadTime: totalTime !== null && totalTime !== void 0 ? totalTime : 0, loadStart: (_a = scene.startTime) !== null && _a !== void 0 ? _a : 0, firstFrameTime: 0 };
+        this.statistic = { loadTime: totalTime !== null && totalTime !== void 0 ? totalTime : 0, loadStart: (_a = scene.startTime) !== null && _a !== void 0 ? _a : 0, firstFrameTime: 0, precompileTime: (_b = scene.timeInfos['asyncCompile']) !== null && _b !== void 0 ? _b : scene.timeInfos['syncCompile'] };
         this.reusable = reusable;
         this.speed = speed;
         this.renderLevel = renderLevel;
@@ -27948,6 +28031,7 @@ var Composition = /** @class */ (function () {
         this.camera = new Camera(this.name, __assign$1(__assign$1({}, sourceContent === null || sourceContent === void 0 ? void 0 : sourceContent.camera), { aspect: width / height }));
         this.url = scene.url;
         this.assigned = true;
+        this.interactive = true;
         this.onPlayerPause = onPlayerPause;
         this.onMessageItem = onMessageItem;
         this.onEnd = onEnd;
@@ -28327,7 +28411,7 @@ var Composition = /** @class */ (function () {
      * @param options - 最大求交数和求交时的回调
      */
     Composition.prototype.hitTest = function (x, y, force, options) {
-        if (this.isDestroyed) {
+        if (this.isDestroyed || !this.interactive) {
             return [];
         }
         var regions = [];
@@ -33098,7 +33182,12 @@ var Player = /** @class */ (function () {
                     for (var i = 0; i < regions.length; i++) {
                         var behavior = regions[i].behavior || InteractBehavior$2.NOTIFY;
                         if (behavior === InteractBehavior$2.NOTIFY) {
-                            (_a = _this.handleItemClicked) === null || _a === void 0 ? void 0 : _a.call(_this, __assign$1(__assign$1({}, regions[i]), { composition: composition.name, player: _this }));
+                            if (composition.onItemClicked) {
+                                composition.onItemClicked(__assign$1({}, regions[i]));
+                            }
+                            else {
+                                (_a = _this.handleItemClicked) === null || _a === void 0 ? void 0 : _a.call(_this, __assign$1(__assign$1({}, regions[i]), { compositionId: composition.id, compositionName: composition.name, composition: composition.name, player: _this }));
+                            }
                         }
                         else if (behavior === InteractBehavior$2.RESUME_PLAYER) {
                             void _this.resume();
@@ -33861,7 +33950,7 @@ Renderer.create = function (canvas, framework, renderOptions) {
 Engine.create = function (gl) {
     return new GLEngine(gl);
 };
-var version = "1.5.1";
+var version = "1.6.0";
 logger.info('player version: ' + version);
 
 exports.AbstractPlugin = AbstractPlugin;
