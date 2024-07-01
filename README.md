@@ -26,11 +26,11 @@ import { Player } from '@galacean/effects/weapp';
 // 1. 使用 adapter 方法注册 canvas
 // 第一种方式 通过ID注册canvas
 const canvas = await adapter.registerCanvas({ id: '#J-webglCanvas' });
-// 第二种方式 通过Cavnas对象注册
+// 第二种方式 通过 canvas 对象注册
 const query = wx.createSelectorQuery();
 query.select('#J-webglCanvas').node().exec((res) => {
-  const nodeCanvase = res[0].node;
-  const canvas = await registerCanvas({ id: nodeCanvase });
+  const nodeCanvas = res[0].node;
+  const canvas = await registerCanvas({ id: nodeCanvas });
 });
 // 2. 通过创建的 canvas 对象实例化一个 Galacean Effects 播放器
 const player = new Player({
