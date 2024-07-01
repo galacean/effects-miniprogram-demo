@@ -24,14 +24,19 @@ import { registerCanvas } from '@galacean/appx-adapter/weapp';
 import { Player } from '@galacean/effects/weapp';
 
 // 1. 使用 adapter 方法注册 canvas
-// 第一种方式 通过ID注册canvas
-const canvas = await adapter.registerCanvas({ id: '#J-webglCanvas' });
-// 第二种方式 通过 canvas 对象注册
+// 第一种方式（推荐）：通过 ID 注册 canvas
+const canvas = await registerCanvas({ id: '#J-webglCanvas' });
+// 第二种方式：通过 Canvas 对象注册
 const query = wx.createSelectorQuery();
-query.select('#J-webglCanvas').node().exec((res) => {
-  const nodeCanvas = res[0].node;
-  const canvas = await registerCanvas({ id: nodeCanvas });
+const nodeCanvas = await new Promise(resolve => {
+  query
+    .select('#J-webglCanvas')
+    .node()
+    .exec(res => {
+      resolve(res[0].node);
+    });
 });
+const canvas = await registerCanvas({ id: nodeCanvas });
 // 2. 通过创建的 canvas 对象实例化一个 Galacean Effects 播放器
 const player = new Player({
   transparentBackground: true,
@@ -46,27 +51,7 @@ void this.player.loadScene('url');
 
 > 注意：
 > - Galacean Effects 对小程序的适配包使用了 `package.json` `exports`，NodeJS v12.7.0 和 Typescript v4.7 及以上才支持，同时 `tsconfig.json` 的 `module` 需配置为 `ESxxx`（如：`ESNext`）。
-
-### 相关参数说明
-
-``` ts
-export interface registerCanvasOptions {
-  /**
-   * canvas 的 ID 或 canvas 对象
-   */
-  id?: string,
-  /**
-   * 是否为小游戏
-   * @default false
-   */
-  isMiniGame?: boolean,
-  /**
-   * canvas 的层级
-   * @default 0
-   */
-  elementLevel?: number,
-}
-````
+> - adapter 的 `registerCanvas` 参数说明：https://github.com/galacean/appx-adapter/blob/main/src/core/register.ts#L8
 
 ## 开发
 
@@ -77,9 +62,11 @@ export interface registerCanvasOptions {
 ``` bash
 # 1. 安装依赖（首次）
 npm install
-# 2. 构建小程序产物
+# 2. 开发调试
+npm run dev
+# 3. 构建小程序产物
 npm run build
 ```
 
 > Tips
-> - `npm run build` 会把 `miniprogram/pages` 下的 `.ts` 编译成 `.js`，然后通过微信开发者工具即可编译或预览
+> - `npm run dev/build` 会把 `miniprogram/pages` 下的 `.ts` 编译成 `.js`，然后通过微信开发者工具即可编译或预览
