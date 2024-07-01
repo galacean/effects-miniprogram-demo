@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/inspire/index",
+    "pages/spine/index",
+    "pages/model/index",
+    "pages/gyroscope/index"
+  ],
+  "window": {
+    "canPullDown": "NO"
+  },
+  "enablePolyfill": false,
+  "lazyCodeLoading": false
+}

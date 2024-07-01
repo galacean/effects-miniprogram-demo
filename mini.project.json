@@ -1,0 +1,10 @@
+{
+  "format": 2,
+  "compileOptions": {
+    "less": true
+  },
+  "developOptions": {
+    "skipTranspile": false
+  },
+  "miniprogramRoot": "miniprogram/"
+}

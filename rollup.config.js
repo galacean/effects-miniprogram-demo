@@ -11,14 +11,19 @@ const plugins = [
 ];
 
 export default [
-  'ap',
-  'mp'
-].map(platform => {
+  'index',
+  'inspire',
+  'spine',
+  'model',
+  'gyroscope',
+].map(name => {
   return {
-    input: [`./libs/${platform}-weapp-galacean-effects.ts`],
+    input: [`./miniprogram/pages/${name}/index.ts`],
     output: {
       format: 'cjs',
-      dir: 'libs/',
+      dir: 'miniprogram/',
+      entryFileNames: `pages/${name}/[name].js`,
+      chunkFileNames: 'chunks/[name].js',
     },
     plugins,
   };
