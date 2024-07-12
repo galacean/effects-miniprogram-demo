@@ -27,9 +27,7 @@ import { Player } from '@galacean/effects/alipay';
 const canvas = await registerCanvas({ id: '#J-webglCanvas' });
 // 2. 通过创建的 canvas 对象实例化一个 Galacean Effects 播放器
 const player = new Player({
-  transparentBackground: true,
   canvas,
-  pixelRatio: 2,
   renderFramework: 'webgl',
 });
 
