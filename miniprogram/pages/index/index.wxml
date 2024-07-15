@@ -1,4 +1,7 @@
 <view style="width: 100wh; height: calc(100vh - 80px); background-color: black">
-  <canvas type="webgl" id="J-webglCanvas" style="width: 100%; height: 100%;" disable-scroll="{{ true }}">
+  <canvas type="webgl"
+          id="J-webglCanvas"
+          style="width: 100%; height: 100%;"
+          disable-scroll="{{ true }}">
   </canvas>
 </view>
