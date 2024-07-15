@@ -6,7 +6,7 @@ Page({
   data: {
 
   },
-  onLoad: async function () {
+  onReady: async function () {
     const canvas = await adapter.registerCanvas({ id: '#J-webglCanvas' });
     // 实例化一个播放器
     const player = new Player({
