@@ -1,0 +1,15 @@
+<view class="container">
+  <view class="page-section page-section-space">
+    <radio-group name="radio" bindchange="checkboxChange">
+      <label><radio value="" />全部机型</label>
+      <label><radio value="B" checked="true" />B（低端机）</label>
+      <label><radio value="A" />A（中端机）</label>
+      <label><radio value="S" />S（高端机）</label>
+    </radio-group>
+  </view>
+  <canvas class="canvas"
+          id="J-webglCanvas"
+          canvas-id="canvas"
+          type="webgl">
+  </canvas>
+</view>

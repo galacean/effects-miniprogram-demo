@@ -1,0 +1,16 @@
+{
+  "setting": {
+    "urlCheck": true,
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "newFeature": true,
+    "autoCompile": true,
+    "compileHotReLoad": true,
+    "nativeCompile": true
+  },
+  "miniprogramRoot": "miniprogram",
+  "appid": "testAppId",
+  "projectname": "douyin",
+  "douyinProjectType": "native"
+}
