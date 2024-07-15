@@ -1,11 +1,7 @@
 import { Player } from '@galacean/effects/alipay';
 import { registerCanvas } from '@galacean/appx-adapter/alipay';
-import '@galacean/effects-plugin-spine/alipay';
 
-// 找春天
-const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*PHr2S4nmAM8AAAAAAAAAAAAADlB4AQ';
-// 818 理财
-// const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*JaLiQYyUqhoAAAAAAAAAAAAADlB4AQ';
+const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*PubBSpHUbjYAAAAAAAAAAAAADlB4AQ';
 
 Page<{}, {
   player: Player | null;
@@ -18,7 +14,11 @@ Page<{}, {
       this.player = new Player({
         canvas,
       });
-      await this.player.loadScene(json);
+      await this.player.loadScene(json, {
+        variables: {
+          image: 'https://mdn.alipayobjects.com/huamei_klifp9/afts/img/A*ySrfRJvfvfQAAAAAAAAAAAAADvV6AQ/original',
+        },
+      });
     } catch (e) {
       console.error(`biz error: ${e}`);
     }

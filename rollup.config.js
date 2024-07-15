@@ -13,6 +13,9 @@ const plugins = [
 export default [
   'index',
   'inspire',
+  'render-level',
+  'interactive',
+  'dynamic-image',
   'spine',
   'model',
   'gyroscope',
