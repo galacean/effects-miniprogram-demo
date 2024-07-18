@@ -1,4 +1,4 @@
-<view style="width: 100wh; height: calc(100vh - 80px); background-color: gray;">
+<view style="width: 100vw; height: calc(100vh - 80px); background-color: gray;">
   <canvas type="webgl"
           id="J-webglCanvas"
           canvas-id="canvas"
