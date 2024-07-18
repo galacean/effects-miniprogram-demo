@@ -2,13 +2,10 @@
   <canvas class="canvas"
           id="J-webglCanvas"
           canvas-id="canvas"
+          bindtouchstart="onTouchStart"
+          bindtouchmove="onTouchMove"
+          bindtouchend="onTouchEnd"
+          bindtouchcancel="onTouchCancel"
           type="webgl">
   </canvas>
-  <view disable-scroll="true"
-        class="cover"
-        onTouchStart="onTouchStart"
-        onTouchMove="onTouchMove"
-        onTouchEnd="onTouchEnd"
-        onTouchCancel="onTouchCancel">
-  </view>
 </view>

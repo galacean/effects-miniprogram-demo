@@ -2,16 +2,14 @@
   <view class="center">
     <canvas class="canvas"
             disable-scroll="true"
+            canvas-id="canvas"
             id="J-webglCanvas"
+            bindtouchstart="onTouchStart"
+            bindtouchmove="onTouchMove"
+            bindtouchend="onTouchEnd"
+            bindtouchcancel="onTouchCancel"
             type="webgl">
     </canvas>
-    <view disable-scroll="true"
-          class="cover"
-          onTouchStart="onTouchStart"
-          onTouchMove="onTouchMove"
-          onTouchEnd="onTouchEnd"
-          onTouchCancel="onTouchCancel">
-    </view>
   </view>
   <view class="operation">
     <scroll-view scroll-y="true"

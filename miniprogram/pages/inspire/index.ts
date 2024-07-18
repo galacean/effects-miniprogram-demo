@@ -1,8 +1,8 @@
 import { Player } from '@galacean/effects/douyin';
 import {
-  registerCanvas,// dispatchTouchStart, dispatchTouchMove, dispatchTouchEnd, dispatchTouchCancel,
+  registerCanvas, dispatchTouchStart, dispatchTouchMove, dispatchTouchEnd, dispatchTouchCancel,
 } from '@galacean/appx-adapter/douyin';
-import '@galacean/effects-plugin-spine/douyin';
+// import '@galacean/effects-plugin-spine/douyin';
 import inspireList from './assets/inspire-list';
 
 Page<{
@@ -18,8 +18,6 @@ Page<{
   onReady: async function () {
     try {
       const canvas = await registerCanvas({ id: '#J-webglCanvas' });
-      console.log(canvas);
-      
 
       this.player = new Player({
         canvas,
@@ -71,19 +69,18 @@ Page<{
 
     this.playByUrl(url, variables);
   },
-  // onTouchEnd (e: any) {
-  //   dispatchTouchEnd(e);
-  // },
-  // onTouchStart (e: any) {
-  //   dispatchTouchStart(e);
-  // },
-  // onTouchMove (e: any) {
-  //   dispatchTouchMove(e);
-  // },
-  // onTouchCancel (e: any) {
-  //   dispatchTouchCancel(e);
-  // },
-
+  onTouchEnd (e: any) {
+    dispatchTouchEnd(e);
+  },
+  onTouchStart (e: any) {
+    dispatchTouchStart(e);
+  },
+  onTouchMove (e: any) {
+    dispatchTouchMove(e);
+  },
+  onTouchCancel (e: any) {
+    dispatchTouchCancel(e);
+  },
   handlePlay () {
     this.player?.resume();
   },
