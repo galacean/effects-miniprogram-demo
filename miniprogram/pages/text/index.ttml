@@ -1,0 +1,7 @@
+<view class="container">
+  <canvas class="canvas"
+          id="J-webglCanvas"
+          canvas-id="canvas"
+          type="webgl">
+  </canvas>
+</view>
