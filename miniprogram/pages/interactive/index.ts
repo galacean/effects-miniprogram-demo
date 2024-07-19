@@ -3,7 +3,7 @@ import {
   registerCanvas, dispatchTouchStart, dispatchTouchMove, dispatchTouchEnd, dispatchTouchCancel,
 } from '@galacean/appx-adapter/douyin';
 
-const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*9ZGzTLI-rXgAAAAAAAAAAAAADlB4AQ';
+const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*cyyfTavfBscAAAAAAAAAAAAADlB4AQ';
 
 Page<{}, {
   [key: string]: any;
