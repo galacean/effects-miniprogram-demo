@@ -1,4 +1,4 @@
-import { registerCanvas } from '@galacean/appx-adapter/weapp';
+import { dispatchTouchCancel, dispatchTouchEnd, dispatchTouchMove, dispatchTouchStart, registerCanvas } from '@galacean/appx-adapter/weapp';
 import { Player, AbstractPlugin, registerPlugin } from '@galacean/effects/weapp';
 import inspireList from '../../assets/inspire-list';
 
@@ -26,6 +26,7 @@ Page<{}, WechatMiniprogram.Page.CustomOption>({
       canvas,
       pixelRatio: 2,
       renderFramework: 'webgl',
+      interactive: true,
     });
     this.playByUrl(inspireList.text.url);
   },
@@ -46,14 +47,17 @@ Page<{}, WechatMiniprogram.Page.CustomOption>({
       this.player.useDowngradeImage(downgradeImage);
     }
   },
-  touchStart (e: Event) {
-    this.canvas.dispatchTouchEvent({ ...e, type: 'touchstart' })
+  touchCancel(e: TouchEvent) { 
+    dispatchTouchCancel(e as any);
+  },
+  touchStart(e: Event) {
+    dispatchTouchStart(e as any);
   },
   touchMove (e: Event) {
-    this.canvas.dispatchTouchEvent({ ...e, type: 'touchmove' })
+    dispatchTouchMove(e as any);
   },
   touchEnd (e: Event) {
-    this.canvas.dispatchTouchEvent({ ...e, type: 'touchend' })
+    dispatchTouchEnd(e as any);
   }
 });
 
