@@ -1,14 +1,2 @@
-node_modules
-.DS_Store
-dist
-lib
-*.local
-*.tgz
-.eslintcache
-*.tsbuildinfo
-.vscode
-.idea
-.pnpm-debug.log
-*-warn.log
 .history
-libs/**/*.js
+*.log
