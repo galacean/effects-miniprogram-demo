@@ -4,7 +4,7 @@
     "build": "rollup -c --environment BUILD:production"
   },
   "dependencies": {
-    "@galacean/appx-adapter": "0.2.1",
+    "@galacean/appx-adapter": "^0.2.3",
     "@galacean/effects": "^1.6.0"
   },
   "devDependencies": {
