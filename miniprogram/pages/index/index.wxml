@@ -2,7 +2,12 @@
   <canvas type="webgl"
           id="J-webglCanvas"
           style="width: 100%; height: 100%;"
-          disable-scroll="{{ true }}">
+          disable-scroll="{{ true }}"
+          bind:touchcancel="touchCancel" 
+          bind:touchend="touchEnd" 
+          bind:touchmove="touchMove" 
+          bind:touchstart="touchStart"
+          >
   </canvas>
 </view>
 <view class="section">
