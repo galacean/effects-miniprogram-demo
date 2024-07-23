@@ -3,6 +3,7 @@
     <canvas class="canvas"
             disable-scroll="true"
             id="J-webglCanvas"
+            onReady="onCanvasReady"
             type="webgl">
     </canvas>
     <view disable-scroll="true"

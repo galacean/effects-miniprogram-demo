@@ -7,7 +7,7 @@ Page<{}, {
   player: Player | null;
   [key: string]: any;
 }>({
-  onReady: async function () {
+  onCanvasReady: async function () {
     try {
       const canvas = await registerCanvas({ id: '#J-webglCanvas' });
 

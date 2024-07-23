@@ -1,6 +1,7 @@
 <view class="container">
   <canvas class="canvas"
           id="J-webglCanvas"
+          onReady="onCanvasReady"
           type="webgl">
   </canvas>
 </view>

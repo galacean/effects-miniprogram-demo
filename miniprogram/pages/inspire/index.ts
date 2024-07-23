@@ -17,7 +17,7 @@ Page<{
     items: inspireList,
     sceneLoading: false,
   },
-  async onReady () {
+  async onCanvasReady () {
     try {
       const canvas = await registerCanvas({ id: '#J-webglCanvas' });
 

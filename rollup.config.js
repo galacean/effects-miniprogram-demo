@@ -13,6 +13,7 @@ const plugins = [
 export default [
   'index',
   'inspire',
+  'text',
   'render-level',
   'interactive',
   'dynamic-image',
