@@ -10,6 +10,7 @@
     "pages/model/index"
   ],
   "window": {
-    "navigationBarForceEnable": true
+    "navigationBarForceEnable": true,
+    "enableSkia": true
   }
 }
