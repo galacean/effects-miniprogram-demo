@@ -1,0 +1,46 @@
+<view class="container">
+  <view class="center">
+    <canvas class="canvas"
+            disable-scroll="true"
+            id="J-webglCanvas"
+            onReady="onCanvasReady"
+            type="webgl">
+    </canvas>
+    <view disable-scroll="true"
+          class="cover"
+          onTouchStart="onTouchStart"
+          onTouchMove="onTouchMove"
+          onTouchEnd="onTouchEnd"
+          onTouchCancel="onTouchCancel">
+    </view>
+  </view>
+  <view class="operation">
+    <scroll-view scroll-y="true"
+                 class="section">
+      <radio-group class="radio-group"
+                   onChange="onRadioChange">
+        <label class="radio"
+               a:for="{{items}}"
+               key="{{item.name}}-{{index}}">
+          <radio value="{{item}}"
+                 checked="{{item.checked}}" />
+          <text class="radio-text">{{item.name}}</text>
+        </label>
+      </radio-group>
+    </scroll-view>
+    <view class="btn-section">
+      <button size="mini"
+              onTap="handlePlay"
+              type="ghost"
+              loading="{{sceneLoading}}">恢复</button>
+      <button size="mini"
+              onTap="handlePause"
+              type="primary"
+              loading="{{sceneLoading}}">暂停</button>
+      <button size="mini"
+              onTap="handleRestart"
+              type="default"
+              loading="{{sceneLoading}}">重播</button>
+    </view>
+  </view>
+</view>

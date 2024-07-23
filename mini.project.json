@@ -1,0 +1,9 @@
+{
+  "enableAppxNg": true,
+  "miniappCanary": false,
+  "developOptions": {
+    "skipTranspile": false
+  },
+  "miniprogramRoot": "miniprogram/",
+  "component2": true
+}

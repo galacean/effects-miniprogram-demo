@@ -11,14 +11,22 @@ const plugins = [
 ];
 
 export default [
-  'alipay',
-  'weapp'
-].map(platform => {
+  'index',
+  'inspire',
+  'text',
+  'render-level',
+  'interactive',
+  'dynamic-image',
+  'spine',
+  'model',
+].map(name => {
   return {
-    input: [`./libs/mp-${platform}-galacean-effects.ts`],
+    input: [`./miniprogram/pages/${name}/index.ts`],
     output: {
       format: 'cjs',
-      dir: 'libs/',
+      dir: 'miniprogram/',
+      entryFileNames: `pages/${name}/[name].js`,
+      chunkFileNames: 'chunks/[name].js',
     },
     plugins,
   };

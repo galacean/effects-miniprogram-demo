@@ -1,0 +1,9 @@
+<view class="page">
+  <navigator open-type="navigate" url="/pages/inspire/index" hover-class="navigator-hover">灵感测试</navigator>
+  <navigator open-type="navigate" url="/pages/text/index" hover-class="navigator-hover">文本元素</navigator>
+  <navigator open-type="navigate" url="/pages/render-level/index" hover-class="navigator-hover">分级渲染</navigator>
+  <navigator open-type="navigate" url="/pages/interactive/index" hover-class="navigator-hover">交互元素</navigator>
+  <navigator open-type="navigate" url="/pages/dynamic-image/index" hover-class="navigator-hover">动态换图</navigator>
+  <navigator open-type="navigate" url="/pages/spine/index" hover-class="navigator-hover">Spine 插件</navigator>
+  <navigator open-type="navigate" url="/pages/model/index" hover-class="navigator-hover">3D 插件</navigator>
+</view>

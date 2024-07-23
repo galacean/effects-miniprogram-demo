@@ -1,0 +1,55 @@
+.container {
+  width: 100vw;
+  height: 100vh;
+}
+
+.container .center {
+  width: 100vw;
+  height: 70vh;
+  position: relative;
+}
+
+.container .center .canvas {
+  background-color: rgba(0, 0, 0, 0.6);
+  width: 100%;
+  height: 100%;
+}
+
+.container .center .cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.container .operation {
+  height: 30vh;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.container .operation .section {
+  width: 70vw;
+  margin: 10px;
+  height: 100%;
+}
+
+.container .operation .section .radio {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.container .operation .section .radio-text {
+  line-height: 2;
+}
+
+.container .operation .btn-section {
+  width: 20vw;
+  margin-right: 40px;
+}
+
+.container .operation .btn-section button {
+  margin: 10px;
+}
