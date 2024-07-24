@@ -1,6 +1,10 @@
 import { dispatchTouchCancel, dispatchTouchEnd, dispatchTouchMove, dispatchTouchStart, registerCanvas } from '@galacean/appx-adapter/weapp';
 import { Player, AbstractPlugin, registerPlugin } from '@galacean/effects/weapp';
 import inspireList from '../../assets/inspire-list';
+// 3D 插件
+// import '@galacean/effects-plugin-model/weapp';
+// spine 插件
+// import '@galacean/effects-plugin-spine/weapp';
 
 // 假装注册陀螺仪插件，兼容有陀螺仪的合成报错
 // @ts-expect-error
