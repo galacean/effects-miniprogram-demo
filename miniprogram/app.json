@@ -1,12 +1,19 @@
 {
-  "pages":[
-    "pages/index/index"
+  "pages": [
+    "pages/index/index",
+    "pages/inspire/index",
+    "pages/text/index",
+    "pages/render-level/index",
+    "pages/interactive/index",
+    "pages/dynamic-image/index",
+    "pages/spine/index",
+    "pages/model/index"
   ],
-  "window":{
-    "backgroundTextStyle":"light",
+  "window": {
+    "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "Weixin",
-    "navigationBarTextStyle":"black"
+    "navigationBarTitleText": "Galacean Effects Demo",
+    "navigationBarTextStyle": "black"
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json"

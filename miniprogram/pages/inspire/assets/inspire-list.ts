@@ -1,4 +1,12 @@
 export default {
+  test: {
+    url: 'https://mdn.alipayobjects.com/mars/afts/file/A*_I84Rbtm9YEAAAAAAAAAAAAADlB4AQ',
+    variables: {
+      btn: 'https://mdn.alipayobjects.com/graph_jupiter/afts/img/A*dMnQRaof40AAAAAAAAAAAAAADsF2AQ/350w_105h_2e',
+      text_171: 'Shake Shake',
+    },
+    name: '数据模板和文本',
+  },
   wufu2022: {
     url: 'https://mdn.alipayobjects.com/mars/afts/file/A*dnU-SprU5pAAAAAAAAAAAAAADlB4AQ',
     name: '2022-集五福氛围',

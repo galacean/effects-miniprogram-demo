@@ -11,14 +11,46 @@ const plugins = [
 ];
 
 export default () => {
+  const input = [
+    'index',
+    'inspire',
+    'text',
+    'render-level',
+    'interactive',
+    'dynamic-image',
+    'spine',
+    'model',
+  ].map(name => `./miniprogram/pages/${name}/index.ts`);
+
   return {
-    input: ['./miniprogram/pages/index/index.ts'],
+    input,
     output: {
       format: 'cjs',
       dir: 'miniprogram/',
-      entryFileNames: 'pages/[name]/[name].js',
       chunkFileNames: 'chunks/[name].js',
     },
     plugins,
-  };
-}
+  }
+};
+
+// export default [
+//   'index',
+//   'inspire',
+//   'text',
+//   'render-level',
+//   'interactive',
+//   'dynamic-image',
+//   'spine',
+//   'model',
+// ].map(name => {
+//   return {
+//     input: [`./miniprogram/pages/${name}/index.ts`],
+//     output: {
+//       format: 'cjs',
+//       dir: 'miniprogram/',
+//       entryFileNames: `pages/${name}/[name].js`,
+//       chunkFileNames: 'chunks/[name].js',
+//     },
+//     plugins,
+//   };
+// });
