@@ -38,7 +38,7 @@
 }
 
 .container .operation .btn-section {
-  width: 20vw;
+  width: 30vw;
   margin-right: 10px;
 }
 

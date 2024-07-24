@@ -11,7 +11,9 @@ const plugins = [
 ];
 
 export default () => {
-  const input = [
+  const input = {};
+
+  [
     'index',
     'inspire',
     'text',
@@ -20,14 +22,23 @@ export default () => {
     'dynamic-image',
     'spine',
     'model',
-  ].map(name => `./miniprogram/pages/${name}/index.ts`);
+  ].forEach(name => {
+    input[name] = `./miniprogram/pages/${name}/index.ts`;
+  });
 
   return {
     input,
     output: {
       format: 'cjs',
       dir: 'miniprogram/',
+      entryFileNames: 'pages/[name]/index.js',
       chunkFileNames: 'chunks/[name].js',
+      manualChunks: {
+        'appx-adapter': ['@galacean/appx-adapter/weapp'],
+        'effects': ['@galacean/effects/weapp'],
+        'plugin-spine': ['@galacean/effects-plugin-spine/weapp'],
+        'plugin-model': ['@galacean/effects-plugin-model/weapp'],
+      },
     },
     plugins,
   }

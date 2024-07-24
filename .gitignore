@@ -12,4 +12,5 @@ lib
 *-warn.log
 .history
 miniprogram_npm
+miniprogram/chunks
 miniprogram/pages/**/*.js

@@ -19,7 +19,7 @@ Page<{}, {
       });
       await this.player.loadScene(json, {
         variables: {
-          image: 'https://mdn.alipayobjects.com/huamei_klifp9/afts/img/A*ySrfRJvfvfQAAAAAAAAAAAAADvV6AQ/original',
+          image: 'https://mdn.alipayobjects.com/huamei_klifp9/afts/img/A*ySrfRJvfvfQAAAAAAAAAAAAADvV6AQ/.png',
         },
       });
     } catch (e) {
