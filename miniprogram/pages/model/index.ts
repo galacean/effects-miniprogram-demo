@@ -1,6 +1,6 @@
 import { Player } from '@galacean/effects/douyin';
 import { registerCanvas } from '@galacean/appx-adapter/douyin';
-// import '@galacean/effects-plugin-model/douyin';
+import '@galacean/effects-plugin-model/douyin';
 
 // 绿色人
 const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*SERYRaes5S0AAAAAAAAAAAAADlB4AQ';

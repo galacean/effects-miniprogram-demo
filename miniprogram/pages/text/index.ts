@@ -12,7 +12,6 @@ Page<{}, {
 
       this.player = new Player({
         canvas,
-        interactive: true,
         renderFramework: 'webgl',
       });
 

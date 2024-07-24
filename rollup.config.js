@@ -10,24 +10,36 @@ const plugins = [
   }),
 ];
 
-export default [
-  'index',
-  'inspire',
-  'text',
-  'render-level',
-  'interactive',
-  'dynamic-image',
-  'spine',
-  'model',
-].map(name => {
+export default () => {
+  const input = {};
+
+  [
+    'index',
+    'inspire',
+    'text',
+    'render-level',
+    'interactive',
+    'dynamic-image',
+    'spine',
+    'model',
+  ].forEach(name => {
+    input[name] = `./miniprogram/pages/${name}/index.ts`;
+  });
+
   return {
-    input: [`./miniprogram/pages/${name}/index.ts`],
+    input,
     output: {
       format: 'cjs',
       dir: 'miniprogram/',
-      entryFileNames: `pages/${name}/[name].js`,
+      entryFileNames: 'pages/[name]/index.js',
       chunkFileNames: 'chunks/[name].js',
+      manualChunks: {
+        'appx-adapter': ['@galacean/appx-adapter/douyin'],
+        'effects': ['@galacean/effects/douyin'],
+        'plugin-spine': ['@galacean/effects-plugin-spine/douyin'],
+        'plugin-model': ['@galacean/effects-plugin-model/douyin'],
+      },
     },
     plugins,
-  };
-});
+  }
+};

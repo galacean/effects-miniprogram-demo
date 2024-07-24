@@ -2,4 +2,5 @@
 *.log
 node_modules
 .DS_Store
+miniprogram/chunks
 miniprogram/pages/**/*.js
