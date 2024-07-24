@@ -43,25 +43,3 @@ export default () => {
     plugins,
   }
 };
-
-// export default [
-//   'index',
-//   'inspire',
-//   'text',
-//   'render-level',
-//   'interactive',
-//   'dynamic-image',
-//   'spine',
-//   'model',
-// ].map(name => {
-//   return {
-//     input: [`./miniprogram/pages/${name}/index.ts`],
-//     output: {
-//       format: 'cjs',
-//       dir: 'miniprogram/',
-//       entryFileNames: `pages/${name}/[name].js`,
-//       chunkFileNames: 'chunks/[name].js',
-//     },
-//     plugins,
-//   };
-// });
