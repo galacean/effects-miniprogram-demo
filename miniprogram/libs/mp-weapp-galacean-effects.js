@@ -23,14 +23,6 @@ function getDefaultExportFromCjs (x) {
 
 var weapp = {};
 
-var core = {};
-
-var eventIniter = {};
-
-var touchEvent = {};
-
-var document = {};
-
 var platform$1 = {};
 
 Object.defineProperty(platform$1, "__esModule", { value: true });
@@ -78,6 +70,28 @@ platform$1.platform = {
     onDeviceMotionChange: function (listener) { },
     offDeviceMotionChange: function (listener) { },
 };
+
+var platform_1$8 = platform$1;
+platform_1$8.platform.createCanvas = wx.createCanvas;
+platform_1$8.platform.createImage = wx.createImage;
+platform_1$8.platform.createOffscreenCanvas = wx.createOffscreenCanvas;
+platform_1$8.platform.createSelectorQuery = wx.createSelectorQuery;
+platform_1$8.platform.getSystemInfoSync = wx.getSystemInfoSync;
+platform_1$8.platform.request = wx.request;
+platform_1$8.platform.createVideoContext = wx.createVideoContext;
+platform_1$8.platform.downloadFile = wx.downloadFile;
+platform_1$8.platform.startDeviceMotionListening = wx.startDeviceMotionListening;
+platform_1$8.platform.stopDeviceMotionListening = wx.stopDeviceMotionListening;
+platform_1$8.platform.onDeviceMotionChange = wx.onDeviceMotionChange;
+platform_1$8.platform.offDeviceMotionChange = wx.offDeviceMotionChange;
+
+var core = {};
+
+var eventIniter = {};
+
+var touchEvent = {};
+
+var document = {};
 
 var body = {};
 
@@ -1399,6 +1413,7 @@ var Blob = /** @class */ (function () {
      * @param type mimetype image/png image/webp...
      */
     function Blob(buffers, type) {
+        if (type === void 0) { type = 'image/png'; }
         this.buffers = buffers;
         this.type = type;
     }
@@ -2867,7 +2882,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.window = void 0;
-__exportStar(core, exports);
+
 var core_1 = core;
 exports.window = {
     innerWidth: core_1.screen.availWidth,
@@ -2912,18 +2927,7 @@ exports.window = {
         core_1.document.dispatchEvent(event);
     },
 };
-core_1.platform.createCanvas = wx.createCanvas;
-core_1.platform.createImage = wx.createImage;
-core_1.platform.createOffscreenCanvas = wx.createOffscreenCanvas;
-core_1.platform.createSelectorQuery = wx.createSelectorQuery;
-core_1.platform.getSystemInfoSync = wx.getSystemInfoSync;
-core_1.platform.request = wx.request;
-core_1.platform.createVideoContext = wx.createVideoContext;
-core_1.platform.downloadFile = wx.downloadFile;
-core_1.platform.startDeviceMotionListening = wx.startDeviceMotionListening;
-core_1.platform.stopDeviceMotionListening = wx.stopDeviceMotionListening;
-core_1.platform.onDeviceMotionChange = wx.onDeviceMotionChange;
-core_1.platform.offDeviceMotionChange = wx.offDeviceMotionChange;
+__exportStar(core, exports);
 }(weapp));
 
 var index$2 = /*@__PURE__*/getDefaultExportFromCjs(weapp);
@@ -23207,13 +23211,21 @@ var TextLayout = /** @class */ (function () {
         this.textAlign = textAlign;
         this.lineHeight = lineHeight;
     }
-    TextLayout.prototype.getOffsetY = function (style, lineCount, lineHeight) {
+    /**
+     * 获取初始的行高偏移值
+     * @param style - 字体基础数据
+     * @param lineCount - 渲染行数
+     * @param lineHeight - 渲染时的字体行高
+     * @param fontSize - 渲染时的字体大小
+     * @returns - 行高偏移值
+     */
+    TextLayout.prototype.getOffsetY = function (style, lineCount, lineHeight, fontSize) {
         var offsetResult = 0;
-        var fontSize = style.fontSize, outlineWidth = style.outlineWidth, fontScale = style.fontScale;
-        // 计算基础偏移量
-        var baseOffset = (fontSize + outlineWidth) * fontScale;
+        var outlineWidth = style.outlineWidth, fontScale = style.fontScale;
         // /3 计算Y轴偏移量，以匹配编辑器行为
         var offsetY = (lineHeight - fontSize) / 3;
+        // 计算基础偏移量
+        var baseOffset = fontSize + outlineWidth * fontScale;
         var commonCalculation = lineHeight * (lineCount - 1);
         switch (this.textBaseline) {
             case TextBaseline$1.top:
@@ -23271,7 +23283,7 @@ var TextItem = /** @class */ (function (_super) {
         _this.engine = vfxItem.composition.getEngine();
         _this.textStyle = new TextStyle(options);
         _this.textLayout = new TextLayout(options);
-        _this.text = options.text;
+        _this.text = options.text.toString();
         _this.lineCount = _this.getLineCount(options.text, true);
         // Text
         _this.mesh = new TextMesh(_this.engine, _this.renderInfo, vfxItem.composition);
@@ -23348,7 +23360,7 @@ var TextItem = /** @class */ (function (_super) {
         if (this.text === value) {
             return;
         }
-        this.text = value;
+        this.text = value.toString();
         this.lineCount = this.getLineCount(value, false);
         this.isDirty = true;
     };
@@ -23500,7 +23512,7 @@ var TextItem = /** @class */ (function (_super) {
         var fontScale = style.fontScale;
         var width = (layout.width + style.fontOffset) * fontScale;
         var height = layout.height * fontScale;
-        style.fontSize * fontScale;
+        var fontSize = style.fontSize * fontScale;
         var lineHeight = layout.lineHeight * fontScale;
         this.char = (this.text || '').split('');
         this.canvas.width = width;
@@ -23521,7 +23533,7 @@ var TextItem = /** @class */ (function (_super) {
         context.fillStyle = "rgba(".concat(style.textColor[0], ", ").concat(style.textColor[1], ", ").concat(style.textColor[2], ", ").concat(style.textColor[3], ")");
         var charsInfo = [];
         var x = 0;
-        var y = layout.getOffsetY(style, this.lineCount, lineHeight);
+        var y = layout.getOffsetY(style, this.lineCount, lineHeight, fontSize);
         var charsArray = [];
         var charOffsetX = [];
         for (var i = 0; i < this.char.length; i++) {
@@ -24691,11 +24703,13 @@ var Camera = /** @class */ (function () {
      * @param z - 当前的位置 z
      */
     Camera.prototype.getInverseVPRatio = function (z) {
-        var pos = new Vector3(0, 0, z);
+        var pos = new Vector3(this.position.x, this.position.y, z);
         var mat = this.getViewProjectionMatrix();
         var inverseVP = this.getInverseViewProjectionMatrix();
         var nz = mat.projectPoint(pos).z;
-        return inverseVP.projectPoint(new Vector3(1, 1, nz));
+        var _a = inverseVP.projectPoint(new Vector3(1, 1, nz)), xMax = _a.x, yMax = _a.y;
+        var _b = inverseVP.projectPoint(new Vector3(-1, -1, nz)), xMin = _b.x, yMin = _b.y;
+        return new Vector3((xMax - xMin) / 2, (yMax - yMin) / 2, 0);
     };
     /**
      * 设置相机的旋转四元数
@@ -33952,7 +33966,7 @@ Renderer.create = function (canvas, framework, renderOptions) {
 Engine.create = function (gl) {
     return new GLEngine(gl);
 };
-var version = "1.6.0";
+var version = "1.6.4";
 logger.info('player version: ' + version);
 
 exports.AbstractPlugin = AbstractPlugin;
