@@ -1,5 +1,6 @@
 .history
 *.log
+.DS_Store
 node_modules
 miniprogram/chunks
 miniprogram/pages/**/*.js
