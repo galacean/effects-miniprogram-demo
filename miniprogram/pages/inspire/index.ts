@@ -2,19 +2,21 @@ import { Player } from '@galacean/effects/douyin';
 import {
   registerCanvas, dispatchTouchStart, dispatchTouchMove, dispatchTouchEnd, dispatchTouchCancel,
 } from '@galacean/appx-adapter/douyin';
-// import '@galacean/effects-plugin-spine/douyin';
+import '@galacean/effects-plugin-spine/douyin';
 import inspireList from './assets/inspire-list';
 
 Page<{
   items: Record<string, any>;
   sceneLoading: boolean;
 }, {
+  player: Player | null;
   [key: string]: any;
 }>({
   data: {
     items: inspireList,
     sceneLoading: false,
   },
+  player: null,
   onReady: async function () {
     try {
       const canvas = await registerCanvas({ id: '#J-webglCanvas' });
@@ -23,13 +25,9 @@ Page<{
         canvas,
         renderFramework: 'webgl',
         interactive: true,
-        env: 'editor',
-        onPausedByItem: (data) => {
-          console.info('onPausedByItem', data);
-        },
-        onItemClicked: (data) => {
-          console.log(`item ${data.name} has been clicked`);
-        },
+      });
+      this.player.on('click', e => {
+        console.log(`item ${e.name} has been clicked`);
       });
       this.playByUrl(inspireList.fireworks.url);
     } catch (e) {
