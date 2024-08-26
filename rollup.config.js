@@ -13,6 +13,7 @@ const plugins = [
 export default [
   'alipay',
   'weapp',
+  'douyin',
 ].map(platform => {
   return {
     input: [`./libs/mp-${platform}-galacean-effects.ts`],
