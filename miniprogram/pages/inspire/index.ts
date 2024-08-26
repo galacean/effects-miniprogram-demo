@@ -24,13 +24,9 @@ Page<{
       this.player = new Player({
         canvas,
         interactive: true,
-        env: 'editor',
-        onPausedByItem: (data) => {
-          console.info('onPausedByItem', data);
-        },
-        onItemClicked: (data) => {
-          console.log(`item ${data.name} has been clicked`);
-        },
+      });
+      this.player.on('click', e => {
+        console.log(`item ${e.name} has been clicked`);
       });
       this.playByUrl(inspireList.spring.url);
     } catch (e) {
