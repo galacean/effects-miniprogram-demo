@@ -1672,6 +1672,35 @@ function cancelAnimationFrame(id) {
 }
 requestAnimationFrame$1.cancelAnimationFrame = cancelAnimationFrame;
 
+var textDecoder = {};
+
+Object.defineProperty(textDecoder, "__esModule", { value: true });
+textDecoder.TextDecoder = void 0;
+var TextDecoder = /** @class */ (function () {
+    function TextDecoder() {
+    }
+    /**
+     * 不支持 UTF-8 code points 大于 1 字节
+     * @see https://stackoverflow.com/questions/17191945/conversion-between-utf-8-arraybuffer-and-string
+     * @param input
+     */
+    TextDecoder.prototype.decode = function (input) {
+        var uint8Array = input instanceof ArrayBuffer ? new Uint8Array(input) : input;
+        var s = '';
+        for (var i = 0, il = uint8Array.length; i < il; i++) {
+            s += String.fromCharCode(uint8Array[i]);
+        }
+        try {
+            return decodeURIComponent(encodeURIComponent(s));
+        }
+        catch (_) {
+            return s;
+        }
+    };
+    return TextDecoder;
+}());
+textDecoder.TextDecoder = TextDecoder;
+
 var url = {};
 
 Object.defineProperty(url, "__esModule", { value: true });
@@ -3117,6 +3146,7 @@ __exportStar(register$1, exports);
 __exportStar(node, exports);
 __exportStar(requestAnimationFrame$1, exports);
 __exportStar(screen, exports);
+__exportStar(textDecoder, exports);
 __exportStar(url, exports);
 __exportStar(xmlHttpRequest, exports);
 __exportStar(webgl, exports);
@@ -3175,6 +3205,7 @@ exports.window = {
     URL: core_1.URL,
     WebGLRenderingContext: core_1.WebGLRenderingContext,
     WebGL2RenderingContext: core_1.WebGL2RenderingContext,
+    TextDecoder: core_1.TextDecoder,
     addEventListener: function (type, listener, options) {
         if (options === void 0) { options = {}; }
         core_1.document.addEventListener(type, listener, options);
@@ -11272,7 +11303,7 @@ function _loadVideo() {
                         }, true);
                     }
                     video.addEventListener("error", function(e) {
-                        reject(e);
+                        reject("Load video fail.");
                     });
                 })
             ];
@@ -16746,7 +16777,6 @@ function _assert_this_initialized(self) {
 /**
  * 动画图，负责更新所有的动画节点
  * @since 2.0.0
- * @internal
  */ var PlayableGraph = /*#__PURE__*/ function() {
     function PlayableGraph() {
         this.playableOutputs = [];
@@ -16754,24 +16784,24 @@ function _assert_this_initialized(self) {
     }
     var _proto = PlayableGraph.prototype;
     _proto.evaluate = function evaluate(dt) {
-        // 初始化节点状态
-        for(var _iterator = _create_for_of_iterator_helper_loose(this.playables), _step; !(_step = _iterator()).done;){
-            var playable = _step.value;
-            this.updatePlayableTime(playable, dt);
-        }
         // 初始化输出节点状态
-        for(var _iterator1 = _create_for_of_iterator_helper_loose(this.playableOutputs), _step1; !(_step1 = _iterator1()).done;){
-            var playableOutput = _step1.value;
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.playableOutputs), _step; !(_step = _iterator()).done;){
+            var playableOutput = _step.value;
             playableOutput.context.deltaTime = dt;
         }
         // 执行生命周期函数
-        for(var _iterator2 = _create_for_of_iterator_helper_loose(this.playableOutputs), _step2; !(_step2 = _iterator2()).done;){
-            var playableOutput1 = _step2.value;
+        for(var _iterator1 = _create_for_of_iterator_helper_loose(this.playableOutputs), _step1; !(_step1 = _iterator1()).done;){
+            var playableOutput1 = _step1.value;
             this.prepareFrameWithRoot(playableOutput1);
         }
-        for(var _iterator3 = _create_for_of_iterator_helper_loose(this.playableOutputs), _step3; !(_step3 = _iterator3()).done;){
-            var playableOutput2 = _step3.value;
+        for(var _iterator2 = _create_for_of_iterator_helper_loose(this.playableOutputs), _step2; !(_step2 = _iterator2()).done;){
+            var playableOutput2 = _step2.value;
             this.processFrameWithRoot(playableOutput2);
+        }
+        // 更新节点时间
+        for(var _iterator3 = _create_for_of_iterator_helper_loose(this.playables), _step3; !(_step3 = _iterator3()).done;){
+            var playable = _step3.value;
+            this.updatePlayableTime(playable, dt);
         }
     };
     _proto.connect = function connect(source, sourceOutputPort, destination, destinationInputPort) {
@@ -16795,24 +16825,18 @@ function _assert_this_initialized(self) {
         if (playable.getPlayState() !== 0) {
             return;
         }
-        if (playable.overrideTimeNextEvaluation) {
-            playable.overrideTimeNextEvaluation = false;
-        } else {
-            playable.setTime(playable.getTime() + deltaTime);
-        }
+        playable.setTime(playable.getTime() + deltaTime);
     };
     return PlayableGraph;
 }();
 /**
  * 动画图可播放节点对象
  * @since 2.0.0
- * @internal
  */ var Playable = /*#__PURE__*/ function() {
     function Playable(graph, inputCount) {
         if (inputCount === void 0) inputCount = 0;
         this.onPlayablePlayFlag = true;
         this.onPlayablePauseFlag = false;
-        this.overrideTimeNextEvaluation = false;
         this.destroyed = false;
         this.inputs = [];
         this.inputOuputPorts = [];
@@ -16898,7 +16922,6 @@ function _assert_this_initialized(self) {
     };
     _proto.setTime = function setTime(time) {
         this.time = time;
-        this.overrideTimeNextEvaluation = true;
     };
     _proto.getTime = function getTime() {
         return this.time;
@@ -17004,7 +17027,6 @@ function _assert_this_initialized(self) {
 /**
  * 动画图输出节点对象，将动画数据采样到绑定的元素属性上
  * @since 2.0.0
- * @internal
  */ var PlayableOutput = /*#__PURE__*/ function() {
     function PlayableOutput() {
         this.sourceOutputPort = 0;
@@ -19815,6 +19837,9 @@ exports.ParticleSystem = /*#__PURE__*/ function(Component) {
     _proto.isFrozen = function isFrozen() {
         return this.frozen;
     };
+    _proto.isEnded = function isEnded() {
+        return this.ended;
+    };
     _proto.initEmitterTransform = function initEmitterTransform() {
         var position = this.item.transform.position.clone();
         var rotation = this.item.transform.rotation.clone();
@@ -20007,7 +20032,7 @@ exports.ParticleSystem = /*#__PURE__*/ function(Component) {
                             break;
                         }
                         var burst = bursts[j];
-                        var opts = burst.getGeneratorOptions(timePassed, lifetime);
+                        var opts = !burst.disabled && burst.getGeneratorOptions(timePassed, lifetime);
                         if (opts) {
                             var originVec = [
                                 0,
@@ -20016,6 +20041,9 @@ exports.ParticleSystem = /*#__PURE__*/ function(Component) {
                             ];
                             var offsets = emission.burstOffsets[j];
                             var burstOffset = offsets && offsets[opts.cycleIndex] || originVec;
+                            if (burst.once) {
+                                this.removeBurst(j);
+                            }
                             for(var i1 = 0; i1 < opts.count && cursor < maxCount; i1++){
                                 var _p_transform;
                                 if (shouldSkipGenerate()) {
@@ -20733,7 +20761,6 @@ function randomArrItem(arr, keepArr) {
 
 /**
  * @since 2.0.0
- * @internal
  */ var ParticleBehaviourPlayable = /*#__PURE__*/ function(Playable) {
     _inherits(ParticleBehaviourPlayable, Playable);
     function ParticleBehaviourPlayable() {
@@ -20761,11 +20788,8 @@ function randomArrItem(arr, keepArr) {
         }
         var particleSystem = this.particleSystem;
         if (particleSystem) {
-            // TODO: [1.31] @十弦 验证 https://github.com/galacean/effects-runtime/commit/3e7d73d37b7d98c2a25e4544e80e928b17801ccd#diff-fae062f28caf3771cfedd3a20dc22f9749bd054c7541bf2fd50a9a5e413153d4
-            // particleSystem.setParentTransform(parentItem.transform);
-            particleSystem.setVisible(true);
             var deltaTime = context.deltaTime;
-            if (this.time < particleSystem.item.duration && particleSystem.isFrozen()) {
+            if (this.time >= 0 && this.time < particleSystem.item.duration && particleSystem.isEnded()) {
                 particleSystem.reset();
             }
             if (Math.abs(this.time - this.lastTime) < 0.001) {
@@ -21793,7 +21817,6 @@ var tempSize = new Vector3(1, 1, 1);
 var tempPos = new Vector3();
 /**
  * @since 2.0.0
- * @internal
  */ var TransformAnimationPlayable = /*#__PURE__*/ function(AnimationPlayable) {
     _inherits(TransformAnimationPlayable, AnimationPlayable);
     function TransformAnimationPlayable() {
@@ -21955,7 +21978,6 @@ exports.TransformPlayableAsset = __decorate([
 ], exports.TransformPlayableAsset);
 /**
  * @since 2.0.0
- * @internal
  */ var ActivationPlayable = /*#__PURE__*/ function(Playable) {
     _inherits(ActivationPlayable, Playable);
     function ActivationPlayable() {
@@ -22106,7 +22128,6 @@ var AnimationClipPlayable = /*#__PURE__*/ function(Playable) {
 
 /**
  * @since 2.0.0
- * @internal
  */ var TimelineClip = /*#__PURE__*/ function() {
     function TimelineClip() {
         this.start = 0;
@@ -22116,7 +22137,7 @@ var AnimationClipPlayable = /*#__PURE__*/ function(Playable) {
     _proto.toLocalTime = function toLocalTime(time) {
         var localTime = time - this.start;
         var duration = this.duration;
-        if (localTime - duration > 0.001) {
+        if (localTime - duration > 0) {
             if (this.endBehavior === EndBehavior.restart) {
                 localTime = localTime % duration;
             } else if (this.endBehavior === EndBehavior.freeze) {
@@ -22245,7 +22266,7 @@ var RuntimeClip = /*#__PURE__*/ function() {
         var ended = false;
         var started = false;
         var boundObject = this.track.binding;
-        if (localTime > clip.start + clip.duration + 0.001 && clip.endBehavior === EndBehavior.destroy) {
+        if (localTime >= clip.start + clip.duration && clip.endBehavior === EndBehavior.destroy) {
             if (_instanceof1(boundObject, exports.VFXItem) && exports.VFXItem.isParticle(boundObject) && this.particleSystem && !this.particleSystem.destroyed) {
                 weight = 1.0;
             } else {
@@ -22641,6 +22662,18 @@ function compareTracks(a, b) {
             }
         }
     };
+    _proto.showItems = function showItems() {
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.items), _step; !(_step = _iterator()).done;){
+            var item = _step.value;
+            item.setVisible(true);
+        }
+    };
+    _proto.hideItems = function hideItems() {
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.items), _step; !(_step = _iterator()).done;){
+            var item = _step.value;
+            item.setVisible(false);
+        }
+    };
     _proto.onDestroy = function onDestroy() {
         if (this.item.composition) {
             if (this.items) {
@@ -22751,6 +22784,34 @@ function compareTracks(a, b) {
     return CompositionComponent;
 }(Behaviour);
 
+var SubCompositionMixerPlayable = /*#__PURE__*/ function(Playable) {
+    _inherits(SubCompositionMixerPlayable, Playable);
+    function SubCompositionMixerPlayable() {
+        return Playable.apply(this, arguments);
+    }
+    var _proto = SubCompositionMixerPlayable.prototype;
+    _proto.processFrame = function processFrame(context) {
+        var boundObject = context.output.getUserData();
+        if (!_instanceof1(boundObject, CompositionComponent)) {
+            return;
+        }
+        var compositionComponent = boundObject;
+        var hasInput = false;
+        for(var i = 0; i < this.getInputCount(); i++){
+            if (this.getInputWeight(i) > 0) {
+                hasInput = true;
+                break;
+            }
+        }
+        if (hasInput) {
+            compositionComponent.showItems();
+        } else {
+            compositionComponent.hideItems();
+        }
+    };
+    return SubCompositionMixerPlayable;
+}(Playable);
+
 exports.SubCompositionTrack = /*#__PURE__*/ function(TrackAsset) {
     _inherits(SubCompositionTrack, TrackAsset);
     function SubCompositionTrack() {
@@ -22762,6 +22823,9 @@ exports.SubCompositionTrack = /*#__PURE__*/ function(TrackAsset) {
             throw new Error("SubCompositionTrack needs to be set under the VFXItem track.");
         }
         return parentBinding.getComponent(CompositionComponent);
+    };
+    _proto.createTrackMixer = function createTrackMixer(graph) {
+        return new SubCompositionMixerPlayable(graph);
     };
     return SubCompositionTrack;
 }(exports.TrackAsset);
@@ -26799,22 +26863,6 @@ var seed$4 = 1;
         this.timeout = timeout;
     };
     /**
-   * 根据用户传入的参数修改场景数据
-   */ _proto.updateSceneData = function updateSceneData(items) {
-        var variables = this.options.variables;
-        if (!variables || Object.keys(variables).length === 0) {
-            return;
-        }
-        items.forEach(function(item) {
-            if (item.type === ItemType.text) {
-                var textVariable = variables[item.name];
-                if (textVariable) {
-                    item.content.options.text = textVariable;
-                }
-            }
-        });
-    };
-    /**
    * 场景创建，通过 json 创建出场景对象，并进行提前编译等工作
    * @param url - json 的 URL 链接或者 json 对象
    * @param renderer - renderer 对象，用于获取管理、编译 shader 及 GPU 上下文的参数
@@ -26941,7 +26989,6 @@ var seed$4 = 1;
                                 for(i1 = 0; i1 < scene.images.length; i1++){
                                     scene.textureOptions[i1].image = scene.images[i1];
                                 }
-                                _this.updateSceneData(scene.jsonScene.items);
                                 _state.label = 5;
                             case 5:
                                 return [
@@ -26998,7 +27045,6 @@ var seed$4 = 1;
                                 ];
                             case 10:
                                 loadedTextures = _state.sent();
-                                _this.updateSceneData(jsonScene.items);
                                 scene = {
                                     timeInfos: timeInfos,
                                     url: url,
@@ -27290,7 +27336,7 @@ var seed$4 = 1;
                                 ];
                             case 6:
                                 e = _state.sent();
-                                throw new Error("Failed to load. Check the template or if the URL is " + (isVideo ? "video" : "image") + " type, URL: " + url + ", Error: " + e.message + ".");
+                                throw new Error("Failed to load. Check the template or if the URL is " + (isVideo ? "video" : "image") + " type, URL: " + url + ", Error: " + (e.message || e) + ".");
                             case 7:
                                 return [
                                     3,
@@ -28216,6 +28262,7 @@ var listOrder = 0;
    * 跳到指定时间点（不做任何播放行为）
    * @param time - 相对 startTime 的时间
    */ _proto.setTime = function setTime(time) {
+        var speed = this.speed;
         var pause = this.paused;
         if (pause) {
             this.resume();
@@ -28224,7 +28271,9 @@ var listOrder = 0;
             this.rootComposition.start();
             this.rootComposition.isStartCalled = true;
         }
+        this.setSpeed(1);
         this.forwardTime(time + this.startTime);
+        this.setSpeed(speed);
         if (pause) {
             this.pause();
         }
@@ -28236,7 +28285,6 @@ var listOrder = 0;
     /**
    * 前进合成到指定时间
    * @param time - 相对0时刻的时间
-   * @param skipRender - 是否跳过渲染
    */ _proto.forwardTime = function forwardTime(time) {
         var deltaTime = time * 1000 - this.rootComposition.time * 1000;
         var reverse = deltaTime < 0;
@@ -28286,7 +28334,6 @@ var listOrder = 0;
     /**
    * 合成更新，针对所有 item 的更新
    * @param deltaTime - 更新的时间步长
-   * @param skipRender - 是否需要渲染
    */ _proto.update = function update(deltaTime) {
         if (!this.assigned || this.paused) {
             return;
@@ -28913,7 +28960,7 @@ var ByteBuffer = /*#__PURE__*/ function() {
     function ByteBuffer(bytes_) {
         this.bytes_ = bytes_;
         this.position_ = 0;
-        this.text_decoder_ = new TextDecoder();
+        this.text_decoder_ = new weapp.TextDecoder();
     }
     var _proto = ByteBuffer.prototype;
     _proto.clear = function clear() {
@@ -30712,11 +30759,12 @@ var FBGeometryDataT = /*#__PURE__*/ function() {
     return Engine;
 }();
 
+var DEFAULT_FPS = 60;
 /**
  * 定时器类
  */ var Ticker = /*#__PURE__*/ function() {
     function Ticker(fps) {
-        if (fps === void 0) fps = 60;
+        if (fps === void 0) fps = DEFAULT_FPS;
         this.paused = true;
         this.lastTime = 0;
         // deltaTime
@@ -30851,7 +30899,7 @@ registerPlugin("sprite", SpriteLoader, exports.VFXItem, true);
 registerPlugin("particle", ParticleLoader, exports.VFXItem, true);
 registerPlugin("cal", CalculateLoader, exports.VFXItem, true);
 registerPlugin("interact", InteractLoader, exports.VFXItem, true);
-var version$1 = "2.0.3";
+var version$1 = "2.0.6";
 logger.info("Core version: " + version$1 + ".");
 
 var _obj$3;
@@ -31481,19 +31529,17 @@ var GLRendererInternal = /*#__PURE__*/ function() {
                 return;
             }
             offset = subMesh.offset;
-            var _subMesh_indexCount;
-            count = (_subMesh_indexCount = subMesh.indexCount) != null ? _subMesh_indexCount : subMesh.vertexCount;
             if (indicesBuffer) {
-                gl.drawElements(mode, count, indicesBuffer.type, offset != null ? offset : 0);
+                var _subMesh_indexCount;
+                count = (_subMesh_indexCount = subMesh.indexCount) != null ? _subMesh_indexCount : 0;
             } else {
-                gl.drawArrays(mode, offset, count);
+                count = subMesh.vertexCount;
             }
+        }
+        if (indicesBuffer) {
+            gl.drawElements(mode, count, indicesBuffer.type, offset != null ? offset : 0);
         } else {
-            if (indicesBuffer) {
-                gl.drawElements(mode, count, indicesBuffer.type, offset != null ? offset : 0);
-            } else {
-                gl.drawArrays(mode, offset, count);
-            }
+            gl.drawArrays(mode, offset, count);
         }
         vao == null ? void 0 : vao.unbind();
     };
@@ -32428,8 +32474,8 @@ var GLMaterialState = /*#__PURE__*/ function() {
             glContext.FUNC_ADD,
             glContext.FUNC_ADD
         ];
-        this.depthTest = false;
-        this.depthMask = false;
+        this.depthTest = true;
+        this.depthMask = true;
         this.depthRange = [
             0,
             1
@@ -32606,6 +32652,7 @@ var GLMaterial = /*#__PURE__*/ function(Material) {
         if (!this.shaderVariant || this.shaderVariant.shader !== this.shader || this.macrosDirtyFlag) {
             this.shaderVariant = this.shader.createVariant(this.enabledMacros);
             this.macrosDirtyFlag = false;
+            this.uniformDirtyFlag = true;
         }
     };
     _proto.setupStates = function setupStates(pipelineContext) {
@@ -32844,24 +32891,16 @@ var GLMaterial = /*#__PURE__*/ function(Material) {
         this.ints = {};
         this.floatArrays = {};
         this.vector4s = {};
-        var propertiesData = _extends({
-            blending: false,
-            zTest: false,
-            zWrite: false
-        }, data);
-        // FIXME: 刷新 Material 状态，后面删除 data 中的 blending，zTest 和 zWrite 状态
+        var propertiesData = _extends({}, data);
         if (data.stringTags["RenderType"] !== undefined) {
-            propertiesData.blending = data.stringTags["RenderType"] === RenderType.Transparent;
+            this.blending = data.stringTags["RenderType"] === RenderType.Transparent;
         }
         if (data.floats["ZTest"] !== undefined) {
-            propertiesData.zTest = data.floats["ZTest"] !== 0;
+            this.depthTest = data.floats["ZTest"] !== 0;
         }
         if (data.floats["ZWrite"] !== undefined) {
-            propertiesData.zWrite = data.floats["ZWrite"] !== 0;
+            this.depthMask = data.floats["ZWrite"] !== 0;
         }
-        this.blending = propertiesData.blending;
-        this.depthTest = propertiesData.zTest;
-        this.depthMask = propertiesData.zWrite;
         var renderFace = data.stringTags["RenderFace"];
         if (renderFace === RenderFace.Front) {
             this.culling = true;
@@ -34347,7 +34386,10 @@ var GLShaderLibrary = /*#__PURE__*/ function() {
         var checkComplete = function() {
             if (_this.engine.isDestroyed) {
                 console.warn("The player is destroyed during the loadScene process. Please check the timing of calling loadScene and dispose. A common situation is that when calling loadScene, await is not added. This will cause dispose to be called before loadScene is completed.");
-                return;
+                return asyncCallback == null ? void 0 : asyncCallback(result);
+            }
+            if (shader.initialized) {
+                return asyncCallback == null ? void 0 : asyncCallback(result);
             }
             var shouldLink = !asyncCallback || !ext || ext && gl.getProgramParameter(result.program, ext.COMPLETION_STATUS_KHR) == true;
             var program = shouldLink && linkProgram();
@@ -34374,9 +34416,7 @@ var GLShaderLibrary = /*#__PURE__*/ function() {
                         setupProgram(glProgram);
                     }
                 }
-                if (asyncCallback) {
-                    asyncCallback(result);
-                }
+                asyncCallback == null ? void 0 : asyncCallback(result);
             } else if (asyncCallback) {
                 weapp.requestAnimationFrame(checkComplete);
             }
@@ -35737,6 +35777,11 @@ var seed = 1;
                             effectsObject = _step.value;
                             engine.addInstance(effectsObject);
                         }
+                        _this.updateTextVariables(scene, opts.variables);
+                        // 加载期间 player 销毁
+                        if (_this.disposed) {
+                            throw new Error("Disposed player can not used to create Composition.");
+                        }
                         for(i = 0; i < scene.textureOptions.length; i++){
                             scene.textureOptions[i] = _instanceof1(scene.textureOptions[i], Texture) ? scene.textureOptions[i] : engine.assetLoader.loadGUID(scene.textureOptions[i].id);
                             scene.textureOptions[i].initialize();
@@ -35753,10 +35798,6 @@ var seed = 1;
                         _state.sent();
                         _state.label = 3;
                     case 3:
-                        // 加载期间 player 销毁
-                        if (_this.disposed) {
-                            throw new Error("Disposed player can not used to create Composition.");
-                        }
                         composition = new Composition(_extends({}, opts, {
                             renderer: renderer,
                             width: renderer.getWidth(),
@@ -35767,10 +35808,12 @@ var seed = 1;
                             }
                         }), scene);
                         _this.compositions.push(composition);
-                        // 中低端设备降帧到 30fps
                         if (_this.ticker) {
+                            // 中低端设备降帧到 30fps
                             if (opts.renderLevel === RenderLevel.B) {
                                 _this.ticker.setFPS(Math.min(_this.ticker.getFPS(), 30));
+                            } else {
+                                _this.ticker.setFPS(DEFAULT_FPS);
                             }
                         }
                         // TODO 目前编辑器会每帧调用 loadScene, 在这编译会导致闪帧，待编辑器渲染逻辑优化后移除。
@@ -35811,6 +35854,30 @@ var seed = 1;
                 }
             });
         })();
+    };
+    /**
+   * 根据用户参数修改原始数据
+   * @param scene
+   * @param options
+   */ _proto.updateTextVariables = function updateTextVariables(scene, variables) {
+        if (variables === void 0) variables = {};
+        var renderer = this.renderer;
+        var engine = renderer.engine;
+        scene.jsonScene.items.forEach(function(item) {
+            if (item.type === ItemType.text) {
+                var textVariable = variables[item.name];
+                if (!textVariable) {
+                    return;
+                }
+                item.components.forEach(function(param) {
+                    var id = param.id;
+                    var componentData = engine.findEffectsObjectData(id);
+                    if ((componentData == null ? void 0 : componentData.dataType) === DataType.TextComponent) {
+                        componentData.options.text = textVariable;
+                    }
+                });
+            }
+        });
     };
     /**
    * 播放通过 player 加载好的全部合成
@@ -36357,7 +36424,7 @@ Renderer.create = function(canvas, framework, renderOptions) {
 Engine.create = function(gl) {
     return new GLEngine(gl);
 };
-var version = "2.0.3";
+var version = "2.0.6";
 logger.info("Player version: " + version + ".");
 
 exports.AbstractPlugin = AbstractPlugin;
@@ -36381,6 +36448,7 @@ exports.Composition = Composition;
 exports.CompositionComponent = CompositionComponent;
 exports.CompositionSourceManager = CompositionSourceManager;
 exports.DEFAULT_FONTS = DEFAULT_FONTS;
+exports.DEFAULT_FPS = DEFAULT_FPS;
 exports.Database = Database;
 exports.Downloader = Downloader;
 exports.EFFECTS_COPY_MESH_NAME = EFFECTS_COPY_MESH_NAME;
