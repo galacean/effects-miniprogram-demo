@@ -2,10 +2,7 @@ import { Player } from '@galacean/effects/alipay';
 import { registerCanvas } from '@galacean/appx-adapter/alipay';
 import '@galacean/effects-plugin-model/alipay';
 
-// 绿色人
-const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*SERYRaes5S0AAAAAAAAAAAAADlB4AQ';
-// 骨骼
-// const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*NPMMTbrZrJAAAAAAAAAAAAAADlB4AQ';
+const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*Q62TQL7Lo0cAAAAAAAAAAAAADlB4AQ';
 
 Page<{}, {
   player: Player | null;
