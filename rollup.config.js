@@ -26,6 +26,7 @@ export default () => {
     'dynamic-image',
     'spine',
     'model',
+    'preload',
   ].forEach(name => {
     input[name] = `./miniprogram/pages/${name}/index.ts`;
   });
