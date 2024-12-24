@@ -7,7 +7,8 @@
     "pages/interactive/index",
     "pages/dynamic-image/index",
     "pages/spine/index",
-    "pages/model/index"
+    "pages/model/index",
+    "pages/preload/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

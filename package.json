@@ -6,9 +6,9 @@
   },
   "dependencies": {
     "@galacean/appx-adapter": "0.3.1",
-    "@galacean/effects": "^2.0.6",
-    "@galacean/effects-plugin-model": "^2.0.6",
-    "@galacean/effects-plugin-spine": "^2.0.6"
+    "@galacean/effects": "^2.1.4",
+    "@galacean/effects-plugin-model": "^2.1.4",
+    "@galacean/effects-plugin-spine": "^2.1.4"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.0.3",
