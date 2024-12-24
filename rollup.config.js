@@ -27,6 +27,7 @@ export default () => {
     'spine',
     'model',
     'gyroscope',
+    'preload',
   ].forEach(name => {
     input[name] = `./miniprogram/pages/${name}/index.ts`;
   });

@@ -7,4 +7,5 @@
   <navigator open-type="navigate" url="/pages/spine/index" hover-class="navigator-hover">Spine 插件</navigator>
   <navigator open-type="navigate" url="/pages/model/index" hover-class="navigator-hover">3D 插件</navigator>
   <navigator open-type="navigate" url="/pages/gyroscope/index" hover-class="navigator-hover">陀螺仪插件</navigator>
+  <navigator open-type="navigate" url="/pages/preload/index" hover-class="navigator-hover">资源预加载</navigator>
 </view>

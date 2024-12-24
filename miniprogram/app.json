@@ -8,7 +8,8 @@
     "pages/dynamic-image/index",
     "pages/spine/index",
     "pages/model/index",
-    "pages/gyroscope/index"
+    "pages/gyroscope/index",
+    "pages/preload/index"
   ],
   "window": {
     "canPullDown": "NO"
