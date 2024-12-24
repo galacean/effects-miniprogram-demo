@@ -1749,6 +1749,62 @@ function _arrayBufferToBase64(buffer) {
 
 var xmlHttpRequest = {};
 
+var _instanceof = {};
+
+Object.defineProperty(_instanceof, "__esModule", { value: true });
+_instanceof.isInstanceOf = void 0;
+var renderTarget = typeof my !== 'undefined' ? my.renderTarget : undefined;
+var inMiniPlugin = renderTarget === 'web' && typeof getApp !== 'function';
+function isInstanceOf(a, b) {
+    var result = a instanceof b;
+    if (inMiniPlugin) {
+        if (isGlobalConstructor(b)) {
+            var aType = Object.prototype.toString.call(a);
+            if (aType === '[object ' + b.name + ']') {
+                return true;
+            }
+        }
+    }
+    return result;
+}
+_instanceof.isInstanceOf = isInstanceOf;
+function isGlobalConstructor(k) {
+    if (typeof k === 'function' && typeof k.name === 'string') {
+        var gk = void 0;
+        switch (k.name) {
+            case 'Object':
+                gk = Object;
+                break;
+            case 'Array':
+                gk = Array;
+                break;
+            case 'String':
+                gk = String;
+                break;
+            case 'Number':
+                gk = Number;
+                break;
+            case 'Date':
+                gk = Date;
+                break;
+            case 'Function':
+                gk = Function;
+                break;
+            case 'Boolean':
+                gk = Boolean;
+                break;
+            case 'ArrayBuffer':
+                gk = typeof ArrayBuffer !== 'undefined' ? ArrayBuffer : undefined;
+                break;
+            case 'Promise':
+                gk = typeof Promise !== 'undefined' ? Promise : undefined;
+                break;
+        }
+        return gk === k;
+    }
+    return false;
+}
+
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -1767,6 +1823,7 @@ var __extends = (undefined && undefined.__extends) || (function () {
 Object.defineProperty(xmlHttpRequest, "__esModule", { value: true });
 xmlHttpRequest.XMLHttpRequest = void 0;
 // @ts-nocheck
+var instanceof_1 = _instanceof;
 var platform_1 = platform$1;
 var event_target_1 = eventTarget;
 var _requestHeader = new WeakMap();
@@ -1887,7 +1944,7 @@ var XMLHttpRequest = /** @class */ (function (_super) {
                 }
                 resolved_1 = true;
                 statusCode = statusCode === undefined ? 200 : statusCode;
-                if (typeof data !== 'string' && !(data instanceof ArrayBuffer) && dataType_1 !== 'json') {
+                if (typeof data !== 'string' && !((0, instanceof_1.isInstanceOf)(data, ArrayBuffer)) && dataType_1 !== 'json') {
                     try {
                         data = JSON.stringify(data);
                         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1902,7 +1959,7 @@ var XMLHttpRequest = /** @class */ (function (_super) {
                 _changeReadyState.call(_this, XMLHttpRequest.HEADERS_RECEIVED);
                 _changeReadyState.call(_this, XMLHttpRequest.LOADING);
                 _this.response = data;
-                if (data instanceof ArrayBuffer) {
+                if ((0, instanceof_1.isInstanceOf)(data, ArrayBuffer)) {
                     Object.defineProperty(_this, 'responseText', {
                         enumerable: true,
                         configurable: true,
@@ -4030,20 +4087,194 @@ function applyMixins(derivedCtrl, baseCtrls) {
     });
 }
 
-function _defineProperties(target, props) {
-    for(var i = 0; i < props.length; i++){
-        var descriptor = props[i];
-        descriptor.enumerable = descriptor.enumerable || false;
-        descriptor.configurable = true;
-        if ("value" in descriptor) descriptor.writable = true;
-        Object.defineProperty(target, descriptor.key, descriptor);
+var pluginLoaderMap = {};
+var defaultPlugins = [];
+var pluginCtrlMap = {};
+/**
+ * 注册 plugin
+ * @param name
+ * @param pluginClass class of plugin
+ * @param itemClass class of item
+ * @param isDefault load
+ */ // eslint-disable-next-line @typescript-eslint/no-unused-vars
+function registerPlugin(name, pluginClass, itemClass, isDefault) {
+    if (pluginCtrlMap[name]) {
+        logger.error("Duplicate registration for plugin " + name + ".");
+    }
+    pluginCtrlMap[name] = itemClass;
+    pluginLoaderMap[name] = pluginClass;
+    if (isDefault) {
+        addItem(defaultPlugins, name);
     }
 }
-function _create_class(Constructor, protoProps, staticProps) {
-    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) _defineProperties(Constructor, staticProps);
-    return Constructor;
+function unregisterPlugin(name) {
+    delete pluginCtrlMap[name];
+    delete pluginLoaderMap[name];
+    removeItem(defaultPlugins, name);
 }
+var PluginSystem = /*#__PURE__*/ function() {
+    function PluginSystem(pluginNames) {
+        var loaders = {};
+        var loaded = [];
+        var addLoader = function(name) {
+            var loader = pluginLoaderMap[name];
+            if (!loaded.includes(loader)) {
+                loaded.push(loader);
+                loaders[name] = loader;
+            }
+        };
+        defaultPlugins.forEach(addLoader);
+        pluginNames.forEach(addLoader);
+        this.plugins = Object.keys(loaders).map(function(name) {
+            var CTRL = pluginLoaderMap[name];
+            if (!CTRL) {
+                throw new Error("The plugin '" + name + "' not found." + getPluginUsageInfo(name));
+            }
+            var loader = new CTRL();
+            loader.name = name;
+            return loader;
+        }).sort(function(a, b) {
+            return a.order - b.order;
+        });
+    }
+    var _proto = PluginSystem.prototype;
+    _proto.initializeComposition = function initializeComposition(composition, scene) {
+        this.plugins.forEach(function(loader) {
+            return loader.onCompositionConstructed(composition, scene);
+        });
+    };
+    _proto.destroyComposition = function destroyComposition(comp) {
+        this.plugins.forEach(function(loader) {
+            return loader.onCompositionDestroyed(comp);
+        });
+    };
+    _proto.resetComposition = function resetComposition(comp, renderFrame) {
+        this.plugins.forEach(function(loader) {
+            return loader.onCompositionReset(comp, renderFrame);
+        });
+    };
+    _proto.processRawJSON = function processRawJSON(json, options) {
+        var _this = this;
+        return _async_to_generator(function() {
+            return __generator(this, function(_state) {
+                return [
+                    2,
+                    _this.callStatic("processRawJSON", json, options)
+                ];
+            });
+        })();
+    };
+    _proto.processAssets = function processAssets(json, options) {
+        var _this = this;
+        return _async_to_generator(function() {
+            return __generator(this, function(_state) {
+                return [
+                    2,
+                    _this.callStatic("processAssets", json, options)
+                ];
+            });
+        })();
+    };
+    _proto.precompile = function precompile(compositions, renderer, options) {
+        var _this = this;
+        return _async_to_generator(function() {
+            return __generator(this, function(_state) {
+                return [
+                    2,
+                    _this.callStatic("precompile", compositions, renderer, options)
+                ];
+            });
+        })();
+    };
+    _proto.loadResources = function loadResources(scene, options) {
+        var _this = this;
+        return _async_to_generator(function() {
+            return __generator(this, function(_state) {
+                return [
+                    2,
+                    _this.callStatic("prepareResource", scene, options)
+                ];
+            });
+        })();
+    };
+    _proto.callStatic = function callStatic(name) {
+        for(var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++){
+            args[_key - 1] = arguments[_key];
+        }
+        var _this = this;
+        return _async_to_generator(function() {
+            var pendings, plugins, i, plugin, ctrl, _ctrl_name, _ctrl_name1;
+            return __generator(this, function(_state) {
+                pendings = [];
+                plugins = _this.plugins;
+                for(i = 0; i < plugins.length; i++){
+                    plugin = plugins[i];
+                    ctrl = pluginLoaderMap[plugin.name];
+                    if (name in ctrl) {
+                        pendings.push(Promise.resolve((_ctrl_name1 = ctrl[name]) == null ? void 0 : (_ctrl_name = _ctrl_name1).call.apply(_ctrl_name, [].concat([
+                            ctrl
+                        ], args))));
+                    }
+                }
+                return [
+                    2,
+                    Promise.all(pendings)
+                ];
+            });
+        })();
+    };
+    return PluginSystem;
+}();
+var pluginInfoMap = {
+    "alipay-downgrade": "@galacean/effects-plugin-alipay-downgrade",
+    "downgrade": "@galacean/effects-plugin-downgrade",
+    "editor-gizmo": "@galacean/effects-plugin-editor-gizmo",
+    "model": "@galacean/effects-plugin-model",
+    "video": "@galacean/effects-plugin-multimedia",
+    "audio": "@galacean/effects-plugin-multimedia",
+    "orientation-transformer": "@galacean/effects-plugin-orientation-transformer",
+    "richtext": "@galacean/effects-plugin-rich-text",
+    "spine": "@galacean/effects-plugin-spine"
+};
+function getPluginUsageInfo(name) {
+    var info = pluginInfoMap[name];
+    if (info) {
+        return "\n请按如下命令进行操作（Please follow the commands below to proceed）：\n1、使用 npm 安装插件（Install Plugin）：npm i " + info + "@latest --save\n2、导入插件（Import Plugin）：import '" + info + "'";
+    } else {
+        return "";
+    }
+}
+
+/**
+ * 抽象插件类
+ * 注册合成不同生命周期的回调函数
+ */ var AbstractPlugin = /*#__PURE__*/ function() {
+    function AbstractPlugin() {
+        this.order = 100;
+        this.name = "";
+    }
+    var _proto = AbstractPlugin.prototype;
+    _proto.onCompositionConstructed = function onCompositionConstructed(composition, scene) {};
+    _proto.onCompositionItemLifeBegin = function onCompositionItemLifeBegin(composition, item) {};
+    _proto.onCompositionItemLifeEnd = function onCompositionItemLifeEnd(composition, item) {};
+    _proto.onCompositionItemRemoved = function onCompositionItemRemoved(composition, item) {};
+    _proto.onCompositionReset = function onCompositionReset(composition, frame) {};
+    _proto.onCompositionWillReset = function onCompositionWillReset(composition, frame) {};
+    _proto.onCompositionDestroyed = function onCompositionDestroyed(composition) {};
+    _proto.onCompositionUpdate = function onCompositionUpdate(composition, dt) {};
+    _proto.prepareRenderFrame = function prepareRenderFrame(composition, frame) {
+        return false;
+    };
+    _proto.postProcessFrame = function postProcessFrame(composition, frame) {};
+    /**
+   * 在加载到 JSON 后，就可以进行提前编译
+   * @param json
+   * @param player
+   */ AbstractPlugin.precompile = function precompile(compositions, renderer) {
+        return Promise.resolve();
+    };
+    return AbstractPlugin;
+}();
 
 function _set_prototype_of(o, p) {
     _set_prototype_of = Object.setPrototypeOf || function setPrototypeOf(o, p) {
@@ -4067,40 +4298,1206 @@ function _inherits(subClass, superClass) {
     if (superClass) _set_prototype_of(subClass, superClass);
 }
 
-function _array_like_to_array(arr, len) {
-    if (len == null || len > arr.length) len = arr.length;
-    for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
-    return arr2;
-}
+/*********************************************/ /*               元素属性参数类型               */ /*********************************************/ /**
+ * 渲染等级
+ */ var RenderLevel;
+(function(RenderLevel) {
+    RenderLevel["S"] = "S";
+    RenderLevel["APlus"] = "A+";
+    RenderLevel["A"] = "A";
+    RenderLevel["BPlus"] = "B+";
+    RenderLevel["B"] = "B";
+})(RenderLevel || (RenderLevel = {}));
+/**
+ * 混合模式
+ */ var BlendingMode;
+(function(BlendingMode) {
+    /**
+     * 普通混合模式
+     */ BlendingMode[BlendingMode["ALPHA"] = 0] = "ALPHA";
+    /**
+     * 叠加混合模式
+     */ BlendingMode[BlendingMode["ADD"] = 1] = "ADD";
+    /**
+     * 相乘混合模式
+     */ BlendingMode[BlendingMode["MULTIPLY"] = 2] = "MULTIPLY";
+    /**
+     * 亮度混合模式
+     */ BlendingMode[BlendingMode["BRIGHTNESS"] = 3] = "BRIGHTNESS";
+    /**
+     * 减色混合模式
+     */ BlendingMode[BlendingMode["SUBTRACTION"] = 4] = "SUBTRACTION";
+    /**
+     * 强光混合模式
+     */ BlendingMode[BlendingMode["STRONG_LIGHT"] = 5] = "STRONG_LIGHT";
+    /**
+     * 弱光混合模式
+     */ BlendingMode[BlendingMode["WEAK_LIGHT"] = 6] = "WEAK_LIGHT";
+    /**
+     * 亮度叠加混合模式
+     */ BlendingMode[BlendingMode["SUPERPOSITION"] = 7] = "SUPERPOSITION";
+})(BlendingMode || (BlendingMode = {}));
+/**
+ * 单双面模式
+ */ var SideMode;
+(function(SideMode) {
+    /**
+     * 双面模式
+     */ SideMode[SideMode["DOUBLE"] = 1032] = "DOUBLE";
+    /**
+     * 正面模式
+     */ SideMode[SideMode["FRONT"] = 1028] = "FRONT";
+    /**
+     * 背面模式
+     */ SideMode[SideMode["BACK"] = 1029] = "BACK";
+})(SideMode || (SideMode = {}));
+/**
+ * 蒙版模式
+ */ var MaskMode;
+(function(MaskMode) {
+    /**
+     * 无蒙版
+     */ MaskMode[MaskMode["NONE"] = 0] = "NONE";
+    /**
+     * 蒙版
+     */ MaskMode[MaskMode["MASK"] = 1] = "MASK";
+    /**
+     * 被遮挡
+     */ MaskMode[MaskMode["OBSCURED"] = 2] = "OBSCURED";
+    /**
+     * 被反向遮挡
+     */ MaskMode[MaskMode["REVERSE_OBSCURED"] = 3] = "REVERSE_OBSCURED";
+})(MaskMode || (MaskMode = {}));
+/**
+ * 发射器形状
+ */ var ParticleEmitterShapeType;
+(function(ParticleEmitterShapeType) {
+    /**
+     * 没有类型
+     */ ParticleEmitterShapeType[ParticleEmitterShapeType["NONE"] = 0] = "NONE";
+    /**
+     * 圆球
+     */ ParticleEmitterShapeType[ParticleEmitterShapeType["SPHERE"] = 1] = "SPHERE";
+    /**
+     * 圆锥
+     */ ParticleEmitterShapeType[ParticleEmitterShapeType["CONE"] = 2] = "CONE";
+    /**
+     * 半球
+     */ ParticleEmitterShapeType[ParticleEmitterShapeType["HEMISPHERE"] = 3] = "HEMISPHERE";
+    /**
+     * 圆
+     */ ParticleEmitterShapeType[ParticleEmitterShapeType["CIRCLE"] = 4] = "CIRCLE";
+    /**
+     * 圆环
+     */ ParticleEmitterShapeType[ParticleEmitterShapeType["DONUT"] = 5] = "DONUT";
+    /**
+     * 矩形
+     */ ParticleEmitterShapeType[ParticleEmitterShapeType["RECTANGLE"] = 6] = "RECTANGLE";
+    /**
+     * 矩形框
+     */ ParticleEmitterShapeType[ParticleEmitterShapeType["RECTANGLE_EDGE"] = 7] = "RECTANGLE_EDGE";
+    /**
+     * 直线
+     */ ParticleEmitterShapeType[ParticleEmitterShapeType["EDGE"] = 8] = "EDGE";
+    /**
+     * 贴图
+     */ ParticleEmitterShapeType[ParticleEmitterShapeType["TEXTURE"] = 9] = "TEXTURE";
+})(ParticleEmitterShapeType || (ParticleEmitterShapeType = {}));
+/**
+ * 插件类型
+ */ var PluginType;
+(function(PluginType) {
+    /**
+     * 陀螺仪
+     */ PluginType[PluginType["GYROSCOPE"] = 0] = "GYROSCOPE";
+    /**
+     * Spine
+     */ PluginType[PluginType["SPINE"] = 1] = "SPINE";
+})(PluginType || (PluginType = {}));
+/**
+ * 交互类型
+ */ var InteractType;
+(function(InteractType) {
+    /**
+     * 点击
+     */ InteractType[InteractType["CLICK"] = 0] = "CLICK";
+    /**
+     * 消息
+     * 前端收到 onMessageItem 回调
+     */ InteractType[InteractType["MESSAGE"] = 1] = "MESSAGE";
+    /**
+     * 拖拽
+     */ InteractType[InteractType["DRAG"] = 2] = "DRAG";
+})(InteractType || (InteractType = {}));
+/**
+ * 交互行为
+ */ var InteractBehavior;
+(function(InteractBehavior) {
+    /**
+     * 无
+     */ InteractBehavior[InteractBehavior["NONE"] = 0] = "NONE";
+    /**
+     * 通知
+     */ InteractBehavior[InteractBehavior["NOTIFY"] = 1] = "NOTIFY";
+    /**
+     * 重置播放器
+     */ InteractBehavior[InteractBehavior["RESUME_PLAYER"] = 2] = "RESUME_PLAYER";
+    /**
+     * 清除元素
+     */ InteractBehavior[InteractBehavior["REMOVE"] = 3] = "REMOVE";
+    /**
+     * 暂停播放器
+     */ InteractBehavior[InteractBehavior["PAUSE"] = 4] = "PAUSE";
+})(InteractBehavior || (InteractBehavior = {}));
+/**
+ * 元素类型
+ */ var ItemType;
+(function(ItemType) {
+    /**
+     * 错误元素
+     */ ItemType["base"] = "0";
+    /**
+     * 图层元素
+     */ ItemType["sprite"] = "1";
+    /**
+     * 粒子元素
+     */ ItemType["particle"] = "2";
+    /**
+     * 空节点元素
+     */ ItemType["null"] = "3";
+    /**
+     * 交互元素
+     */ ItemType["interact"] = "4";
+    /**
+     * 插件元素
+     */ ItemType["plugin"] = "5";
+    /**
+     * 相机元素
+     */ ItemType["camera"] = "6";
+    /**
+     * 预合成元素
+     */ ItemType["composition"] = "7";
+    /**
+     * Spine 元素
+     */ ItemType["spine"] = "spine";
+    /**
+     * Mesh 元素
+     */ ItemType["mesh"] = "mesh";
+    /**
+     * 节点树元素
+     */ ItemType["tree"] = "tree";
+    /**
+     * 文本元素
+     */ ItemType["text"] = "text";
+    /**
+     * 灯光元素
+     */ ItemType["light"] = "light";
+    /**
+     * 天空盒元素
+     */ ItemType["skybox"] = "skybox";
+    /**
+     * 特效元素
+     */ ItemType["effect"] = "effect";
+    /**
+     * 形状元素
+     */ ItemType["shape"] = "shape";
+    /**
+     * 后处理元素
+     */ ItemType["postProcessVolume"] = "postProcessVolume";
+    /**
+     * 节点元素
+     */ ItemType["node"] = "node";
+    /**
+     * 视频元素
+     */ ItemType["video"] = "video";
+    /**
+     * 音频元素
+     */ ItemType["audio"] = "audio";
+    /**
+     * 富文本元素
+     */ ItemType["richtext"] = "richtext";
+})(ItemType || (ItemType = {}));
+/**
+ * 渲染模式
+ */ var RenderMode;
+(function(RenderMode) {
+    /**
+     * 广告牌模式
+     */ RenderMode[RenderMode["BILLBOARD"] = 0] = "BILLBOARD";
+    /**
+     * 网格模式
+     */ RenderMode[RenderMode["MESH"] = 1] = "MESH";
+    /**
+     * 垂直广告牌模式
+     */ RenderMode[RenderMode["VERTICAL_BILLBOARD"] = 2] = "VERTICAL_BILLBOARD";
+    /**
+     * 水平广告牌模式
+     */ RenderMode[RenderMode["HORIZONTAL_BILLBOARD"] = 3] = "HORIZONTAL_BILLBOARD";
+})(RenderMode || (RenderMode = {}));
+/**
+ * 变换中心
+ */ var ParticleOrigin;
+(function(ParticleOrigin) {
+    /**
+     * 水平和垂直中点
+     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_CENTER"] = 0] = "PARTICLE_ORIGIN_CENTER";
+    /**
+     * 水平左侧 垂直顶部
+     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_LEFT_TOP"] = 1] = "PARTICLE_ORIGIN_LEFT_TOP";
+    /**
+     * 水平左侧 垂直中间
+     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_LEFT_CENTER"] = 2] = "PARTICLE_ORIGIN_LEFT_CENTER";
+    /**
+     * 水平左侧 垂直底部
+     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_LEFT_BOTTOM"] = 3] = "PARTICLE_ORIGIN_LEFT_BOTTOM";
+    /**
+     * 水平中间 垂直顶部
+     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_CENTER_TOP"] = 4] = "PARTICLE_ORIGIN_CENTER_TOP";
+    /**
+     * 水平中间 垂直底部
+     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_CENTER_BOTTOM"] = 5] = "PARTICLE_ORIGIN_CENTER_BOTTOM";
+    /**
+     * 水平右侧 垂直顶部
+     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_RIGHT_TOP"] = 6] = "PARTICLE_ORIGIN_RIGHT_TOP";
+    /**
+     * 水平右侧 垂直中间
+     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_RIGHT_CENTER"] = 7] = "PARTICLE_ORIGIN_RIGHT_CENTER";
+    /**
+     * 水平右侧 垂直底部
+     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_RIGHT_BOTTOM"] = 8] = "PARTICLE_ORIGIN_RIGHT_BOTTOM";
+})(ParticleOrigin || (ParticleOrigin = {}));
+var RenderType;
+(function(RenderType) {
+    RenderType["Opaque"] = "Opaque";
+    RenderType["Transparent"] = "Transparent";
+})(RenderType || (RenderType = {}));
+var RenderFace;
+(function(RenderFace) {
+    RenderFace["Both"] = "Both";
+    RenderFace["Back"] = "Back";
+    RenderFace["Front"] = "Front";
+})(RenderFace || (RenderFace = {}));
 
-function _unsupported_iterable_to_array(o, minLen) {
-    if (!o) return;
-    if (typeof o === "string") return _array_like_to_array(o, minLen);
-    var n = Object.prototype.toString.call(o).slice(8, -1);
-    if (n === "Object" && o.constructor) n = o.constructor.name;
-    if (n === "Map" || n === "Set") return Array.from(n);
-    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _array_like_to_array(o, minLen);
-}
+/**
+ * 销毁
+ */ var END_BEHAVIOR_DESTROY = 0;
+/**
+ * 暂停
+ * @deprecated since 2.0 - use `END_BEHAVIOR_FREEZE` instead
+ */ var END_BEHAVIOR_PAUSE = 1;
+/**
+ * 无限播放
+ */ var END_BEHAVIOR_FORWARD = 2;
+/**
+ * 销毁并保留最后一帧
+ * @deprecated since 2.0
+ */ var END_BEHAVIOR_PAUSE_AND_DESTROY = 3;
+/**
+ * 冻结
+ */ var END_BEHAVIOR_FREEZE = 4;
+/**
+ * 重播
+ */ var END_BEHAVIOR_RESTART = 5;
+/**
+ *
+ */ var END_BEHAVIOR_DESTROY_CHILDREN = 6;
+var CAMERA_CLIP_MODE_VERTICAL = 1;
+var CAMERA_CLIP_MODE_NORMAL = 0;
+var MESSAGE_ITEM_PHRASE_BEGIN = 2;
+var MESSAGE_ITEM_PHRASE_END = 1;
 
-function _create_for_of_iterator_helper_loose(o, allowArrayLike) {
-    var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
-    if (it) return (it = it.call(o)).next.bind(it);
-    // Fallback for engines without symbol support
-    if (Array.isArray(o) || (it = _unsupported_iterable_to_array(o)) || allowArrayLike && o && typeof o.length === "number") {
-        if (it) o = it;
-        var i = 0;
-        return function() {
-            if (i >= o.length) return {
-                done: true
-            };
-            return {
-                done: false,
-                value: o[i++]
-            };
-        };
+var CameraClipMode;
+(function(CameraClipMode) {
+    /**
+     * 剪裁上下
+     */ CameraClipMode[CameraClipMode["portrait"] = 1] = "portrait";
+    /**
+     * 剪裁左右
+     */ CameraClipMode[CameraClipMode["landscape"] = 0] = "landscape";
+})(CameraClipMode || (CameraClipMode = {}));
+
+/*********************************************/ /*               基本数值属性参数              */ /*********************************************/ var ValueType;
+(function(ValueType) {
+    /**
+     * 常数
+     */ ValueType[ValueType["CONSTANT"] = 0] = "CONSTANT";
+    /**
+     * 二维常数向量
+     */ ValueType[ValueType["CONSTANT_VEC2"] = 1] = "CONSTANT_VEC2";
+    /**
+     * 三维常数向量
+     */ ValueType[ValueType["CONSTANT_VEC3"] = 2] = "CONSTANT_VEC3";
+    /**
+     * 四维常数向量
+     */ ValueType[ValueType["CONSTANT_VEC4"] = 3] = "CONSTANT_VEC4";
+    /**
+     * 随机数
+     */ ValueType[ValueType["RANDOM"] = 4] = "RANDOM";
+    /**
+     * 直线
+     */ ValueType[ValueType["LINE"] = 5] = "LINE";
+    /**
+     * 曲线
+     */ ValueType[ValueType["CURVE"] = 6] = "CURVE";
+    /**
+     * 贝塞尔路径
+     */ ValueType[ValueType["BEZIER_PATH"] = 7] = "BEZIER_PATH";
+    /**
+     * 颜色
+     */ ValueType[ValueType["RGBA_COLOR"] = 8] = "RGBA_COLOR";
+    /**
+     * 渐变色
+     */ ValueType[ValueType["GRADIENT_COLOR"] = 9] = "GRADIENT_COLOR";
+    /**
+     * 蒙版形状点集
+     */ ValueType[ValueType["SHAPE_POINTS"] = 10] = "SHAPE_POINTS";
+    /**
+     * 蒙版形状切分
+     */ ValueType[ValueType["SHAPE_SPLITS"] = 11] = "SHAPE_SPLITS";
+    /**
+     * 直线路径
+     */ ValueType[ValueType["LINEAR_PATH"] = 12] = "LINEAR_PATH";
+    /**
+     * 多色
+     */ ValueType[ValueType["COLORS"] = 13] = "COLORS";
+    /**
+     * 二进制指针
+     */ ValueType[ValueType["BINARY"] = 20] = "BINARY";
+    /**
+     * 贝塞尔曲线
+     */ ValueType[ValueType["BEZIER_CURVE"] = 21] = "BEZIER_CURVE";
+    /**
+     * 贝塞尔曲线路径
+     */ ValueType[ValueType["BEZIER_CURVE_PATH"] = 22] = "BEZIER_CURVE_PATH";
+    /**
+     * 贝塞尔曲线四元数
+     */ ValueType[ValueType["BEZIER_CURVE_QUAT"] = 23] = "BEZIER_CURVE_QUAT";
+    /**
+     * 颜色曲线
+     */ ValueType[ValueType["COLOR_CURVE"] = 24] = "COLOR_CURVE";
+    /**
+     * Vector4 曲线
+     */ ValueType[ValueType["VECTOR4_CURVE"] = 25] = "VECTOR4_CURVE";
+})(ValueType || (ValueType = {}));
+/**
+ * 关键帧类型
+ */ var BezierKeyframeType;
+(function(BezierKeyframeType) {
+    BezierKeyframeType[BezierKeyframeType["AUTO"] = 0] = "AUTO";
+    BezierKeyframeType[BezierKeyframeType["EASE"] = 1] = "EASE";
+    BezierKeyframeType[BezierKeyframeType["EASE_IN"] = 2] = "EASE_IN";
+    BezierKeyframeType[BezierKeyframeType["EASE_OUT"] = 3] = "EASE_OUT";
+    BezierKeyframeType[BezierKeyframeType["LINE"] = 4] = "LINE";
+    BezierKeyframeType[BezierKeyframeType["HOLD"] = 5] = "HOLD";
+    BezierKeyframeType[BezierKeyframeType["LINE_OUT"] = 6] = "LINE_OUT";
+})(BezierKeyframeType || (BezierKeyframeType = {}));
+
+/**
+ * 结束行为
+ */ var EndBehavior;
+(function(EndBehavior) {
+    /**
+     * 销毁
+     */ EndBehavior[EndBehavior["destroy"] = 0] = "destroy";
+    /**
+     * 重播
+     */ EndBehavior[EndBehavior["restart"] = 5] = "restart";
+    /**
+     * 无限播放
+     */ EndBehavior[EndBehavior["forward"] = 2] = "forward";
+    /**
+     * 冻结
+     */ EndBehavior[EndBehavior["freeze"] = 4] = "freeze";
+})(EndBehavior || (EndBehavior = {}));
+var ParentItemEndBehavior;
+(function(ParentItemEndBehavior) {
+    ParentItemEndBehavior[ParentItemEndBehavior["destroyChildren"] = 6] = "destroyChildren";
+})(ParentItemEndBehavior || (ParentItemEndBehavior = {}));
+
+/**
+ * 粒子交互行为
+ */ var ParticleInteractionBehavior;
+(function(ParticleInteractionBehavior) {
+    /**
+     * 无
+     */ ParticleInteractionBehavior[ParticleInteractionBehavior["none"] = 0] = "none";
+    /**
+     * 移出粒子
+     */ ParticleInteractionBehavior[ParticleInteractionBehavior["removeParticle"] = 1] = "removeParticle";
+})(ParticleInteractionBehavior || (ParticleInteractionBehavior = {}));
+
+var ShapeArcMode;
+(function(ShapeArcMode) {
+    /**
+     * 随机
+     */ ShapeArcMode[ShapeArcMode["RANDOM"] = 0] = "RANDOM";
+    /**
+     * 单向循环
+     */ ShapeArcMode[ShapeArcMode["UNIDIRECTIONAL_CYCLE"] = 1] = "UNIDIRECTIONAL_CYCLE";
+    /**
+     * 双向循环
+     */ ShapeArcMode[ShapeArcMode["BIDIRECTIONAL_CYCLE"] = 2] = "BIDIRECTIONAL_CYCLE";
+    /**
+     * 均匀爆发
+     */ ShapeArcMode[ShapeArcMode["UNIFORM_BURST"] = 3] = "UNIFORM_BURST";
+})(ShapeArcMode || (ShapeArcMode = {}));
+
+var LightType;
+(function(LightType) {
+    /**
+     * 点光源
+     */ LightType["point"] = "point";
+    /**
+     * 聚光灯
+     */ LightType["spot"] = "spot";
+    /**
+     * 方向光
+     */ LightType["directional"] = "directional";
+    /**
+     * 环境光
+     */ LightType["ambient"] = "ambient";
+})(LightType || (LightType = {}));
+
+var ModelBoundingType;
+(function(ModelBoundingType) {
+    ModelBoundingType[ModelBoundingType["box"] = 2] = "box";
+    ModelBoundingType[ModelBoundingType["sphere"] = 3] = "sphere";
+})(ModelBoundingType || (ModelBoundingType = {}));
+
+var CameraType;
+(function(CameraType) {
+    CameraType["orthographic"] = "orthographic";
+    CameraType["perspective"] = "perspective";
+})(CameraType || (CameraType = {}));
+
+// 材质类型
+var MaterialType;
+(function(MaterialType) {
+    MaterialType["unlit"] = "unlit";
+    MaterialType["pbr"] = "pbr";
+    // 头发材质，在 pbr 材质基础上扩展
+    MaterialType["hair"] = "hair";
+})(MaterialType || (MaterialType = {}));
+// 混合模式
+var MaterialBlending;
+(function(MaterialBlending) {
+    MaterialBlending[MaterialBlending["opaque"] = 100] = "opaque";
+    MaterialBlending[MaterialBlending["masked"] = 101] = "masked";
+    MaterialBlending[MaterialBlending["translucent"] = 102] = "translucent";
+    MaterialBlending[MaterialBlending["additive"] = 103] = "additive";
+})(MaterialBlending || (MaterialBlending = {}));
+
+/**
+ * 3D渲染模式：将渲染过程中的中间结果输出，主要用于排查渲染效果问题，支持 pbr 和 unlit 材质
+ */ var RenderMode3D;
+(function(RenderMode3D) {
+    /**
+     * 正常渲染
+     */ RenderMode3D["none"] = "none";
+    /**
+     * 纹理坐标
+     */ RenderMode3D["uv"] = "uv";
+    /**
+     * 世界坐标法线
+     */ RenderMode3D["normal"] = "normal";
+    /**
+     * 基础颜色
+     */ RenderMode3D["basecolor"] = "basecolor";
+    /**
+     * 基础颜色 Alpha
+     */ RenderMode3D["alpha"] = "alpha";
+    /**
+     * 金属度
+     */ RenderMode3D["metallic"] = "metallic";
+    /**
+     * 粗超度
+     */ RenderMode3D["roughness"] = "roughness";
+    /**
+     * 环境遮蔽
+     */ RenderMode3D["ao"] = "ao";
+    /**
+     * 自发光
+     */ RenderMode3D["emissive"] = "emissive";
+    /**
+     * 漫反射
+     */ RenderMode3D["diffuse"] = "diffuse";
+})(RenderMode3D || (RenderMode3D = {}));
+
+var TextOverflow;
+(function(TextOverflow) {
+    /**
+     * display 模式下，会显示所有文本，存在文本超过边界框的情况。
+     */ TextOverflow[TextOverflow["display"] = 0] = "display";
+    /**
+     * clip 模式下，当文本内容超出边界框时，多余的会被截断。
+     */ TextOverflow[TextOverflow["clip"] = 1] = "clip";
+    /**
+     * ellipsis 模式下，会使用（...）来代替超出边界框的内容。
+     */ TextOverflow[TextOverflow["ellipsis"] = 2] = "ellipsis";
+})(TextOverflow || (TextOverflow = {}));
+var TextBaseline;
+(function(TextBaseline) {
+    /**
+     * 文本顶对齐。
+     */ TextBaseline[TextBaseline["top"] = 0] = "top";
+    /**
+     * 文本垂直居中对齐。
+     */ TextBaseline[TextBaseline["middle"] = 1] = "middle";
+    /**
+     * 文本底对齐。
+     */ TextBaseline[TextBaseline["bottom"] = 2] = "bottom";
+})(TextBaseline || (TextBaseline = {}));
+var TextAlignment;
+(function(TextAlignment) {
+    /**
+     * text alignment starts from（x,y) to right direction
+     * 从 (x,y) 开始第一个字符，向右边延伸
+     */ TextAlignment[TextAlignment["left"] = 0] = "left";
+    /**
+     * (x,y) is middle position of text, where (left + right)/2 =(x,y)
+     * (x,y) 为文字中间位置，（最左位置 + 最右位置)/2 = (x,y)
+     */ TextAlignment[TextAlignment["middle"] = 1] = "middle";
+    /**
+     * text alignment ends with（x,y) from left direction
+     * 从 (x,y) 结束最后一个字符，向左边延伸
+     */ TextAlignment[TextAlignment["right"] = 2] = "right";
+})(TextAlignment || (TextAlignment = {}));
+/**
+ * 文本字重
+ */ var TextWeight;
+(function(TextWeight) {
+    /**
+     * 正常
+     */ TextWeight["normal"] = "normal";
+    /**
+     * 粗体
+     */ TextWeight["bold"] = "bold";
+    /**
+     * 瘦体
+     */ TextWeight["lighter"] = "lighter";
+})(TextWeight || (TextWeight = {}));
+/**
+ * 文本样式
+ */ var FontStyle;
+(function(FontStyle) {
+    /**
+     * 正常
+     */ FontStyle["normal"] = "normal";
+    /**
+     * 斜体
+     */ FontStyle["italic"] = "italic";
+    /**
+     * 倾斜体
+     */ FontStyle["oblique"] = "oblique";
+})(FontStyle || (FontStyle = {}));
+
+var BuiltinObjectGUID = {
+    WhiteTexture: "whitetexture00000000000000000000",
+    TransparentTexture: "transparenttexture00000000000000000000",
+    PBRShader: "pbr00000000000000000000000000000",
+    UnlitShader: "unlit000000000000000000000000000"
+};
+
+/**
+ * 矢量图形类型
+ */ var ShapePrimitiveType;
+(function(ShapePrimitiveType) {
+    /**
+     * 自定义图形
+     */ ShapePrimitiveType[ShapePrimitiveType["Custom"] = 0] = "Custom";
+    /**
+     * 矩形
+     */ ShapePrimitiveType[ShapePrimitiveType["Rectangle"] = 1] = "Rectangle";
+    /**
+     * 椭圆
+     */ ShapePrimitiveType[ShapePrimitiveType["Ellipse"] = 2] = "Ellipse";
+    /**
+     * 多边形
+     */ ShapePrimitiveType[ShapePrimitiveType["Polygon"] = 3] = "Polygon";
+    /**
+     * 星形
+     */ ShapePrimitiveType[ShapePrimitiveType["Star"] = 4] = "Star";
+})(ShapePrimitiveType || (ShapePrimitiveType = {}));
+
+// 本期无该功能 待补充
+var ShapeConnectType;
+(function(ShapeConnectType) {})(ShapeConnectType || (ShapeConnectType = {}));
+// @待补充
+var ShapePointType;
+(function(ShapePointType) {})(ShapePointType || (ShapePointType = {}));
+
+/**
+ * 动态换图类型
+ * @since 1.1.0
+ */ var BackgroundType;
+(function(BackgroundType) {
+    BackgroundType["video"] = "video";
+    BackgroundType["image"] = "image";
+})(BackgroundType || (BackgroundType = {}));
+/**
+ * 多媒体资源类型
+ * @since 2.1.0
+ */ var MultimediaType;
+(function(MultimediaType) {
+    MultimediaType["video"] = "video";
+    MultimediaType["audio"] = "audio";
+})(MultimediaType || (MultimediaType = {}));
+
+var DataType;
+(function(DataType) {
+    DataType["VFXItemData"] = "VFXItemData";
+    DataType["EffectComponent"] = "EffectComponent";
+    DataType["Material"] = "Material";
+    DataType["Shader"] = "Shader";
+    DataType["SpriteComponent"] = "SpriteComponent";
+    DataType["ParticleSystem"] = "ParticleSystem";
+    DataType["InteractComponent"] = "InteractComponent";
+    DataType["CameraController"] = "CameraController";
+    DataType["PostProcessVolume"] = "PostProcessVolume";
+    DataType["Geometry"] = "Geometry";
+    DataType["Texture"] = "Texture";
+    DataType["Image"] = "Image";
+    DataType["AnimationClip"] = "AnimationClip";
+    DataType["TextComponent"] = "TextComponent";
+    DataType["BinaryAsset"] = "BinaryAsset";
+    // Timeline
+    DataType["TrackAsset"] = "TrackAsset";
+    DataType["TimelineAsset"] = "TimelineAsset";
+    DataType["ObjectBindingTrack"] = "ObjectBindingTrack";
+    DataType["TransformTrack"] = "TransformTrack";
+    DataType["SpriteColorTrack"] = "SpriteColorTrack";
+    DataType["ActivationTrack"] = "ActivationTrack";
+    DataType["SubCompositionTrack"] = "SubCompositionTrack";
+    DataType["FloatPropertyTrack"] = "FloatPropertyTrack";
+    DataType["ColorPropertyTrack"] = "ColorPropertyTrack";
+    DataType["Vector4PropertyTrack"] = "Vector4PropertyTrack";
+    DataType["TransformPlayableAsset"] = "TransformPlayableAsset";
+    DataType["SpriteColorPlayableAsset"] = "SpriteColorPlayableAsset";
+    DataType["ActivationPlayableAsset"] = "ActivationPlayableAsset";
+    DataType["SubCompositionPlayableAsset"] = "SubCompositionPlayableAsset";
+    DataType["FloatPropertyPlayableAsset"] = "FloatPropertyPlayableAsset";
+    DataType["ColorPropertyPlayableAsset"] = "ColorPropertyPlayableAsset";
+    DataType["MeshComponent"] = "MeshComponent";
+    DataType["SkyboxComponent"] = "SkyboxComponent";
+    DataType["LightComponent"] = "LightComponent";
+    DataType["CameraComponent"] = "CameraComponent";
+    DataType["ModelPluginComponent"] = "ModelPluginComponent";
+    DataType["TreeComponent"] = "TreeComponent";
+    DataType["AnimationComponent"] = "AnimationComponent";
+    DataType["SpineComponent"] = "SpineComponent";
+    DataType["VideoComponent"] = "VideoComponent";
+    DataType["AudioComponent"] = "AudioComponent";
+    DataType["RichTextComponent"] = "RichTextComponent";
+    DataType["OrientationComponent"] = "OrientationComponent";
+    DataType["ShapeComponent"] = "ShapeComponent";
+    // Non-EffectObject
+    DataType["TimelineClip"] = "TimelineClip";
+})(DataType || (DataType = {}));
+
+var GeometryType;
+(function(GeometryType) {
+    /**
+     * Draw single points.
+     */ GeometryType[GeometryType["POINTS"] = 0] = "POINTS";
+    /**
+     * Draw lines. Each vertex connects to the one after it.
+     */ GeometryType[GeometryType["LINES"] = 1] = "LINES";
+    /**
+     * Draw lines. Each set of two vertices is treated as a separate line segment.
+     */ GeometryType[GeometryType["LINE_LOOP"] = 2] = "LINE_LOOP";
+    /**
+     * Draw a connected group of line segments from the first vertex to the last.
+     */ GeometryType[GeometryType["LINE_STRIP"] = 3] = "LINE_STRIP";
+    /**
+     * Draw triangles. Each set of three vertices creates a separate triangle.
+     */ GeometryType[GeometryType["TRIANGLES"] = 4] = "TRIANGLES";
+    /**
+     * Draw a connected strip of triangles.
+     */ GeometryType[GeometryType["TRIANGLE_STRIP"] = 5] = "TRIANGLE_STRIP";
+    /**
+     * Draw a connected group of triangles. Each vertex connects to the previous and the first vertex in the fan.
+     */ GeometryType[GeometryType["TRIANGLE_FAN"] = 6] = "TRIANGLE_FAN";
+})(GeometryType || (GeometryType = {}));
+var VertexFormatType;
+(function(VertexFormatType) {
+    VertexFormatType[VertexFormatType["Float16"] = 0] = "Float16";
+    VertexFormatType[VertexFormatType["Float32"] = 1] = "Float32";
+    VertexFormatType[VertexFormatType["Int8"] = 2] = "Int8";
+    VertexFormatType[VertexFormatType["Int16"] = 3] = "Int16";
+    VertexFormatType[VertexFormatType["Int32"] = 4] = "Int32";
+    VertexFormatType[VertexFormatType["UInt8"] = 5] = "UInt8";
+    VertexFormatType[VertexFormatType["UInt16"] = 6] = "UInt16";
+    VertexFormatType[VertexFormatType["UInt32"] = 7] = "UInt32";
+})(VertexFormatType || (VertexFormatType = {}));
+var IndexFormatType;
+(function(IndexFormatType) {
+    IndexFormatType[IndexFormatType["None"] = -1] = "None";
+    IndexFormatType[IndexFormatType["UInt8"] = 0] = "UInt8";
+    IndexFormatType[IndexFormatType["UInt16"] = 1] = "UInt16";
+    IndexFormatType[IndexFormatType["UInt32"] = 2] = "UInt32";
+})(IndexFormatType || (IndexFormatType = {}));
+// BINORMAL[n]	Binormal	float4
+// BLENDINDICES[n]	混合索引	uint
+// BLENDWEIGHT[n]	混合权重	FLOAT
+// COLOR[n]	漫射和反射颜色	float4
+// NORMAL[n]	法向矢量	float4
+// POSITION[n]	对象空间中的顶点位置。	float4
+// POSITIONT	变换的顶点位置。	float4
+// PSIZE[n]	点大小	FLOAT
+// TANGENT[n]	正切	float4
+// TEXCOORD[n]	纹理坐标	float4
+// POSITION_BS[n]	Blend Shape 空间中的顶点位置	float4
+// NORMAL_BS[n]	Blend Shape 空间中的法向矢量	float4
+// TANGENT_BS[n]	Blend Shape 空间中的正切矢量	float4
+var VertexBufferSemantic;
+(function(VertexBufferSemantic) {
+    VertexBufferSemantic["Position"] = "POSITION";
+    VertexBufferSemantic["Uv"] = "TEXCOORD0";
+    VertexBufferSemantic["Uv2"] = "TEXCOORD1";
+    VertexBufferSemantic["Normal"] = "NORMAL";
+    VertexBufferSemantic["Tangent"] = "TANGENT";
+    VertexBufferSemantic["Color"] = "COLOR";
+    VertexBufferSemantic["Joints"] = "JOINTS";
+    VertexBufferSemantic["Weights"] = "WEIGHTS";
+    //
+    VertexBufferSemantic["PositionBS0"] = "POSITION_BS0";
+    VertexBufferSemantic["PositionBS1"] = "POSITION_BS1";
+    VertexBufferSemantic["PositionBS2"] = "POSITION_BS2";
+    VertexBufferSemantic["PositionBS3"] = "POSITION_BS3";
+    VertexBufferSemantic["PositionBS4"] = "POSITION_BS4";
+    VertexBufferSemantic["PositionBS5"] = "POSITION_BS5";
+    VertexBufferSemantic["PositionBS6"] = "POSITION_BS6";
+    VertexBufferSemantic["PositionBS7"] = "POSITION_BS7";
+    VertexBufferSemantic["NormalBS0"] = "NORMAL_BS0";
+    VertexBufferSemantic["NormalBS1"] = "NORMAL_BS1";
+    VertexBufferSemantic["NormalBS2"] = "NORMAL_BS2";
+    VertexBufferSemantic["NormalBS3"] = "NORMAL_BS3";
+    VertexBufferSemantic["TangentBS0"] = "TANGENT_BS0";
+    VertexBufferSemantic["TangentBS1"] = "TANGENT_BS1";
+    VertexBufferSemantic["TangentBS2"] = "TANGENT_BS2";
+    VertexBufferSemantic["TangentBS3"] = "TANGENT_BS3";
+})(VertexBufferSemantic || (VertexBufferSemantic = {}));
+
+var index$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    get RenderLevel () { return RenderLevel; },
+    get BlendingMode () { return BlendingMode; },
+    get SideMode () { return SideMode; },
+    get MaskMode () { return MaskMode; },
+    get ParticleEmitterShapeType () { return ParticleEmitterShapeType; },
+    get PluginType () { return PluginType; },
+    get InteractType () { return InteractType; },
+    get InteractBehavior () { return InteractBehavior; },
+    get ItemType () { return ItemType; },
+    get RenderMode () { return RenderMode; },
+    get ParticleOrigin () { return ParticleOrigin; },
+    get RenderType () { return RenderType; },
+    get RenderFace () { return RenderFace; },
+    get CameraClipMode () { return CameraClipMode; },
+    END_BEHAVIOR_DESTROY: END_BEHAVIOR_DESTROY,
+    END_BEHAVIOR_PAUSE: END_BEHAVIOR_PAUSE,
+    END_BEHAVIOR_FORWARD: END_BEHAVIOR_FORWARD,
+    END_BEHAVIOR_PAUSE_AND_DESTROY: END_BEHAVIOR_PAUSE_AND_DESTROY,
+    END_BEHAVIOR_FREEZE: END_BEHAVIOR_FREEZE,
+    END_BEHAVIOR_RESTART: END_BEHAVIOR_RESTART,
+    END_BEHAVIOR_DESTROY_CHILDREN: END_BEHAVIOR_DESTROY_CHILDREN,
+    CAMERA_CLIP_MODE_VERTICAL: CAMERA_CLIP_MODE_VERTICAL,
+    CAMERA_CLIP_MODE_NORMAL: CAMERA_CLIP_MODE_NORMAL,
+    MESSAGE_ITEM_PHRASE_BEGIN: MESSAGE_ITEM_PHRASE_BEGIN,
+    MESSAGE_ITEM_PHRASE_END: MESSAGE_ITEM_PHRASE_END,
+    get ValueType () { return ValueType; },
+    get BezierKeyframeType () { return BezierKeyframeType; },
+    get EndBehavior () { return EndBehavior; },
+    get ParentItemEndBehavior () { return ParentItemEndBehavior; },
+    get ParticleInteractionBehavior () { return ParticleInteractionBehavior; },
+    get ShapeArcMode () { return ShapeArcMode; },
+    get LightType () { return LightType; },
+    get ModelBoundingType () { return ModelBoundingType; },
+    get CameraType () { return CameraType; },
+    get MaterialType () { return MaterialType; },
+    get MaterialBlending () { return MaterialBlending; },
+    get RenderMode3D () { return RenderMode3D; },
+    get TextOverflow () { return TextOverflow; },
+    get TextBaseline () { return TextBaseline; },
+    get TextAlignment () { return TextAlignment; },
+    get TextWeight () { return TextWeight; },
+    get FontStyle () { return FontStyle; },
+    BuiltinObjectGUID: BuiltinObjectGUID,
+    get ShapePrimitiveType () { return ShapePrimitiveType; },
+    get ShapeConnectType () { return ShapeConnectType; },
+    get ShapePointType () { return ShapePointType; },
+    get BackgroundType () { return BackgroundType; },
+    get MultimediaType () { return MultimediaType; },
+    get DataType () { return DataType; },
+    get GeometryType () { return GeometryType; },
+    get VertexFormatType () { return VertexFormatType; },
+    get IndexFormatType () { return IndexFormatType; },
+    get VertexBufferSemantic () { return VertexBufferSemantic; }
+});
+
+function _defineProperties(target, props) {
+    for(var i = 0; i < props.length; i++){
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
     }
-    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
+function _create_class(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    return Constructor;
+}
+
+var decoratorInitialStore = new Map();
+var mergedStore = new Map();
+var effectsClassStore = {};
+function effectsClass(className) {
+    return function(target, context) {
+        if (effectsClassStore[className]) {
+            console.warn("Class " + className + " is already registered.");
+        }
+        // TODO: three修改json dataType, 这边重复注册直接 return
+        effectsClassStore[className] = target;
+    };
+}
+function serialize(type, sourceName) {
+    return generateSerializableMember(type, sourceName); // value member
+}
+function getMergedStore(target) {
+    var classKey = target.constructor;
+    if (mergedStore.get(classKey)) {
+        return mergedStore.get(classKey);
+    }
+    var store = {};
+    mergedStore.set(classKey, store);
+    var currentTarget = target;
+    var currentKey = classKey;
+    while(currentKey){
+        var initialStore = decoratorInitialStore.get(currentKey);
+        for(var property in initialStore){
+            store[property] = initialStore[property];
+        }
+        var parent = Object.getPrototypeOf(currentTarget);
+        currentKey = Object.getPrototypeOf(parent).constructor;
+        if (currentKey === Object) {
+            break;
+        }
+        currentTarget = parent;
+    }
+    return store;
+}
+function generateSerializableMember(type, sourceName) {
+    return function(target, propertyKey) {
+        var classStore = getDirectStore(target);
+        if (!classStore) {
+            return;
+        }
+        if (!classStore[propertyKey]) {
+            classStore[propertyKey] = {
+                type: type,
+                sourceName: sourceName
+            };
+        }
+    };
+}
+function getDirectStore(target) {
+    var classKey = target.constructor;
+    if (!decoratorInitialStore.get(classKey)) {
+        decoratorInitialStore.set(classKey, {});
+    }
+    return decoratorInitialStore.get(classKey);
+}
+
+/**
+ * @since 2.0.0
+ */ var EffectsObject = /*#__PURE__*/ function() {
+    function EffectsObject(engine) {
+        this.engine = engine;
+        this.guid = generateGUID();
+        this.taggedProperties = {};
+        this.engine.addInstance(this);
+    }
+    var _proto = EffectsObject.prototype;
+    /**
+   *
+   * @returns
+   */ _proto.getInstanceId = function getInstanceId() {
+        return this.guid;
+    };
+    /**
+   *
+   * @param guid
+   */ _proto.setInstanceId = function setInstanceId(guid) {
+        this.engine.removeInstance(this.guid);
+        this.guid = guid;
+        this.engine.addInstance(this);
+    };
+    /**
+   *
+   */ _proto.toData = function toData() {};
+    /**
+   * 反序列化函数
+   *
+   * @param data - 对象的序列化的数据
+   */ _proto.fromData = function fromData(data) {
+        if (data.id) {
+            this.setInstanceId(data.id);
+        }
+    };
+    /**
+   *
+   */ _proto.dispose = function dispose() {};
+    /**
+   *
+   * @param obj
+   * @returns
+   */ EffectsObject.is = function is(obj) {
+        return _instanceof1(obj, EffectsObject) && "guid" in obj;
+    };
+    return EffectsObject;
+}();
+
+/**
+ * @since 2.0.0
+ */ var Component = /*#__PURE__*/ function(EffectsObject) {
+    _inherits(Component, EffectsObject);
+    function Component() {
+        var _this;
+        _this = EffectsObject.apply(this, arguments) || this;
+        _this.isAwakeCalled = false;
+        _this.isStartCalled = false;
+        _this.isEnableCalled = false;
+        _this._enabled = true;
+        return _this;
+    }
+    var _proto = Component.prototype;
+    /**
+   * 生命周期函数，初始化后调用，生命周期内只调用一次
+   */ _proto.onAwake = function onAwake() {
+    // OVERRIDE
+    };
+    /**
+   * 在 enabled 变为 true 时触发
+   */ _proto.onEnable = function onEnable() {
+    // OVERRIDE
+    };
+    /**
+   * 在 enabled 变为 false 时触发
+   */ _proto.onDisable = function onDisable() {
+    // OVERRIDE
+    };
+    /**
+   * 生命周期函数，在第一次 update 前调用，生命周期内只调用一次
+   */ _proto.onStart = function onStart() {
+    // OVERRIDE
+    };
+    /**
+   * 生命周期函数，每帧调用一次
+   */ _proto.onUpdate = function onUpdate(dt) {
+    // OVERRIDE
+    };
+    /**
+   * 生命周期函数，每帧调用一次，在 update 之后调用
+   */ _proto.onLateUpdate = function onLateUpdate(dt) {
+    // OVERRIDE
+    };
+    /**
+   * 生命周期函数，在组件销毁时调用
+   */ _proto.onDestroy = function onDestroy() {
+    // OVERRIDE
+    };
+    /**
+   * @internal
+   */ _proto.enable = function enable() {
+        if (this.item.composition) {
+            this.item.composition.sceneTicking.addComponent(this);
+            this.isEnableCalled = true;
+        }
+        this.onEnable();
+    };
+    /**
+   * @internal
+   */ _proto.disable = function disable() {
+        this.onDisable();
+        if (this.item.composition) {
+            this.isEnableCalled = false;
+            this.item.composition.sceneTicking.removeComponent(this);
+        }
+    };
+    _proto.setVFXItem = function setVFXItem(item) {
+        this.item = item;
+        if (item.isDuringPlay) {
+            if (!this.isAwakeCalled) {
+                this.onAwake();
+                this.isAwakeCalled = true;
+            }
+            if (item.isActive && this.enabled) {
+                this.start();
+                this.enable();
+            }
+        }
+    };
+    _proto.fromData = function fromData(data) {
+        EffectsObject.prototype.fromData.call(this, data);
+        if (data.item) {
+            this.item = data.item;
+        }
+    };
+    _proto.dispose = function dispose() {
+        if (this.isEnableCalled) {
+            this.disable();
+        }
+        if (this.isAwakeCalled) {
+            this.isAwakeCalled = false;
+            this.onDestroy();
+        }
+        if (this.item) {
+            removeItem(this.item.components, this);
+        }
+    };
+    _proto.start = function start() {
+        if (this.isStartCalled) {
+            return;
+        }
+        this.isStartCalled = true;
+        this.onStart();
+    };
+    _create_class(Component, [
+        {
+            key: "transform",
+            get: /**
+   * 附加到的 VFXItem 对象 Transform 组件
+   */ function get() {
+                return this.item.transform;
+            }
+        },
+        {
+            key: "isActiveAndEnabled",
+            get: /**
+   * 组件是否可以更新，true 更新，false 不更新
+   */ function get() {
+                return this.item.isActive && this.enabled;
+            }
+        },
+        {
+            key: "enabled",
+            get: function get() {
+                return this._enabled;
+            },
+            set: function set(value) {
+                if (this.enabled !== value) {
+                    this._enabled = value;
+                    if (value) {
+                        if (this.isActiveAndEnabled) {
+                            this.enable();
+                            if (!this.isStartCalled) {
+                                this.onStart();
+                                this.isStartCalled = true;
+                            }
+                        }
+                    } else {
+                        if (this.isEnableCalled) {
+                            this.disable();
+                        }
+                    }
+                }
+            }
+        }
+    ]);
+    return Component;
+}(EffectsObject);
+__decorate([
+    serialize()
+], Component.prototype, "_enabled", void 0);
+/**
+ * @since 2.0.0
+ */ var Behaviour = /*#__PURE__*/ function(Component) {
+    _inherits(Behaviour, Component);
+    function Behaviour() {
+        return Component.apply(this, arguments);
+    }
+    var _proto = Behaviour.prototype;
+    _proto.setVFXItem = function setVFXItem(item) {
+        Component.prototype.setVFXItem.call(this, item);
+    };
+    _proto.dispose = function dispose() {
+        Component.prototype.dispose.call(this);
+    };
+    return Behaviour;
+}(Component);
+
+/**
+ * 所有渲染组件的基类
+ * @since 2.0.0
+ */ var RendererComponent = /*#__PURE__*/ function(Component) {
+    _inherits(RendererComponent, Component);
+    function RendererComponent() {
+        var _this;
+        _this = Component.apply(this, arguments) || this;
+        _this.materials = [];
+        _this._priority = 0;
+        return _this;
+    }
+    var _proto = RendererComponent.prototype;
+    _proto.render = function render(renderer) {};
+    _proto.setVFXItem = function setVFXItem(item) {
+        Component.prototype.setVFXItem.call(this, item);
+        this.item.rendererComponents.push(this);
+    };
+    _proto.onEnable = function onEnable() {
+        var _this_item_composition;
+        (_this_item_composition = this.item.composition) == null ? void 0 : _this_item_composition.renderFrame.addMeshToDefaultRenderPass(this);
+    };
+    _proto.onDisable = function onDisable() {
+        var _this_item_composition;
+        (_this_item_composition = this.item.composition) == null ? void 0 : _this_item_composition.renderFrame.removeMeshFromDefaultRenderPass(this);
+    };
+    _proto.fromData = function fromData(data) {
+        Component.prototype.fromData.call(this, data);
+    };
+    _proto.toData = function toData() {
+        Component.prototype.toData.call(this);
+    };
+    _proto.dispose = function dispose() {
+        if (this.item) {
+            removeItem(this.item.rendererComponents, this);
+        }
+        Component.prototype.dispose.call(this);
+    };
+    _create_class(RendererComponent, [
+        {
+            key: "priority",
+            get: function get() {
+                return this._priority;
+            },
+            set: function set(value) {
+                this._priority = value;
+            }
+        },
+        {
+            key: "material",
+            get: function get() {
+                return this.materials[0];
+            },
+            set: function set(material) {
+                if (this.materials.length === 0) {
+                    this.materials.push(material);
+                } else {
+                    this.materials[0] = material;
+                }
+            }
+        }
+    ]);
+    return RendererComponent;
+}(Component);
+__decorate([
+    serialize()
+], RendererComponent.prototype, "materials", void 0);
+__decorate([
+    serialize()
+], RendererComponent.prototype, "_priority", void 0);
 
 var PI2 = Math.PI * 2;
 var DEG2RAD = Math.PI / 180;
@@ -5106,6 +6503,645 @@ Vector3.Y = new Vector3(0.0, 1.0, 0.0);
 Vector3.Z = new Vector3(0.0, 0.0, 1.0);
 Vector3.ONE = new Vector3(1.0, 1.0, 1.0);
 Vector3.ZERO = new Vector3(0.0, 0.0, 0.0);
+
+/**
+ * 四维向量
+ */ var Vector4$1 = /*#__PURE__*/ function() {
+    function Vector4(x, y, z, w) {
+        if (x === void 0) x = 0;
+        if (y === void 0) y = 0;
+        if (z === void 0) z = 0;
+        if (w === void 0) w = 0;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.w = w;
+    }
+    var _proto = Vector4.prototype;
+    /**
+     * 设置向量
+     * @param x - x 轴分量
+     * @param y - y 轴分量
+     * @param z - z 轴分量
+     * @param w - w 轴分量
+     * @returns
+     */ _proto.set = function set(x, y, z, w) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.w = w;
+        return this;
+    };
+    /**
+     * 设置零向量
+     * @returns 向量
+     */ _proto.setZero = function setZero() {
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+        this.w = 0;
+        return this;
+    };
+    /**
+     * 通过标量数值设置向量
+     * @param num - 数值
+     * @returns 向量
+     */ _proto.setFromNumber = function setFromNumber(num) {
+        this.x = num;
+        this.y = num;
+        this.z = num;
+        this.w = num;
+        return this;
+    };
+    /**
+     * 通过数组创建向量
+     * @param array - 数组
+     * @param [offset=0] - 起始偏移值
+     * @returns 向量
+     */ _proto.setFromArray = function setFromArray(array, offset) {
+        if (offset === void 0) offset = 0;
+        var _array_offset;
+        this.x = (_array_offset = array[offset]) != null ? _array_offset : 0;
+        var _array_;
+        this.y = (_array_ = array[offset + 1]) != null ? _array_ : 0;
+        var _array_1;
+        this.z = (_array_1 = array[offset + 2]) != null ? _array_1 : 0;
+        var _array_2;
+        this.w = (_array_2 = array[offset + 3]) != null ? _array_2 : 0;
+        return this;
+    };
+    /**
+     * 拷贝向量
+     * @param v - 复制对象
+     * @returns 拷贝结果
+     */ _proto.copyFrom = function copyFrom(v) {
+        this.x = v.x;
+        this.y = v.y;
+        this.z = v.z;
+        this.w = v.w;
+        return this;
+    };
+    /**
+     * 克隆向量
+     * @returns 克隆结果
+     */ _proto.clone = function clone() {
+        return new Vector4(this.x, this.y, this.z, this.w);
+    };
+    /**
+     * 根据下标设置向量分量
+     * @param index - 下标值
+     * @param value - 分量值
+     * @returns 向量
+     */ _proto.setElement = function setElement(index, value) {
+        switch(index){
+            case 0:
+                this.x = value;
+                break;
+            case 1:
+                this.y = value;
+                break;
+            case 2:
+                this.z = value;
+                break;
+            case 3:
+                this.w = value;
+                break;
+            default:
+                console.error("index is out of range: " + index);
+        }
+        return this;
+    };
+    /**
+     * 根据下标获取向量分量
+     * @param index - 下标
+     * @returns 分量值
+     */ _proto.getElement = function getElement(index) {
+        switch(index){
+            case 0:
+                return this.x;
+            case 1:
+                return this.y;
+            case 2:
+                return this.z;
+            case 3:
+                return this.w;
+            default:
+                console.error("index is out of range: " + index);
+        }
+        return 0;
+    };
+    /**
+     * 向量相加
+     * @param right - 相加对象，向量 | 数字
+     * @returns 相加结果
+     */ _proto.add = function add(right) {
+        if (typeof right === "number") {
+            this.x += right;
+            this.y += right;
+            this.z += right;
+            this.w += right;
+        } else if (_instanceof1(right, Array)) {
+            this.x += right[0];
+            this.y += right[1];
+            this.z += right[2];
+            this.w += right[3];
+        } else {
+            this.x += right.x;
+            this.y += right.y;
+            this.z += right.z;
+            this.w += right.w;
+        }
+        return this;
+    };
+    /**
+     * 向量相加
+     * @param left - 向量
+     * @param right - 向量
+     * @returns 求和结果
+     */ _proto.addVectors = function addVectors(left, right) {
+        this.x = left.x + right.x;
+        this.y = left.y + right.y;
+        this.z = left.z + right.z;
+        this.w = left.w + right.w;
+        return this;
+    };
+    /**
+     * 向量比例缩放后相加
+     * @param right - 向量
+     * @param s - 比例
+     * @returns 求和结果
+     */ _proto.addScaledVector = function addScaledVector(right, s) {
+        this.x += right.x * s;
+        this.y += right.y * s;
+        this.z += right.z * s;
+        this.w += right.w * s;
+        return this;
+    };
+    /**
+     * 向量相减
+     * @param right - 相减对象，向量 | 数字
+     * @returns 相减结果
+     */ _proto.subtract = function subtract(right) {
+        if (typeof right === "number") {
+            this.x -= right;
+            this.y -= right;
+            this.z -= right;
+            this.w -= right;
+        } else if (_instanceof1(right, Array)) {
+            this.x -= right[0];
+            this.y -= right[1];
+            this.z -= right[2];
+            this.w -= right[3];
+        } else {
+            this.x -= right.x;
+            this.y -= right.y;
+            this.z -= right.z;
+            this.w -= right.w;
+        }
+        return this;
+    };
+    /**
+     * 向量相减
+     * @param left - 向量
+     * @param right - 向量
+     * @returns 向量
+     */ _proto.subtractVectors = function subtractVectors(left, right) {
+        this.x = left.x - right.x;
+        this.y = left.y - right.y;
+        this.z = left.z - right.z;
+        this.w = left.w - right.w;
+        return this;
+    };
+    /**
+     * 向量相乘
+     * @param right - 相乘对象，对象 | 数字
+     * @returns 向量
+     */ _proto.multiply = function multiply(right) {
+        if (typeof right === "number") {
+            this.x *= right;
+            this.y *= right;
+            this.z *= right;
+            this.w *= right;
+        } else if (_instanceof1(right, Array)) {
+            this.x *= right[0];
+            this.y *= right[1];
+            this.z *= right[2];
+            this.w *= right[3];
+        } else {
+            this.x *= right.x;
+            this.y *= right.y;
+            this.z *= right.z;
+            this.w *= right.w;
+        }
+        return this;
+    };
+    /**
+     * 向量相乘
+     * @param left - 向量
+     * @param right - 向量
+     * @returns 向量
+     */ _proto.multiplyVectors = function multiplyVectors(left, right) {
+        this.x = left.x * right.x;
+        this.y = left.y * right.y;
+        this.z = left.z * right.z;
+        this.w = left.w * right.w;
+        return this;
+    };
+    /**
+     * 向量相除
+     * @param right - 相除对象，对象 | 数字
+     * @returns 向量
+     */ _proto.divide = function divide(right) {
+        if (typeof right === "number") {
+            this.x /= right;
+            this.y /= right;
+            this.z /= right;
+            this.w /= right;
+        } else if (_instanceof1(right, Array)) {
+            this.x /= right[0];
+            this.y /= right[1];
+            this.z /= right[2];
+            this.w /= right[3];
+        } else {
+            this.x /= right.x;
+            this.y /= right.y;
+            this.z /= right.z;
+            this.w /= right.w;
+        }
+        return this;
+    };
+    /**
+     * 向量缩放
+     * @param v - 数字
+     * @returns 缩放结果
+     */ _proto.scale = function scale(v) {
+        this.x *= v;
+        this.y *= v;
+        this.z *= v;
+        this.w *= v;
+        return this;
+    };
+    /**
+     * 分量求和
+     * @returns 求和结果
+     */ _proto.sum = function sum() {
+        return this.x + this.y + this.z + this.w;
+    };
+    /**
+     * 向量求最小值
+     * @param v - 向量或数值
+     * @returns 最小值
+     */ _proto.min = function min(v) {
+        if (typeof v === "number") {
+            this.x = Math.min(this.x, v);
+            this.y = Math.min(this.y, v);
+            this.z = Math.min(this.z, v);
+            this.w = Math.min(this.w, v);
+        } else {
+            this.x = Math.min(this.x, v.x);
+            this.y = Math.min(this.y, v.y);
+            this.z = Math.min(this.z, v.z);
+            this.w = Math.min(this.w, v.w);
+        }
+        return this;
+    };
+    /**
+     * 向量求最大值
+     * @param v - 向量或数值
+     * @returns 最大值
+     */ _proto.max = function max(v) {
+        if (typeof v === "number") {
+            this.x = Math.max(this.x, v);
+            this.y = Math.max(this.y, v);
+            this.z = Math.max(this.z, v);
+            this.w = Math.max(this.w, v);
+        } else {
+            this.x = Math.max(this.x, v.x);
+            this.y = Math.max(this.y, v.y);
+            this.z = Math.max(this.z, v.z);
+            this.w = Math.max(this.w, v.w);
+        }
+        return this;
+    };
+    /**
+     * 向量阈值约束
+     * @param min - 最小值
+     * @param max - 最大值
+     * @returns 向量
+     */ _proto.clamp = function clamp(min, max) {
+        return this.max(min).min(max);
+    };
+    /**
+     * 向量向下取整
+     * @returns 取整结果
+     */ _proto.floor = function floor() {
+        this.x = Math.floor(this.x);
+        this.y = Math.floor(this.y);
+        this.z = Math.floor(this.z);
+        this.w = Math.floor(this.w);
+        return this;
+    };
+    /**
+     * 向量向上取整
+     * @returns 取整结果
+     */ _proto.ceil = function ceil() {
+        this.x = Math.ceil(this.x);
+        this.y = Math.ceil(this.y);
+        this.z = Math.ceil(this.z);
+        this.w = Math.ceil(this.w);
+        return this;
+    };
+    /**
+     * 向量四舍五入
+     * @returns 求值结果
+     */ _proto.round = function round() {
+        this.x = Math.round(this.x);
+        this.y = Math.round(this.y);
+        this.z = Math.round(this.z);
+        this.w = Math.round(this.w);
+        return this;
+    };
+    /**
+     * 向量取绝对值
+     * @returns 向量
+     */ _proto.abs = function abs() {
+        this.x = Math.abs(this.x);
+        this.y = Math.abs(this.y);
+        this.z = Math.abs(this.z);
+        this.w = Math.abs(this.w);
+        return this;
+    };
+    /**
+     * 向量取反
+     * @returns 取反结果
+     */ _proto.negate = function negate() {
+        this.x = -this.x;
+        this.y = -this.y;
+        this.z = -this.z;
+        this.w = -this.w;
+        return this;
+    };
+    /**
+     * 向量长度平方
+     * @returns 长度平方
+     */ _proto.lengthSquared = function lengthSquared() {
+        return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
+    };
+    /**
+     * 向量长度
+     * @returns 长度
+     */ _proto.length = function length() {
+        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+    };
+    /**
+     * 向量归一化
+     * @returns 归一化结果
+     */ _proto.normalize = function normalize() {
+        return this.divide(this.length() || 1);
+    };
+    /**
+     * 设置向量长度
+     * @param length - 长度
+     * @returns 向量
+     */ _proto.setLength = function setLength(length) {
+        return this.normalize().multiply(length);
+    };
+    /**
+     * 向量求线性插值
+     * @param v - 向量
+     * @param alpha - 插值比例
+     * @returns 插值结果
+     */ _proto.lerp = function lerp(v, alpha) {
+        this.x += (v.x - this.x) * alpha;
+        this.y += (v.y - this.y) * alpha;
+        this.z += (v.z - this.z) * alpha;
+        this.w += (v.w - this.w) * alpha;
+        return this;
+    };
+    /**
+     * 两向量求线性插值
+     * @param v1 - 第一个向量
+     * @param v2 - 第二个向量
+     * @param alpha - 插值比例
+     * @returns 插值结果
+     */ _proto.lerpVectors = function lerpVectors(v1, v2, alpha) {
+        this.x = v1.x + (v2.x - v1.x) * alpha;
+        this.y = v1.y + (v2.y - v1.y) * alpha;
+        this.z = v1.z + (v2.z - v1.z) * alpha;
+        this.w = v1.w + (v2.w - v1.w) * alpha;
+        return this;
+    };
+    /**
+     * 向量求点积
+     * @param v - 向量
+     * @returns 点积结果
+     */ _proto.dot = function dot(v) {
+        return this.x * v.x + this.y * v.y + this.z * v.z + this.w * v.w;
+    };
+    /**
+     * 向量判等
+     * @param v - 向量
+     * @returns 判等结果
+     */ _proto.equals = function equals(v) {
+        return v.x === this.x && v.y === this.y && v.z === this.z && v.w === this.w;
+    };
+    /**
+     * 是否零向量
+     * @returns 是否零向量
+     */ _proto.isZero = function isZero() {
+        var eps = NumberEpsilon;
+        var _this = this, x = _this.x, y = _this.y, z = _this.z, w = _this.w;
+        return Math.abs(x) <= eps && Math.abs(y) <= eps && Math.abs(z) <= eps && Math.abs(w) <= eps;
+    };
+    /**
+     * 向量转数组
+     * @returns 数组
+     */ _proto.toArray = function toArray() {
+        return [
+            this.x,
+            this.y,
+            this.z,
+            this.w
+        ];
+    };
+    _proto.toVector3 = function toVector3() {
+        return new Vector3(this.x, this.y, this.z);
+    };
+    _proto.fill = function fill(array, offset) {
+        if (offset === void 0) offset = 0;
+        array[offset] = this.x;
+        array[offset + 1] = this.y;
+        array[offset + 2] = this.z;
+        array[offset + 3] = this.w;
+    };
+    /**
+     * 生成随机向量
+     * @returns 向量
+     */ _proto.random = function random() {
+        this.x = Math.random();
+        this.y = Math.random();
+        this.z = Math.random();
+        this.w = Math.random();
+        return this;
+    };
+    /**
+     * 变换矩阵作用于向量
+     * @param m - 变换矩阵
+     * @param [out] - 输出结果，如果没有设置就直接覆盖当前值
+     * @returns 向量
+     */ _proto.applyMatrix = function applyMatrix(m, out) {
+        return m.transformVector4(this, out);
+    };
+    /**
+     * 通过标量数值创建向量
+     * @param num - 数值
+     * @returns 向量
+     */ Vector4.fromNumber = function fromNumber(num) {
+        return new Vector4().setFromNumber(num);
+    };
+    /**
+     * 通过数组创建向量
+     * @param array - 数组
+     * @param [offset=0] - 起始偏移值
+     * @returns 向量
+     */ Vector4.fromArray = function fromArray(array, offset) {
+        if (offset === void 0) offset = 0;
+        return new Vector4().setFromArray(array, offset);
+    };
+    return Vector4;
+}();
+/**
+     * 四维向量的常量
+     */ Vector4$1.ONE = new Vector4$1(1.0, 1.0, 1.0, 1.0);
+Vector4$1.ZERO = new Vector4$1(0.0, 0.0, 0.0, 0.0);
+
+/**
+ * Mesh 组件
+ */ var MeshComponent = /*#__PURE__*/ function(RendererComponent) {
+    _inherits(MeshComponent, RendererComponent);
+    function MeshComponent() {
+        var _this;
+        _this = RendererComponent.apply(this, arguments) || this;
+        /**
+   * 用于点击测试的碰撞器
+   */ _this.meshCollider = new MeshCollider();
+        // TODO 点击测试后续抽象一个 Collider 组件
+        _this.getHitTestParams = function(force) {
+            var worldMatrix = _this.transform.getWorldMatrix();
+            _this.meshCollider.setGeometry(_this.geometry, worldMatrix);
+            var area = _this.meshCollider.getBoundingBoxData();
+            if (area) {
+                return {
+                    type: area.type,
+                    triangles: area.area
+                };
+            }
+        };
+        return _this;
+    }
+    var _proto = MeshComponent.prototype;
+    _proto.render = function render(renderer) {
+        if (renderer.renderingData.currentFrame.globalUniforms) {
+            renderer.setGlobalMatrix("effects_ObjectToWorld", this.transform.getWorldMatrix());
+        }
+        renderer.drawGeometry(this.geometry, this.material);
+    };
+    _proto.getBoundingBox = function getBoundingBox() {
+        var worldMatrix = this.transform.getWorldMatrix();
+        this.meshCollider.setGeometry(this.geometry, worldMatrix);
+        var boundingBox = this.meshCollider.getBoundingBox();
+        return boundingBox;
+    };
+    return MeshComponent;
+}(RendererComponent);
+__decorate([
+    serialize()
+], MeshComponent.prototype, "geometry", void 0);
+
+exports.EffectComponent = /*#__PURE__*/ function(MeshComponent) {
+    _inherits(EffectComponent, MeshComponent);
+    function EffectComponent(engine) {
+        var _this;
+        _this = MeshComponent.call(this, engine) || this;
+        _this.name = "EffectComponent";
+        return _this;
+    }
+    var _proto = EffectComponent.prototype;
+    _proto.onStart = function onStart() {
+        this.item.getHitTestParams = this.getHitTestParams;
+    };
+    _proto.onUpdate = function onUpdate(dt) {
+        var time = this.item.time;
+        var _this_material_getVector4;
+        var _Time = (_this_material_getVector4 = this.material.getVector4("_Time")) != null ? _this_material_getVector4 : new Vector4$1();
+        this.material.setVector4("_Time", _Time.set(time / 20, time, time * 2, time * 3));
+    };
+    _proto.fromData = function fromData(data) {
+        MeshComponent.prototype.fromData.call(this, data);
+        this.material = this.materials[0];
+    };
+    return EffectComponent;
+}(MeshComponent);
+exports.EffectComponent = __decorate([
+    effectsClass(DataType.EffectComponent)
+], exports.EffectComponent);
+
+exports.PostProcessVolume = /*#__PURE__*/ function(Behaviour) {
+    _inherits(PostProcessVolume, Behaviour);
+    function PostProcessVolume(engine) {
+        var _this;
+        _this = Behaviour.call(this, engine) || this;
+        _this.bloom = {
+            threshold: 0,
+            intensity: 0,
+            active: false
+        };
+        _this.vignette = {
+            intensity: 0,
+            smoothness: 0,
+            roundness: 0,
+            active: false
+        };
+        _this.tonemapping = {
+            active: false
+        };
+        _this.colorAdjustments = {
+            brightness: 0,
+            saturation: 0,
+            contrast: 0,
+            active: false
+        };
+        return _this;
+    }
+    var _proto = PostProcessVolume.prototype;
+    _proto.onStart = function onStart() {
+        var composition = this.item.composition;
+        if (composition) {
+            composition.renderFrame.globalVolume = this;
+        }
+    };
+    return PostProcessVolume;
+}(Behaviour);
+__decorate([
+    serialize()
+], exports.PostProcessVolume.prototype, "bloom", void 0);
+__decorate([
+    serialize()
+], exports.PostProcessVolume.prototype, "vignette", void 0);
+__decorate([
+    serialize()
+], exports.PostProcessVolume.prototype, "tonemapping", void 0);
+__decorate([
+    serialize()
+], exports.PostProcessVolume.prototype, "colorAdjustments", void 0);
+exports.PostProcessVolume = __decorate([
+    effectsClass(DataType.PostProcessVolume)
+], exports.PostProcessVolume);
+
+function _assert_this_initialized(self) {
+    if (self === void 0) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    return self;
+}
 
 /**
  * 四元数
@@ -6518,6 +8554,2052 @@ Matrix4$1.tempVec1 = new Vector3();
 Matrix4$1.tempVec2 = new Vector3();
 Matrix4$1.tempMat0 = new Matrix4$1();
 
+function _array_like_to_array(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+    for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
+    return arr2;
+}
+
+function _unsupported_iterable_to_array(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _array_like_to_array(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(n);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _array_like_to_array(o, minLen);
+}
+
+function _create_for_of_iterator_helper_loose(o, allowArrayLike) {
+    var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
+    if (it) return (it = it.call(o)).next.bind(it);
+    // Fallback for engines without symbol support
+    if (Array.isArray(o) || (it = _unsupported_iterable_to_array(o)) || allowArrayLike && o && typeof o.length === "number") {
+        if (it) o = it;
+        var i = 0;
+        return function() {
+            if (i >= o.length) return {
+                done: true
+            };
+            return {
+                done: false,
+                value: o[i++]
+            };
+        };
+    }
+    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+
+exports.ShaderCompileResultStatus = void 0;
+(function(ShaderCompileResultStatus) {
+    ShaderCompileResultStatus[ShaderCompileResultStatus["noShader"] = 0] = "noShader";
+    ShaderCompileResultStatus[ShaderCompileResultStatus["success"] = 1] = "success";
+    ShaderCompileResultStatus[ShaderCompileResultStatus["fail"] = 2] = "fail";
+    ShaderCompileResultStatus[ShaderCompileResultStatus["compiling"] = 3] = "compiling";
+})(exports.ShaderCompileResultStatus || (exports.ShaderCompileResultStatus = {}));
+exports.GLSLVersion = void 0;
+(function(GLSLVersion) {
+    GLSLVersion["GLSL1"] = "100";
+    GLSLVersion["GLSL3"] = "300 es";
+})(exports.GLSLVersion || (exports.GLSLVersion = {}));
+var ShaderVariant = /*#__PURE__*/ function(EffectsObject) {
+    _inherits(ShaderVariant, EffectsObject);
+    function ShaderVariant(engine, source) {
+        var _this;
+        _this = EffectsObject.call(this, engine) || this;
+        _this.source = source;
+        return _this;
+    }
+    return ShaderVariant;
+}(EffectsObject);
+exports.Shader = /*#__PURE__*/ function(EffectsObject) {
+    _inherits(Shader, EffectsObject);
+    function Shader() {
+        return EffectsObject.apply(this, arguments);
+    }
+    var _proto = Shader.prototype;
+    _proto.createVariant = function createVariant(macros) {
+        var shaderMacros = [];
+        if (macros) {
+            for(var _iterator = _create_for_of_iterator_helper_loose(Object.keys(macros)), _step; !(_step = _iterator()).done;){
+                var key = _step.value;
+                shaderMacros.push([
+                    key,
+                    macros[key]
+                ]);
+            }
+        }
+        var shaderVariant = this.engine.getShaderLibrary().createShader(this.shaderData, shaderMacros);
+        shaderVariant.shader = this;
+        return shaderVariant;
+    };
+    _proto.fromData = function fromData(data) {
+        EffectsObject.prototype.fromData.call(this, data);
+        this.shaderData = data;
+    };
+    return Shader;
+}(EffectsObject);
+exports.Shader = __decorate([
+    effectsClass(DataType.Shader)
+], exports.Shader);
+
+var EFFECTS_COPY_MESH_NAME = "effects-internal-copy";
+var COPY_MESH_SHADER_ID = "effects-internal-copy-mesh";
+var COPY_VERTEX_SHADER = "\nprecision highp float;\nattribute vec2 aPos;\nvarying vec2 vTex;\nvoid main(){\n    gl_Position = vec4(aPos,0.,1.0);\n    vTex = (aPos + vec2(1.0))/2.;\n}";
+var COPY_FRAGMENT_SHADER = "precision mediump float;\nvarying vec2 vTex;\n\n#ifdef DEPTH_TEXTURE\nuniform sampler2D uDepth;\n#extension GL_EXT_frag_depth : enable\n#endif\nvoid main(){\n    #ifdef DEPTH_TEXTURE\n    gl_FragDepthEXT = texture2D(uDepth,vTex).r;\n    #endif\n}\n";
+function createCopyShader(level, writeDepth) {
+    var webgl2 = level === 2;
+    return {
+        name: EFFECTS_COPY_MESH_NAME,
+        vertex: COPY_VERTEX_SHADER,
+        fragment: COPY_FRAGMENT_SHADER,
+        glslVersion: webgl2 ? exports.GLSLVersion.GLSL3 : exports.GLSLVersion.GLSL1,
+        macros: [
+            [
+                "DEPTH_TEXTURE",
+                !!writeDepth
+            ]
+        ],
+        // @ts-expect-error
+        cacheId: COPY_MESH_SHADER_ID + +writeDepth
+    };
+}
+
+/**
+ * Helper class to create a WebGL Context
+ *
+ * @param canvas
+ * @param glType
+ * @param options
+ * @returns
+ */ function createGLContext(canvas, glType, options) {
+    if (glType === void 0) glType = "webgl";
+    var context;
+    if (glType === "webgl2") {
+        context = canvas.getContext("webgl2", options);
+        if (!context) {
+            console.debug("WebGL2 context retrieval failed, falling back to WebGL context.");
+        }
+    }
+    if (!context || glType === "webgl") {
+        context = canvas.getContext("webgl", options);
+    }
+    if (!context) {
+        throw new Error("This browser does not support WebGL or the WebGL version is incorrect. Please check your WebGL version.");
+    }
+    return context;
+}
+
+function gpuTimer(gl) {
+    var ext = gl.getExtension("EXT_disjoint_timer_query_webgl2");
+    if (ext) {
+        var query = gl.createQuery();
+        var getTime = /*#__PURE__*/ _async_to_generator(function() {
+            return __generator(this, function(_state) {
+                return [
+                    2,
+                    new Promise(function(resolve, reject) {
+                        if (query) {
+                            var available = gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE);
+                            var disjoint = gl.getParameter(ext.GPU_DISJOINT_EXT);
+                            if (available && !disjoint) {
+                                // See how much time the rendering of the object took in nanoseconds.
+                                var timeElapsed = gl.getQueryParameter(query, gl.QUERY_RESULT); // Do something useful with the time.  Note that care should be
+                                // taken to use all significant bits of the result, not just the
+                                // least significant 32 bits.
+                                resolve(timeElapsed / 1000 / 1000);
+                            }
+                            if (available || disjoint) {
+                                // Clean up the query object.
+                                gl.deleteQuery(query); // Don't re-enter this polling loop.
+                                query = null;
+                            }
+                            available !== null && query && alipay.window.setTimeout(function() {
+                                getTime().then(resolve).catch;
+                            }, 1);
+                        }
+                    })
+                ];
+            });
+        });
+        if (!query) {
+            return;
+        }
+        return {
+            begin: function() {
+                query && gl.beginQuery(ext.TIME_ELAPSED_EXT, query);
+            },
+            end: function() {
+                gl.endQuery(ext.TIME_ELAPSED_EXT);
+            },
+            getTime: getTime
+        };
+    }
+}
+
+var initErrors = [];
+// @ts-expect-error
+var glContext = {};
+if (!initErrors.length) {
+    initGLContext();
+}
+function initGLContext() {
+    // 重要：iOS 9/10 低版本需要拷贝 gl context 的 prototype，要不然会有属性值的缺失
+    if (typeof alipay.WebGL2RenderingContext === "function") {
+        copy(alipay.WebGL2RenderingContext);
+    } else if (typeof alipay.WebGLRenderingContext !== "undefined") {
+        copy(alipay.WebGLRenderingContext);
+        copy(alipay.WebGLRenderingContext.prototype);
+    } else {
+        initErrors.push(// iOS 16 lockdown mode
+        "iOS16 lockdown mode, WebGL Constants not in global");
+    }
+    if (!initErrors.length && !("HALF_FLOAT" in glContext)) {
+        // @ts-expect-error set default value
+        glContext["HALF_FLOAT"] = 5131;
+    }
+}
+function isWebGL2(gl) {
+    return typeof alipay.WebGL2RenderingContext !== "undefined" && gl.constructor.name === "WebGL2RenderingContext";
+}
+function copy(target) {
+    for(var name in target){
+        if (/^[A-Z_]/.test(name)) {
+            // @ts-expect-error safe to assign
+            glContext[name] = target[name];
+        }
+    }
+}
+function vertexFormatType2GLType(formatType) {
+    switch(formatType){
+        case VertexFormatType.Float32:
+            return alipay.WebGLRenderingContext["FLOAT"];
+        case VertexFormatType.Int16:
+            return alipay.WebGLRenderingContext["SHORT"];
+        case VertexFormatType.Int8:
+            return alipay.WebGLRenderingContext["BYTE"];
+        case VertexFormatType.UInt16:
+            return alipay.WebGLRenderingContext["UNSIGNED_SHORT"];
+        case VertexFormatType.UInt8:
+            return alipay.WebGLRenderingContext["UNSIGNED_BYTE"];
+        default:
+            return alipay.WebGLRenderingContext["FLOAT"];
+    }
+}
+function glType2VertexFormatType(webglType) {
+    switch(webglType){
+        case alipay.WebGLRenderingContext["FLOAT"]:
+            return VertexFormatType.Float32;
+        case alipay.WebGLRenderingContext["SHORT"]:
+            return VertexFormatType.Int16;
+        case alipay.WebGLRenderingContext["BYTE"]:
+            return VertexFormatType.Int8;
+        case alipay.WebGLRenderingContext["UNSIGNED_SHORT"]:
+            return VertexFormatType.UInt16;
+        case alipay.WebGLRenderingContext["UNSIGNED_BYTE"]:
+            return VertexFormatType.UInt8;
+        default:
+            return VertexFormatType.Float32;
+    }
+}
+
+exports.ShaderType = void 0;
+(function(ShaderType) {
+    ShaderType[ShaderType["vertex"] = 0] = "vertex";
+    ShaderType[ShaderType["fragment"] = 1] = "fragment";
+})(exports.ShaderType || (exports.ShaderType = {}));
+
+function valIfUndefined(val, def) {
+    if (val === undefined || val === null) {
+        return def;
+    }
+    return val;
+}
+function getPreMultiAlpha(blending) {
+    switch(blending){
+        case BlendingMode.ALPHA:
+            return 1;
+        case BlendingMode.ADD:
+            return 1;
+        case BlendingMode.SUBTRACTION:
+            return 1;
+        case BlendingMode.STRONG_LIGHT:
+            return 1;
+        case BlendingMode.WEAK_LIGHT:
+            return 1;
+        case BlendingMode.SUPERPOSITION:
+            return 2;
+        case BlendingMode.BRIGHTNESS:
+            return 3;
+        case BlendingMode.MULTIPLY:
+            return 0;
+        default:
+            // 处理undefined
+            return 1;
+    }
+}
+function setBlendMode(material, blendMode) {
+    switch(blendMode){
+        case undefined:
+            material.blendFunction = [
+                glContext.ONE,
+                glContext.ONE_MINUS_SRC_ALPHA,
+                glContext.ONE,
+                glContext.ONE_MINUS_SRC_ALPHA
+            ];
+            break;
+        case BlendingMode.ALPHA:
+            material.blendFunction = [
+                glContext.ONE,
+                glContext.ONE_MINUS_SRC_ALPHA,
+                glContext.ONE,
+                glContext.ONE_MINUS_SRC_ALPHA
+            ];
+            break;
+        case BlendingMode.ADD:
+            material.blendFunction = [
+                glContext.ONE,
+                glContext.ONE,
+                glContext.ONE,
+                glContext.ONE
+            ];
+            break;
+        case BlendingMode.SUBTRACTION:
+            material.blendFunction = [
+                glContext.ONE,
+                glContext.ONE,
+                glContext.ZERO,
+                glContext.ONE
+            ];
+            material.blendEquation = [
+                glContext.FUNC_REVERSE_SUBTRACT,
+                glContext.FUNC_REVERSE_SUBTRACT
+            ];
+            break;
+        case BlendingMode.SUPERPOSITION:
+            material.blendFunction = [
+                glContext.ONE,
+                glContext.ONE,
+                glContext.ONE,
+                glContext.ONE
+            ];
+            break;
+        case BlendingMode.MULTIPLY:
+            material.blendFunction = [
+                glContext.DST_COLOR,
+                glContext.ONE_MINUS_SRC_ALPHA,
+                glContext.DST_COLOR,
+                glContext.ONE_MINUS_SRC_ALPHA
+            ];
+            break;
+        case BlendingMode.BRIGHTNESS:
+            material.blendFunction = [
+                glContext.ONE,
+                glContext.ONE_MINUS_SRC_ALPHA,
+                glContext.ONE,
+                glContext.ONE_MINUS_SRC_ALPHA
+            ];
+            break;
+        case BlendingMode.STRONG_LIGHT:
+            material.blendFunction = [
+                glContext.DST_COLOR,
+                glContext.DST_ALPHA,
+                glContext.ZERO,
+                glContext.ONE
+            ];
+            break;
+        case BlendingMode.WEAK_LIGHT:
+            material.blendFunction = [
+                glContext.DST_COLOR,
+                glContext.ZERO,
+                glContext.ZERO,
+                glContext.ONE
+            ];
+            break;
+        default:
+            console.warn("BlendMode " + blendMode + " not in specification, please set blend params separately.");
+    }
+}
+function setSideMode(material, side) {
+    if (side === SideMode.DOUBLE) {
+        material.culling = false;
+    } else {
+        material.culling = true;
+        material.frontFace = glContext.CW;
+        material.cullFace = side === SideMode.BACK ? glContext.BACK : glContext.FRONT;
+    }
+}
+function setMaskMode(material, maskMode) {
+    switch(maskMode){
+        case undefined:
+            material.stencilTest = false;
+            break;
+        case MaskMode.MASK:
+            material.stencilTest = true;
+            material.stencilFunc = [
+                glContext.ALWAYS,
+                glContext.ALWAYS
+            ];
+            material.stencilOpZPass = [
+                glContext.REPLACE,
+                glContext.REPLACE
+            ];
+            break;
+        case MaskMode.OBSCURED:
+            material.stencilTest = true;
+            material.stencilFunc = [
+                glContext.EQUAL,
+                glContext.EQUAL
+            ];
+            break;
+        case MaskMode.REVERSE_OBSCURED:
+            material.stencilTest = true;
+            material.stencilFunc = [
+                glContext.NOTEQUAL,
+                glContext.NOTEQUAL
+            ];
+            break;
+        case MaskMode.NONE:
+            material.stencilTest = false;
+            break;
+        default:
+            console.warn("MaskMode " + maskMode + " not in specification, please set stencil params seperately.");
+    }
+}
+
+function _extends() {
+    _extends = Object.assign || function assign(target) {
+        for(var i = 1; i < arguments.length; i++){
+            var source = arguments[i];
+            for(var key in source)if (Object.prototype.hasOwnProperty.call(source, key)) target[key] = source[key];
+        }
+        return target;
+    };
+    return _extends.apply(this, arguments);
+}
+
+exports.TextureLoadAction = void 0;
+(function(TextureLoadAction) {
+    TextureLoadAction[TextureLoadAction["whatever"] = 0] = "whatever";
+    //preserve previous attachment
+    //load = 1,
+    //clear attachment
+    TextureLoadAction[TextureLoadAction["clear"] = 2] = "clear";
+})(exports.TextureLoadAction || (exports.TextureLoadAction = {}));
+exports.TextureSourceType = void 0;
+(function(TextureSourceType) {
+    TextureSourceType[TextureSourceType["none"] = 0] = "none";
+    TextureSourceType[TextureSourceType["data"] = 1] = "data";
+    TextureSourceType[TextureSourceType["image"] = 2] = "image";
+    TextureSourceType[TextureSourceType["compressed"] = 3] = "compressed";
+    TextureSourceType[TextureSourceType["video"] = 4] = "video";
+    TextureSourceType[TextureSourceType["canvas"] = 5] = "canvas";
+    TextureSourceType[TextureSourceType["framebuffer"] = 6] = "framebuffer";
+    TextureSourceType[TextureSourceType["mipmaps"] = 7] = "mipmaps";
+})(exports.TextureSourceType || (exports.TextureSourceType = {}));
+
+/**
+ * 负责下载各种资源，并提供了一些异步加载和缓存管理的功能
+ */ var Downloader = /*#__PURE__*/ function() {
+    function Downloader() {
+        /**
+   * 存储多个回调函数的对象
+   */ this.callbacks = {};
+    }
+    var _proto = Downloader.prototype;
+    /**
+   * 下载一个 JSON 文件
+   * @param url - 要下载的 JSON 文件的 URL
+   * @param onSuccess - 下载成功后的回调函数
+   * @param onError - 下载失败后的回调函数
+   */ _proto.downloadJSON = function downloadJSON(url, onSuccess, onError) {
+        this.download(url, "json", onSuccess, onError);
+    };
+    /**
+   * 下载一个二进制文件
+   * @param url - 要下载的二进制文件的 URL
+   * @param onSuccess - 下载成功后的回调函数
+   * @param onError - 下载失败后的回调函数
+   */ _proto.downloadBinary = function downloadBinary(url, onSuccess, onError) {
+        this.download(url, "arraybuffer", onSuccess, onError);
+    };
+    /**
+   * 下载一个 Blob 文件
+   * @param url - 要下载的 Blob 文件的 URL
+   * @param onSuccess - 下载成功后的回调函数
+   * @param onError - 下载失败后的回调函数
+   */ _proto.downloadBlob = function downloadBlob(url, onSuccess, onError) {
+        this.download(url, "blob", onSuccess, onError);
+    };
+    _proto.download = function download(url, responseType, onSuccess, onError) {
+        var _this = this;
+        if (responseType === void 0) responseType = "json";
+        if (this.start(url, onSuccess, onError)) {
+            return;
+        }
+        var xhr = new alipay.XMLHttpRequest();
+        var handleError = function() {
+            _this.finish(url, xhr.status, xhr.response);
+        };
+        var handleLoad = function() {
+            if (xhr.status == 200 || xhr.status == 0) {
+                _this.finish(url, 200, xhr.response);
+            } else {
+                handleError();
+            }
+        };
+        xhr.responseType = responseType;
+        xhr.addEventListener("load", handleLoad);
+        xhr.addEventListener("error", handleError);
+        xhr.open("GET", url, true);
+        xhr.send();
+    };
+    _proto.start = function start(url, onSuccess, onError) {
+        var callbacks = this.callbacks[url];
+        try {
+            if (callbacks) {
+                return true;
+            }
+            this.callbacks[url] = callbacks = [];
+        } finally{
+            callbacks.push(onSuccess, onError);
+        }
+    };
+    _proto.finish = function finish(url, status, data) {
+        var callbacks = this.callbacks[url];
+        delete this.callbacks[url];
+        var args = status == 200 || status == 0 ? [
+            data
+        ] : [
+            status,
+            data
+        ];
+        for(var i = args.length - 1, n = callbacks.length; i < n; i += 2){
+            callbacks[i].apply(null, args);
+        }
+    };
+    return Downloader;
+}();
+var webPFailed = false;
+var avifFailed = false;
+/**
+ * 异步加载一个 WebP 图片文件，如果不支持 WebP，则加载 PNG 图片文件
+ * @param png - PNG 图片文件的 URL
+ * @param webp - WebP 图片文件的 URL
+ */ function loadWebPOptional(png, webp) {
+    return _loadWebPOptional.apply(this, arguments);
+}
+function _loadWebPOptional() {
+    _loadWebPOptional = _async_to_generator(function(png, webp) {
+        var image, image1, image2;
+        return __generator(this, function(_state) {
+            switch(_state.label){
+                case 0:
+                    if (!(webPFailed || !webp)) return [
+                        3,
+                        2
+                    ];
+                    return [
+                        4,
+                        loadImage(png)
+                    ];
+                case 1:
+                    image = _state.sent();
+                    return [
+                        2,
+                        {
+                            image: image,
+                            url: png
+                        }
+                    ];
+                case 2:
+                    _state.trys.push([
+                        2,
+                        4,
+                        ,
+                        6
+                    ]);
+                    return [
+                        4,
+                        loadImage(webp)
+                    ];
+                case 3:
+                    image1 = _state.sent();
+                    return [
+                        2,
+                        {
+                            image: image1,
+                            url: webp
+                        }
+                    ];
+                case 4:
+                    _state.sent();
+                    webPFailed = true;
+                    return [
+                        4,
+                        loadImage(png)
+                    ];
+                case 5:
+                    image2 = _state.sent();
+                    return [
+                        2,
+                        {
+                            image: image2,
+                            url: png
+                        }
+                    ];
+                case 6:
+                    return [
+                        2
+                    ];
+            }
+        });
+    });
+    return _loadWebPOptional.apply(this, arguments);
+}
+/**
+ * 异步加载一个 AVIF 图片文件，如果不支持 AVIF，则加载 PNG 图片文件
+ * @param png - PNG 图片文件的 URL
+ * @param avif - AVIF 图片文件的 URL
+ */ function loadAVIFOptional(png, avif) {
+    return _loadAVIFOptional.apply(this, arguments);
+}
+function _loadAVIFOptional() {
+    _loadAVIFOptional = _async_to_generator(function(png, avif) {
+        var image, image1, image2;
+        return __generator(this, function(_state) {
+            switch(_state.label){
+                case 0:
+                    if (!(avifFailed || !avif)) return [
+                        3,
+                        2
+                    ];
+                    return [
+                        4,
+                        loadImage(png)
+                    ];
+                case 1:
+                    image = _state.sent();
+                    return [
+                        2,
+                        {
+                            image: image,
+                            url: png
+                        }
+                    ];
+                case 2:
+                    _state.trys.push([
+                        2,
+                        4,
+                        ,
+                        6
+                    ]);
+                    return [
+                        4,
+                        loadImage(avif)
+                    ];
+                case 3:
+                    image1 = _state.sent();
+                    return [
+                        2,
+                        {
+                            image: image1,
+                            url: avif
+                        }
+                    ];
+                case 4:
+                    _state.sent();
+                    avifFailed = true;
+                    return [
+                        4,
+                        loadImage(png)
+                    ];
+                case 5:
+                    image2 = _state.sent();
+                    return [
+                        2,
+                        {
+                            image: image2,
+                            url: png
+                        }
+                    ];
+                case 6:
+                    return [
+                        2
+                    ];
+            }
+        });
+    });
+    return _loadAVIFOptional.apply(this, arguments);
+}
+/**
+ * 异步加载一个图片文件
+ * @param source - 图片文件的 URL、Blob 或 HTMLImageElement 对象
+ */ function loadImage(source) {
+    return _loadImage.apply(this, arguments);
+}
+function _loadImage() {
+    _loadImage = _async_to_generator(function(source) {
+        var url, revokeURL;
+        return __generator(this, function(_state) {
+            url = "";
+            // 1. string | Blob | HTMLImageElement 处理逻辑
+            if (_instanceof1(source, alipay.HTMLImageElement)) {
+                if (source.complete) {
+                    return [
+                        2,
+                        source
+                    ];
+                }
+                url = source.src;
+            } else if (_instanceof1(source, alipay.Blob)) {
+                url = alipay.URL.createObjectURL(source);
+                revokeURL = true;
+            } else if (typeof source === "string") {
+                url = source;
+            }
+            // 2. 非法类型
+            if (!url) {
+                throw new Error("Invalid url type: " + JSON.stringify(source) + ".");
+            }
+            return [
+                2,
+                new Promise(function(resolve, reject) {
+                    var img = new alipay.Image();
+                    if (!/^data:/.test(url)) {
+                        img.crossOrigin = "*";
+                    }
+                    img.onload = function() {
+                        img.onload = null;
+                        if (revokeURL) {
+                            alipay.URL.revokeObjectURL(url);
+                        }
+                        return resolve(img);
+                    };
+                    img.onerror = function(e) {
+                        img.onerror = null;
+                        if (revokeURL) {
+                            alipay.URL.revokeObjectURL(url);
+                        }
+                        return reject("Load image fail: " + url + ", reason: " + JSON.stringify(e));
+                    };
+                    img.src = url;
+                })
+            ];
+        });
+    });
+    return _loadImage.apply(this, arguments);
+}
+/**
+ * 异步加载一个二进制文件
+ * @param url - 二进制文件的 URL
+ */ function loadBinary(url) {
+    return _loadBinary.apply(this, arguments);
+}
+function _loadBinary() {
+    _loadBinary = _async_to_generator(function(url) {
+        return __generator(this, function(_state) {
+            return [
+                2,
+                new Promise(function(resolve, reject) {
+                    new Downloader().downloadBinary(url, resolve, function(status, responseText) {
+                        reject("Couldn't load bins " + url + ": status " + status + ", " + responseText);
+                    });
+                })
+            ];
+        });
+    });
+    return _loadBinary.apply(this, arguments);
+}
+/**
+ * 异步加载一个 Blob 文件
+ * @param url - Blob 文件的 URL
+ */ function loadBlob(url) {
+    return _loadBlob.apply(this, arguments);
+}
+function _loadBlob() {
+    _loadBlob = _async_to_generator(function(url) {
+        return __generator(this, function(_state) {
+            return [
+                2,
+                new Promise(function(resolve, reject) {
+                    new Downloader().downloadBlob(url, resolve, function(status, responseText) {
+                        reject("Couldn't load blob " + url + ": status " + status + ", " + responseText);
+                    });
+                })
+            ];
+        });
+    });
+    return _loadBlob.apply(this, arguments);
+}
+/**
+ * 异步加载一个视频文件
+ * @param url - 视频文件的 URL 或 MediaProvider 对象
+ */ function loadVideo(url) {
+    return _loadVideo.apply(this, arguments);
+}
+function _loadVideo() {
+    _loadVideo = _async_to_generator(function(url) {
+        var video;
+        return __generator(this, function(_state) {
+            video = alipay.document.createElement("video");
+            if (typeof url === "string") {
+                video.src = url;
+            } else {
+                video.srcObject = url;
+            }
+            video.crossOrigin = "anonymous";
+            video.muted = true;
+            if (isAndroid()) {
+                video.setAttribute("renderer", "standard");
+            }
+            video.setAttribute("playsinline", "playsinline");
+            return [
+                2,
+                new Promise(function(resolve, reject) {
+                    var pending = video.play();
+                    if (pending) {
+                        void pending.then(function() {
+                            return resolve(video);
+                        });
+                    } else {
+                        video.addEventListener("loadeddata", function listener() {
+                            resolve(video);
+                            video.removeEventListener("loadeddata", listener);
+                        }, true);
+                    }
+                    video.addEventListener("error", function(e) {
+                        reject("Load video fail.");
+                    });
+                })
+            ];
+        });
+    });
+    return _loadVideo.apply(this, arguments);
+}
+function loadMedia(url, loadFn) {
+    return _loadMedia.apply(this, arguments);
+}
+function _loadMedia() {
+    _loadMedia = _async_to_generator(function(url, loadFn) {
+        return __generator(this, function(_state) {
+            switch(_state.label){
+                case 0:
+                    if (!Array.isArray(url)) return [
+                        3,
+                        5
+                    ];
+                    _state.label = 1;
+                case 1:
+                    _state.trys.push([
+                        1,
+                        3,
+                        ,
+                        5
+                    ]);
+                    return [
+                        4,
+                        loadFn(url[0])
+                    ];
+                case 2:
+                    return [
+                        2,
+                        _state.sent()
+                    ];
+                case 3:
+                    _state.sent();
+                    return [
+                        4,
+                        loadFn(url[1])
+                    ];
+                case 4:
+                    return [
+                        2,
+                        _state.sent()
+                    ];
+                case 5:
+                    return [
+                        2,
+                        loadFn(url)
+                    ];
+            }
+        });
+    });
+    return _loadMedia.apply(this, arguments);
+}
+
+function deserializeMipmapTexture(textureOptions, bins, assets) {
+    return _deserializeMipmapTexture.apply(this, arguments);
+}
+function _deserializeMipmapTexture() {
+    _deserializeMipmapTexture = _async_to_generator(function(textureOptions, bins, assets, files) {
+        var mipmaps, target, jobs, loadedMipmaps, mipmaps1, target1, jobs1, loadedMipmaps1, bin;
+        return __generator(this, function(_state) {
+            switch(_state.label){
+                case 0:
+                    if (files === void 0) files = [];
+                    if (!(textureOptions.target === 34067)) return [
+                        3,
+                        2
+                    ];
+                    mipmaps = textureOptions.mipmaps, target = textureOptions.target;
+                    jobs = mipmaps.map(function(mipmap) {
+                        return Promise.all(mipmap.map(function(pointer) {
+                            // @ts-expect-error
+                            if (pointer.id) {
+                                // @ts-expect-error
+                                var loadedImage = assets[pointer.id];
+                                return loadedImage;
+                            } else {
+                                return loadMipmapImage(pointer, bins);
+                            }
+                        }));
+                    });
+                    return [
+                        4,
+                        Promise.all(jobs)
+                    ];
+                case 1:
+                    loadedMipmaps = _state.sent();
+                    return [
+                        2,
+                        _extends({
+                            keepImageSource: false
+                        }, textureOptions, {
+                            mipmaps: loadedMipmaps,
+                            sourceFrom: {
+                                target: target,
+                                // bin,
+                                type: exports.TextureSourceType.mipmaps
+                            }
+                        })
+                    ];
+                case 2:
+                    // TODO: 补充测试用例
+                    mipmaps1 = textureOptions.mipmaps, target1 = textureOptions.target;
+                    jobs1 = mipmaps1.map(function(pointer) {
+                        return loadMipmapImage(pointer, bins);
+                    });
+                    return [
+                        4,
+                        Promise.all(jobs1)
+                    ];
+                case 3:
+                    loadedMipmaps1 = _state.sent();
+                    bin = files[mipmaps1[0][1][0]].url;
+                    return [
+                        2,
+                        _extends({
+                            keepImageSource: false
+                        }, textureOptions, {
+                            mipmaps: loadedMipmaps1,
+                            sourceType: exports.TextureSourceType.mipmaps,
+                            sourceFrom: {
+                                target: target1,
+                                bin: bin,
+                                type: exports.TextureSourceType.mipmaps,
+                                mipmaps: mipmaps1.map(function(pointer) {
+                                    return [
+                                        pointer[1][1],
+                                        pointer[1][2]
+                                    ];
+                                })
+                            }
+                        })
+                    ];
+                case 4:
+                    return [
+                        2
+                    ];
+            }
+        });
+    });
+    return _deserializeMipmapTexture.apply(this, arguments);
+}
+function loadMipmapImage(pointer, bins) {
+    return _loadMipmapImage.apply(this, arguments);
+}
+function _loadMipmapImage() {
+    _loadMipmapImage = _async_to_generator(function(pointer, bins) {
+        var _pointer_, index, start, length, bin;
+        return __generator(this, function(_state) {
+            _pointer_ = pointer[1], index = _pointer_[0], start = _pointer_[1], length = _pointer_[2];
+            bin = bins[index];
+            if (!bin) {
+                throw new Error("Invalid bin pointer: " + JSON.stringify(pointer) + ".");
+            }
+            return [
+                2,
+                loadImage(new alipay.Blob([
+                    new Uint8Array(bin, start, length)
+                ]))
+            ];
+        });
+    });
+    return _loadMipmapImage.apply(this, arguments);
+}
+
+var seed$d = 1;
+/**
+ * Texture 抽象类
+ */ var Texture = /*#__PURE__*/ function(EffectsObject) {
+    _inherits(Texture, EffectsObject);
+    function Texture(engine) {
+        var _this;
+        _this = EffectsObject.call(this, engine) || this;
+        _this.destroyed = false;
+        _this.id = "Tex" + seed$d++;
+        return _this;
+    }
+    var _proto = Texture.prototype;
+    /**
+   * 获取 Texture 的宽度。
+   */ _proto.getWidth = function getWidth() {
+        return this.width || 0;
+    };
+    /**
+   * 获取 Texture 的高度。
+   */ _proto.getHeight = function getHeight() {
+        return this.height || 0;
+    };
+    _proto.uploadCurrentVideoFrame = function uploadCurrentVideoFrame() {
+    // OVERRIDE
+    };
+    /**
+   * 释放 Texture GPU 资源。
+   * 注意：该方法只释放资源，并不销毁 GPU textureBuffer 对象。
+   * @override
+   */ _proto.offloadData = function offloadData() {
+    // OVERRIDE
+    };
+    /**
+   * 重新加载 Texture  GPU 资源。
+   * @override
+   */ _proto.reloadData = function reloadData() {
+    // OVERRIDE
+    };
+    /**
+   * 初始化 GPU 资源
+   * @override
+   */ _proto.initialize = function initialize() {
+    // OVERRIDE
+    };
+    _proto.assembleOptions = function assembleOptions(options) {
+        var _options_target = options.target, target = _options_target === void 0 ? glContext.TEXTURE_2D : _options_target, tmp = options.format, internalFormat = tmp === void 0 ? glContext.RGBA : tmp;
+        if (!options.sourceType) {
+            if ("image" in options) {
+                options.sourceType = exports.TextureSourceType.image;
+            } else if ("data" in options) {
+                options.sourceType = exports.TextureSourceType.data;
+            } else if ("video" in options) {
+                options.sourceType = exports.TextureSourceType.video;
+            } else {
+                options.sourceType = 0; // TextureSourceType.none
+            }
+        }
+        return _extends({
+            minFilter: glContext.NEAREST,
+            magFilter: glContext.NEAREST,
+            wrapS: glContext.CLAMP_TO_EDGE,
+            wrapT: glContext.CLAMP_TO_EDGE,
+            target: target,
+            format: glContext.RGBA,
+            internalFormat: internalFormat,
+            type: glContext.UNSIGNED_BYTE
+        }, options);
+    };
+    /**
+   * 通过 URL 创建 Texture 对象。
+   * @param url - 要创建的 Texture URL
+   * @since 2.0.0
+   */ Texture.fromImage = function fromImage(url, engine, options) {
+        return _async_to_generator(function() {
+            var image, texture;
+            return __generator(this, function(_state) {
+                switch(_state.label){
+                    case 0:
+                        return [
+                            4,
+                            loadImage(url)
+                        ];
+                    case 1:
+                        image = _state.sent();
+                        texture = Texture.create(engine, _extends({
+                            sourceType: exports.TextureSourceType.image,
+                            image: image,
+                            target: glContext.TEXTURE_2D,
+                            id: generateGUID(),
+                            flipY: true
+                        }, options));
+                        texture.initialize();
+                        return [
+                            2,
+                            texture
+                        ];
+                }
+            });
+        })();
+    };
+    /**
+   * 通过视频 URL 创建 Texture 对象。
+   * @param url - 要创建的 Texture URL
+   * @param engine - 引擎对象
+   * @param options - 可选的 Texture 选项
+   * @since 2.1.0
+   * @returns
+   */ Texture.fromVideo = function fromVideo(url, engine, options) {
+        return _async_to_generator(function() {
+            var video, texture;
+            return __generator(this, function(_state) {
+                switch(_state.label){
+                    case 0:
+                        return [
+                            4,
+                            loadVideo(url)
+                        ];
+                    case 1:
+                        video = _state.sent();
+                        texture = Texture.create(engine, _extends({
+                            sourceType: exports.TextureSourceType.video,
+                            video: video,
+                            id: generateGUID(),
+                            flipY: true
+                        }, options));
+                        texture.initialize();
+                        return [
+                            2,
+                            texture
+                        ];
+                }
+            });
+        })();
+    };
+    _create_class(Texture, [
+        {
+            key: "isDestroyed",
+            get: function get() {
+                return this.destroyed;
+            }
+        }
+    ]);
+    return Texture;
+}(EffectsObject);
+function generateHalfFloatTexture(engine, data, width, height) {
+    var channel = data.length / width / height;
+    var format;
+    var internalFormat;
+    if (channel === 4 || channel === 0) {
+        internalFormat = format = glContext.RGBA;
+    } else if (channel === 3) {
+        internalFormat = format = glContext.RGB;
+    } else if (channel === 2) {
+        internalFormat = format = glContext.LUMINANCE_ALPHA;
+    } else {
+        internalFormat = format = glContext.LUMINANCE;
+    }
+    return Texture.createWithData(engine, {
+        data: data,
+        width: width,
+        height: height
+    }, {
+        type: glContext.HALF_FLOAT,
+        format: format,
+        internalFormat: internalFormat,
+        wrapS: glContext.CLAMP_TO_EDGE,
+        wrapT: glContext.CLAMP_TO_EDGE
+    });
+}
+var sourceOptions = {
+    type: glContext.UNSIGNED_BYTE,
+    format: glContext.RGBA,
+    internalFormat: glContext.RGBA,
+    wrapS: glContext.MIRRORED_REPEAT,
+    wrapT: glContext.MIRRORED_REPEAT,
+    minFilter: glContext.NEAREST,
+    magFilter: glContext.NEAREST
+};
+function generateWhiteTexture(engine) {
+    return Texture.create(engine, _extends({
+        id: BuiltinObjectGUID.WhiteTexture,
+        data: {
+            width: 1,
+            height: 1,
+            data: new Uint8Array([
+                255,
+                255,
+                255,
+                255
+            ])
+        },
+        sourceType: exports.TextureSourceType.data
+    }, sourceOptions));
+}
+function generateTransparentTexture(engine) {
+    return Texture.create(engine, _extends({
+        id: BuiltinObjectGUID.TransparentTexture,
+        data: {
+            width: 1,
+            height: 1,
+            data: new Uint8Array([
+                0,
+                0,
+                0,
+                0
+            ])
+        },
+        sourceType: exports.TextureSourceType.data
+    }, sourceOptions));
+}
+
+var HEADER_LEN = 12 + 13 * 4; // identifier + header elements (not including key value meta-data pairs)
+var COMPRESSED_2D = 0; // uses a gl.compressedTexImage2D()
+//const COMPRESSED_3D = 1; // uses a gl.compressedTexImage3D()
+var TEX_2D = 2; // uses a gl.texImage2D()
+//const TEX_3D = 3; // uses a gl.texImage3D()
+var KTXTexture = /*#__PURE__*/ function() {
+    function KTXTexture(arrayBuffer, facesExpected, baseOffset) {
+        if (baseOffset === void 0) baseOffset = 0;
+        this.arrayBuffer = arrayBuffer;
+        this.baseOffset = baseOffset;
+        // Test that it is a ktx formatted file, based on the first 12 bytes, character representation is:
+        // '´', 'K', 'T', 'X', ' ', '1', '1', 'ª', '\r', '\n', '\x1A', '\n'
+        // 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A
+        var identifier = new Uint8Array(this.arrayBuffer, this.baseOffset, 12);
+        if (identifier[0] !== 0xab || identifier[1] !== 0x4b || identifier[2] !== 0x54 || identifier[3] !== 0x58 || identifier[4] !== 0x20 || identifier[5] !== 0x31 || identifier[6] !== 0x31 || identifier[7] !== 0xbb || identifier[8] !== 0x0d || identifier[9] !== 0x0a || identifier[10] !== 0x1a || identifier[11] !== 0x0a) {
+            throw new Error("Texture missing KTX identifier.");
+        }
+        // load the reset of the header in native 32 bit uint
+        var dataSize = Uint32Array.BYTES_PER_ELEMENT;
+        var headerDataView = new DataView(this.arrayBuffer, this.baseOffset + 12, 13 * dataSize);
+        var endianness = headerDataView.getUint32(0, true);
+        var littleEndian = endianness === 0x04030201;
+        this.glType = headerDataView.getUint32(1 * dataSize, littleEndian); // must be 0 for compressed textures
+        this.glTypeSize = headerDataView.getUint32(2 * dataSize, littleEndian); // must be 1 for compressed textures
+        this.glFormat = headerDataView.getUint32(3 * dataSize, littleEndian); // must be 0 for compressed textures
+        this.glInternalFormat = headerDataView.getUint32(4 * dataSize, littleEndian); // the value of arg passed to gl.compressedTexImage2D(,,x,,,,)
+        this.glBaseInternalFormat = headerDataView.getUint32(5 * dataSize, littleEndian); // specify GL_RGB, GL_RGBA, GL_ALPHA, etc (un-compressed only)
+        this.pixelWidth = headerDataView.getUint32(6 * dataSize, littleEndian); // level 0 value of arg passed to gl.compressedTexImage2D(,,,x,,,)
+        this.pixelHeight = headerDataView.getUint32(7 * dataSize, littleEndian); // level 0 value of arg passed to gl.compressedTexImage2D(,,,,x,,)
+        this.pixelDepth = headerDataView.getUint32(8 * dataSize, littleEndian); // level 0 value of arg passed to gl.compressedTexImage3D(,,,,,x,,)
+        this.numberOfArrayElements = headerDataView.getUint32(9 * dataSize, littleEndian); // used for texture arrays
+        this.numberOfFaces = headerDataView.getUint32(10 * dataSize, littleEndian); // used for cubemap textures, should either be 1 or 6
+        this.numberOfMipmapLevels = headerDataView.getUint32(11 * dataSize, littleEndian); // number of levels; disregard possibility of 0 for compressed textures
+        this.bytesOfKeyValueData = headerDataView.getUint32(12 * dataSize, littleEndian); // the amount of space after the header for meta-data
+        // value of zero is an indication to generate mipmaps @ runtime.  Not usually allowed for compressed, so disregard.
+        this.numberOfMipmapLevels = Math.max(1, this.numberOfMipmapLevels);
+        if (this.pixelHeight === 0 || this.pixelDepth !== 0) {
+            logger.warn("Only 2D textures currently supported.");
+            return;
+        }
+        if (this.numberOfArrayElements !== 0) {
+            logger.warn("Texture arrays not currently supported.");
+            return;
+        }
+        if (this.numberOfFaces !== facesExpected) {
+            logger.warn("Number of faces expected " + facesExpected + ", but found " + this.numberOfFaces + ".");
+            return;
+        }
+        // we now have a completely validated file, so could use existence of loadType as success
+        // would need to make this more elaborate & adjust checks above to support more than one load type
+        if (this.glType === 0) {
+            this.loadType = COMPRESSED_2D;
+        } else {
+            this.loadType = TEX_2D;
+        }
+    }
+    var _proto = KTXTexture.prototype;
+    _proto.mipmaps = function mipmaps(loadMipmaps) {
+        var mipmaps = [];
+        // initialize width & height for level 1
+        var dataOffset = HEADER_LEN + this.bytesOfKeyValueData;
+        var width = this.pixelWidth;
+        var height = this.pixelHeight;
+        var mipmapCount = loadMipmaps ? this.numberOfMipmapLevels : 1;
+        for(var level = 0; level < mipmapCount; level++){
+            var imageSize = new Int32Array(this.arrayBuffer, this.baseOffset + dataOffset, 1)[0]; // size per face, since not supporting array cubemaps
+            for(var face = 0; face < this.numberOfFaces; face++){
+                var data = new Uint8Array(this.arrayBuffer, this.baseOffset + dataOffset + 4, imageSize);
+                mipmaps.push({
+                    data: data,
+                    width: width,
+                    height: height
+                });
+                dataOffset += imageSize + 4; // size of the image + 4 for the imageSize field
+                dataOffset += 3 - (imageSize + 3) % 4; // add padding for odd sized image
+            }
+            width = Math.max(1.0, width * 0.5);
+            height = Math.max(1.0, height * 0.5);
+        }
+        return mipmaps;
+    };
+    return KTXTexture;
+}();
+function getKTXTextureOptions(data) {
+    var tex = new KTXTexture(data, 1);
+    var numberOfMipmapLevels = tex.numberOfMipmapLevels, pixelWidth = tex.pixelWidth, pixelHeight = tex.pixelHeight, glType = tex.glType, numberOfFaces = tex.numberOfFaces, glInternalFormat = tex.glInternalFormat, glFormat = tex.glFormat;
+    var useMipmaps = numberOfMipmapLevels >= Math.floor(Math.log2(Math.max(pixelWidth, pixelHeight)) + 1);
+    return {
+        sourceType: exports.TextureSourceType.compressed,
+        type: glType,
+        target: numberOfFaces === 6 ? glContext.TEXTURE_CUBE_MAP : glContext.TEXTURE_2D,
+        internalFormat: glInternalFormat,
+        format: glFormat,
+        mipmaps: tex.mipmaps(useMipmaps)
+    };
+}
+
+var TextureFactory = /*#__PURE__*/ function() {
+    function TextureFactory() {
+        this.reloadPending = {};
+    }
+    var _proto = TextureFactory.prototype;
+    _proto.reload = function reload(texture) {
+        var _this = this;
+        return _async_to_generator(function() {
+            var id, sourceOpts;
+            return __generator(this, function(_state) {
+                switch(_state.label){
+                    case 0:
+                        id = texture.id;
+                        if (_this.reloadPending[id]) {
+                            return [
+                                2
+                            ];
+                        }
+                        if (!texture.sourceFrom) return [
+                            3,
+                            2
+                        ];
+                        _this.reloadPending[id] = true;
+                        return [
+                            4,
+                            _this.loadSource(texture.sourceFrom)
+                        ];
+                    case 1:
+                        sourceOpts = _state.sent();
+                        texture.updateSource(sourceOpts);
+                        _this.reloadPending[id] = false;
+                        return [
+                            3,
+                            3
+                        ];
+                    case 2:
+                        throw new Error("No source from.");
+                    case 3:
+                        return [
+                            2
+                        ];
+                }
+            });
+        })();
+    };
+    _proto.canOffloadTexture = function canOffloadTexture(sourceFrom) {
+        if (sourceFrom) {
+            var type = sourceFrom.type;
+            if (type === exports.TextureSourceType.compressed || type === exports.TextureSourceType.image) {
+                var target = sourceFrom.target, map = sourceFrom.map;
+                var url = sourceFrom.url;
+                if (target === glContext.TEXTURE_CUBE_MAP) {
+                    return typeof map === "object" && !!map;
+                }
+                return isString(url) && url.length > 0;
+            }
+            if (type === exports.TextureSourceType.mipmaps) {
+                var bin = sourceFrom.bin, mipmaps = sourceFrom.mipmaps;
+                var target1 = sourceFrom.target, maps = sourceFrom.maps;
+                var urls = sourceFrom.urls;
+                if (bin) {
+                    return mipmaps.length > 0;
+                }
+                if (target1 === glContext.TEXTURE_CUBE_MAP) {
+                    return maps.every(function(map) {
+                        return typeof map === "object" && map;
+                    });
+                }
+                return urls.every(function(url) {
+                    return isString(url) && url.length > 0;
+                });
+            }
+        }
+        return false;
+    };
+    _proto.loadSource = function loadSource(sourceFrom, config) {
+        var _this = this;
+        return _async_to_generator(function() {
+            var type, target, map, url, bin, mipmaps, urls, maps, cube, image, video, buffer, data, newTarget, newMipmaps, loadedMipmaps, loadedMipmaps1, loadedMipmaps2;
+            return __generator(this, function(_state) {
+                switch(_state.label){
+                    case 0:
+                        type = sourceFrom.type, target = sourceFrom.target;
+                        map = sourceFrom.map;
+                        url = sourceFrom.url;
+                        bin = sourceFrom.bin, mipmaps = sourceFrom.mipmaps;
+                        urls = sourceFrom.urls;
+                        maps = sourceFrom.maps;
+                        if (!(target === glContext.TEXTURE_CUBE_MAP && type !== exports.TextureSourceType.mipmaps)) return [
+                            3,
+                            2
+                        ];
+                        return [
+                            4,
+                            _this.loadCubeMap(map)
+                        ];
+                    case 1:
+                        cube = _state.sent();
+                        return [
+                            2,
+                            _extends({}, config, {
+                                cube: cube,
+                                target: glContext.TEXTURE_CUBE_MAP,
+                                sourceType: exports.TextureSourceType.image,
+                                sourceFrom: {
+                                    type: exports.TextureSourceType.image,
+                                    map: _extends({}, map),
+                                    target: glContext.TEXTURE_CUBE_MAP
+                                }
+                            })
+                        ];
+                    case 2:
+                        if (!(type === exports.TextureSourceType.image)) return [
+                            3,
+                            4
+                        ];
+                        return [
+                            4,
+                            loadImage(url)
+                        ];
+                    case 3:
+                        image = _state.sent();
+                        return [
+                            2,
+                            _extends({}, config, {
+                                image: image,
+                                sourceType: exports.TextureSourceType.image,
+                                sourceFrom: {
+                                    type: type,
+                                    url: url,
+                                    target: glContext.TEXTURE_2D
+                                }
+                            })
+                        ];
+                    case 4:
+                        if (!(type === exports.TextureSourceType.video)) return [
+                            3,
+                            6
+                        ];
+                        return [
+                            4,
+                            loadVideo(url)
+                        ];
+                    case 5:
+                        video = _state.sent();
+                        return [
+                            2,
+                            _extends({}, config, {
+                                video: video,
+                                sourceType: exports.TextureSourceType.video
+                            })
+                        ];
+                    case 6:
+                        if (!(type === exports.TextureSourceType.compressed)) return [
+                            3,
+                            8
+                        ];
+                        return [
+                            4,
+                            loadBinary(url)
+                        ];
+                    case 7:
+                        buffer = _state.sent();
+                        return [
+                            2,
+                            _extends({}, getKTXTextureOptions(buffer), config, {
+                                sourceFrom: {
+                                    url: url,
+                                    type: exports.TextureSourceType.compressed
+                                }
+                            })
+                        ];
+                    case 8:
+                        if (!(type === exports.TextureSourceType.mipmaps)) return [
+                            3,
+                            17
+                        ];
+                        if (!bin) return [
+                            3,
+                            13
+                        ];
+                        return [
+                            4,
+                            loadBinary(bin)
+                        ];
+                    case 9:
+                        data = _state.sent();
+                        newTarget = target != null ? target : glContext.TEXTURE_2D;
+                        newMipmaps = newTarget === glContext.TEXTURE_2D ? mipmaps.slice() : mipmaps.map(function(s) {
+                            return s.slice();
+                        });
+                        if (!(target === glContext.TEXTURE_CUBE_MAP)) return [
+                            3,
+                            11
+                        ];
+                        return [
+                            4,
+                            Promise.all(mipmaps.map(function(mipmap) {
+                                return _this.loadMipmapImages(mipmap, data);
+                            }))
+                        ];
+                    case 10:
+                        loadedMipmaps = _state.sent();
+                        return [
+                            3,
+                            12
+                        ];
+                    case 11:
+                        loadedMipmaps = _this.loadMipmapImages(mipmaps, data);
+                        _state.label = 12;
+                    case 12:
+                        return [
+                            2,
+                            _extends({}, config, {
+                                mipmaps: loadedMipmaps,
+                                target: newTarget,
+                                sourceType: exports.TextureSourceType.mipmaps,
+                                sourceFrom: {
+                                    bin: bin,
+                                    mipmaps: newMipmaps,
+                                    target: newTarget,
+                                    type: exports.TextureSourceType.mipmaps
+                                }
+                            })
+                        ];
+                    case 13:
+                        if (!(target === glContext.TEXTURE_2D || !target)) return [
+                            3,
+                            15
+                        ];
+                        return [
+                            4,
+                            Promise.all(urls.map(function(url) {
+                                return loadImage(url);
+                            }))
+                        ];
+                    case 14:
+                        loadedMipmaps1 = _state.sent();
+                        return [
+                            2,
+                            _extends({}, config, {
+                                mipmaps: loadedMipmaps1,
+                                target: glContext.TEXTURE_2D,
+                                sourceType: exports.TextureSourceType.mipmaps,
+                                sourceFrom: {
+                                    type: type,
+                                    urls: urls.slice(),
+                                    target: glContext.TEXTURE_2D
+                                }
+                            })
+                        ];
+                    case 15:
+                        if (!(target === glContext.TEXTURE_CUBE_MAP)) return [
+                            3,
+                            17
+                        ];
+                        return [
+                            4,
+                            Promise.all(maps.map(function(map) {
+                                return _this.loadCubeMap(map);
+                            }))
+                        ];
+                    case 16:
+                        loadedMipmaps2 = _state.sent();
+                        return [
+                            2,
+                            _extends({}, config, {
+                                mipmaps: loadedMipmaps2,
+                                target: glContext.TEXTURE_CUBE_MAP,
+                                sourceType: exports.TextureSourceType.mipmaps,
+                                sourceFrom: {
+                                    type: type,
+                                    maps: maps.map(function(map) {
+                                        return _extends({}, map);
+                                    }),
+                                    target: glContext.TEXTURE_CUBE_MAP
+                                }
+                            })
+                        ];
+                    case 17:
+                        throw new Error("Invalid resource type: " + type + ".");
+                }
+            });
+        })();
+    };
+    _proto.loadMipmapImages = function loadMipmapImages(pointers, bin) {
+        return _async_to_generator(function() {
+            return __generator(this, function(_state) {
+                return [
+                    2,
+                    Promise.all(pointers.map(function(pointer) {
+                        var blob = new alipay.Blob([
+                            new Uint8Array(bin, pointer[0], pointer[1])
+                        ]);
+                        return loadImage(blob);
+                    }))
+                ];
+            });
+        })();
+    };
+    _proto.loadCubeMap = function loadCubeMap(cubemap) {
+        return _async_to_generator(function() {
+            return __generator(this, function(_state) {
+                return [
+                    2,
+                    Promise.all(cubemap.map(function(key) {
+                        return loadImage(key);
+                    }))
+                ];
+            });
+        })();
+    };
+    return TextureFactory;
+}();
+var g;
+function getDefaultTextureFactory() {
+    if (!g) {
+        g = new TextureFactory();
+    }
+    return g;
+}
+function setDefaultTextureFactory(factory) {
+    g = factory;
+}
+
+/**
+ * 引擎接入暂时不需要实现
+ */ var MaterialDataBlock = /*#__PURE__*/ function() {
+    function MaterialDataBlock(props) {
+        this.destroyed = false;
+        var _props_name = props.name, name = _props_name === void 0 ? "defaultDataBlock" : _props_name;
+        this.name = name;
+    }
+    var _proto = MaterialDataBlock.prototype;
+    _proto.setUniformValues = function setUniformValues(uniformValue) {
+        var _this = this;
+        Object.keys(uniformValue).forEach(function(key) {
+            _this.setUniformValue(key, uniformValue[key]);
+        });
+    };
+    _proto.invalidAllFlags = function invalidAllFlags() {
+    // OVERRIDE
+    };
+    _proto.updateUniformSubData = function updateUniformSubData(name, start, count) {
+    // OVERRIDE
+    };
+    return MaterialDataBlock;
+}();
+function isUniformStruct(value) {
+    return typeof value === "object" && value && value.length === undefined && _instanceof1(value, Texture);
+}
+function isUniformStructArray(value) {
+    return value && value.length !== undefined && isUniformStruct(value[0]);
+}
+
+exports.MaterialRenderType = void 0;
+(function(MaterialRenderType) {
+    MaterialRenderType[MaterialRenderType["normal"] = 0] = "normal";
+    MaterialRenderType[MaterialRenderType["transformFeedback"] = 1] = "transformFeedback";
+})(exports.MaterialRenderType || (exports.MaterialRenderType = {}));
+/**
+ * 用于设置材质默认名称的自增序号
+ * @internal
+ */ var seed$c = 1;
+/**
+ * Material 抽象类
+ */ var Material = /*#__PURE__*/ function(EffectsObject) {
+    _inherits(Material, EffectsObject);
+    function Material(engine, props) {
+        var _this;
+        _this = EffectsObject.call(this, engine) || this;
+        _this.stringTags = {};
+        _this.enabledMacros = {};
+        _this.destroyed = false;
+        _this.initialized = false;
+        _this.shaderDirty = true;
+        if (props) {
+            var _props_name = props.name, name = _props_name === void 0 ? "Material" + seed$c++ : _props_name, _props_renderType = props.renderType, renderType = _props_renderType === void 0 ? 0 : _props_renderType, shader = props.shader, uniformSemantics = props.uniformSemantics;
+            _this.name = name;
+            _this.renderType = renderType; // TODO 没有地方用到
+            _this.shaderSource = shader;
+            _this.props = props;
+            _this.uniformSemantics = _extends({}, uniformSemantics); // TODO 废弃，待移除
+        } else {
+            _this.name = "Material" + seed$c++;
+            _this.renderType = 0;
+        }
+        return _this;
+    }
+    var _proto = Material.prototype;
+    /**
+   * 初始化 GPU 资源
+   * @override
+   */ _proto.initialize = function initialize() {
+    // OVERRIDE
+    };
+    _proto.createShaderVariant = function createShaderVariant() {
+    // OVERRIDE
+    };
+    _proto.use = function use(render, globalUniforms) {
+    // OVERRIDE
+    };
+    _create_class(Material, [
+        {
+            key: "shader",
+            get: function get() {
+                return this._shader;
+            },
+            set: function set(value) {
+                if (this._shader === value) {
+                    return;
+                }
+                this._shader = value;
+                this.shaderDirty = true;
+            }
+        },
+        {
+            key: "mainTexture",
+            get: /**
+   * 材质的主纹理
+   */ function get() {
+                return this.getTexture("_MainTex");
+            },
+            set: function set(value) {
+                this.setTexture("_MainTex", value);
+            }
+        },
+        {
+            key: "color",
+            get: /**
+   * 材质的主颜色
+   */ function get() {
+                return this.getColor("_Color");
+            },
+            set: function set(value) {
+                this.setColor("_Color", value);
+            }
+        },
+        {
+            key: "blending",
+            set: /******** effects-core 中会调用 引擎必须实现 ***********************/ /**
+   * 设置 Material 的颜色融合开关
+   * @param blending - 是否开启混合效果
+   */ function set(blending) {}
+        },
+        {
+            key: "blendFunction",
+            set: /**
+   * 分别指定 Material 的颜色混合函数乘数
+   * @param func - 混合函数参数
+   */ function set(func) {}
+        },
+        {
+            key: "blendEquation",
+            set: /**
+   * 分别指定 Material 的颜色混合方式
+   * @param equation - 混合方程参数
+   */ function set(equation) {}
+        },
+        {
+            key: "depthTest",
+            set: /**
+   * 设置 Material 的深度测试开关
+   * @param value - 是否开启深度测试
+   */ function set(value) {}
+        },
+        {
+            key: "depthMask",
+            set: /**
+   * 设置 Material 的写入深度缓冲开关
+   * @param value - 是否开启深度写入
+   */ function set(value) {}
+        },
+        {
+            key: "stencilTest",
+            set: /**
+   * 设置 Material 的模板测试开关
+   * @param value - 是否开启模板测试
+   */ function set(value) {}
+        },
+        {
+            key: "stencilRef",
+            set: /**
+   * 分别指定 Material 的模板测试参考值
+   * @param value  - 模板测试参考值参数
+   */ function set(value) {}
+        },
+        {
+            key: "stencilFunc",
+            set: /**
+   * 分别指定 Material 的模板测试函数
+   * @param value - 模板测试函数参数
+   */ function set(value) {}
+        },
+        {
+            key: "stencilOpZPass",
+            set: /**
+   * 分别指定 Material 的模板测试和深度测试都通过时使用的函数
+   * @param value - 模板测试深度测试通过时的操作参数
+   */ function set(value) {}
+        },
+        {
+            key: "culling",
+            set: /**
+   * 设置 Material 的正反面剔除开关
+   * @param value - 是否开启剔除
+   */ function set(value) {}
+        },
+        {
+            key: "frontFace",
+            set: /**
+   * 设置 Material 的正反面计算方向
+   * @param value
+   */ function set(value) {}
+        },
+        {
+            key: "cullFace",
+            set: /**
+   * 设置 Material 要剔除的面
+   * @param value - 剔除面参数
+   */ function set(value) {}
+        },
+        {
+            key: "blendColor",
+            set: /***************************************************/ /******** effects-core 中暂无调用 引擎可以先不实现 ***********************/ /**
+   * 设置 Material 的源和目标混合因子
+   * @param color
+   */ function set(color) {}
+        },
+        {
+            key: "depthRange",
+            set: /**
+   * 设置 Material 的深度映射范围
+   * @param value
+   */ function set(value) {}
+        },
+        {
+            key: "depthFunc",
+            set: /**
+   * 设置 Material 的深度比较函数
+   * @param value - 深度测试函数参数
+   */ function set(value) {}
+        },
+        {
+            key: "polygonOffsetFill",
+            set: /**
+   * 设置 Material 的多边形偏移（实现类似深度偏移的效果）
+   * @param value - 多边形偏移参数
+   */ function set(value) {}
+        },
+        {
+            key: "polygonOffset",
+            set: /**
+   * 指定 Material 计算深度值的比例因子 factor 和单位 units
+   * @param value
+   */ function set(value) {}
+        },
+        {
+            key: "sampleAlphaToCoverage",
+            set: /**
+   * 设置 Material 的通过 alpha 值决定临时覆盖值计算的开关
+   * @param value - 是否开启 alpha 抖动
+   */ function set(value) {}
+        },
+        {
+            key: "colorMask",
+            set: /**
+   * 设置 Material 颜色缓冲区的写入开关
+   * @param value
+   */ function set(value) {}
+        },
+        {
+            key: "stencilMask",
+            set: /**
+   * 分别指定 Material 的模板测试掩码
+   * @param value - 模板测试写入掩码参数
+   */ function set(value) {}
+        },
+        {
+            key: "stencilOpFail",
+            set: /**
+   * 分别指定 Material 模板测试失败时要使用的函数
+   * @param value - 模板测试失败时的操作参数
+   */ function set(value) {}
+        },
+        {
+            key: "stencilOpZFail",
+            set: /**
+   * 分别指定 Material 模板测试通过但深度测试失败时要使用的函数
+   * @param value - 模板测试深度测试失败时的操作参数
+   */ function set(value) {}
+        }
+    ]);
+    return Material;
+}(EffectsObject);
+
+var def = {
+    format: glContext.RGBA,
+    type: glContext.UNSIGNED_BYTE,
+    minFilter: glContext.LINEAR,
+    magFilter: glContext.LINEAR,
+    wrapS: glContext.CLAMP_TO_EDGE,
+    wrapT: glContext.CLAMP_TO_EDGE
+};
+var disposeSymbol = Symbol("dispose");
+var PassTextureCache = /*#__PURE__*/ function() {
+    function PassTextureCache(engine) {
+        this.textureCache = {};
+        this.textureRef = {};
+        this.engine = engine;
+    }
+    var _proto = PassTextureCache.prototype;
+    _proto.requestColorAttachmentTexture = function requestColorAttachmentTexture(request) {
+        var _this = this;
+        var width = request.width, height = request.height, name = request.name;
+        var options = {
+            sourceType: exports.TextureSourceType.framebuffer,
+            data: {
+                width: width,
+                height: height
+            },
+            name: name
+        };
+        var keys = [
+            name
+        ];
+        Object.getOwnPropertyNames(def).forEach(function(name) {
+            var _request_name;
+            var value = (_request_name = request[name]) != null ? _request_name : def[name];
+            options[name] = value;
+            keys.push(name, value);
+        });
+        var cacheId = keys.join(":");
+        var tex = this.textureCache[cacheId];
+        if (tex) {
+            this.textureRef[cacheId]++;
+        } else {
+            var engine = this.engine;
+            assertExist(engine);
+            tex = Texture.create(engine, options);
+            this.textureCache[cacheId] = tex;
+            this.textureRef[cacheId] = 1;
+            // @ts-expect-error
+            tex[disposeSymbol] = tex.dispose;
+            tex.dispose = function() {
+                return _this.removeTexture(cacheId);
+            };
+        }
+        return tex;
+    };
+    _proto.removeTexture = function removeTexture(id) {
+        var refCount = this.textureRef[id];
+        if (refCount <= 1) {
+            if (refCount < 0) {
+                console.error("Ref count < 0.");
+            }
+            var tex = this.textureCache[id];
+            if (tex) {
+                // @ts-expect-error
+                tex[disposeSymbol]();
+                // @ts-expect-error
+                tex.dispose = tex[disposeSymbol];
+            }
+            delete this.textureCache[id];
+            delete this.textureRef[id];
+        } else {
+            this.textureRef[id] = refCount - 1;
+        }
+    };
+    _proto.dispose = function dispose() {
+        var _this = this;
+        Object.keys(this.textureCache).forEach(function(key) {
+            var texture = _this.textureCache[key];
+            // @ts-expect-error
+            texture[disposeSymbol]();
+            // @ts-expect-error
+            texture.dispose = texture[disposeSymbol];
+        });
+        this.textureCache = {};
+        this.textureRef = {};
+        this.engine = undefined;
+    };
+    return PassTextureCache;
+}();
+
+var SemanticMap = /*#__PURE__*/ function() {
+    function SemanticMap(semantics) {
+        if (semantics === void 0) semantics = {};
+        this.semantics = _extends({}, semantics);
+    }
+    var _proto = SemanticMap.prototype;
+    _proto.toObject = function toObject() {
+        return _extends({}, this.semantics);
+    };
+    _proto.setSemantic = function setSemantic(name, value) {
+        if (value === undefined) {
+            delete this.semantics[name];
+        } else {
+            this.semantics[name] = value;
+        }
+    };
+    _proto.getSemanticValue = function getSemanticValue(name, state) {
+        var ret = this.semantics[name];
+        if (isFunction(ret)) {
+            return ret(state);
+        }
+        return ret;
+    };
+    _proto.hasSemanticValue = function hasSemanticValue(name) {
+        return name in this.semantics;
+    };
+    _proto.dispose = function dispose() {
+        var _this = this;
+        Object.keys(this.semantics).forEach(function(name) {
+            delete _this.semantics[name];
+        });
+    };
+    return SemanticMap;
+}();
+
+var _obj$9;
+var BYTES_TYPE_MAP = (_obj$9 = {}, _obj$9[glContext.FLOAT] = Float32Array.BYTES_PER_ELEMENT, _obj$9[glContext.INT] = Int32Array.BYTES_PER_ELEMENT, _obj$9[glContext.SHORT] = Int16Array.BYTES_PER_ELEMENT, _obj$9[glContext.BYTE] = Int8Array.BYTES_PER_ELEMENT, _obj$9);
+/**
+ * Geometry 抽象类
+ */ var Geometry = /*#__PURE__*/ function(EffectsObject) {
+    _inherits(Geometry, EffectsObject);
+    function Geometry() {
+        return EffectsObject.apply(this, arguments);
+    }
+    var _proto = Geometry.prototype;
+    /**
+   * 初始化 GPU 资源
+   * @override
+   */ _proto.initialize = function initialize() {
+    // OVERRIDE
+    };
+    /**
+   * 几何数据刷新
+   */ _proto.flush = function flush() {
+    // OVERRIDE
+    };
+    return Geometry;
+}(EffectsObject);
+function generateEmptyTypedArray(type) {
+    if (type === glContext.INT) {
+        return new Int32Array(0);
+    }
+    if (type === glContext.SHORT) {
+        return new Int16Array(0);
+    }
+    return new Float32Array(0);
+}
+
 /**
  * 欧拉角顺序
  */ var EulerOrder;
@@ -6961,1844 +11043,6 @@ Matrix4$1.tempMat0 = new Matrix4$1();
 Euler.DEFAULT_ORDER = EulerOrder.ZYX;
 Euler.tempQuat0 = new Quaternion();
 Euler.tempMat0 = new Matrix4$1();
-
-/*********************************************/ /*               元素属性参数类型               */ /*********************************************/ /**
- * 渲染等级
- */ var RenderLevel;
-(function(RenderLevel) {
-    RenderLevel["S"] = "S";
-    RenderLevel["APlus"] = "A+";
-    RenderLevel["A"] = "A";
-    RenderLevel["BPlus"] = "B+";
-    RenderLevel["B"] = "B";
-})(RenderLevel || (RenderLevel = {}));
-/**
- * 混合模式
- */ var BlendingMode;
-(function(BlendingMode) {
-    /**
-     * 普通混合模式
-     */ BlendingMode[BlendingMode["ALPHA"] = 0] = "ALPHA";
-    /**
-     * 叠加混合模式
-     */ BlendingMode[BlendingMode["ADD"] = 1] = "ADD";
-    /**
-     * 相乘混合模式
-     */ BlendingMode[BlendingMode["MULTIPLY"] = 2] = "MULTIPLY";
-    /**
-     * 亮度混合模式
-     */ BlendingMode[BlendingMode["BRIGHTNESS"] = 3] = "BRIGHTNESS";
-    /**
-     * 减色混合模式
-     */ BlendingMode[BlendingMode["SUBTRACTION"] = 4] = "SUBTRACTION";
-    /**
-     * 强光混合模式
-     */ BlendingMode[BlendingMode["STRONG_LIGHT"] = 5] = "STRONG_LIGHT";
-    /**
-     * 弱光混合模式
-     */ BlendingMode[BlendingMode["WEAK_LIGHT"] = 6] = "WEAK_LIGHT";
-    /**
-     * 亮度叠加混合模式
-     */ BlendingMode[BlendingMode["SUPERPOSITION"] = 7] = "SUPERPOSITION";
-})(BlendingMode || (BlendingMode = {}));
-/**
- * 单双面模式
- */ var SideMode;
-(function(SideMode) {
-    /**
-     * 双面模式
-     */ SideMode[SideMode["DOUBLE"] = 1032] = "DOUBLE";
-    /**
-     * 正面模式
-     */ SideMode[SideMode["FRONT"] = 1028] = "FRONT";
-    /**
-     * 背面模式
-     */ SideMode[SideMode["BACK"] = 1029] = "BACK";
-})(SideMode || (SideMode = {}));
-/**
- * 蒙版模式
- */ var MaskMode;
-(function(MaskMode) {
-    /**
-     * 无蒙版
-     */ MaskMode[MaskMode["NONE"] = 0] = "NONE";
-    /**
-     * 蒙版
-     */ MaskMode[MaskMode["MASK"] = 1] = "MASK";
-    /**
-     * 被遮挡
-     */ MaskMode[MaskMode["OBSCURED"] = 2] = "OBSCURED";
-    /**
-     * 被反向遮挡
-     */ MaskMode[MaskMode["REVERSE_OBSCURED"] = 3] = "REVERSE_OBSCURED";
-})(MaskMode || (MaskMode = {}));
-/**
- * 发射器形状
- */ var ShapeType;
-(function(ShapeType) {
-    /**
-     * 没有类型
-     */ ShapeType[ShapeType["NONE"] = 0] = "NONE";
-    /**
-     * 圆球
-     */ ShapeType[ShapeType["SPHERE"] = 1] = "SPHERE";
-    /**
-     * 圆锥
-     */ ShapeType[ShapeType["CONE"] = 2] = "CONE";
-    /**
-     * 半球
-     */ ShapeType[ShapeType["HEMISPHERE"] = 3] = "HEMISPHERE";
-    /**
-     * 圆
-     */ ShapeType[ShapeType["CIRCLE"] = 4] = "CIRCLE";
-    /**
-     * 圆环
-     */ ShapeType[ShapeType["DONUT"] = 5] = "DONUT";
-    /**
-     * 矩形
-     */ ShapeType[ShapeType["RECTANGLE"] = 6] = "RECTANGLE";
-    /**
-     * 矩形框
-     */ ShapeType[ShapeType["RECTANGLE_EDGE"] = 7] = "RECTANGLE_EDGE";
-    /**
-     * 直线
-     */ ShapeType[ShapeType["EDGE"] = 8] = "EDGE";
-    /**
-     * 贴图
-     */ ShapeType[ShapeType["TEXTURE"] = 9] = "TEXTURE";
-})(ShapeType || (ShapeType = {}));
-/**
- * 插件类型
- */ var PluginType;
-(function(PluginType) {
-    /**
-     * 陀螺仪
-     */ PluginType[PluginType["GYROSCOPE"] = 0] = "GYROSCOPE";
-    /**
-     * Spine
-     */ PluginType[PluginType["SPINE"] = 1] = "SPINE";
-})(PluginType || (PluginType = {}));
-/**
- * 交互类型
- */ var InteractType;
-(function(InteractType) {
-    /**
-     * 点击
-     */ InteractType[InteractType["CLICK"] = 0] = "CLICK";
-    /**
-     * 消息
-     * 前端收到 onMessageItem 回调
-     */ InteractType[InteractType["MESSAGE"] = 1] = "MESSAGE";
-    /**
-     * 拖拽
-     */ InteractType[InteractType["DRAG"] = 2] = "DRAG";
-})(InteractType || (InteractType = {}));
-/**
- * 交互行为
- */ var InteractBehavior;
-(function(InteractBehavior) {
-    /**
-     * 无
-     */ InteractBehavior[InteractBehavior["NONE"] = 0] = "NONE";
-    /**
-     * 通知
-     */ InteractBehavior[InteractBehavior["NOTIFY"] = 1] = "NOTIFY";
-    /**
-     * 重置播放器
-     */ InteractBehavior[InteractBehavior["RESUME_PLAYER"] = 2] = "RESUME_PLAYER";
-    /**
-     * 清除元素
-     */ InteractBehavior[InteractBehavior["REMOVE"] = 3] = "REMOVE";
-    /**
-     * 暂停播放器
-     */ InteractBehavior[InteractBehavior["PAUSE"] = 4] = "PAUSE";
-})(InteractBehavior || (InteractBehavior = {}));
-/**
- * 元素类型
- */ var ItemType;
-(function(ItemType) {
-    /**
-     * 错误元素
-     */ ItemType["base"] = "0";
-    /**
-     * 图层元素
-     */ ItemType["sprite"] = "1";
-    /**
-     * 粒子元素
-     */ ItemType["particle"] = "2";
-    /**
-     * 空节点元素
-     */ ItemType["null"] = "3";
-    /**
-     * 交互元素
-     */ ItemType["interact"] = "4";
-    /**
-     * 插件元素
-     */ ItemType["plugin"] = "5";
-    /**
-     * 相机元素
-     */ ItemType["camera"] = "6";
-    /**
-     * 预合成元素
-     */ ItemType["composition"] = "7";
-    /**
-     * Spine 元素
-     */ ItemType["spine"] = "spine";
-    /**
-     * Mesh 元素
-     */ ItemType["mesh"] = "mesh";
-    /**
-     * 节点树元素
-     */ ItemType["tree"] = "tree";
-    /**
-     * 文本元素
-     */ ItemType["text"] = "text";
-    /**
-     * 灯光元素
-     */ ItemType["light"] = "light";
-    /**
-     * 天空盒元素
-     */ ItemType["skybox"] = "skybox";
-    /**
-     * 特效元素
-     */ ItemType["effect"] = "effect";
-    /**
-     * 节点元素
-     */ ItemType["node"] = "node";
-})(ItemType || (ItemType = {}));
-/**
- * 渲染模式
- */ var RenderMode;
-(function(RenderMode) {
-    /**
-     * 广告牌模式
-     */ RenderMode[RenderMode["BILLBOARD"] = 0] = "BILLBOARD";
-    /**
-     * 网格模式
-     */ RenderMode[RenderMode["MESH"] = 1] = "MESH";
-    /**
-     * 垂直广告牌模式
-     */ RenderMode[RenderMode["VERTICAL_BILLBOARD"] = 2] = "VERTICAL_BILLBOARD";
-    /**
-     * 水平广告牌模式
-     */ RenderMode[RenderMode["HORIZONTAL_BILLBOARD"] = 3] = "HORIZONTAL_BILLBOARD";
-})(RenderMode || (RenderMode = {}));
-/**
- * 变换中心
- */ var ParticleOrigin;
-(function(ParticleOrigin) {
-    /**
-     * 水平和垂直中点
-     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_CENTER"] = 0] = "PARTICLE_ORIGIN_CENTER";
-    /**
-     * 水平左侧 垂直顶部
-     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_LEFT_TOP"] = 1] = "PARTICLE_ORIGIN_LEFT_TOP";
-    /**
-     * 水平左侧 垂直中间
-     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_LEFT_CENTER"] = 2] = "PARTICLE_ORIGIN_LEFT_CENTER";
-    /**
-     * 水平左侧 垂直底部
-     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_LEFT_BOTTOM"] = 3] = "PARTICLE_ORIGIN_LEFT_BOTTOM";
-    /**
-     * 水平中间 垂直顶部
-     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_CENTER_TOP"] = 4] = "PARTICLE_ORIGIN_CENTER_TOP";
-    /**
-     * 水平中间 垂直底部
-     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_CENTER_BOTTOM"] = 5] = "PARTICLE_ORIGIN_CENTER_BOTTOM";
-    /**
-     * 水平右侧 垂直顶部
-     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_RIGHT_TOP"] = 6] = "PARTICLE_ORIGIN_RIGHT_TOP";
-    /**
-     * 水平右侧 垂直中间
-     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_RIGHT_CENTER"] = 7] = "PARTICLE_ORIGIN_RIGHT_CENTER";
-    /**
-     * 水平右侧 垂直底部
-     */ ParticleOrigin[ParticleOrigin["PARTICLE_ORIGIN_RIGHT_BOTTOM"] = 8] = "PARTICLE_ORIGIN_RIGHT_BOTTOM";
-})(ParticleOrigin || (ParticleOrigin = {}));
-var RenderType;
-(function(RenderType) {
-    RenderType["Opaque"] = "Opaque";
-    RenderType["Transparent"] = "Transparent";
-})(RenderType || (RenderType = {}));
-var RenderFace;
-(function(RenderFace) {
-    RenderFace["Both"] = "Both";
-    RenderFace["Back"] = "Back";
-    RenderFace["Front"] = "Front";
-})(RenderFace || (RenderFace = {}));
-
-/**
- * 销毁
- */ var END_BEHAVIOR_DESTROY = 0;
-/**
- * 暂停
- * @deprecated since 2.0 - use `END_BEHAVIOR_FREEZE` instead
- */ var END_BEHAVIOR_PAUSE = 1;
-/**
- * 无限播放
- */ var END_BEHAVIOR_FORWARD = 2;
-/**
- * 销毁并保留最后一帧
- * @deprecated since 2.0
- */ var END_BEHAVIOR_PAUSE_AND_DESTROY = 3;
-/**
- * 冻结
- */ var END_BEHAVIOR_FREEZE = 4;
-/**
- * 重播
- */ var END_BEHAVIOR_RESTART = 5;
-/**
- *
- */ var END_BEHAVIOR_DESTROY_CHILDREN = 6;
-var CAMERA_CLIP_MODE_VERTICAL = 1;
-var CAMERA_CLIP_MODE_NORMAL = 0;
-var MESSAGE_ITEM_PHRASE_BEGIN = 2;
-var MESSAGE_ITEM_PHRASE_END = 1;
-
-var CameraClipMode;
-(function(CameraClipMode) {
-    /**
-     * 剪裁上下
-     */ CameraClipMode[CameraClipMode["portrait"] = 1] = "portrait";
-    /**
-     * 剪裁左右
-     */ CameraClipMode[CameraClipMode["landscape"] = 0] = "landscape";
-})(CameraClipMode || (CameraClipMode = {}));
-
-/**
- * 动态换图类型
- * @since 1.1.0
- */ var BackgroundType;
-(function(BackgroundType) {
-    BackgroundType["video"] = "video";
-    BackgroundType["image"] = "image";
-})(BackgroundType || (BackgroundType = {}));
-
-/*********************************************/ /*               基本数值属性参数              */ /*********************************************/ var ValueType;
-(function(ValueType) {
-    /**
-     * 常数
-     */ ValueType[ValueType["CONSTANT"] = 0] = "CONSTANT";
-    /**
-     * 二维常数向量
-     */ ValueType[ValueType["CONSTANT_VEC2"] = 1] = "CONSTANT_VEC2";
-    /**
-     * 三维常数向量
-     */ ValueType[ValueType["CONSTANT_VEC3"] = 2] = "CONSTANT_VEC3";
-    /**
-     * 四维常数向量
-     */ ValueType[ValueType["CONSTANT_VEC4"] = 3] = "CONSTANT_VEC4";
-    /**
-     * 随机数
-     */ ValueType[ValueType["RANDOM"] = 4] = "RANDOM";
-    /**
-     * 直线
-     */ ValueType[ValueType["LINE"] = 5] = "LINE";
-    /**
-     * 曲线
-     */ ValueType[ValueType["CURVE"] = 6] = "CURVE";
-    /**
-     * 贝塞尔路径
-     */ ValueType[ValueType["BEZIER_PATH"] = 7] = "BEZIER_PATH";
-    /**
-     * 颜色
-     */ ValueType[ValueType["RGBA_COLOR"] = 8] = "RGBA_COLOR";
-    /**
-     * 渐变色
-     */ ValueType[ValueType["GRADIENT_COLOR"] = 9] = "GRADIENT_COLOR";
-    /**
-     * 蒙版形状点集
-     */ ValueType[ValueType["SHAPE_POINTS"] = 10] = "SHAPE_POINTS";
-    /**
-     * 蒙版形状切分
-     */ ValueType[ValueType["SHAPE_SPLITS"] = 11] = "SHAPE_SPLITS";
-    /**
-     * 直线路径
-     */ ValueType[ValueType["LINEAR_PATH"] = 12] = "LINEAR_PATH";
-    /**
-     * 多色
-     */ ValueType[ValueType["COLORS"] = 13] = "COLORS";
-    /**
-     * 二进制指针
-     */ ValueType[ValueType["BINARY"] = 20] = "BINARY";
-    /**
-     * 贝塞尔曲线
-     */ ValueType[ValueType["BEZIER_CURVE"] = 21] = "BEZIER_CURVE";
-    /**
-     * 贝塞尔曲线路径
-     */ ValueType[ValueType["BEZIER_CURVE_PATH"] = 22] = "BEZIER_CURVE_PATH";
-    /**
-     * 贝塞尔曲线四元数
-     */ ValueType[ValueType["BEZIER_CURVE_QUAT"] = 23] = "BEZIER_CURVE_QUAT";
-})(ValueType || (ValueType = {}));
-/**
- * 关键帧类型
- */ var BezierKeyframeType;
-(function(BezierKeyframeType) {
-    BezierKeyframeType[BezierKeyframeType["AUTO"] = 0] = "AUTO";
-    BezierKeyframeType[BezierKeyframeType["EASE"] = 1] = "EASE";
-    BezierKeyframeType[BezierKeyframeType["EASE_IN"] = 2] = "EASE_IN";
-    BezierKeyframeType[BezierKeyframeType["EASE_OUT"] = 3] = "EASE_OUT";
-    BezierKeyframeType[BezierKeyframeType["LINE"] = 4] = "LINE";
-    BezierKeyframeType[BezierKeyframeType["HOLD"] = 5] = "HOLD";
-    BezierKeyframeType[BezierKeyframeType["LINE_OUT"] = 6] = "LINE_OUT";
-})(BezierKeyframeType || (BezierKeyframeType = {}));
-
-/**
- * 结束行为
- */ var EndBehavior;
-(function(EndBehavior) {
-    /**
-     * 销毁
-     */ EndBehavior[EndBehavior["destroy"] = 0] = "destroy";
-    /**
-     * 重播
-     */ EndBehavior[EndBehavior["restart"] = 5] = "restart";
-    /**
-     * 无限播放
-     */ EndBehavior[EndBehavior["forward"] = 2] = "forward";
-    /**
-     * 冻结
-     */ EndBehavior[EndBehavior["freeze"] = 4] = "freeze";
-})(EndBehavior || (EndBehavior = {}));
-var ParentItemEndBehavior;
-(function(ParentItemEndBehavior) {
-    ParentItemEndBehavior[ParentItemEndBehavior["destroyChildren"] = 6] = "destroyChildren";
-})(ParentItemEndBehavior || (ParentItemEndBehavior = {}));
-
-/**
- * 粒子交互行为
- */ var ParticleInteractionBehavior;
-(function(ParticleInteractionBehavior) {
-    /**
-     * 无
-     */ ParticleInteractionBehavior[ParticleInteractionBehavior["none"] = 0] = "none";
-    /**
-     * 移出粒子
-     */ ParticleInteractionBehavior[ParticleInteractionBehavior["removeParticle"] = 1] = "removeParticle";
-})(ParticleInteractionBehavior || (ParticleInteractionBehavior = {}));
-
-var ShapeArcMode;
-(function(ShapeArcMode) {
-    /**
-     * 随机
-     */ ShapeArcMode[ShapeArcMode["RANDOM"] = 0] = "RANDOM";
-    /**
-     * 单向循环
-     */ ShapeArcMode[ShapeArcMode["UNIDIRECTIONAL_CYCLE"] = 1] = "UNIDIRECTIONAL_CYCLE";
-    /**
-     * 双向循环
-     */ ShapeArcMode[ShapeArcMode["BIDIRECTIONAL_CYCLE"] = 2] = "BIDIRECTIONAL_CYCLE";
-    /**
-     * 均匀爆发
-     */ ShapeArcMode[ShapeArcMode["UNIFORM_BURST"] = 3] = "UNIFORM_BURST";
-})(ShapeArcMode || (ShapeArcMode = {}));
-
-var LightType;
-(function(LightType) {
-    /**
-     * 点光源
-     */ LightType["point"] = "point";
-    /**
-     * 聚光灯
-     */ LightType["spot"] = "spot";
-    /**
-     * 方向光
-     */ LightType["directional"] = "directional";
-    /**
-     * 环境光
-     */ LightType["ambient"] = "ambient";
-})(LightType || (LightType = {}));
-
-var ModelBoundingType;
-(function(ModelBoundingType) {
-    ModelBoundingType[ModelBoundingType["box"] = 2] = "box";
-    ModelBoundingType[ModelBoundingType["sphere"] = 3] = "sphere";
-})(ModelBoundingType || (ModelBoundingType = {}));
-
-var CameraType;
-(function(CameraType) {
-    CameraType["orthographic"] = "orthographic";
-    CameraType["perspective"] = "perspective";
-})(CameraType || (CameraType = {}));
-
-// 材质类型
-var MaterialType;
-(function(MaterialType) {
-    MaterialType["unlit"] = "unlit";
-    MaterialType["pbr"] = "pbr";
-    // 头发材质，在 pbr 材质基础上扩展
-    MaterialType["hair"] = "hair";
-})(MaterialType || (MaterialType = {}));
-// 混合模式
-var MaterialBlending;
-(function(MaterialBlending) {
-    MaterialBlending[MaterialBlending["opaque"] = 100] = "opaque";
-    MaterialBlending[MaterialBlending["masked"] = 101] = "masked";
-    MaterialBlending[MaterialBlending["translucent"] = 102] = "translucent";
-    MaterialBlending[MaterialBlending["additive"] = 103] = "additive";
-})(MaterialBlending || (MaterialBlending = {}));
-
-/**
- * 3D渲染模式：将渲染过程中的中间结果输出，主要用于排查渲染效果问题，支持 pbr 和 unlit 材质
- */ var RenderMode3D;
-(function(RenderMode3D) {
-    /**
-     * 正常渲染
-     */ RenderMode3D["none"] = "none";
-    /**
-     * 纹理坐标
-     */ RenderMode3D["uv"] = "uv";
-    /**
-     * 世界坐标法线
-     */ RenderMode3D["normal"] = "normal";
-    /**
-     * 基础颜色
-     */ RenderMode3D["basecolor"] = "basecolor";
-    /**
-     * 基础颜色 Alpha
-     */ RenderMode3D["alpha"] = "alpha";
-    /**
-     * 金属度
-     */ RenderMode3D["metallic"] = "metallic";
-    /**
-     * 粗超度
-     */ RenderMode3D["roughness"] = "roughness";
-    /**
-     * 环境遮蔽
-     */ RenderMode3D["ao"] = "ao";
-    /**
-     * 自发光
-     */ RenderMode3D["emissive"] = "emissive";
-})(RenderMode3D || (RenderMode3D = {}));
-
-var TextOverflow;
-(function(TextOverflow) {
-    /**
-     * display 模式下，会显示所有文本，存在文本超过边界框的情况。
-     */ TextOverflow[TextOverflow["display"] = 0] = "display";
-    /**
-     * clip 模式下，当文本内容超出边界框时，多余的会被截断。
-     */ TextOverflow[TextOverflow["clip"] = 1] = "clip";
-    /**
-     * ellipsis 模式下，会使用（...）来代替超出边界框的内容。
-     */ TextOverflow[TextOverflow["ellipsis"] = 2] = "ellipsis";
-})(TextOverflow || (TextOverflow = {}));
-var TextBaseline;
-(function(TextBaseline) {
-    /**
-     * 文本顶对齐。
-     */ TextBaseline[TextBaseline["top"] = 0] = "top";
-    /**
-     * 文本垂直居中对齐。
-     */ TextBaseline[TextBaseline["middle"] = 1] = "middle";
-    /**
-     * 文本底对齐。
-     */ TextBaseline[TextBaseline["bottom"] = 2] = "bottom";
-})(TextBaseline || (TextBaseline = {}));
-var TextAlignment;
-(function(TextAlignment) {
-    /**
-     * text alignment starts from（x,y) to right direction
-     * 从 (x,y) 开始第一个字符，向右边延伸
-     */ TextAlignment[TextAlignment["left"] = 0] = "left";
-    /**
-     * (x,y) is middle position of text, where (left + right)/2 =(x,y)
-     * (x,y) 为文字中间位置，（最左位置 + 最右位置)/2 = (x,y)
-     */ TextAlignment[TextAlignment["middle"] = 1] = "middle";
-    /**
-     * text alignment ends with（x,y) from left direction
-     * 从 (x,y) 结束最后一个字符，向左边延伸
-     */ TextAlignment[TextAlignment["right"] = 2] = "right";
-})(TextAlignment || (TextAlignment = {}));
-/**
- * 文本字重
- */ var TextWeight;
-(function(TextWeight) {
-    /**
-     * 正常
-     */ TextWeight["normal"] = "normal";
-    /**
-     * 粗体
-     */ TextWeight["bold"] = "bold";
-    /**
-     * 瘦体
-     */ TextWeight["lighter"] = "lighter";
-})(TextWeight || (TextWeight = {}));
-/**
- * 文本样式
- */ var FontStyle;
-(function(FontStyle) {
-    /**
-     * 正常
-     */ FontStyle["normal"] = "normal";
-    /**
-     * 斜体
-     */ FontStyle["italic"] = "italic";
-    /**
-     * 倾斜体
-     */ FontStyle["oblique"] = "oblique";
-})(FontStyle || (FontStyle = {}));
-
-var DataType;
-(function(DataType) {
-    DataType["VFXItemData"] = "VFXItemData";
-    DataType["EffectComponent"] = "EffectComponent";
-    DataType["Material"] = "Material";
-    DataType["Shader"] = "Shader";
-    DataType["SpriteComponent"] = "SpriteComponent";
-    DataType["ParticleSystem"] = "ParticleSystem";
-    DataType["InteractComponent"] = "InteractComponent";
-    DataType["CameraController"] = "CameraController";
-    DataType["Geometry"] = "Geometry";
-    DataType["Texture"] = "Texture";
-    DataType["AnimationClip"] = "AnimationClip";
-    DataType["TextComponent"] = "TextComponent";
-    DataType["BinaryAsset"] = "BinaryAsset";
-    // Timeline
-    DataType["TrackAsset"] = "TrackAsset";
-    DataType["TimelineAsset"] = "TimelineAsset";
-    DataType["ObjectBindingTrack"] = "ObjectBindingTrack";
-    DataType["TransformTrack"] = "TransformTrack";
-    DataType["SpriteColorTrack"] = "SpriteColorTrack";
-    DataType["ActivationTrack"] = "ActivationTrack";
-    DataType["SubCompositionTrack"] = "SubCompositionTrack";
-    DataType["TransformPlayableAsset"] = "TransformPlayableAsset";
-    DataType["SpriteColorPlayableAsset"] = "SpriteColorPlayableAsset";
-    DataType["ActivationPlayableAsset"] = "ActivationPlayableAsset";
-    DataType["SubCompositionPlayableAsset"] = "SubCompositionPlayableAsset";
-    // FIXME: 先完成ECS的场景转换，后面移到spec中
-    DataType["MeshComponent"] = "MeshComponent";
-    DataType["SkyboxComponent"] = "SkyboxComponent";
-    DataType["LightComponent"] = "LightComponent";
-    DataType["CameraComponent"] = "CameraComponent";
-    DataType["ModelPluginComponent"] = "ModelPluginComponent";
-    DataType["TreeComponent"] = "TreeComponent";
-    DataType["AnimationComponent"] = "AnimationComponent";
-    DataType["SpineComponent"] = "SpineComponent";
-    // Non-EffectObject
-    DataType["TimelineClip"] = "TimelineClip";
-})(DataType || (DataType = {}));
-var GeometryType;
-(function(GeometryType) {
-    /**
-     * Draw single points.
-     */ GeometryType[GeometryType["POINTS"] = 0] = "POINTS";
-    /**
-     * Draw lines. Each vertex connects to the one after it.
-     */ GeometryType[GeometryType["LINES"] = 1] = "LINES";
-    /**
-     * Draw lines. Each set of two vertices is treated as a separate line segment.
-     */ GeometryType[GeometryType["LINE_LOOP"] = 2] = "LINE_LOOP";
-    /**
-     * Draw a connected group of line segments from the first vertex to the last.
-     */ GeometryType[GeometryType["LINE_STRIP"] = 3] = "LINE_STRIP";
-    /**
-     * Draw triangles. Each set of three vertices creates a separate triangle.
-     */ GeometryType[GeometryType["TRIANGLES"] = 4] = "TRIANGLES";
-    /**
-     * Draw a connected strip of triangles.
-     */ GeometryType[GeometryType["TRIANGLE_STRIP"] = 5] = "TRIANGLE_STRIP";
-    /**
-     * Draw a connected group of triangles. Each vertex connects to the previous and the first vertex in the fan.
-     */ GeometryType[GeometryType["TRIANGLE_FAN"] = 6] = "TRIANGLE_FAN";
-})(GeometryType || (GeometryType = {}));
-var VertexFormatType;
-(function(VertexFormatType) {
-    VertexFormatType[VertexFormatType["Float16"] = 0] = "Float16";
-    VertexFormatType[VertexFormatType["Float32"] = 1] = "Float32";
-    VertexFormatType[VertexFormatType["Int8"] = 2] = "Int8";
-    VertexFormatType[VertexFormatType["Int16"] = 3] = "Int16";
-    VertexFormatType[VertexFormatType["Int32"] = 4] = "Int32";
-    VertexFormatType[VertexFormatType["UInt8"] = 5] = "UInt8";
-    VertexFormatType[VertexFormatType["UInt16"] = 6] = "UInt16";
-    VertexFormatType[VertexFormatType["UInt32"] = 7] = "UInt32";
-})(VertexFormatType || (VertexFormatType = {}));
-var IndexFormatType;
-(function(IndexFormatType) {
-    IndexFormatType[IndexFormatType["None"] = -1] = "None";
-    IndexFormatType[IndexFormatType["UInt8"] = 0] = "UInt8";
-    IndexFormatType[IndexFormatType["UInt16"] = 1] = "UInt16";
-    IndexFormatType[IndexFormatType["UInt32"] = 2] = "UInt32";
-})(IndexFormatType || (IndexFormatType = {}));
-// BINORMAL[n]	Binormal	float4
-// BLENDINDICES[n]	混合索引	uint
-// BLENDWEIGHT[n]	混合权重	FLOAT
-// COLOR[n]	漫射和反射颜色	float4
-// NORMAL[n]	法向矢量	float4
-// POSITION[n]	对象空间中的顶点位置。	float4
-// POSITIONT	变换的顶点位置。	float4
-// PSIZE[n]	点大小	FLOAT
-// TANGENT[n]	正切	float4
-// TEXCOORD[n]	纹理坐标	float4
-// POSITION_BS[n]	Blend Shape 空间中的顶点位置	float4
-// NORMAL_BS[n]	Blend Shape 空间中的法向矢量	float4
-// TANGENT_BS[n]	Blend Shape 空间中的正切矢量	float4
-var VertexBufferSemantic;
-(function(VertexBufferSemantic) {
-    VertexBufferSemantic["Position"] = "POSITION";
-    VertexBufferSemantic["Uv"] = "TEXCOORD0";
-    VertexBufferSemantic["Uv2"] = "TEXCOORD1";
-    VertexBufferSemantic["Normal"] = "NORMAL";
-    VertexBufferSemantic["Tangent"] = "TANGENT";
-    VertexBufferSemantic["Color"] = "COLOR";
-    VertexBufferSemantic["Joints"] = "JOINTS";
-    VertexBufferSemantic["Weights"] = "WEIGHTS";
-    //
-    VertexBufferSemantic["PositionBS0"] = "POSITION_BS0";
-    VertexBufferSemantic["PositionBS1"] = "POSITION_BS1";
-    VertexBufferSemantic["PositionBS2"] = "POSITION_BS2";
-    VertexBufferSemantic["PositionBS3"] = "POSITION_BS3";
-    VertexBufferSemantic["PositionBS4"] = "POSITION_BS4";
-    VertexBufferSemantic["PositionBS5"] = "POSITION_BS5";
-    VertexBufferSemantic["PositionBS6"] = "POSITION_BS6";
-    VertexBufferSemantic["PositionBS7"] = "POSITION_BS7";
-    VertexBufferSemantic["NormalBS0"] = "NORMAL_BS0";
-    VertexBufferSemantic["NormalBS1"] = "NORMAL_BS1";
-    VertexBufferSemantic["NormalBS2"] = "NORMAL_BS2";
-    VertexBufferSemantic["NormalBS3"] = "NORMAL_BS3";
-    VertexBufferSemantic["TangentBS0"] = "TANGENT_BS0";
-    VertexBufferSemantic["TangentBS1"] = "TANGENT_BS1";
-    VertexBufferSemantic["TangentBS2"] = "TANGENT_BS2";
-    VertexBufferSemantic["TangentBS3"] = "TANGENT_BS3";
-})(VertexBufferSemantic || (VertexBufferSemantic = {}));
-
-var BuiltinObjectGUID = {
-    WhiteTexture: "whitetexture00000000000000000000",
-    PBRShader: "pbr00000000000000000000000000000",
-    UnlitShader: "unlit000000000000000000000000000"
-};
-
-var index$1 = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    get RenderLevel () { return RenderLevel; },
-    get BlendingMode () { return BlendingMode; },
-    get SideMode () { return SideMode; },
-    get MaskMode () { return MaskMode; },
-    get ShapeType () { return ShapeType; },
-    get PluginType () { return PluginType; },
-    get InteractType () { return InteractType; },
-    get InteractBehavior () { return InteractBehavior; },
-    get ItemType () { return ItemType; },
-    get RenderMode () { return RenderMode; },
-    get ParticleOrigin () { return ParticleOrigin; },
-    get RenderType () { return RenderType; },
-    get RenderFace () { return RenderFace; },
-    get CameraClipMode () { return CameraClipMode; },
-    get BackgroundType () { return BackgroundType; },
-    END_BEHAVIOR_DESTROY: END_BEHAVIOR_DESTROY,
-    END_BEHAVIOR_PAUSE: END_BEHAVIOR_PAUSE,
-    END_BEHAVIOR_FORWARD: END_BEHAVIOR_FORWARD,
-    END_BEHAVIOR_PAUSE_AND_DESTROY: END_BEHAVIOR_PAUSE_AND_DESTROY,
-    END_BEHAVIOR_FREEZE: END_BEHAVIOR_FREEZE,
-    END_BEHAVIOR_RESTART: END_BEHAVIOR_RESTART,
-    END_BEHAVIOR_DESTROY_CHILDREN: END_BEHAVIOR_DESTROY_CHILDREN,
-    CAMERA_CLIP_MODE_VERTICAL: CAMERA_CLIP_MODE_VERTICAL,
-    CAMERA_CLIP_MODE_NORMAL: CAMERA_CLIP_MODE_NORMAL,
-    MESSAGE_ITEM_PHRASE_BEGIN: MESSAGE_ITEM_PHRASE_BEGIN,
-    MESSAGE_ITEM_PHRASE_END: MESSAGE_ITEM_PHRASE_END,
-    get ValueType () { return ValueType; },
-    get BezierKeyframeType () { return BezierKeyframeType; },
-    get EndBehavior () { return EndBehavior; },
-    get ParentItemEndBehavior () { return ParentItemEndBehavior; },
-    get ParticleInteractionBehavior () { return ParticleInteractionBehavior; },
-    get ShapeArcMode () { return ShapeArcMode; },
-    get LightType () { return LightType; },
-    get ModelBoundingType () { return ModelBoundingType; },
-    get CameraType () { return CameraType; },
-    get MaterialType () { return MaterialType; },
-    get MaterialBlending () { return MaterialBlending; },
-    get RenderMode3D () { return RenderMode3D; },
-    get TextOverflow () { return TextOverflow; },
-    get TextBaseline () { return TextBaseline; },
-    get TextAlignment () { return TextAlignment; },
-    get TextWeight () { return TextWeight; },
-    get FontStyle () { return FontStyle; },
-    get DataType () { return DataType; },
-    get GeometryType () { return GeometryType; },
-    get VertexFormatType () { return VertexFormatType; },
-    get IndexFormatType () { return IndexFormatType; },
-    get VertexBufferSemantic () { return VertexBufferSemantic; },
-    BuiltinObjectGUID: BuiltinObjectGUID
-});
-
-var decoratorInitialStore = new Map();
-var mergedStore = new Map();
-var effectsClassStore = {};
-function effectsClass(className) {
-    return function(target, context) {
-        if (effectsClassStore[className]) {
-            console.warn("Class " + className + " is already registered.");
-        }
-        // TODO: three修改json dataType, 这边重复注册直接 return
-        effectsClassStore[className] = target;
-    };
-}
-function serialize(type, sourceName) {
-    return generateSerializableMember(type, sourceName); // value member
-}
-function getMergedStore(target) {
-    var classKey = target.constructor;
-    if (mergedStore.get(classKey)) {
-        return mergedStore.get(classKey);
-    }
-    var store = {};
-    mergedStore.set(classKey, store);
-    var currentTarget = target;
-    var currentKey = classKey;
-    while(currentKey){
-        var initialStore = decoratorInitialStore.get(currentKey);
-        for(var property in initialStore){
-            store[property] = initialStore[property];
-        }
-        var parent = Object.getPrototypeOf(currentTarget);
-        currentKey = Object.getPrototypeOf(parent).constructor;
-        if (currentKey === Object) {
-            break;
-        }
-        currentTarget = parent;
-    }
-    return store;
-}
-function generateSerializableMember(type, sourceName) {
-    return function(target, propertyKey) {
-        var classStore = getDirectStore(target);
-        if (!classStore) {
-            return;
-        }
-        if (!classStore[propertyKey]) {
-            classStore[propertyKey] = {
-                type: type,
-                sourceName: sourceName
-            };
-        }
-    };
-}
-function getDirectStore(target) {
-    var classKey = target.constructor;
-    if (!decoratorInitialStore.get(classKey)) {
-        decoratorInitialStore.set(classKey, {});
-    }
-    return decoratorInitialStore.get(classKey);
-}
-
-/**
- * @since 2.0.0
- */ var EffectsObject = /*#__PURE__*/ function() {
-    function EffectsObject(engine) {
-        this.engine = engine;
-        this.guid = generateGUID();
-        this.taggedProperties = {};
-        this.engine.addInstance(this);
-    }
-    var _proto = EffectsObject.prototype;
-    _proto.getInstanceId = function getInstanceId() {
-        return this.guid;
-    };
-    _proto.setInstanceId = function setInstanceId(guid) {
-        this.engine.removeInstance(this.guid);
-        this.guid = guid;
-        this.engine.addInstance(this);
-    };
-    _proto.toData = function toData() {};
-    /**
-   * 反序列化函数
-   *
-   * @param data - 对象的序列化的数据
-   */ _proto.fromData = function fromData(data) {
-        if (data.id) {
-            this.setInstanceId(data.id);
-        }
-    };
-    _proto.dispose = function dispose() {};
-    EffectsObject.is = function is(obj) {
-        return _instanceof1(obj, EffectsObject) && "guid" in obj;
-    };
-    return EffectsObject;
-}();
-
-/**
- * @since 2.0.0
- */ var Component = /*#__PURE__*/ function(EffectsObject) {
-    _inherits(Component, EffectsObject);
-    function Component() {
-        return EffectsObject.apply(this, arguments);
-    }
-    var _proto = Component.prototype;
-    _proto.onAttached = function onAttached() {};
-    _proto.onDestroy = function onDestroy() {};
-    _proto.fromData = function fromData(data) {
-        EffectsObject.prototype.fromData.call(this, data);
-        if (data.item) {
-            this.item = data.item;
-        }
-    };
-    _proto.dispose = function dispose() {
-        this.onDestroy();
-        if (this.item) {
-            removeItem(this.item.components, this);
-        }
-    };
-    _create_class(Component, [
-        {
-            key: "transform",
-            get: /**
-   * 附加到的 VFXItem 对象 Transform 组件
-   */ function get() {
-                return this.item.transform;
-            }
-        }
-    ]);
-    return Component;
-}(EffectsObject);
-/**
- * @since 2.0.0
- */ var Behaviour = /*#__PURE__*/ function(Component) {
-    _inherits(Behaviour, Component);
-    function Behaviour() {
-        var _this;
-        _this = Component.apply(this, arguments) || this;
-        _this.isAwakeCalled = false;
-        _this.isStartCalled = false;
-        _this._enabled = true;
-        return _this;
-    }
-    var _proto = Behaviour.prototype;
-    /**
-   * 生命周期函数，初始化后调用，生命周期内只调用一次
-   */ _proto.awake = function awake() {
-    // OVERRIDE
-    };
-    /**
-   * 在每次设置 enabled 为 true 时触发
-   */ _proto.onEnable = function onEnable() {
-    // OVERRIDE
-    };
-    /**
-   * 生命周期函数，在第一次 update 前调用，生命周期内只调用一次
-   */ _proto.start = function start() {
-    // OVERRIDE
-    };
-    /**
-   * 生命周期函数，每帧调用一次
-   */ _proto.update = function update(dt) {
-    // OVERRIDE
-    };
-    /**
-   * 生命周期函数，每帧调用一次，在 update 之后调用
-   */ _proto.lateUpdate = function lateUpdate(dt) {
-    // OVERRIDE
-    };
-    _proto.onAttached = function onAttached() {
-        this.item.itemBehaviours.push(this);
-        if (!this.isAwakeCalled) {
-            this.awake();
-            this.isAwakeCalled = true;
-        }
-    };
-    _proto.dispose = function dispose() {
-        if (this.item) {
-            removeItem(this.item.itemBehaviours, this);
-        }
-        Component.prototype.dispose.call(this);
-    };
-    _create_class(Behaviour, [
-        {
-            key: "isActiveAndEnabled",
-            get: /**
-   * 组件是否可以更新，true 更新，false 不更新
-   */ function get() {
-                return this.item.getVisible() && this.enabled;
-            }
-        },
-        {
-            key: "enabled",
-            get: function get() {
-                return this._enabled;
-            },
-            set: function set(value) {
-                this._enabled = value;
-                if (value) {
-                    if (this.isActiveAndEnabled) {
-                        this.onEnable();
-                    }
-                    if (!this.isStartCalled) {
-                        this.start();
-                        this.isStartCalled = true;
-                    }
-                }
-            }
-        }
-    ]);
-    return Behaviour;
-}(Component);
-__decorate([
-    serialize()
-], Behaviour.prototype, "_enabled", void 0);
-
-/**
- * 所有渲染组件的基类
- * @since 2.0.0
- */ var RendererComponent = /*#__PURE__*/ function(Component) {
-    _inherits(RendererComponent, Component);
-    function RendererComponent() {
-        var _this;
-        _this = Component.apply(this, arguments) || this;
-        _this.isStartCalled = false;
-        _this.materials = [];
-        _this._priority = 0;
-        _this._enabled = true;
-        return _this;
-    }
-    var _proto = RendererComponent.prototype;
-    _proto.onEnable = function onEnable() {};
-    _proto.start = function start() {};
-    _proto.update = function update(dt) {};
-    _proto.lateUpdate = function lateUpdate(dt) {};
-    _proto.render = function render(renderer) {};
-    _proto.onAttached = function onAttached() {
-        this.item.rendererComponents.push(this);
-    };
-    _proto.fromData = function fromData(data) {
-        Component.prototype.fromData.call(this, data);
-    };
-    _proto.toData = function toData() {
-        Component.prototype.toData.call(this);
-    };
-    _proto.dispose = function dispose() {
-        if (this.item) {
-            removeItem(this.item.rendererComponents, this);
-        }
-        Component.prototype.dispose.call(this);
-    };
-    _create_class(RendererComponent, [
-        {
-            key: "priority",
-            get: function get() {
-                return this._priority;
-            },
-            set: function set(value) {
-                this._priority = value;
-            }
-        },
-        {
-            key: "enabled",
-            get: function get() {
-                return this._enabled;
-            },
-            set: function set(value) {
-                this._enabled = value;
-                if (value) {
-                    this.onEnable();
-                }
-            }
-        },
-        {
-            key: "isActiveAndEnabled",
-            get: /**
-   * 组件是否可以更新，true 更新，false 不更新
-   */ function get() {
-                return this.item.getVisible() && this.enabled;
-            }
-        },
-        {
-            key: "material",
-            get: function get() {
-                return this.materials[0];
-            },
-            set: function set(material) {
-                if (this.materials.length === 0) {
-                    this.materials.push(material);
-                } else {
-                    this.materials[0] = material;
-                }
-            }
-        }
-    ]);
-    return RendererComponent;
-}(Component);
-__decorate([
-    serialize()
-], RendererComponent.prototype, "materials", void 0);
-__decorate([
-    serialize()
-], RendererComponent.prototype, "_priority", void 0);
-__decorate([
-    serialize()
-], RendererComponent.prototype, "_enabled", void 0);
-
-/**
- * 抽象插件类
- * 注册合成不同生命周期的回调函数
- */ var AbstractPlugin = /*#__PURE__*/ function() {
-    function AbstractPlugin() {
-        this.order = 100;
-        this.name = "";
-    }
-    var _proto = AbstractPlugin.prototype;
-    _proto.onCompositionConstructed = function onCompositionConstructed(composition, scene) {};
-    _proto.onCompositionItemLifeBegin = function onCompositionItemLifeBegin(composition, item) {};
-    _proto.onCompositionItemLifeEnd = function onCompositionItemLifeEnd(composition, item) {};
-    _proto.onCompositionItemRemoved = function onCompositionItemRemoved(composition, item) {};
-    _proto.onCompositionReset = function onCompositionReset(composition, frame) {};
-    _proto.onCompositionWillReset = function onCompositionWillReset(composition, frame) {};
-    _proto.onCompositionDestroyed = function onCompositionDestroyed(composition) {};
-    _proto.onCompositionUpdate = function onCompositionUpdate(composition, dt) {};
-    _proto.prepareRenderFrame = function prepareRenderFrame(composition, frame) {
-        return false;
-    };
-    _proto.postProcessFrame = function postProcessFrame(composition, frame) {};
-    /**
-   * 在加载到 JSON 后，就可以进行提前编译
-   * @param json
-   * @param player
-   */ AbstractPlugin.precompile = function precompile(compositions, renderer) {
-        return Promise.resolve();
-    };
-    return AbstractPlugin;
-}();
-
-exports.CameraController = /*#__PURE__*/ function(Behaviour) {
-    _inherits(CameraController, Behaviour);
-    function CameraController(engine, props) {
-        var _this;
-        _this = Behaviour.call(this, engine) || this;
-        if (props) {
-            _this.fromData(props);
-        }
-        return _this;
-    }
-    var _proto = CameraController.prototype;
-    _proto.update = function update() {
-        if (this.item.composition && this.item.transform.getValid()) {
-            var camera = this.item.composition.camera;
-            camera.near = this.options.near;
-            camera.far = this.options.far;
-            camera.fov = this.options.fov;
-            camera.clipMode = this.options.clipMode;
-            camera.position = this.transform.getWorldPosition();
-            camera.rotation = this.transform.getWorldRotation();
-        }
-    };
-    _proto.fromData = function fromData(data) {
-        Behaviour.prototype.fromData.call(this, data);
-        this.options = data.options;
-    };
-    return CameraController;
-}(Behaviour);
-exports.CameraController = __decorate([
-    effectsClass(DataType.CameraController)
-], exports.CameraController);
-
-var CameraVFXItemLoader = /*#__PURE__*/ function(AbstractPlugin) {
-    _inherits(CameraVFXItemLoader, AbstractPlugin);
-    function CameraVFXItemLoader() {
-        return AbstractPlugin.apply(this, arguments);
-    }
-    return CameraVFXItemLoader;
-}(AbstractPlugin);
-
-exports.HitTestType = void 0;
-(function(HitTestType) {
-    HitTestType[HitTestType["triangle"] = 1] = "triangle";
-    HitTestType[HitTestType["box"] = 2] = "box";
-    HitTestType[HitTestType["sphere"] = 3] = "sphere";
-    HitTestType[HitTestType["custom"] = 4] = "custom";
-})(exports.HitTestType || (exports.HitTestType = {}));
-
-var EVENT_TYPE_CLICK = "click";
-var EVENT_TYPE_TOUCH_START = "touchstart";
-var EVENT_TYPE_TOUCH_MOVE = "touchmove";
-var EVENT_TYPE_TOUCH_END = "touchend";
-var EventSystem = /*#__PURE__*/ function() {
-    function EventSystem(target, allowPropagation) {
-        if (allowPropagation === void 0) allowPropagation = false;
-        this.target = target;
-        this.allowPropagation = allowPropagation;
-        this.enabled = true;
-        this.handlers = {};
-        this.nativeHandlers = {};
-    }
-    var _proto = EventSystem.prototype;
-    _proto.bindListeners = function bindListeners() {
-        var _this = this;
-        var x;
-        var y;
-        var currentTouch;
-        var lastTouch;
-        var getTouch;
-        getTouch = function(event) {
-            return event;
-        };
-        var touchstart = "mousedown";
-        var touchmove = "mousemove";
-        var touchend = "mouseup";
-        var getTouchEventValue = function(event, x, y, dx, dy) {
-            if (dx === void 0) dx = 0;
-            if (dy === void 0) dy = 0;
-            var vx = 0;
-            var vy = 0;
-            var ts = alipay.performance.now();
-            if (!_this.target) {
-                logger.error("Trigger TouchEvent after EventSystem is disposed.");
-                return {
-                    x: x,
-                    y: y,
-                    vx: 0,
-                    vy: vy,
-                    dx: dx,
-                    dy: dy,
-                    ts: ts,
-                    width: 0,
-                    height: 0,
-                    origin: event
-                };
-            }
-            var _this_target = _this.target, width = _this_target.width, height = _this_target.height;
-            if (lastTouch) {
-                var dt = ts - lastTouch.ts;
-                vx = (dx - lastTouch.dx) / dt || 0;
-                vy = (dy - lastTouch.dy) / dt || 0;
-                lastTouch = {
-                    dx: dx,
-                    dy: dy,
-                    ts: ts
-                };
-            }
-            return {
-                x: x,
-                y: y,
-                vx: vx,
-                vy: vy,
-                dx: dx,
-                dy: dy,
-                ts: ts,
-                width: width,
-                height: height,
-                origin: event
-            };
-        };
-        if (isSimulatorCellPhone()) {
-            getTouch = function(event) {
-                var touches = event.touches, changedTouches = event.changedTouches;
-                return touches[0] || changedTouches[0];
-            };
-            touchstart = "touchstart";
-            touchmove = "touchmove";
-            touchend = "touchend";
-        }
-        var _obj;
-        this.nativeHandlers = (_obj = {}, _obj[touchstart] = function(event) {
-            if (_this.enabled) {
-                var touch = getTouch(event);
-                var cood = getCoord(touch);
-                x = cood.x;
-                y = cood.y;
-                lastTouch = currentTouch = {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY,
-                    ts: alipay.performance.now(),
-                    x: x,
-                    y: y
-                };
-                _this.dispatchEvent(EVENT_TYPE_TOUCH_START, getTouchEventValue(event, x, y));
-            }
-        }, _obj[touchmove] = function(event) {
-            if (currentTouch && _this.enabled) {
-                var cood = getCoord(getTouch(event));
-                x = cood.x;
-                y = cood.y;
-                _this.dispatchEvent(EVENT_TYPE_TOUCH_MOVE, getTouchEventValue(event, x, y, x - currentTouch.x, y - currentTouch.y));
-            }
-        }, _obj[touchend] = function(event) {
-            if (currentTouch && _this.enabled) {
-                if (!_this.allowPropagation && event.cancelable) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                var touch = getTouch(event);
-                var cood = getCoord(touch);
-                var dt = Math.abs(currentTouch.clientX - touch.clientX) + Math.abs(currentTouch.clientY - touch.clientY);
-                x = cood.x;
-                y = cood.y;
-                if (dt < 4) {
-                    _this.dispatchEvent(EVENT_TYPE_CLICK, getTouchEventValue(event, x, y));
-                }
-                _this.dispatchEvent(EVENT_TYPE_TOUCH_END, getTouchEventValue(event, x, y, x - currentTouch.x, y - currentTouch.y));
-            }
-            currentTouch = 0;
-        }, _obj);
-        Object.keys(this.nativeHandlers).forEach(function(name) {
-            var _this_target;
-            (_this_target = _this.target) == null ? void 0 : _this_target.addEventListener(String(name), _this.nativeHandlers[name]);
-        });
-    };
-    _proto.dispatchEvent = function dispatchEvent(type, event) {
-        var handlers = this.handlers[type];
-        handlers == null ? void 0 : handlers.forEach(function(fn) {
-            return fn(event);
-        });
-    };
-    _proto.addEventListener = function addEventListener(type, callback) {
-        var handlers = this.handlers[type];
-        if (!handlers) {
-            handlers = this.handlers[type] = [];
-        }
-        addItem(handlers, callback);
-        return function() {
-            removeItem(handlers, callback);
-        };
-    };
-    _proto.removeEventListener = function removeEventListener(type, callback) {
-        var handlers = this.handlers[type];
-        if (handlers) {
-            removeItem(handlers, callback);
-        }
-    };
-    _proto.dispose = function dispose() {
-        var _this = this;
-        if (this.target) {
-            this.handlers = {};
-            Object.keys(this.nativeHandlers).forEach(function(name) {
-                var _this_target;
-                (_this_target = _this.target) == null ? void 0 : _this_target.removeEventListener(String(name), _this.nativeHandlers[name]);
-            });
-            this.nativeHandlers = {};
-            this.target = null;
-        }
-    };
-    return EventSystem;
-}();
-function getCoord(event) {
-    var ele = event.target;
-    var clientX = event.clientX, clientY = event.clientY;
-    var _ele_getBoundingClientRect = ele.getBoundingClientRect(), left = _ele_getBoundingClientRect.left, top = _ele_getBoundingClientRect.top, width = _ele_getBoundingClientRect.width, height = _ele_getBoundingClientRect.height;
-    var x = (clientX - left) / width * 2 - 1;
-    var y = 1 - (clientY - top) / height * 2;
-    return {
-        x: x,
-        y: y
-    };
-}
-
-var InteractLoader = /*#__PURE__*/ function(AbstractPlugin) {
-    _inherits(InteractLoader, AbstractPlugin);
-    function InteractLoader() {
-        return AbstractPlugin.apply(this, arguments);
-    }
-    return InteractLoader;
-}(AbstractPlugin);
-
-/**
- * 四维向量
- */ var Vector4$1 = /*#__PURE__*/ function() {
-    function Vector4(x, y, z, w) {
-        if (x === void 0) x = 0;
-        if (y === void 0) y = 0;
-        if (z === void 0) z = 0;
-        if (w === void 0) w = 0;
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.w = w;
-    }
-    var _proto = Vector4.prototype;
-    /**
-     * 设置向量
-     * @param x - x 轴分量
-     * @param y - y 轴分量
-     * @param z - z 轴分量
-     * @param w - w 轴分量
-     * @returns
-     */ _proto.set = function set(x, y, z, w) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.w = w;
-        return this;
-    };
-    /**
-     * 设置零向量
-     * @returns 向量
-     */ _proto.setZero = function setZero() {
-        this.x = 0;
-        this.y = 0;
-        this.z = 0;
-        this.w = 0;
-        return this;
-    };
-    /**
-     * 通过标量数值设置向量
-     * @param num - 数值
-     * @returns 向量
-     */ _proto.setFromNumber = function setFromNumber(num) {
-        this.x = num;
-        this.y = num;
-        this.z = num;
-        this.w = num;
-        return this;
-    };
-    /**
-     * 通过数组创建向量
-     * @param array - 数组
-     * @param [offset=0] - 起始偏移值
-     * @returns 向量
-     */ _proto.setFromArray = function setFromArray(array, offset) {
-        if (offset === void 0) offset = 0;
-        var _array_offset;
-        this.x = (_array_offset = array[offset]) != null ? _array_offset : 0;
-        var _array_;
-        this.y = (_array_ = array[offset + 1]) != null ? _array_ : 0;
-        var _array_1;
-        this.z = (_array_1 = array[offset + 2]) != null ? _array_1 : 0;
-        var _array_2;
-        this.w = (_array_2 = array[offset + 3]) != null ? _array_2 : 0;
-        return this;
-    };
-    /**
-     * 拷贝向量
-     * @param v - 复制对象
-     * @returns 拷贝结果
-     */ _proto.copyFrom = function copyFrom(v) {
-        this.x = v.x;
-        this.y = v.y;
-        this.z = v.z;
-        this.w = v.w;
-        return this;
-    };
-    /**
-     * 克隆向量
-     * @returns 克隆结果
-     */ _proto.clone = function clone() {
-        return new Vector4(this.x, this.y, this.z, this.w);
-    };
-    /**
-     * 根据下标设置向量分量
-     * @param index - 下标值
-     * @param value - 分量值
-     * @returns 向量
-     */ _proto.setElement = function setElement(index, value) {
-        switch(index){
-            case 0:
-                this.x = value;
-                break;
-            case 1:
-                this.y = value;
-                break;
-            case 2:
-                this.z = value;
-                break;
-            case 3:
-                this.w = value;
-                break;
-            default:
-                console.error("index is out of range: " + index);
-        }
-        return this;
-    };
-    /**
-     * 根据下标获取向量分量
-     * @param index - 下标
-     * @returns 分量值
-     */ _proto.getElement = function getElement(index) {
-        switch(index){
-            case 0:
-                return this.x;
-            case 1:
-                return this.y;
-            case 2:
-                return this.z;
-            case 3:
-                return this.w;
-            default:
-                console.error("index is out of range: " + index);
-        }
-        return 0;
-    };
-    /**
-     * 向量相加
-     * @param right - 相加对象，向量 | 数字
-     * @returns 相加结果
-     */ _proto.add = function add(right) {
-        if (typeof right === "number") {
-            this.x += right;
-            this.y += right;
-            this.z += right;
-            this.w += right;
-        } else if (_instanceof1(right, Array)) {
-            this.x += right[0];
-            this.y += right[1];
-            this.z += right[2];
-            this.w += right[3];
-        } else {
-            this.x += right.x;
-            this.y += right.y;
-            this.z += right.z;
-            this.w += right.w;
-        }
-        return this;
-    };
-    /**
-     * 向量相加
-     * @param left - 向量
-     * @param right - 向量
-     * @returns 求和结果
-     */ _proto.addVectors = function addVectors(left, right) {
-        this.x = left.x + right.x;
-        this.y = left.y + right.y;
-        this.z = left.z + right.z;
-        this.w = left.w + right.w;
-        return this;
-    };
-    /**
-     * 向量比例缩放后相加
-     * @param right - 向量
-     * @param s - 比例
-     * @returns 求和结果
-     */ _proto.addScaledVector = function addScaledVector(right, s) {
-        this.x += right.x * s;
-        this.y += right.y * s;
-        this.z += right.z * s;
-        this.w += right.w * s;
-        return this;
-    };
-    /**
-     * 向量相减
-     * @param right - 相减对象，向量 | 数字
-     * @returns 相减结果
-     */ _proto.subtract = function subtract(right) {
-        if (typeof right === "number") {
-            this.x -= right;
-            this.y -= right;
-            this.z -= right;
-            this.w -= right;
-        } else if (_instanceof1(right, Array)) {
-            this.x -= right[0];
-            this.y -= right[1];
-            this.z -= right[2];
-            this.w -= right[3];
-        } else {
-            this.x -= right.x;
-            this.y -= right.y;
-            this.z -= right.z;
-            this.w -= right.w;
-        }
-        return this;
-    };
-    /**
-     * 向量相减
-     * @param left - 向量
-     * @param right - 向量
-     * @returns 向量
-     */ _proto.subtractVectors = function subtractVectors(left, right) {
-        this.x = left.x - right.x;
-        this.y = left.y - right.y;
-        this.z = left.z - right.z;
-        this.w = left.w - right.w;
-        return this;
-    };
-    /**
-     * 向量相乘
-     * @param right - 相乘对象，对象 | 数字
-     * @returns 向量
-     */ _proto.multiply = function multiply(right) {
-        if (typeof right === "number") {
-            this.x *= right;
-            this.y *= right;
-            this.z *= right;
-            this.w *= right;
-        } else if (_instanceof1(right, Array)) {
-            this.x *= right[0];
-            this.y *= right[1];
-            this.z *= right[2];
-            this.w *= right[3];
-        } else {
-            this.x *= right.x;
-            this.y *= right.y;
-            this.z *= right.z;
-            this.w *= right.w;
-        }
-        return this;
-    };
-    /**
-     * 向量相乘
-     * @param left - 向量
-     * @param right - 向量
-     * @returns 向量
-     */ _proto.multiplyVectors = function multiplyVectors(left, right) {
-        this.x = left.x * right.x;
-        this.y = left.y * right.y;
-        this.z = left.z * right.z;
-        this.w = left.w * right.w;
-        return this;
-    };
-    /**
-     * 向量相除
-     * @param right - 相除对象，对象 | 数字
-     * @returns 向量
-     */ _proto.divide = function divide(right) {
-        if (typeof right === "number") {
-            this.x /= right;
-            this.y /= right;
-            this.z /= right;
-            this.w /= right;
-        } else if (_instanceof1(right, Array)) {
-            this.x /= right[0];
-            this.y /= right[1];
-            this.z /= right[2];
-            this.w /= right[3];
-        } else {
-            this.x /= right.x;
-            this.y /= right.y;
-            this.z /= right.z;
-            this.w /= right.w;
-        }
-        return this;
-    };
-    /**
-     * 向量缩放
-     * @param v - 数字
-     * @returns 缩放结果
-     */ _proto.scale = function scale(v) {
-        this.x *= v;
-        this.y *= v;
-        this.z *= v;
-        this.w *= v;
-        return this;
-    };
-    /**
-     * 分量求和
-     * @returns 求和结果
-     */ _proto.sum = function sum() {
-        return this.x + this.y + this.z + this.w;
-    };
-    /**
-     * 向量求最小值
-     * @param v - 向量或数值
-     * @returns 最小值
-     */ _proto.min = function min(v) {
-        if (typeof v === "number") {
-            this.x = Math.min(this.x, v);
-            this.y = Math.min(this.y, v);
-            this.z = Math.min(this.z, v);
-            this.w = Math.min(this.w, v);
-        } else {
-            this.x = Math.min(this.x, v.x);
-            this.y = Math.min(this.y, v.y);
-            this.z = Math.min(this.z, v.z);
-            this.w = Math.min(this.w, v.w);
-        }
-        return this;
-    };
-    /**
-     * 向量求最大值
-     * @param v - 向量或数值
-     * @returns 最大值
-     */ _proto.max = function max(v) {
-        if (typeof v === "number") {
-            this.x = Math.max(this.x, v);
-            this.y = Math.max(this.y, v);
-            this.z = Math.max(this.z, v);
-            this.w = Math.max(this.w, v);
-        } else {
-            this.x = Math.max(this.x, v.x);
-            this.y = Math.max(this.y, v.y);
-            this.z = Math.max(this.z, v.z);
-            this.w = Math.max(this.w, v.w);
-        }
-        return this;
-    };
-    /**
-     * 向量阈值约束
-     * @param min - 最小值
-     * @param max - 最大值
-     * @returns 向量
-     */ _proto.clamp = function clamp(min, max) {
-        return this.max(min).min(max);
-    };
-    /**
-     * 向量向下取整
-     * @returns 取整结果
-     */ _proto.floor = function floor() {
-        this.x = Math.floor(this.x);
-        this.y = Math.floor(this.y);
-        this.z = Math.floor(this.z);
-        this.w = Math.floor(this.w);
-        return this;
-    };
-    /**
-     * 向量向上取整
-     * @returns 取整结果
-     */ _proto.ceil = function ceil() {
-        this.x = Math.ceil(this.x);
-        this.y = Math.ceil(this.y);
-        this.z = Math.ceil(this.z);
-        this.w = Math.ceil(this.w);
-        return this;
-    };
-    /**
-     * 向量四舍五入
-     * @returns 求值结果
-     */ _proto.round = function round() {
-        this.x = Math.round(this.x);
-        this.y = Math.round(this.y);
-        this.z = Math.round(this.z);
-        this.w = Math.round(this.w);
-        return this;
-    };
-    /**
-     * 向量取绝对值
-     * @returns 向量
-     */ _proto.abs = function abs() {
-        this.x = Math.abs(this.x);
-        this.y = Math.abs(this.y);
-        this.z = Math.abs(this.z);
-        this.w = Math.abs(this.w);
-        return this;
-    };
-    /**
-     * 向量取反
-     * @returns 取反结果
-     */ _proto.negate = function negate() {
-        this.x = -this.x;
-        this.y = -this.y;
-        this.z = -this.z;
-        this.w = -this.w;
-        return this;
-    };
-    /**
-     * 向量长度平方
-     * @returns 长度平方
-     */ _proto.lengthSquared = function lengthSquared() {
-        return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
-    };
-    /**
-     * 向量长度
-     * @returns 长度
-     */ _proto.length = function length() {
-        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
-    };
-    /**
-     * 向量归一化
-     * @returns 归一化结果
-     */ _proto.normalize = function normalize() {
-        return this.divide(this.length() || 1);
-    };
-    /**
-     * 设置向量长度
-     * @param length - 长度
-     * @returns 向量
-     */ _proto.setLength = function setLength(length) {
-        return this.normalize().multiply(length);
-    };
-    /**
-     * 向量求线性插值
-     * @param v - 向量
-     * @param alpha - 插值比例
-     * @returns 插值结果
-     */ _proto.lerp = function lerp(v, alpha) {
-        this.x += (v.x - this.x) * alpha;
-        this.y += (v.y - this.y) * alpha;
-        this.z += (v.z - this.z) * alpha;
-        this.w += (v.w - this.w) * alpha;
-        return this;
-    };
-    /**
-     * 两向量求线性插值
-     * @param v1 - 第一个向量
-     * @param v2 - 第二个向量
-     * @param alpha - 插值比例
-     * @returns 插值结果
-     */ _proto.lerpVectors = function lerpVectors(v1, v2, alpha) {
-        this.x = v1.x + (v2.x - v1.x) * alpha;
-        this.y = v1.y + (v2.y - v1.y) * alpha;
-        this.z = v1.z + (v2.z - v1.z) * alpha;
-        this.w = v1.w + (v2.w - v1.w) * alpha;
-        return this;
-    };
-    /**
-     * 向量求点积
-     * @param v - 向量
-     * @returns 点积结果
-     */ _proto.dot = function dot(v) {
-        return this.x * v.x + this.y * v.y + this.z * v.z + this.w * v.w;
-    };
-    /**
-     * 向量判等
-     * @param v - 向量
-     * @returns 判等结果
-     */ _proto.equals = function equals(v) {
-        return v.x === this.x && v.y === this.y && v.z === this.z && v.w === this.w;
-    };
-    /**
-     * 是否零向量
-     * @returns 是否零向量
-     */ _proto.isZero = function isZero() {
-        var eps = NumberEpsilon;
-        var _this = this, x = _this.x, y = _this.y, z = _this.z, w = _this.w;
-        return Math.abs(x) <= eps && Math.abs(y) <= eps && Math.abs(z) <= eps && Math.abs(w) <= eps;
-    };
-    /**
-     * 向量转数组
-     * @returns 数组
-     */ _proto.toArray = function toArray() {
-        return [
-            this.x,
-            this.y,
-            this.z,
-            this.w
-        ];
-    };
-    _proto.toVector3 = function toVector3() {
-        return new Vector3(this.x, this.y, this.z);
-    };
-    _proto.fill = function fill(array, offset) {
-        if (offset === void 0) offset = 0;
-        array[offset] = this.x;
-        array[offset + 1] = this.y;
-        array[offset + 2] = this.z;
-        array[offset + 3] = this.w;
-    };
-    /**
-     * 生成随机向量
-     * @returns 向量
-     */ _proto.random = function random() {
-        this.x = Math.random();
-        this.y = Math.random();
-        this.z = Math.random();
-        this.w = Math.random();
-        return this;
-    };
-    /**
-     * 变换矩阵作用于向量
-     * @param m - 变换矩阵
-     * @param [out] - 输出结果，如果没有设置就直接覆盖当前值
-     * @returns 向量
-     */ _proto.applyMatrix = function applyMatrix(m, out) {
-        return m.transformVector4(this, out);
-    };
-    /**
-     * 通过标量数值创建向量
-     * @param num - 数值
-     * @returns 向量
-     */ Vector4.fromNumber = function fromNumber(num) {
-        return new Vector4().setFromNumber(num);
-    };
-    /**
-     * 通过数组创建向量
-     * @param array - 数组
-     * @param [offset=0] - 起始偏移值
-     * @returns 向量
-     */ Vector4.fromArray = function fromArray(array, offset) {
-        if (offset === void 0) offset = 0;
-        return new Vector4().setFromArray(array, offset);
-    };
-    return Vector4;
-}();
-/**
-     * 四维向量的常量
-     */ Vector4$1.ONE = new Vector4$1(1.0, 1.0, 1.0, 1.0);
-Vector4$1.ZERO = new Vector4$1(0.0, 0.0, 0.0, 0.0);
 
 /**
  * 三维矩阵（列优先矩阵）
@@ -10586,993 +12830,96 @@ var index = /*#__PURE__*/Object.freeze({
     Sphere: Sphere$1
 });
 
-var SPRITE_VERTEX_STRIDE = 6;
-var SEMANTIC_PRE_COLOR_ATTACHMENT_0 = "PRE_COLOR_0";
-var SEMANTIC_PRE_COLOR_ATTACHMENT_SIZE_0 = "PRE_COLOR_SIZE_0";
-var SEMANTIC_MAIN_PRE_COLOR_ATTACHMENT_0 = "PRE_MAIN_COLOR_0";
-var SEMANTIC_MAIN_PRE_COLOR_ATTACHMENT_SIZE_0 = "PRE_MAIN_COLOR_SIZE_0";
-var PLAYER_OPTIONS_ENV_EDITOR = "editor";
-var HELP_LINK$1 = {
-    "Item duration can't be less than 0": "https://galacean.antgroup.com/effects/user/gasrv4ka5sacrwpg#AOnQS",
-    "ValueType: 21/22 is not supported": "https://galacean.antgroup.com/effects/user/gasrv4ka5sacrwpg#smO1b"
-};
-
+var seed$b = 1;
 /**
- * Helper class to create a WebGL Context
- *
- * @param canvas
- * @param glType
- * @param options
- * @returns
- */ function createGLContext(canvas, glType, options) {
-    if (glType === void 0) glType = "webgl";
-    var context;
-    if (glType === "webgl2") {
-        context = canvas.getContext("webgl2", options);
-        if (!context) {
-            console.debug("WebGL2 context retrieval failed, falling back to WebGL context.");
-        }
-    }
-    if (!context || glType === "webgl") {
-        context = canvas.getContext("webgl", options);
-    }
-    if (!context) {
-        throw new Error("This browser does not support WebGL or the WebGL version is incorrect. Please check your WebGL version.");
-    }
-    return context;
-}
-
-function gpuTimer(gl) {
-    var ext = gl.getExtension("EXT_disjoint_timer_query_webgl2");
-    if (ext) {
-        var query = gl.createQuery();
-        var getTime = /*#__PURE__*/ _async_to_generator(function() {
-            return __generator(this, function(_state) {
-                return [
-                    2,
-                    new Promise(function(resolve, reject) {
-                        if (query) {
-                            var available = gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE);
-                            var disjoint = gl.getParameter(ext.GPU_DISJOINT_EXT);
-                            if (available && !disjoint) {
-                                // See how much time the rendering of the object took in nanoseconds.
-                                var timeElapsed = gl.getQueryParameter(query, gl.QUERY_RESULT); // Do something useful with the time.  Note that care should be
-                                // taken to use all significant bits of the result, not just the
-                                // least significant 32 bits.
-                                resolve(timeElapsed / 1000 / 1000);
-                            }
-                            if (available || disjoint) {
-                                // Clean up the query object.
-                                gl.deleteQuery(query); // Don't re-enter this polling loop.
-                                query = null;
-                            }
-                            available !== null && query && alipay.window.setTimeout(function() {
-                                getTime().then(resolve).catch;
-                            }, 1);
-                        }
-                    })
-                ];
-            });
-        });
-        if (!query) {
-            return;
-        }
-        return {
-            begin: function() {
-                query && gl.beginQuery(ext.TIME_ELAPSED_EXT, query);
-            },
-            end: function() {
-                gl.endQuery(ext.TIME_ELAPSED_EXT);
-            },
-            getTime: getTime
-        };
-    }
-}
-
-var initErrors = [];
-// @ts-expect-error
-var glContext = {};
-if (!initErrors.length) {
-    initGLContext();
-}
-function initGLContext() {
-    // 重要：iOS 9/10 低版本需要拷贝 gl context 的 prototype，要不然会有属性值的缺失
-    if (typeof alipay.WebGL2RenderingContext === "function") {
-        copy(alipay.WebGL2RenderingContext);
-    } else if (typeof alipay.WebGLRenderingContext !== "undefined") {
-        copy(alipay.WebGLRenderingContext);
-        copy(alipay.WebGLRenderingContext.prototype);
-    } else {
-        initErrors.push(// iOS 16 lockdown mode
-        "iOS16 lockdown mode, WebGL Constants not in global");
-    }
-    if (!initErrors.length && !("HALF_FLOAT" in glContext)) {
-        // @ts-expect-error set default value
-        glContext["HALF_FLOAT"] = 5131;
-    }
-}
-function isWebGL2(gl) {
-    return typeof alipay.WebGL2RenderingContext !== "undefined" && gl.constructor.name === "WebGL2RenderingContext";
-}
-function copy(target) {
-    for(var name in target){
-        if (/^[A-Z_]/.test(name)) {
-            // @ts-expect-error safe to assign
-            glContext[name] = target[name];
-        }
-    }
-}
-function vertexFormatType2GLType(formatType) {
-    switch(formatType){
-        case VertexFormatType.Float32:
-            return alipay.WebGLRenderingContext["FLOAT"];
-        case VertexFormatType.Int16:
-            return alipay.WebGLRenderingContext["SHORT"];
-        case VertexFormatType.Int8:
-            return alipay.WebGLRenderingContext["BYTE"];
-        case VertexFormatType.UInt16:
-            return alipay.WebGLRenderingContext["UNSIGNED_SHORT"];
-        case VertexFormatType.UInt8:
-            return alipay.WebGLRenderingContext["UNSIGNED_BYTE"];
-        default:
-            return alipay.WebGLRenderingContext["FLOAT"];
-    }
-}
-function glType2VertexFormatType(webglType) {
-    switch(webglType){
-        case alipay.WebGLRenderingContext["FLOAT"]:
-            return VertexFormatType.Float32;
-        case alipay.WebGLRenderingContext["SHORT"]:
-            return VertexFormatType.Int16;
-        case alipay.WebGLRenderingContext["BYTE"]:
-            return VertexFormatType.Int8;
-        case alipay.WebGLRenderingContext["UNSIGNED_SHORT"]:
-            return VertexFormatType.UInt16;
-        case alipay.WebGLRenderingContext["UNSIGNED_BYTE"]:
-            return VertexFormatType.UInt8;
-        default:
-            return VertexFormatType.Float32;
-    }
-}
-
-exports.ShaderType = void 0;
-(function(ShaderType) {
-    ShaderType[ShaderType["vertex"] = 0] = "vertex";
-    ShaderType[ShaderType["fragment"] = 1] = "fragment";
-})(exports.ShaderType || (exports.ShaderType = {}));
-
-function valIfUndefined(val, def) {
-    if (val === undefined || val === null) {
-        return def;
-    }
-    return val;
-}
-function getPreMultiAlpha(blending) {
-    switch(blending){
-        case BlendingMode.ALPHA:
-            return 1;
-        case BlendingMode.ADD:
-            return 1;
-        case BlendingMode.SUBTRACTION:
-            return 1;
-        case BlendingMode.STRONG_LIGHT:
-            return 1;
-        case BlendingMode.WEAK_LIGHT:
-            return 1;
-        case BlendingMode.SUPERPOSITION:
-            return 2;
-        case BlendingMode.BRIGHTNESS:
-            return 3;
-        case BlendingMode.MULTIPLY:
-            return 0;
-        default:
-            // 处理undefined
-            return 1;
-    }
-}
-function setBlendMode(material, blendMode) {
-    switch(blendMode){
-        case undefined:
-            material.blendFunction = [
-                glContext.ONE,
-                glContext.ONE_MINUS_SRC_ALPHA,
-                glContext.ONE,
-                glContext.ONE_MINUS_SRC_ALPHA
-            ];
-            break;
-        case BlendingMode.ALPHA:
-            material.blendFunction = [
-                glContext.ONE,
-                glContext.ONE_MINUS_SRC_ALPHA,
-                glContext.ONE,
-                glContext.ONE_MINUS_SRC_ALPHA
-            ];
-            break;
-        case BlendingMode.ADD:
-            material.blendFunction = [
-                glContext.ONE,
-                glContext.ONE,
-                glContext.ONE,
-                glContext.ONE
-            ];
-            break;
-        case BlendingMode.SUBTRACTION:
-            material.blendFunction = [
-                glContext.ONE,
-                glContext.ONE,
-                glContext.ZERO,
-                glContext.ONE
-            ];
-            material.blendEquation = [
-                glContext.FUNC_REVERSE_SUBTRACT,
-                glContext.FUNC_REVERSE_SUBTRACT
-            ];
-            break;
-        case BlendingMode.SUPERPOSITION:
-            material.blendFunction = [
-                glContext.ONE,
-                glContext.ONE,
-                glContext.ONE,
-                glContext.ONE
-            ];
-            break;
-        case BlendingMode.MULTIPLY:
-            material.blendFunction = [
-                glContext.DST_COLOR,
-                glContext.ONE_MINUS_SRC_ALPHA,
-                glContext.DST_COLOR,
-                glContext.ONE_MINUS_SRC_ALPHA
-            ];
-            break;
-        case BlendingMode.BRIGHTNESS:
-            material.blendFunction = [
-                glContext.ONE,
-                glContext.ONE_MINUS_SRC_ALPHA,
-                glContext.ONE,
-                glContext.ONE_MINUS_SRC_ALPHA
-            ];
-            break;
-        case BlendingMode.STRONG_LIGHT:
-            material.blendFunction = [
-                glContext.DST_COLOR,
-                glContext.DST_ALPHA,
-                glContext.ZERO,
-                glContext.ONE
-            ];
-            break;
-        case BlendingMode.WEAK_LIGHT:
-            material.blendFunction = [
-                glContext.DST_COLOR,
-                glContext.ZERO,
-                glContext.ZERO,
-                glContext.ONE
-            ];
-            break;
-        default:
-            console.warn("BlendMode " + blendMode + " not in specification, please set blend params separately.");
-    }
-}
-function setSideMode(material, side) {
-    if (side === SideMode.DOUBLE) {
-        material.culling = false;
-    } else {
-        material.culling = true;
-        material.frontFace = glContext.CW;
-        material.cullFace = side === SideMode.BACK ? glContext.BACK : glContext.FRONT;
-    }
-}
-function setMaskMode(material, maskMode) {
-    switch(maskMode){
-        case undefined:
-            material.stencilTest = false;
-            break;
-        case MaskMode.MASK:
-            material.stencilTest = true;
-            material.stencilFunc = [
-                glContext.ALWAYS,
-                glContext.ALWAYS
-            ];
-            material.stencilOpZPass = [
-                glContext.REPLACE,
-                glContext.REPLACE
-            ];
-            break;
-        case MaskMode.OBSCURED:
-            material.stencilTest = true;
-            material.stencilFunc = [
-                glContext.EQUAL,
-                glContext.EQUAL
-            ];
-            break;
-        case MaskMode.REVERSE_OBSCURED:
-            material.stencilTest = true;
-            material.stencilFunc = [
-                glContext.NOTEQUAL,
-                glContext.NOTEQUAL
-            ];
-            break;
-        case MaskMode.NONE:
-            material.stencilTest = false;
-            break;
-        default:
-            console.warn("MaskMode " + maskMode + " not in specification, please set stencil params seperately.");
-    }
-}
-
-function _extends() {
-    _extends = Object.assign || function assign(target) {
-        for(var i = 1; i < arguments.length; i++){
-            var source = arguments[i];
-            for(var key in source)if (Object.prototype.hasOwnProperty.call(source, key)) target[key] = source[key];
-        }
-        return target;
-    };
-    return _extends.apply(this, arguments);
-}
-
-exports.TextureLoadAction = void 0;
-(function(TextureLoadAction) {
-    TextureLoadAction[TextureLoadAction["whatever"] = 0] = "whatever";
-    //preserve previous attachment
-    //load = 1,
-    //clear attachment
-    TextureLoadAction[TextureLoadAction["clear"] = 2] = "clear";
-})(exports.TextureLoadAction || (exports.TextureLoadAction = {}));
-exports.TextureSourceType = void 0;
-(function(TextureSourceType) {
-    TextureSourceType[TextureSourceType["none"] = 0] = "none";
-    TextureSourceType[TextureSourceType["data"] = 1] = "data";
-    TextureSourceType[TextureSourceType["image"] = 2] = "image";
-    TextureSourceType[TextureSourceType["compressed"] = 3] = "compressed";
-    TextureSourceType[TextureSourceType["video"] = 4] = "video";
-    TextureSourceType[TextureSourceType["canvas"] = 5] = "canvas";
-    TextureSourceType[TextureSourceType["framebuffer"] = 6] = "framebuffer";
-    TextureSourceType[TextureSourceType["mipmaps"] = 7] = "mipmaps";
-})(exports.TextureSourceType || (exports.TextureSourceType = {}));
-
-/**
- * 负责下载各种资源，并提供了一些异步加载和缓存管理的功能
- */ var Downloader = /*#__PURE__*/ function() {
-    function Downloader() {
-        /**
-   * 存储多个回调函数的对象
-   */ this.callbacks = {};
-    }
-    var _proto = Downloader.prototype;
-    /**
-   * 下载一个 JSON 文件
-   * @param url - 要下载的 JSON 文件的 URL
-   * @param onSuccess - 下载成功后的回调函数
-   * @param onError - 下载失败后的回调函数
-   */ _proto.downloadJSON = function downloadJSON(url, onSuccess, onError) {
-        this.download(url, "json", onSuccess, onError);
-    };
-    /**
-   * 下载一个二进制文件
-   * @param url - 要下载的二进制文件的 URL
-   * @param onSuccess - 下载成功后的回调函数
-   * @param onError - 下载失败后的回调函数
-   */ _proto.downloadBinary = function downloadBinary(url, onSuccess, onError) {
-        this.download(url, "arraybuffer", onSuccess, onError);
-    };
-    /**
-   * 下载一个 Blob 文件
-   * @param url - 要下载的 Blob 文件的 URL
-   * @param onSuccess - 下载成功后的回调函数
-   * @param onError - 下载失败后的回调函数
-   */ _proto.downloadBlob = function downloadBlob(url, onSuccess, onError) {
-        this.download(url, "blob", onSuccess, onError);
-    };
-    _proto.download = function download(url, responseType, onSuccess, onError) {
-        var _this = this;
-        if (responseType === void 0) responseType = "json";
-        if (this.start(url, onSuccess, onError)) {
-            return;
-        }
-        var xhr = new alipay.XMLHttpRequest();
-        var handleError = function() {
-            _this.finish(url, xhr.status, xhr.response);
-        };
-        var handleLoad = function() {
-            if (xhr.status == 200 || xhr.status == 0) {
-                _this.finish(url, 200, xhr.response);
-            } else {
-                handleError();
-            }
-        };
-        xhr.responseType = responseType;
-        xhr.addEventListener("load", handleLoad);
-        xhr.addEventListener("error", handleError);
-        xhr.open("GET", url, true);
-        xhr.send();
-    };
-    _proto.start = function start(url, onSuccess, onError) {
-        var callbacks = this.callbacks[url];
-        try {
-            if (callbacks) {
-                return true;
-            }
-            this.callbacks[url] = callbacks = [];
-        } finally{
-            callbacks.push(onSuccess, onError);
-        }
-    };
-    _proto.finish = function finish(url, status, data) {
-        var callbacks = this.callbacks[url];
-        delete this.callbacks[url];
-        var args = status == 200 || status == 0 ? [
-            data
-        ] : [
-            status,
-            data
-        ];
-        for(var i = args.length - 1, n = callbacks.length; i < n; i += 2){
-            callbacks[i].apply(null, args);
-        }
-    };
-    return Downloader;
-}();
-var webPFailed = false;
-var avifFailed = false;
-/**
- * 异步加载一个 WebP 图片文件，如果不支持 WebP，则加载 PNG 图片文件
- * @param png - PNG 图片文件的 URL
- * @param webp - WebP 图片文件的 URL
- */ function loadWebPOptional(png, webp) {
-    return _loadWebPOptional.apply(this, arguments);
-}
-function _loadWebPOptional() {
-    _loadWebPOptional = _async_to_generator(function(png, webp) {
-        var image, image1, image2;
-        return __generator(this, function(_state) {
-            switch(_state.label){
-                case 0:
-                    if (!(webPFailed || !webp)) return [
-                        3,
-                        2
-                    ];
-                    return [
-                        4,
-                        loadImage(png)
-                    ];
-                case 1:
-                    image = _state.sent();
-                    return [
-                        2,
-                        {
-                            image: image,
-                            url: png
-                        }
-                    ];
-                case 2:
-                    _state.trys.push([
-                        2,
-                        4,
-                        ,
-                        6
-                    ]);
-                    return [
-                        4,
-                        loadImage(webp)
-                    ];
-                case 3:
-                    image1 = _state.sent();
-                    return [
-                        2,
-                        {
-                            image: image1,
-                            url: webp
-                        }
-                    ];
-                case 4:
-                    _state.sent();
-                    webPFailed = true;
-                    return [
-                        4,
-                        loadImage(png)
-                    ];
-                case 5:
-                    image2 = _state.sent();
-                    return [
-                        2,
-                        {
-                            image: image2,
-                            url: png
-                        }
-                    ];
-                case 6:
-                    return [
-                        2
-                    ];
-            }
-        });
-    });
-    return _loadWebPOptional.apply(this, arguments);
-}
-/**
- * 异步加载一个 AVIF 图片文件，如果不支持 AVIF，则加载 PNG 图片文件
- * @param png - PNG 图片文件的 URL
- * @param avif - AVIF 图片文件的 URL
- */ function loadAVIFOptional(png, avif) {
-    return _loadAVIFOptional.apply(this, arguments);
-}
-function _loadAVIFOptional() {
-    _loadAVIFOptional = _async_to_generator(function(png, avif) {
-        var image, image1, image2;
-        return __generator(this, function(_state) {
-            switch(_state.label){
-                case 0:
-                    if (!(avifFailed || !avif)) return [
-                        3,
-                        2
-                    ];
-                    return [
-                        4,
-                        loadImage(png)
-                    ];
-                case 1:
-                    image = _state.sent();
-                    return [
-                        2,
-                        {
-                            image: image,
-                            url: png
-                        }
-                    ];
-                case 2:
-                    _state.trys.push([
-                        2,
-                        4,
-                        ,
-                        6
-                    ]);
-                    return [
-                        4,
-                        loadImage(avif)
-                    ];
-                case 3:
-                    image1 = _state.sent();
-                    return [
-                        2,
-                        {
-                            image: image1,
-                            url: avif
-                        }
-                    ];
-                case 4:
-                    _state.sent();
-                    avifFailed = true;
-                    return [
-                        4,
-                        loadImage(png)
-                    ];
-                case 5:
-                    image2 = _state.sent();
-                    return [
-                        2,
-                        {
-                            image: image2,
-                            url: png
-                        }
-                    ];
-                case 6:
-                    return [
-                        2
-                    ];
-            }
-        });
-    });
-    return _loadAVIFOptional.apply(this, arguments);
-}
-/**
- * 异步加载一个图片文件
- * @param source - 图片文件的 URL、Blob 或 HTMLImageElement 对象
- */ function loadImage(source) {
-    return _loadImage.apply(this, arguments);
-}
-function _loadImage() {
-    _loadImage = _async_to_generator(function(source) {
-        var url, revokeURL;
-        return __generator(this, function(_state) {
-            url = "";
-            // 1. string | Blob | HTMLImageElement 处理逻辑
-            if (_instanceof1(source, alipay.HTMLImageElement)) {
-                if (source.complete) {
-                    return [
-                        2,
-                        source
-                    ];
-                }
-                url = source.src;
-            } else if (_instanceof1(source, alipay.Blob)) {
-                url = alipay.URL.createObjectURL(source);
-                revokeURL = true;
-            } else if (typeof source === "string") {
-                url = source;
-            }
-            // 2. 非法类型
-            if (!url) {
-                throw new Error("Invalid url type: " + JSON.stringify(source) + ".");
-            }
-            return [
-                2,
-                new Promise(function(resolve, reject) {
-                    var img = new alipay.Image();
-                    if (!/^data:/.test(url)) {
-                        img.crossOrigin = "*";
-                    }
-                    img.onload = function() {
-                        img.onload = null;
-                        if (revokeURL) {
-                            alipay.URL.revokeObjectURL(url);
-                        }
-                        return resolve(img);
-                    };
-                    img.onerror = function(e) {
-                        img.onerror = null;
-                        if (revokeURL) {
-                            alipay.URL.revokeObjectURL(url);
-                        }
-                        return reject("Load image fail: " + url + ", reason: " + JSON.stringify(e));
-                    };
-                    img.src = url;
-                })
-            ];
-        });
-    });
-    return _loadImage.apply(this, arguments);
-}
-/**
- * 异步加载一个二进制文件
- * @param url - 二进制文件的 URL
- */ function loadBinary(url) {
-    return _loadBinary.apply(this, arguments);
-}
-function _loadBinary() {
-    _loadBinary = _async_to_generator(function(url) {
-        return __generator(this, function(_state) {
-            return [
-                2,
-                new Promise(function(resolve, reject) {
-                    new Downloader().downloadBinary(url, resolve, function(status, responseText) {
-                        reject("Couldn't load bins " + url + ": status " + status + ", " + responseText);
-                    });
-                })
-            ];
-        });
-    });
-    return _loadBinary.apply(this, arguments);
-}
-/**
- * 异步加载一个 Blob 文件
- * @param url - Blob 文件的 URL
- */ function loadBlob(url) {
-    return _loadBlob.apply(this, arguments);
-}
-function _loadBlob() {
-    _loadBlob = _async_to_generator(function(url) {
-        return __generator(this, function(_state) {
-            return [
-                2,
-                new Promise(function(resolve, reject) {
-                    new Downloader().downloadBlob(url, resolve, function(status, responseText) {
-                        reject("Couldn't load blob " + url + ": status " + status + ", " + responseText);
-                    });
-                })
-            ];
-        });
-    });
-    return _loadBlob.apply(this, arguments);
-}
-/**
- * 异步加载一个视频文件
- * @param url - 视频文件的 URL 或 MediaProvider 对象
- */ function loadVideo(url) {
-    return _loadVideo.apply(this, arguments);
-}
-function _loadVideo() {
-    _loadVideo = _async_to_generator(function(url) {
-        var video;
-        return __generator(this, function(_state) {
-            video = alipay.document.createElement("video");
-            if (typeof url === "string") {
-                video.src = url;
-            } else {
-                video.srcObject = url;
-            }
-            video.crossOrigin = "anonymous";
-            video.muted = true;
-            if (isAndroid()) {
-                video.setAttribute("renderer", "standard");
-            }
-            video.setAttribute("playsinline", "playsinline");
-            return [
-                2,
-                new Promise(function(resolve, reject) {
-                    var pending = video.play();
-                    if (pending) {
-                        void pending.then(function() {
-                            return resolve(video);
-                        });
-                    } else {
-                        video.addEventListener("loadeddata", function listener() {
-                            resolve(video);
-                            video.removeEventListener("loadeddata", listener);
-                        }, true);
-                    }
-                    video.addEventListener("error", function(e) {
-                        reject("Load video fail.");
-                    });
-                })
-            ];
-        });
-    });
-    return _loadVideo.apply(this, arguments);
-}
-function loadMedia(url, loadFn) {
-    return _loadMedia.apply(this, arguments);
-}
-function _loadMedia() {
-    _loadMedia = _async_to_generator(function(url, loadFn) {
-        return __generator(this, function(_state) {
-            switch(_state.label){
-                case 0:
-                    if (!Array.isArray(url)) return [
-                        3,
-                        5
-                    ];
-                    _state.label = 1;
-                case 1:
-                    _state.trys.push([
-                        1,
-                        3,
-                        ,
-                        5
-                    ]);
-                    return [
-                        4,
-                        loadFn(url[0])
-                    ];
-                case 2:
-                    return [
-                        2,
-                        _state.sent()
-                    ];
-                case 3:
-                    _state.sent();
-                    return [
-                        4,
-                        loadFn(url[1])
-                    ];
-                case 4:
-                    return [
-                        2,
-                        _state.sent()
-                    ];
-                case 5:
-                    return [
-                        2,
-                        loadFn(url)
-                    ];
-            }
-        });
-    });
-    return _loadMedia.apply(this, arguments);
-}
-
-function deserializeMipmapTexture(textureOptions, bins, engine) {
-    return _deserializeMipmapTexture.apply(this, arguments);
-}
-function _deserializeMipmapTexture() {
-    _deserializeMipmapTexture = _async_to_generator(function(textureOptions, bins, engine, files) {
-        var mipmaps, target, jobs, loadedMipmaps, mipmaps1, target1, jobs1, loadedMipmaps1, bin;
-        return __generator(this, function(_state) {
-            switch(_state.label){
-                case 0:
-                    if (files === void 0) files = [];
-                    if (!(textureOptions.target === 34067)) return [
-                        3,
-                        2
-                    ];
-                    mipmaps = textureOptions.mipmaps, target = textureOptions.target;
-                    jobs = mipmaps.map(function(mipmap) {
-                        return Promise.all(mipmap.map(function(pointer) {
-                            // @ts-expect-error
-                            if (pointer.id) {
-                                // @ts-expect-error
-                                var loadedImageAsset = engine.assetLoader.loadGUID(pointer.id);
-                                // @ts-expect-error
-                                return loadedImageAsset.data;
-                            } else {
-                                return loadMipmapImage(pointer, bins);
-                            }
-                        }));
-                    });
-                    return [
-                        4,
-                        Promise.all(jobs)
-                    ];
-                case 1:
-                    loadedMipmaps = _state.sent();
-                    return [
-                        2,
-                        _extends({
-                            keepImageSource: false
-                        }, textureOptions, {
-                            mipmaps: loadedMipmaps,
-                            sourceFrom: {
-                                target: target,
-                                // bin,
-                                type: exports.TextureSourceType.mipmaps
-                            }
-                        })
-                    ];
-                case 2:
-                    // TODO: 补充测试用例
-                    mipmaps1 = textureOptions.mipmaps, target1 = textureOptions.target;
-                    jobs1 = mipmaps1.map(function(pointer) {
-                        return loadMipmapImage(pointer, bins);
-                    });
-                    return [
-                        4,
-                        Promise.all(jobs1)
-                    ];
-                case 3:
-                    loadedMipmaps1 = _state.sent();
-                    bin = files[mipmaps1[0][1][0]].url;
-                    return [
-                        2,
-                        _extends({
-                            keepImageSource: false
-                        }, textureOptions, {
-                            mipmaps: loadedMipmaps1,
-                            sourceType: exports.TextureSourceType.mipmaps,
-                            sourceFrom: {
-                                target: target1,
-                                bin: bin,
-                                type: exports.TextureSourceType.mipmaps,
-                                mipmaps: mipmaps1.map(function(pointer) {
-                                    return [
-                                        pointer[1][1],
-                                        pointer[1][2]
-                                    ];
-                                })
-                            }
-                        })
-                    ];
-                case 4:
-                    return [
-                        2
-                    ];
-            }
-        });
-    });
-    return _deserializeMipmapTexture.apply(this, arguments);
-}
-function loadMipmapImage(pointer, bins) {
-    return _loadMipmapImage.apply(this, arguments);
-}
-function _loadMipmapImage() {
-    _loadMipmapImage = _async_to_generator(function(pointer, bins) {
-        var _pointer_, index, start, length, bin;
-        return __generator(this, function(_state) {
-            _pointer_ = pointer[1], index = _pointer_[0], start = _pointer_[1], length = _pointer_[2];
-            bin = bins[index];
-            if (!bin) {
-                throw new Error("Invalid bin pointer: " + JSON.stringify(pointer) + ".");
-            }
-            return [
-                2,
-                loadImage(new alipay.Blob([
-                    new Uint8Array(bin, start, length)
-                ]))
-            ];
-        });
-    });
-    return _loadMipmapImage.apply(this, arguments);
-}
-
-var seed$c = 1;
-/**
- * Texture 抽象类
- */ var Texture = /*#__PURE__*/ function(EffectsObject) {
-    _inherits(Texture, EffectsObject);
-    function Texture(engine) {
+ * Mesh 抽象类
+ */ var Mesh = /*#__PURE__*/ function(RendererComponent) {
+    _inherits(Mesh, RendererComponent);
+    function Mesh(engine, props) {
         var _this;
-        _this = EffectsObject.call(this, engine) || this;
+        _this = RendererComponent.call(this, engine) || this;
         _this.destroyed = false;
-        _this.id = "Tex" + seed$c++;
+        _this.visible = true;
+        if (props) {
+            var material = props.material, geometry = props.geometry, _props_name = props.name, name = _props_name === void 0 ? "<unnamed>" : _props_name, _props_priority = props.priority, priority = _props_priority === void 0 ? 0 : _props_priority, _props_worldMatrix = props.worldMatrix, worldMatrix = _props_worldMatrix === void 0 ? Matrix4$1.fromIdentity() : _props_worldMatrix;
+            _this.id = "Mesh" + seed$b++;
+            _this.name = name;
+            _this.geometry = geometry;
+            _this.material = material;
+            _this.priority = priority;
+            _this.worldMatrix = worldMatrix;
+        } else {
+            _this.id = "Mesh" + seed$b++;
+            _this.name = "<unnamed>";
+            _this.worldMatrix = Matrix4$1.fromIdentity();
+            _this._priority = 0;
+        }
         return _this;
     }
-    var _proto = Texture.prototype;
+    var _proto = Mesh.prototype;
     /**
-   * 获取 Texture 的宽度。
-   */ _proto.getWidth = function getWidth() {
-        return this.width || 0;
-    };
-    /**
-   * 获取 Texture 的高度。
-   */ _proto.getHeight = function getHeight() {
-        return this.height || 0;
-    };
-    _proto.uploadCurrentVideoFrame = function uploadCurrentVideoFrame() {
-    // OVERRIDE
+   * 设置当前 Mesh 的可见性。
+   * @param visible - true：可见，false：不可见
+   */ _proto.setVisible = function setVisible(visible) {
+        this.visible = visible;
     };
     /**
-   * 释放 Texture GPU 资源。
-   * 注意：该方法只释放资源，并不销毁 GPU textureBuffer 对象。
-   * @override
-   */ _proto.offloadData = function offloadData() {
-    // OVERRIDE
+   * 获取当前 Mesh 的可见性。
+   */ _proto.getVisible = function getVisible() {
+        return this.visible;
     };
-    /**
-   * 重新加载 Texture  GPU 资源。
-   * @override
-   */ _proto.reloadData = function reloadData() {
-    // OVERRIDE
-    };
-    /**
-   * 初始化 GPU 资源
-   * @override
-   */ _proto.initialize = function initialize() {
-    // OVERRIDE
-    };
-    _proto.assembleOptions = function assembleOptions(options) {
-        var _options_target = options.target, target = _options_target === void 0 ? glContext.TEXTURE_2D : _options_target, tmp = options.format, internalFormat = tmp === void 0 ? glContext.RGBA : tmp;
-        if (!options.sourceType) {
-            if ("image" in options) {
-                options.sourceType = exports.TextureSourceType.image;
-            } else if ("data" in options) {
-                options.sourceType = exports.TextureSourceType.data;
-            } else if ("video" in options) {
-                options.sourceType = exports.TextureSourceType.video;
-            } else {
-                options.sourceType = 0; // TextureSourceType.none
-            }
+    _proto.render = function render(renderer) {
+        if (this.isDestroyed) {
+            // console.error(`mesh ${mesh.name} destroyed`, mesh);
+            return;
         }
-        return _extends({
-            minFilter: glContext.NEAREST,
-            magFilter: glContext.NEAREST,
-            wrapS: glContext.CLAMP_TO_EDGE,
-            wrapT: glContext.CLAMP_TO_EDGE,
-            target: target,
-            format: glContext.RGBA,
-            internalFormat: internalFormat,
-            type: glContext.UNSIGNED_BYTE
-        }, options);
+        if (!this.getVisible()) {
+            return;
+        }
+        if (renderer.renderingData.currentFrame.globalUniforms) {
+            renderer.setGlobalMatrix("effects_ObjectToWorld", this.worldMatrix);
+        }
+        renderer.drawGeometry(this.geometry, this.material);
     };
     /**
-   * 通过 URL 创建 Texture 对象。
-   * @param url - 要创建的 Texture URL
-   * @since 2.0.0
-   */ Texture.fromImage = function fromImage(url, engine) {
-        return _async_to_generator(function() {
-            var image, texture;
-            return __generator(this, function(_state) {
-                switch(_state.label){
-                    case 0:
-                        return [
-                            4,
-                            loadImage(url)
-                        ];
-                    case 1:
-                        image = _state.sent();
-                        texture = Texture.create(engine, {
-                            sourceType: exports.TextureSourceType.image,
-                            image: image,
-                            id: generateGUID(),
-                            flipY: true
-                        });
-                        texture.initialize();
-                        return [
-                            2,
-                            texture
-                        ];
-                }
-            });
-        })();
+   * 获取当前 Mesh 的第一个 geometry。
+   */ _proto.firstGeometry = function firstGeometry() {
+        return this.geometry;
     };
-    _create_class(Texture, [
+    /**
+   * 设置当前 Mesh 的材质
+   * @param material - 要设置的材质
+   * @param destroy - 可选的材质销毁选项
+   */ _proto.setMaterial = function setMaterial(material, destroy) {
+        if (destroy !== exports.DestroyOptions.keep) {
+            this.material.dispose(destroy);
+        }
+        this.material = material;
+    };
+    _proto.restore = function restore() {};
+    /**
+   * 销毁当前资源
+   * @param options - 可选的销毁选项
+   */ _proto.dispose = function dispose(options) {
+        if (this.destroyed) {
+            //console.error('call mesh.destroy multiple times', this);
+            return;
+        }
+        if ((options == null ? void 0 : options.geometries) !== exports.DestroyOptions.keep) {
+            this.geometry.dispose();
+        }
+        var materialDestroyOption = options == null ? void 0 : options.material;
+        if (materialDestroyOption !== exports.DestroyOptions.keep) {
+            this.material.dispose(materialDestroyOption);
+        }
+        this.destroyed = true;
+        if (this.engine !== undefined) {
+            this.engine.removeMesh(this);
+            // @ts-expect-error
+            this.engine = undefined;
+        }
+    };
+    _create_class(Mesh, [
         {
             key: "isDestroyed",
             get: function get() {
@@ -11580,731 +12927,1834 @@ var seed$c = 1;
             }
         }
     ]);
-    return Texture;
-}(EffectsObject);
-function generateHalfFloatTexture(engine, data, width, height) {
-    var channel = data.length / width / height;
-    var format;
-    var internalFormat;
-    if (channel === 4 || channel === 0) {
-        internalFormat = format = glContext.RGBA;
-    } else if (channel === 3) {
-        internalFormat = format = glContext.RGB;
-    } else if (channel === 2) {
-        internalFormat = format = glContext.LUMINANCE_ALPHA;
-    } else {
-        internalFormat = format = glContext.LUMINANCE;
-    }
-    return Texture.createWithData(engine, {
-        data: data,
-        width: width,
-        height: height
-    }, {
-        type: glContext.HALF_FLOAT,
-        format: format,
-        internalFormat: internalFormat,
-        wrapS: glContext.CLAMP_TO_EDGE,
-        wrapT: glContext.CLAMP_TO_EDGE
-    });
-}
-var sourceOptions = {
-    type: glContext.UNSIGNED_BYTE,
-    format: glContext.RGBA,
-    internalFormat: glContext.RGBA,
-    wrapS: glContext.MIRRORED_REPEAT,
-    wrapT: glContext.MIRRORED_REPEAT,
-    minFilter: glContext.NEAREST,
-    magFilter: glContext.NEAREST
-};
-function generateWhiteTexture(engine) {
-    return Texture.create(engine, _extends({
-        id: "whitetexture00000000000000000000",
-        data: {
-            width: 1,
-            height: 1,
-            data: new Uint8Array([
-                255,
-                255,
-                255,
-                255
-            ])
-        },
-        sourceType: exports.TextureSourceType.data
-    }, sourceOptions));
-}
-function generateTransparentTexture(engine) {
-    return Texture.create(engine, _extends({
-        id: "transparenttexture00000000000000000000",
-        data: {
-            width: 1,
-            height: 1,
-            data: new Uint8Array([
-                0,
-                0,
-                0,
-                0
-            ])
-        },
-        sourceType: exports.TextureSourceType.data
-    }, sourceOptions));
-}
+    return Mesh;
+}(RendererComponent);
 
-var HEADER_LEN = 12 + 13 * 4; // identifier + header elements (not including key value meta-data pairs)
-var COMPRESSED_2D = 0; // uses a gl.compressedTexImage2D()
-//const COMPRESSED_3D = 1; // uses a gl.compressedTexImage3D()
-var TEX_2D = 2; // uses a gl.texImage2D()
-//const TEX_3D = 3; // uses a gl.texImage3D()
-var KTXTexture = /*#__PURE__*/ function() {
-    function KTXTexture(arrayBuffer, facesExpected, baseOffset) {
-        if (baseOffset === void 0) baseOffset = 0;
-        this.arrayBuffer = arrayBuffer;
-        this.baseOffset = baseOffset;
-        // Test that it is a ktx formatted file, based on the first 12 bytes, character representation is:
-        // '´', 'K', 'T', 'X', ' ', '1', '1', 'ª', '\r', '\n', '\x1A', '\n'
-        // 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A
-        var identifier = new Uint8Array(this.arrayBuffer, this.baseOffset, 12);
-        if (identifier[0] !== 0xab || identifier[1] !== 0x4b || identifier[2] !== 0x54 || identifier[3] !== 0x58 || identifier[4] !== 0x20 || identifier[5] !== 0x31 || identifier[6] !== 0x31 || identifier[7] !== 0xbb || identifier[8] !== 0x0d || identifier[9] !== 0x0a || identifier[10] !== 0x1a || identifier[11] !== 0x0a) {
-            throw new Error("Texture missing KTX identifier.");
-        }
-        // load the reset of the header in native 32 bit uint
-        var dataSize = Uint32Array.BYTES_PER_ELEMENT;
-        var headerDataView = new DataView(this.arrayBuffer, this.baseOffset + 12, 13 * dataSize);
-        var endianness = headerDataView.getUint32(0, true);
-        var littleEndian = endianness === 0x04030201;
-        this.glType = headerDataView.getUint32(1 * dataSize, littleEndian); // must be 0 for compressed textures
-        this.glTypeSize = headerDataView.getUint32(2 * dataSize, littleEndian); // must be 1 for compressed textures
-        this.glFormat = headerDataView.getUint32(3 * dataSize, littleEndian); // must be 0 for compressed textures
-        this.glInternalFormat = headerDataView.getUint32(4 * dataSize, littleEndian); // the value of arg passed to gl.compressedTexImage2D(,,x,,,,)
-        this.glBaseInternalFormat = headerDataView.getUint32(5 * dataSize, littleEndian); // specify GL_RGB, GL_RGBA, GL_ALPHA, etc (un-compressed only)
-        this.pixelWidth = headerDataView.getUint32(6 * dataSize, littleEndian); // level 0 value of arg passed to gl.compressedTexImage2D(,,,x,,,)
-        this.pixelHeight = headerDataView.getUint32(7 * dataSize, littleEndian); // level 0 value of arg passed to gl.compressedTexImage2D(,,,,x,,)
-        this.pixelDepth = headerDataView.getUint32(8 * dataSize, littleEndian); // level 0 value of arg passed to gl.compressedTexImage3D(,,,,,x,,)
-        this.numberOfArrayElements = headerDataView.getUint32(9 * dataSize, littleEndian); // used for texture arrays
-        this.numberOfFaces = headerDataView.getUint32(10 * dataSize, littleEndian); // used for cubemap textures, should either be 1 or 6
-        this.numberOfMipmapLevels = headerDataView.getUint32(11 * dataSize, littleEndian); // number of levels; disregard possibility of 0 for compressed textures
-        this.bytesOfKeyValueData = headerDataView.getUint32(12 * dataSize, littleEndian); // the amount of space after the header for meta-data
-        // value of zero is an indication to generate mipmaps @ runtime.  Not usually allowed for compressed, so disregard.
-        this.numberOfMipmapLevels = Math.max(1, this.numberOfMipmapLevels);
-        if (this.pixelHeight === 0 || this.pixelDepth !== 0) {
-            logger.warn("Only 2D textures currently supported.");
-            return;
-        }
-        if (this.numberOfArrayElements !== 0) {
-            logger.warn("Texture arrays not currently supported.");
-            return;
-        }
-        if (this.numberOfFaces !== facesExpected) {
-            logger.warn("Number of faces expected " + facesExpected + ", but found " + this.numberOfFaces + ".");
-            return;
-        }
-        // we now have a completely validated file, so could use existence of loadType as success
-        // would need to make this more elaborate & adjust checks above to support more than one load type
-        if (this.glType === 0) {
-            this.loadType = COMPRESSED_2D;
-        } else {
-            this.loadType = TEX_2D;
-        }
-    }
-    var _proto = KTXTexture.prototype;
-    _proto.mipmaps = function mipmaps(loadMipmaps) {
-        var mipmaps = [];
-        // initialize width & height for level 1
-        var dataOffset = HEADER_LEN + this.bytesOfKeyValueData;
-        var width = this.pixelWidth;
-        var height = this.pixelHeight;
-        var mipmapCount = loadMipmaps ? this.numberOfMipmapLevels : 1;
-        for(var level = 0; level < mipmapCount; level++){
-            var imageSize = new Int32Array(this.arrayBuffer, this.baseOffset + dataOffset, 1)[0]; // size per face, since not supporting array cubemaps
-            for(var face = 0; face < this.numberOfFaces; face++){
-                var data = new Uint8Array(this.arrayBuffer, this.baseOffset + dataOffset + 4, imageSize);
-                mipmaps.push({
-                    data: data,
-                    width: width,
-                    height: height
-                });
-                dataOffset += imageSize + 4; // size of the image + 4 for the imageSize field
-                dataOffset += 3 - (imageSize + 3) % 4; // add padding for odd sized image
-            }
-            width = Math.max(1.0, width * 0.5);
-            height = Math.max(1.0, height * 0.5);
-        }
-        return mipmaps;
-    };
-    return KTXTexture;
-}();
-function getKTXTextureOptions(data) {
-    var tex = new KTXTexture(data, 1);
-    var numberOfMipmapLevels = tex.numberOfMipmapLevels, pixelWidth = tex.pixelWidth, pixelHeight = tex.pixelHeight, glType = tex.glType, numberOfFaces = tex.numberOfFaces, glInternalFormat = tex.glInternalFormat, glFormat = tex.glFormat;
-    var useMipmaps = numberOfMipmapLevels >= Math.floor(Math.log2(Math.max(pixelWidth, pixelHeight)) + 1);
-    return {
-        sourceType: exports.TextureSourceType.compressed,
-        type: glType,
-        target: numberOfFaces === 6 ? glContext.TEXTURE_CUBE_MAP : glContext.TEXTURE_2D,
-        internalFormat: glInternalFormat,
-        format: glFormat,
-        mipmaps: tex.mipmaps(useMipmaps)
-    };
-}
-
-var TextureFactory = /*#__PURE__*/ function() {
-    function TextureFactory() {
-        this.reloadPending = {};
-    }
-    var _proto = TextureFactory.prototype;
-    _proto.reload = function reload(texture) {
-        var _this = this;
-        return _async_to_generator(function() {
-            var id, sourceOpts;
-            return __generator(this, function(_state) {
-                switch(_state.label){
-                    case 0:
-                        id = texture.id;
-                        if (_this.reloadPending[id]) {
-                            return [
-                                2
-                            ];
-                        }
-                        if (!texture.sourceFrom) return [
-                            3,
-                            2
-                        ];
-                        _this.reloadPending[id] = true;
-                        return [
-                            4,
-                            _this.loadSource(texture.sourceFrom)
-                        ];
-                    case 1:
-                        sourceOpts = _state.sent();
-                        texture.updateSource(sourceOpts);
-                        _this.reloadPending[id] = false;
-                        return [
-                            3,
-                            3
-                        ];
-                    case 2:
-                        throw new Error("No source from.");
-                    case 3:
-                        return [
-                            2
-                        ];
-                }
-            });
-        })();
-    };
-    _proto.canOffloadTexture = function canOffloadTexture(sourceFrom) {
-        if (sourceFrom) {
-            var type = sourceFrom.type;
-            if (type === exports.TextureSourceType.compressed || type === exports.TextureSourceType.image) {
-                var target = sourceFrom.target, map = sourceFrom.map;
-                var url = sourceFrom.url;
-                if (target === glContext.TEXTURE_CUBE_MAP) {
-                    return typeof map === "object" && !!map;
-                }
-                return isString(url) && url.length > 0;
-            }
-            if (type === exports.TextureSourceType.mipmaps) {
-                var bin = sourceFrom.bin, mipmaps = sourceFrom.mipmaps;
-                var target1 = sourceFrom.target, maps = sourceFrom.maps;
-                var urls = sourceFrom.urls;
-                if (bin) {
-                    return mipmaps.length > 0;
-                }
-                if (target1 === glContext.TEXTURE_CUBE_MAP) {
-                    return maps.every(function(map) {
-                        return typeof map === "object" && map;
-                    });
-                }
-                return urls.every(function(url) {
-                    return isString(url) && url.length > 0;
-                });
-            }
-        }
-        return false;
-    };
-    _proto.loadSource = function loadSource(sourceFrom, config) {
-        var _this = this;
-        return _async_to_generator(function() {
-            var type, target, map, url, bin, mipmaps, urls, maps, cube, image, video, buffer, data, newTarget, newMipmaps, loadedMipmaps, loadedMipmaps1, loadedMipmaps2;
-            return __generator(this, function(_state) {
-                switch(_state.label){
-                    case 0:
-                        type = sourceFrom.type, target = sourceFrom.target;
-                        map = sourceFrom.map;
-                        url = sourceFrom.url;
-                        bin = sourceFrom.bin, mipmaps = sourceFrom.mipmaps;
-                        urls = sourceFrom.urls;
-                        maps = sourceFrom.maps;
-                        if (!(target === glContext.TEXTURE_CUBE_MAP && type !== exports.TextureSourceType.mipmaps)) return [
-                            3,
-                            2
-                        ];
-                        return [
-                            4,
-                            _this.loadCubeMap(map)
-                        ];
-                    case 1:
-                        cube = _state.sent();
-                        return [
-                            2,
-                            _extends({}, config, {
-                                cube: cube,
-                                target: glContext.TEXTURE_CUBE_MAP,
-                                sourceType: exports.TextureSourceType.image,
-                                sourceFrom: {
-                                    type: exports.TextureSourceType.image,
-                                    map: _extends({}, map),
-                                    target: glContext.TEXTURE_CUBE_MAP
-                                }
-                            })
-                        ];
-                    case 2:
-                        if (!(type === exports.TextureSourceType.image)) return [
-                            3,
-                            4
-                        ];
-                        return [
-                            4,
-                            loadImage(url)
-                        ];
-                    case 3:
-                        image = _state.sent();
-                        return [
-                            2,
-                            _extends({}, config, {
-                                image: image,
-                                sourceType: exports.TextureSourceType.image,
-                                sourceFrom: {
-                                    type: type,
-                                    url: url,
-                                    target: glContext.TEXTURE_2D
-                                }
-                            })
-                        ];
-                    case 4:
-                        if (!(type === exports.TextureSourceType.video)) return [
-                            3,
-                            6
-                        ];
-                        return [
-                            4,
-                            loadVideo(url)
-                        ];
-                    case 5:
-                        video = _state.sent();
-                        return [
-                            2,
-                            _extends({}, config, {
-                                video: video,
-                                sourceType: exports.TextureSourceType.video
-                            })
-                        ];
-                    case 6:
-                        if (!(type === exports.TextureSourceType.compressed)) return [
-                            3,
-                            8
-                        ];
-                        return [
-                            4,
-                            loadBinary(url)
-                        ];
-                    case 7:
-                        buffer = _state.sent();
-                        return [
-                            2,
-                            _extends({}, getKTXTextureOptions(buffer), config, {
-                                sourceFrom: {
-                                    url: url,
-                                    type: exports.TextureSourceType.compressed
-                                }
-                            })
-                        ];
-                    case 8:
-                        if (!(type === exports.TextureSourceType.mipmaps)) return [
-                            3,
-                            17
-                        ];
-                        if (!bin) return [
-                            3,
-                            13
-                        ];
-                        return [
-                            4,
-                            loadBinary(bin)
-                        ];
-                    case 9:
-                        data = _state.sent();
-                        newTarget = target != null ? target : glContext.TEXTURE_2D;
-                        newMipmaps = newTarget === glContext.TEXTURE_2D ? mipmaps.slice() : mipmaps.map(function(s) {
-                            return s.slice();
-                        });
-                        if (!(target === glContext.TEXTURE_CUBE_MAP)) return [
-                            3,
-                            11
-                        ];
-                        return [
-                            4,
-                            Promise.all(mipmaps.map(function(mipmap) {
-                                return _this.loadMipmapImages(mipmap, data);
-                            }))
-                        ];
-                    case 10:
-                        loadedMipmaps = _state.sent();
-                        return [
-                            3,
-                            12
-                        ];
-                    case 11:
-                        loadedMipmaps = _this.loadMipmapImages(mipmaps, data);
-                        _state.label = 12;
-                    case 12:
-                        return [
-                            2,
-                            _extends({}, config, {
-                                mipmaps: loadedMipmaps,
-                                target: newTarget,
-                                sourceType: exports.TextureSourceType.mipmaps,
-                                sourceFrom: {
-                                    bin: bin,
-                                    mipmaps: newMipmaps,
-                                    target: newTarget,
-                                    type: exports.TextureSourceType.mipmaps
-                                }
-                            })
-                        ];
-                    case 13:
-                        if (!(target === glContext.TEXTURE_2D || !target)) return [
-                            3,
-                            15
-                        ];
-                        return [
-                            4,
-                            Promise.all(urls.map(function(url) {
-                                return loadImage(url);
-                            }))
-                        ];
-                    case 14:
-                        loadedMipmaps1 = _state.sent();
-                        return [
-                            2,
-                            _extends({}, config, {
-                                mipmaps: loadedMipmaps1,
-                                target: glContext.TEXTURE_2D,
-                                sourceType: exports.TextureSourceType.mipmaps,
-                                sourceFrom: {
-                                    type: type,
-                                    urls: urls.slice(),
-                                    target: glContext.TEXTURE_2D
-                                }
-                            })
-                        ];
-                    case 15:
-                        if (!(target === glContext.TEXTURE_CUBE_MAP)) return [
-                            3,
-                            17
-                        ];
-                        return [
-                            4,
-                            Promise.all(maps.map(function(map) {
-                                return _this.loadCubeMap(map);
-                            }))
-                        ];
-                    case 16:
-                        loadedMipmaps2 = _state.sent();
-                        return [
-                            2,
-                            _extends({}, config, {
-                                mipmaps: loadedMipmaps2,
-                                target: glContext.TEXTURE_CUBE_MAP,
-                                sourceType: exports.TextureSourceType.mipmaps,
-                                sourceFrom: {
-                                    type: type,
-                                    maps: maps.map(function(map) {
-                                        return _extends({}, map);
-                                    }),
-                                    target: glContext.TEXTURE_CUBE_MAP
-                                }
-                            })
-                        ];
-                    case 17:
-                        throw new Error("Invalid resource type: " + type + ".");
-                }
-            });
-        })();
-    };
-    _proto.loadMipmapImages = function loadMipmapImages(pointers, bin) {
-        return _async_to_generator(function() {
-            return __generator(this, function(_state) {
-                return [
-                    2,
-                    Promise.all(pointers.map(function(pointer) {
-                        var blob = new alipay.Blob([
-                            new Uint8Array(bin, pointer[0], pointer[1])
-                        ]);
-                        return loadImage(blob);
-                    }))
-                ];
-            });
-        })();
-    };
-    _proto.loadCubeMap = function loadCubeMap(cubemap) {
-        return _async_to_generator(function() {
-            return __generator(this, function(_state) {
-                return [
-                    2,
-                    Promise.all(cubemap.map(function(key) {
-                        return loadImage(key);
-                    }))
-                ];
-            });
-        })();
-    };
-    return TextureFactory;
-}();
-var g;
-function getDefaultTextureFactory() {
-    if (!g) {
-        g = new TextureFactory();
-    }
-    return g;
-}
-function setDefaultTextureFactory(factory) {
-    g = factory;
-}
-
-/**
- * 引擎接入暂时不需要实现
- */ var MaterialDataBlock = /*#__PURE__*/ function() {
-    function MaterialDataBlock(props) {
-        this.destroyed = false;
-        var _props_name = props.name, name = _props_name === void 0 ? "defaultDataBlock" : _props_name;
-        this.name = name;
-    }
-    var _proto = MaterialDataBlock.prototype;
-    _proto.setUniformValues = function setUniformValues(uniformValue) {
-        var _this = this;
-        Object.keys(uniformValue).forEach(function(key) {
-            _this.setUniformValue(key, uniformValue[key]);
-        });
-    };
-    _proto.invalidAllFlags = function invalidAllFlags() {
-    // OVERRIDE
-    };
-    _proto.updateUniformSubData = function updateUniformSubData(name, start, count) {
-    // OVERRIDE
-    };
-    return MaterialDataBlock;
-}();
-function isUniformStruct(value) {
-    return typeof value === "object" && value && value.length === undefined && _instanceof1(value, Texture);
-}
-function isUniformStructArray(value) {
-    return value && value.length !== undefined && isUniformStruct(value[0]);
-}
-
-exports.MaterialRenderType = void 0;
-(function(MaterialRenderType) {
-    MaterialRenderType[MaterialRenderType["normal"] = 0] = "normal";
-    MaterialRenderType[MaterialRenderType["transformFeedback"] = 1] = "transformFeedback";
-})(exports.MaterialRenderType || (exports.MaterialRenderType = {}));
-/**
- * 用于设置材质默认名称的自增序号
- * @internal
- */ var seed$b = 1;
-/**
- * Material 抽象类
- */ var Material = /*#__PURE__*/ function(EffectsObject) {
-    _inherits(Material, EffectsObject);
-    function Material(engine, props) {
-        var _this;
-        _this = EffectsObject.call(this, engine) || this;
-        _this.stringTags = {};
-        _this.enabledMacros = {};
-        _this.destroyed = false;
-        _this.initialized = false;
-        if (props) {
-            var _props_name = props.name, name = _props_name === void 0 ? "Material" + seed$b++ : _props_name, _props_renderType = props.renderType, renderType = _props_renderType === void 0 ? 0 : _props_renderType, shader = props.shader, uniformSemantics = props.uniformSemantics;
-            _this.name = name;
-            _this.renderType = renderType; // TODO 没有地方用到
-            _this.shaderSource = shader;
-            _this.props = props;
-            _this.uniformSemantics = _extends({}, uniformSemantics); // TODO 废弃，待移除
-        } else {
-            _this.name = "Material" + seed$b++;
-            _this.renderType = 0;
-        }
-        return _this;
-    }
-    var _proto = Material.prototype;
+var RenderPassPriorityPrepare = 0;
+var RenderPassPriorityNormal = 1000;
+var RenderPassPriorityPostprocess = 3000;
+exports.RenderPassAttachmentStorageType = void 0;
+(function(RenderPassAttachmentStorageType) {
+    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["none"] = 0] = "none";
+    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["color"] = 1] = "color";
+    //stencil 8 render buffer
+    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["stencil_8_opaque"] = 2] = "stencil_8_opaque";
+    //stencil 16 render buffer
+    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["depth_16_opaque"] = 3] = "depth_16_opaque";
+    //depth 16 & stencil 8 render buffer
+    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["depth_stencil_opaque"] = 4] = "depth_stencil_opaque";
+    //depth 16 texture, need gpu.capability.readableDepthStencilTextures
+    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["depth_16_texture"] = 5] = "depth_16_texture";
+    //depth 24 texture, need gpu.capability.readableDepthStencilTextures
+    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["depth_24_stencil_8_texture"] = 6] = "depth_24_stencil_8_texture";
+})(exports.RenderPassAttachmentStorageType || (exports.RenderPassAttachmentStorageType = {}));
+exports.TextureStoreAction = void 0;
+(function(TextureStoreAction) {
     /**
-   * 初始化 GPU 资源
-   * @override
-   */ _proto.initialize = function initialize() {
-    // OVERRIDE
+   * 不清除 Attachment
+   */ TextureStoreAction[TextureStoreAction["store"] = 0] = "store";
+    /**
+   * 清除 Attachment
+   */ TextureStoreAction[TextureStoreAction["clear"] = 2] = "clear";
+})(exports.TextureStoreAction || (exports.TextureStoreAction = {}));
+var RenderTargetHandle = /*#__PURE__*/ function() {
+    function RenderTargetHandle(engine, options) {
+        this.destroyed = false;
+        if (!options) {
+            return;
+        }
+        var texture = options.texture, size = options.size;
+        if (_instanceof1(texture, Texture)) {
+            this.texture = texture;
+            this.externalTexture = true;
+        } else if (texture) {
+            var wrapT = texture.wrapT, wrapS = texture.wrapS, minFilter = texture.minFilter, magFilter = texture.magFilter, internalFormat = texture.internalFormat, _texture_format = texture.format, format = _texture_format === void 0 ? glContext.RGBA : _texture_format, _texture_type = texture.type, type = _texture_type === void 0 ? glContext.UNSIGNED_BYTE : _texture_type;
+            this.externalTexture = false;
+            this.textureOptions = {
+                size: size,
+                format: format,
+                type: type,
+                internalFormat: internalFormat || format,
+                wrapT: wrapT,
+                wrapS: wrapS,
+                minFilter: minFilter,
+                magFilter: magFilter,
+                name: options.name
+            };
+            this.texture = Texture.create(engine, _extends({}, this.textureOptions, {
+                sourceType: exports.TextureSourceType.framebuffer,
+                data: {
+                    width: size[0],
+                    height: size[1]
+                }
+            }));
+        } else ;
+    }
+    var _proto = RenderTargetHandle.prototype;
+    _proto.dispose = function dispose() {
+        if (this.destroyed) {
+            return;
+        }
+        this.texture.dispose();
+        this.destroyed = true;
     };
-    _proto.createShaderVariant = function createShaderVariant() {
-    // OVERRIDE
-    };
-    _proto.use = function use(render, globalUniforms) {
-    // OVERRIDE
-    };
-    _create_class(Material, [
+    _create_class(RenderTargetHandle, [
         {
-            key: "blending",
-            set: /******** effects-core 中会调用 引擎必须实现 ***********************/ /**
-   * 设置 Material 的颜色融合开关
-   * @param blending - 是否开启混合效果
-   */ function set(blending) {}
+            key: "isDestroyed",
+            get: function get() {
+                return this.destroyed;
+            }
         },
         {
-            key: "blendFunction",
-            set: /**
-   * 分别指定 Material 的颜色混合函数乘数
-   * @param func - 混合函数参数
-   */ function set(func) {}
+            key: "storageType",
+            get: function get() {
+                return 1;
+            }
         },
         {
-            key: "blendEquation",
-            set: /**
-   * 分别指定 Material 的颜色混合方式
-   * @param equation - 混合方程参数
-   */ function set(equation) {}
+            key: "size",
+            get: function get() {
+                var tex = this.texture;
+                return tex ? [
+                    tex.getWidth(),
+                    tex.getHeight()
+                ] : [
+                    0,
+                    0
+                ];
+            }
         },
         {
-            key: "depthTest",
-            set: /**
-   * 设置 Material 的深度测试开关
-   * @param value - 是否开启深度测试
-   */ function set(value) {}
+            key: "width",
+            get: function get() {
+                return this.texture.getWidth() || 0;
+            }
         },
         {
-            key: "depthMask",
-            set: /**
-   * 设置 Material 的写入深度缓冲开关
-   * @param value - 是否开启深度写入
-   */ function set(value) {}
-        },
-        {
-            key: "stencilTest",
-            set: /**
-   * 设置 Material 的模板测试开关
-   * @param value - 是否开启模板测试
-   */ function set(value) {}
-        },
-        {
-            key: "stencilRef",
-            set: /**
-   * 分别指定 Material 的模板测试参考值
-   * @param value  - 模板测试参考值参数
-   */ function set(value) {}
-        },
-        {
-            key: "stencilFunc",
-            set: /**
-   * 分别指定 Material 的模板测试函数
-   * @param value - 模板测试函数参数
-   */ function set(value) {}
-        },
-        {
-            key: "stencilOpZPass",
-            set: /**
-   * 分别指定 Material 的模板测试和深度测试都通过时使用的函数
-   * @param value - 模板测试深度测试通过时的操作参数
-   */ function set(value) {}
-        },
-        {
-            key: "culling",
-            set: /**
-   * 设置 Material 的正反面剔除开关
-   * @param value - 是否开启剔除
-   */ function set(value) {}
-        },
-        {
-            key: "frontFace",
-            set: /**
-   * 设置 Material 的正反面计算方向
-   * @param value
-   */ function set(value) {}
-        },
-        {
-            key: "cullFace",
-            set: /**
-   * 设置 Material 要剔除的面
-   * @param value - 剔除面参数
-   */ function set(value) {}
-        },
-        {
-            key: "blendColor",
-            set: /***************************************************/ /******** effects-core 中暂无调用 引擎可以先不实现 ***********************/ /**
-   * 设置 Material 的源和目标混合因子
-   * @param color
-   */ function set(color) {}
-        },
-        {
-            key: "depthRange",
-            set: /**
-   * 设置 Material 的深度映射范围
-   * @param value
-   */ function set(value) {}
-        },
-        {
-            key: "depthFunc",
-            set: /**
-   * 设置 Material 的深度比较函数
-   * @param value - 深度测试函数参数
-   */ function set(value) {}
-        },
-        {
-            key: "polygonOffsetFill",
-            set: /**
-   * 设置 Material 的多边形偏移（实现类似深度偏移的效果）
-   * @param value - 多边形偏移参数
-   */ function set(value) {}
-        },
-        {
-            key: "polygonOffset",
-            set: /**
-   * 指定 Material 计算深度值的比例因子 factor 和单位 units
-   * @param value
-   */ function set(value) {}
-        },
-        {
-            key: "sampleAlphaToCoverage",
-            set: /**
-   * 设置 Material 的通过 alpha 值决定临时覆盖值计算的开关
-   * @param value - 是否开启 alpha 抖动
-   */ function set(value) {}
-        },
-        {
-            key: "colorMask",
-            set: /**
-   * 设置 Material 颜色缓冲区的写入开关
-   * @param value
-   */ function set(value) {}
-        },
-        {
-            key: "stencilMask",
-            set: /**
-   * 分别指定 Material 的模板测试掩码
-   * @param value - 模板测试写入掩码参数
-   */ function set(value) {}
-        },
-        {
-            key: "stencilOpFail",
-            set: /**
-   * 分别指定 Material 模板测试失败时要使用的函数
-   * @param value - 模板测试失败时的操作参数
-   */ function set(value) {}
-        },
-        {
-            key: "stencilOpZFail",
-            set: /**
-   * 分别指定 Material 模板测试通过但深度测试失败时要使用的函数
-   * @param value - 模板测试深度测试失败时的操作参数
-   */ function set(value) {}
+            key: "height",
+            get: function get() {
+                return this.texture.getHeight() || 0;
+            }
         }
     ]);
-    return Material;
-}(EffectsObject);
+    return RenderTargetHandle;
+}();
+exports.RenderPassDestroyAttachmentType = void 0;
+(function(RenderPassDestroyAttachmentType) {
+    /**
+   * 强制销毁
+   */ RenderPassDestroyAttachmentType[RenderPassDestroyAttachmentType["force"] = 0] = "force";
+    /**
+   * 保留，不销毁
+   */ RenderPassDestroyAttachmentType[RenderPassDestroyAttachmentType["keep"] = 1] = "keep";
+    /**
+   * 如果是外部传入的 Attachment，就不销毁
+   */ RenderPassDestroyAttachmentType[RenderPassDestroyAttachmentType["keepExternal"] = 2] = "keepExternal";
+    /**
+   * 强制销毁
+   */ RenderPassDestroyAttachmentType[RenderPassDestroyAttachmentType["destroy"] = 0] = "destroy";
+})(exports.RenderPassDestroyAttachmentType || (exports.RenderPassDestroyAttachmentType = {}));
+var seed$a = 1;
+/**
+ * RenderPass 抽象类
+ */ var RenderPass = /*#__PURE__*/ function() {
+    function RenderPass(renderer, options) {
+        /**
+   * ColorAttachment 数组
+   */ this.attachments = [];
+        this.destroyed = false;
+        this.initialized = false;
+        var _options_name = options.name, name = _options_name === void 0 ? "RenderPass_" + seed$a++ : _options_name, clearAction = options.clearAction, semantics = options.semantics, depthStencilAttachment = options.depthStencilAttachment, storeAction = options.storeAction, _options_priority = options.priority, priority = _options_priority === void 0 ? 0 : _options_priority, _options_meshOrder = options.meshOrder, meshOrder = _options_meshOrder === void 0 ? exports.OrderType.ascending : _options_meshOrder, _options_meshes = options.meshes, meshes = _options_meshes === void 0 ? [] : _options_meshes, _options_delegate = options.delegate, delegate = _options_delegate === void 0 ? {} : _options_delegate;
+        this.name = name;
+        this.renderer = renderer;
+        this.priority = priority;
+        this.meshOrder = meshOrder;
+        this.meshes = sortByOrder(meshes.slice(), this.meshOrder);
+        this.depthStencilType = (depthStencilAttachment == null ? void 0 : depthStencilAttachment.storageType) || 0;
+        this.clearAction = _extends({}, clearAction);
+        this.storeAction = _extends({
+            colorAction: 0,
+            depthAction: 0,
+            stencilAction: 0
+        }, storeAction);
+        this.semantics = new SemanticMap(semantics);
+        this.options = options;
+        this.delegate = delegate;
+        this.setViewportOptions(options);
+    }
+    var _proto = RenderPass.prototype;
+    _proto.addMesh = function addMesh(mesh) {
+        addByOrder(this.meshes, mesh, this.meshOrder);
+    };
+    _proto.removeMesh = function removeMesh(mesh) {
+        removeItem(this.meshes, mesh);
+    };
+    _proto.setMeshes = function setMeshes(meshes) {
+        var _this_meshes;
+        this.meshes.length = 0;
+        (_this_meshes = this.meshes).splice.apply(_this_meshes, [].concat([
+            0,
+            0
+        ], meshes));
+        sortByOrder(this.meshes, this.meshOrder);
+        return this.meshes;
+    };
+    /**
+   * 获取当前 Attachment 数组，注意 RenderPass 可能没有创建完成
+   */ _proto.getInitAttachments = function getInitAttachments() {
+        if (this.attachments.length > 0) {
+            return this.attachments;
+        } else {
+            return this.options.attachments;
+        }
+    };
+    // TODO 所有pass在子类配置
+    /**
+   * 配置当前pass的RT，在每帧渲染前调用
+   */ _proto.configure = function configure(renderer) {
+        if (this.framebuffer) {
+            renderer.setFramebuffer(this.framebuffer);
+        } else {
+            var _this_getViewport = this.getViewport(), x = _this_getViewport[0], y = _this_getViewport[1], width = _this_getViewport[2], height = _this_getViewport[3];
+            renderer.setViewport(x, y, width, height);
+        }
+    };
+    /**
+   * 执行当前pass，每帧调用一次
+   */ _proto.execute = function execute(renderer) {
+        renderer.clear(this.clearAction);
+        renderer.renderMeshes(this.meshes);
+        renderer.clear(this.storeAction);
+    };
+    /**
+   * 每帧所有的pass渲染完后调用，通常用于清空临时的RT资源
+   */ _proto.frameCleanup = function frameCleanup(renderer) {};
+    /**
+   * 重置 ColorAttachment 数组，会直接替换掉
+   * @param colors - 纹理数组，作为新的 ColorAttachment
+   */ _proto.resetColorAttachments = function resetColorAttachments(colors) {
+        var _this = this;
+        if (!colors.length) {
+            this.resetAttachments({
+                attachments: []
+            });
+        }
+        if (!this.attachments.length) {
+            this.resetAttachments({
+                attachments: colors.map(function(t) {
+                    return {
+                        texture: t
+                    };
+                })
+            });
+        } else {
+            var attachments = colors.map(function(texture) {
+                texture.updateSource({
+                    sourceType: exports.TextureSourceType.framebuffer
+                });
+                return new RenderTargetHandle(_this.renderer.engine, {
+                    texture: texture
+                });
+            });
+            this.attachments.forEach(function(att) {
+                return !att.externalTexture && att.dispose();
+            });
+            this.attachments = attachments;
+            if (this.framebuffer) {
+                this.framebuffer.bind();
+                this.framebuffer.resetColorTextures(colors.map(function(color) {
+                    return color;
+                }));
+            }
+        }
+    };
+    /**
+   * 重置所有 Attachment，会替换掉所有 Attachment
+   * @param options - Attachment 和视口数据
+   */ _proto.resetAttachments = function resetAttachments(options) {
+        this.options = options;
+        this.setViewportOptions(options);
+        if (this.renderer) {
+            this._resetAttachments();
+        }
+    };
+    _proto.setViewportOptions = function setViewportOptions(options) {
+        if (options.viewport) {
+            this.isCustomViewport = true;
+            this.viewportScale = 1;
+            this.customViewport = options.viewport.slice(0, 4);
+            if (this.framebuffer) {
+                var vp = this.customViewport;
+                // TODO 为什么framebuffer和renderpass的isCustomViewport不一样？
+                this.framebuffer.isCustomViewport = false;
+                this.framebuffer.resize(vp[0], vp[1], vp[2], vp[3]);
+            }
+        } else {
+            this.isCustomViewport = false;
+            this.viewportScale = options.viewportScale || 1;
+            if (this.framebuffer) {
+                this.framebuffer.isCustomViewport = true;
+                this.framebuffer.viewportScale = this.viewportScale;
+            }
+        }
+    };
+    _proto._resetAttachments = function _resetAttachments() {
+        var _this = this;
+        var _options_attachments;
+        var renderer = this.renderer;
+        var options = this.options;
+        if (this.attachments.length) {
+            var _this_framebuffer;
+            this.attachments.forEach(function(att) {
+                return !att.externalTexture && att.dispose();
+            });
+            this.attachments.length = 0;
+            (_this_framebuffer = this.framebuffer) == null ? void 0 : _this_framebuffer.dispose({
+                depthStencilAttachment: 2
+            });
+            this.framebuffer = null;
+        }
+        var vs = this.viewportScale;
+        // renderpass 的 viewport 相关参数都需要动态的修改
+        var viewport = this.isCustomViewport ? this.customViewport : [
+            0,
+            0,
+            renderer.getWidth() * vs,
+            renderer.getHeight() * vs
+        ];
+        var size = [
+            viewport[2],
+            viewport[3]
+        ];
+        var name = this.name;
+        if ((_options_attachments = options.attachments) == null ? void 0 : _options_attachments.length) {
+            var attachments = options.attachments.map(function(attr, index) {
+                var _attr_texture;
+                var attachment = new RenderTargetHandle(_this.renderer.engine, _extends({
+                    size: size,
+                    name: ((_attr_texture = attr.texture) == null ? void 0 : _attr_texture.name) || name + "##color_" + index
+                }, attr));
+                return attachment;
+            });
+            this.attachments = attachments;
+            var framebuffer = Framebuffer.create({
+                storeAction: this.storeAction,
+                name: name,
+                viewport: viewport,
+                viewportScale: this.viewportScale,
+                isCustomViewport: this.isCustomViewport,
+                attachments: attachments.map(function(att) {
+                    return att.texture;
+                }),
+                depthStencilAttachment: options.depthStencilAttachment || {
+                    storageType: 0
+                }
+            }, renderer);
+            framebuffer.bind();
+            framebuffer.unbind();
+            this.framebuffer = framebuffer;
+        } else {
+            this.attachments.length = 0;
+        }
+    };
+    /**
+   * 获取当前视口大小，格式：[x偏移，y偏移，宽度，高度]
+   */ _proto.getViewport = function getViewport() {
+        var _this_framebuffer;
+        var ret = ((_this_framebuffer = this.framebuffer) == null ? void 0 : _this_framebuffer.viewport) || this.customViewport;
+        if (ret) {
+            return ret;
+        }
+        var renderer = this.renderer;
+        var vs = this.viewportScale;
+        return renderer ? [
+            0,
+            0,
+            renderer.getWidth() * vs,
+            renderer.getHeight() * vs
+        ] : [
+            0,
+            0,
+            0,
+            0
+        ];
+    };
+    /**
+   * 获取深度 Attachment，可能没有
+   */ _proto.getDepthAttachment = function getDepthAttachment() {
+        var framebuffer = this.framebuffer;
+        if (framebuffer) {
+            var depthTexture = framebuffer.getDepthTexture();
+            var texture = depthTexture ? this.getDepthTexture(depthTexture, framebuffer.externalStorage) : undefined;
+            return {
+                storageType: framebuffer.depthStencilStorageType,
+                storage: framebuffer.depthStorage,
+                texture: texture
+            };
+        }
+    };
+    /**
+   * 获取蒙版 Attachment，可能没有
+   */ _proto.getStencilAttachment = function getStencilAttachment() {
+        var framebuffer = this.framebuffer;
+        if (framebuffer) {
+            var stencilTexture = framebuffer.getStencilTexture();
+            var texture = stencilTexture ? this.getDepthTexture(stencilTexture, framebuffer.externalStorage) : undefined;
+            return {
+                storageType: framebuffer.depthStencilStorageType,
+                storage: framebuffer.stencilStorage,
+                texture: texture
+            };
+        }
+    };
+    _proto.getDepthTexture = function getDepthTexture(texture, external) {
+        if (!this.depthTexture) {
+            var _this_options_depthStencilAttachment;
+            var outTex = (_this_options_depthStencilAttachment = this.options.depthStencilAttachment) == null ? void 0 : _this_options_depthStencilAttachment.texture;
+            var tex = texture === outTex ? outTex : texture;
+            // TODO 为什么要initialize？
+            //tex.initialize(this.renderer.glRenderer.pipelineContext);
+            if (!external) {
+                this.depthTexture = tex;
+            }
+            return tex;
+        }
+        return this.depthTexture;
+    };
+    _proto.getStencilTexture = function getStencilTexture(texture, external) {
+        if (!this.stencilTexture) {
+            var _this_options_depthStencilAttachment;
+            var outTex = (_this_options_depthStencilAttachment = this.options.depthStencilAttachment) == null ? void 0 : _this_options_depthStencilAttachment.texture;
+            var tex = texture === outTex ? outTex : texture;
+            if (!external) {
+                this.stencilTexture = tex;
+            }
+            return tex;
+        }
+        return this.stencilTexture;
+    };
+    // 生成并初始化帧缓冲
+    _proto.initialize = function initialize(renderer) {
+        if (!this.initialized) {
+            this._resetAttachments();
+            this.initialized = true;
+        }
+        return this;
+    };
+    /**
+   * 销毁 RenderPass
+   * @param options - 有选择销毁内部对象
+   */ _proto.dispose = function dispose(options) {
+        if (this.destroyed) {
+            return;
+        }
+        var destroyMeshOption = (options == null ? void 0 : options.meshes) || undefined;
+        if (destroyMeshOption !== exports.DestroyOptions.keep) {
+            this.meshes.forEach(function(mesh) {
+                mesh.dispose(destroyMeshOption);
+            });
+        }
+        this.meshes.length = 0;
+        var colorOpt = (options == null ? void 0 : options.colorAttachment) ? options.colorAttachment : 0;
+        this.attachments.forEach(function(att) {
+            var keep = att.externalTexture && colorOpt === 2 || colorOpt === 1;
+            if (!keep) {
+                att.dispose();
+            }
+        });
+        this.attachments.length = 0;
+        if ((options == null ? void 0 : options.semantics) !== exports.DestroyOptions.keep) {
+            this.semantics.dispose();
+        }
+        this.destroyed = true;
+        var depthStencilOpt = (options == null ? void 0 : options.depthStencilAttachment) ? options.depthStencilAttachment : 0;
+        var fbo = this.framebuffer;
+        if (fbo) {
+            fbo.dispose({
+                depthStencilAttachment: depthStencilOpt
+            });
+            var keep = fbo.externalStorage && depthStencilOpt === 2 || depthStencilOpt === 1;
+            if (!keep) {
+                var _this_stencilTexture, _this_depthTexture;
+                (_this_stencilTexture = this.stencilTexture) == null ? void 0 : _this_stencilTexture.dispose();
+                (_this_depthTexture = this.depthTexture) == null ? void 0 : _this_depthTexture.dispose();
+            }
+        }
+        // @ts-expect-error safe to assign
+        this.options = this.renderer = null;
+        this.initialize = throwDestroyedError;
+    };
+    _create_class(RenderPass, [
+        {
+            key: "isDestroyed",
+            get: function get() {
+                return this.destroyed;
+            }
+        },
+        {
+            key: "viewport",
+            get: function get() {
+                return this.getViewport();
+            }
+        },
+        {
+            key: "stencilAttachment",
+            get: function get() {
+                return this.getStencilAttachment();
+            }
+        },
+        {
+            key: "depthAttachment",
+            get: function get() {
+                return this.getDepthAttachment();
+            }
+        }
+    ]);
+    return RenderPass;
+}();
+
+var blend = "vec4 blendColor(vec4 color,vec4 vc,float mode){vec4 ret=color*vc;float alpha=ret.a;if(mode==1.){ret.rgb*=alpha;}else if(mode==2.){ret.rgb*=alpha;ret.a=dot(ret.rgb,vec3(0.33333333));}else if(mode==3.){alpha=color.r*alpha;ret=vec4(vc.rgb*alpha,alpha);}return ret;}";
+
+var itemFrameFrag = "#version 100\nprecision highp float;vec4 blendColor(vec4 color,vec4 vc,float mode){vec4 ret=color*vc;float alpha=ret.a;if(mode==1.){ret.rgb*=alpha;}else if(mode==2.){ret.rgb*=alpha;ret.a=dot(ret.rgb,vec3(0.33333333));}else if(mode==3.){alpha=color.r*alpha;ret=vec4(vc.rgb*alpha,alpha);}return ret;}varying vec4 vColor;varying vec4 vTexCoord;varying highp vec2 vParams;uniform vec3 uFrameColor;void main(){gl_FragColor=vec4(uFrameColor.xyz,1.0);}";
+
+var integrate = "float calculateMovement(float t,vec2 p1,vec2 p2,vec2 p3,vec2 p4){float movement=0.0;float h=(t-p1.x)*0.05;for(int i=0;i<=20;i++){float t=float(i)*h;float nt=binarySearchT(t,p1.x,p2.x,p3.x,p4.x);float y=cubicBezier(nt,p1.y,p2.y,p3.y,p4.y);float weight=(i==0||i==20)? 1.0 :(mod(float(i),2.)!=0.)? 4.0 : 2.0;movement+=weight*y;}movement*=h/3.;return movement;}float integrateFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i+=2){vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return ret;}vec2 p1=vec2(k0.x,k0.y);vec2 p2=vec2(k0.z,k0.w);vec2 p3=vec2(k1.z,k1.w);vec2 p4=vec2(k1.x,k1.y);if(time>=k1.x){ret+=calculateMovement(k1.x,p1,p2,p3,p4);}if(time>=k0.x&&time<k1.x){return ret+calculateMovement(time,p1,p2,p3,p4);}}return ret;}float integrateByTimeLineSeg(float t,vec2 p0,vec2 p1){float t0=p0.x;float t1=p1.x;float y0=p0.y;float y1=p1.y;vec4 tSqr=vec4(t,t,t0,t0);tSqr=tSqr*tSqr;vec4 a=vec4(2.*t,3.,-t0,3.)*tSqr;float t1y0=t1*y0;vec4 b=vec4(y0-y1,t0*y1-t1y0,2.*y0+y1,t1y0);float r=dot(a,b);return r/(t0-t1)*0.16666667;}float integrateLineSeg(float time,vec2 p0,vec2 p1){float h=time-p0.x;float y0=p0.y;return(y0+y0+(p1.y-y0)*h/(p1.x-p0.x))*h/2.;}float integrateFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateLineSeg(time,k0,k1);}ret+=integrateLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateLineSeg(time,k1,k2);}ret+=integrateLineSeg(k2.x,k1,k2);}return ret;}float integrateByTimeFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateByTimeLineSeg(time,k0,k1);}ret+=integrateByTimeLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateByTimeLineSeg(time,k1,k2);}ret+=integrateByTimeLineSeg(k2.x,k1,k2);}return ret;}float getIntegrateFromTime0(float t1,vec4 value){float type=value.x;if(type==0.){return value.y*t1;}if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateLineSeg(t1,p0,p1);}if(type==3.){return integrateFromLineSeg(t1,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*t1;}if(type==5.){return integrateFromBezierCurveFrames(t1,value.z,value.w);}return 0.;}float getIntegrateByTimeFromTime(float t0,float t1,vec4 value){float type=value.x;if(type==0.){return value.y*(t1*t1-t0*t0)/2.;}else if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateByTimeLineSeg(t1,p0,p1)-integrateByTimeLineSeg(t0,p0,p1);}if(type==3.){return integrateByTimeFromLineSeg(t1,value.y,value.z)-integrateByTimeFromLineSeg(t0,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*(t1*t1-t0*t0)/2.;}if(type==5.){return integrateFromBezierCurveFrames(t1,value.z,value.w)-integrateFromBezierCurveFrames(t0,value.z,value.w);}return 0.;}";
+
+var itemVert = "precision highp float;attribute vec2 atlasOffset;attribute vec3 aPos;varying vec2 vTexCoord;varying vec3 vParams;varying vec4 vColor;uniform vec2 _Size;uniform vec3 _Scale;uniform vec4 _Color;uniform vec4 _TexParams;uniform vec4 _TexOffset;uniform mat4 effects_MatrixVP;uniform mat4 effects_ObjectToWorld;uniform mat4 effects_MatrixV;\n#ifdef ENV_EDITOR\nuniform vec4 uEditorTransform;\n#endif\nvoid main(){vec4 texParams=_TexParams;vTexCoord=vec2(atlasOffset.xy*_TexOffset.zw+_TexOffset.xy);vColor=_Color;vParams=vec3(0.0,texParams.y,texParams.x);if(texParams.z==1.0){vec4 pos=vec4(aPos.xy*_Size,aPos.z,1.0);gl_Position=effects_MatrixVP*effects_ObjectToWorld*pos;}else{mat4 view=effects_MatrixV;vec3 camRight=vec3(view[0][0],view[1][0],view[2][0]);vec3 camUp=vec3(view[0][1],view[1][1],view[2][1]);vec3 worldPosition=vec3(effects_ObjectToWorld*vec4(0.0,0.0,0.0,1.0));vec3 vertexPosition=worldPosition+camRight*aPos.x*_Size.x*_Scale.x+camUp*aPos.y*_Size.y*_Scale.y;gl_Position=effects_MatrixVP*vec4(vertexPosition,1.0);}\n#ifdef ENV_EDITOR\ngl_Position=vec4(gl_Position.xy*uEditorTransform.xy+uEditorTransform.zw*gl_Position.w,gl_Position.zw);\n#endif\n}";
+
+var itemFrag = "precision highp float;varying vec4 vColor;varying vec2 vTexCoord;varying vec3 vParams;uniform sampler2D _MainTex;vec4 blendColor(vec4 color,vec4 vc,float mode){vec4 ret=color*vc;float alpha=ret.a;if(mode==1.){ret.rgb*=alpha;}else if(mode==2.){ret.rgb*=alpha;ret.a=dot(ret.rgb,vec3(0.33333333));}else if(mode==3.){alpha=color.r*alpha;ret=vec4(vc.rgb*alpha,alpha);}return ret;}void main(){vec4 color=vec4(0.);vec4 texColor=texture2D(_MainTex,vTexCoord.xy);color=blendColor(texColor,vColor,floor(0.5+vParams.y));\n#ifdef ALPHA_CLIP\nif(vParams.z==0.&&color.a<0.04){discard;}\n#endif\ncolor.a=clamp(color.a,0.0,1.0);gl_FragColor=color;}";
+
+var particleFrag = "#version 100\nprecision mediump float;vec4 blendColor(vec4 color,vec4 vc,float mode){vec4 ret=color*vc;float alpha=ret.a;if(mode==1.){ret.rgb*=alpha;}else if(mode==2.){ret.rgb*=alpha;ret.a=dot(ret.rgb,vec3(0.33333333));}else if(mode==3.){alpha=color.r*alpha;ret=vec4(vc.rgb*alpha,alpha);}return ret;}\n#define PATICLE_SHADER 1\nvarying float vLife;varying vec2 vTexCoord;varying vec4 vColor;uniform vec3 emissionColor;uniform float emissionIntensity;uniform sampler2D uMaskTex;uniform vec4 uColorParams;uniform vec2 uTexOffset;\n#ifdef COLOR_OVER_LIFETIME\nuniform sampler2D uColorOverLifetime;\n#endif\n#ifdef USE_SPRITE\nvarying vec4 vTexCoordBlend;\n#endif\nvarying float vSeed;\n#ifdef PREVIEW_BORDER\nuniform vec4 uPreviewColor;\n#endif\n#ifdef USE_SPRITE\nvec4 getTextureColor(sampler2D tex,vec2 texCoord){if(vTexCoordBlend.w>0.){return mix(texture2D(tex,texCoord),texture2D(tex,vTexCoordBlend.xy+texCoord),vTexCoordBlend.z);}return texture2D(tex,texCoord);}\n#else\n#define getTextureColor texture2D\n#endif\n#ifndef WEBGL2\n#define round(a) floor(0.5+a)\n#endif\n#ifdef PREVIEW_BORDER\nvoid main(){gl_FragColor=uPreviewColor;}\n#else\nvoid main(){vec4 color=vec4(1.0);vec4 tempColor=vColor;vec2 texOffset=uTexOffset;if(vLife<0.){discard;}if(uColorParams.x>0.0){color=getTextureColor(uMaskTex,vTexCoord);}\n#ifdef COLOR_OVER_LIFETIME\n#ifndef ENABLE_VERTEX_TEXTURE\ntempColor*=texture2D(uColorOverLifetime,vec2(vLife,0.));\n#endif\n#endif\ncolor=blendColor(color,tempColor,round(uColorParams.y));if(color.a<=0.01&&uColorParams.w>0.){float _at=texture2D(uMaskTex,vTexCoord+texOffset).a+texture2D(uMaskTex,vTexCoord+texOffset*-1.).a;if(_at<=0.02){discard;}}vec3 emission=emissionColor*pow(2.0,emissionIntensity);color=vec4(pow(pow(color.rgb,vec3(2.2))+emission,vec3(1.0/2.2)),color.a);gl_FragColor=color;}\n#endif\n";
+
+var particleVert = "#version 100\nprecision mediump float;\n#define SHADER_VERTEX 1\n#define PATICLE_SHADER 1\n#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n#define NONE_CONST_INDEX 1\n#ifdef SHADER_VERTEX\nattribute float aSeed;varying float vSeed;\n#endif\n#ifdef SHADER_VERTEX\n#define MAX_C VERT_MAX_KEY_FRAME_COUNT\n#else\n#define MAX_C FRAG_MAX_KEY_FRAME_COUNT\n#endif\nmat4 cubicBezierMatrix=mat4(1.0,-3.0,3.0,-1.0,0.0,3.0,-6.0,3.0,0.0,0.0,3.0,-3.0,0.0,0.0,0.0,1.0);float cubicBezier(float t,float y1,float y2,float y3,float y4){vec4 tVec=vec4(1.0,t,t*t,t*t*t);vec4 yVec=vec4(y1,y2,y3,y4);vec4 result=tVec*cubicBezierMatrix*yVec;return result.x+result.y+result.z+result.w;}float binarySearchT(float x,float x1,float x2,float x3,float x4){float left=0.0;float right=1.0;float mid=0.0;float computedX;for(int i=0;i<8;i++){mid=(left+right)*0.5;computedX=cubicBezier(mid,x1,x2,x3,x4);if(abs(computedX-x)<0.0001){break;}else if(computedX>x){right=mid;}else{left=mid;}}return mid;}float valueFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);for(int i=0;i<ITR_END;i+=2){if(i>=count){break;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return k0.y;}if(i==int(frameCount-2.)&&time>=k1.x){return k1.y;}if(time>=k0.x&&time<=k1.x){float t=(time-k0.x)/(k1.x-k0.x);float nt=binarySearchT(time,k0.x,k0.z,k1.z,k1.x);return cubicBezier(nt,k0.y,k0.w,k1.w,k1.y);}}}float evaluteLineSeg(float t,vec2 p0,vec2 p1){return p0.y+(p1.y-p0.y)*(t-p0.x)/(p1.x-p0.x);}float valueFromLineSegs(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){if(i>count){return lookup_curve(i).w;}vec4 seg=lookup_curve(i+start);vec2 p0=seg.xy;vec2 p1=seg.zw;if(time>=p0.x&&time<=p1.x){return evaluteLineSeg(time,p0,p1);}vec2 p2=lookup_curve(i+start+1).xy;if(time>p1.x&&time<=p2.x){return evaluteLineSeg(time,p1,p2);}}return lookup_curve(0).y;}float getValueFromTime(float time,vec4 value){float type=value.x;if(type==0.){return value.y;}if(type==1.){return mix(value.y,value.z,time/value.w);}if(type==3.){return valueFromLineSegs(time,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed);}if(type==5.){return valueFromBezierCurveFrames(time,value.z,value.w);}return 0.;}float calculateMovement(float t,vec2 p1,vec2 p2,vec2 p3,vec2 p4){float movement=0.0;float h=(t-p1.x)*0.05;for(int i=0;i<=20;i++){float t=float(i)*h;float nt=binarySearchT(t,p1.x,p2.x,p3.x,p4.x);float y=cubicBezier(nt,p1.y,p2.y,p3.y,p4.y);float weight=(i==0||i==20)? 1.0 :(mod(float(i),2.)!=0.)? 4.0 : 2.0;movement+=weight*y;}movement*=h/3.;return movement;}float integrateFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i+=2){vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return ret;}vec2 p1=vec2(k0.x,k0.y);vec2 p2=vec2(k0.z,k0.w);vec2 p3=vec2(k1.z,k1.w);vec2 p4=vec2(k1.x,k1.y);if(time>=k1.x){ret+=calculateMovement(k1.x,p1,p2,p3,p4);}if(time>=k0.x&&time<k1.x){return ret+calculateMovement(time,p1,p2,p3,p4);}}return ret;}float integrateByTimeLineSeg(float t,vec2 p0,vec2 p1){float t0=p0.x;float t1=p1.x;float y0=p0.y;float y1=p1.y;vec4 tSqr=vec4(t,t,t0,t0);tSqr=tSqr*tSqr;vec4 a=vec4(2.*t,3.,-t0,3.)*tSqr;float t1y0=t1*y0;vec4 b=vec4(y0-y1,t0*y1-t1y0,2.*y0+y1,t1y0);float r=dot(a,b);return r/(t0-t1)*0.16666667;}float integrateLineSeg(float time,vec2 p0,vec2 p1){float h=time-p0.x;float y0=p0.y;return(y0+y0+(p1.y-y0)*h/(p1.x-p0.x))*h/2.;}float integrateFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateLineSeg(time,k0,k1);}ret+=integrateLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateLineSeg(time,k1,k2);}ret+=integrateLineSeg(k2.x,k1,k2);}return ret;}float integrateByTimeFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateByTimeLineSeg(time,k0,k1);}ret+=integrateByTimeLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateByTimeLineSeg(time,k1,k2);}ret+=integrateByTimeLineSeg(k2.x,k1,k2);}return ret;}float getIntegrateFromTime0(float t1,vec4 value){float type=value.x;if(type==0.){return value.y*t1;}if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateLineSeg(t1,p0,p1);}if(type==3.){return integrateFromLineSeg(t1,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*t1;}if(type==5.){return integrateFromBezierCurveFrames(t1,value.z,value.w);}return 0.;}float getIntegrateByTimeFromTime(float t0,float t1,vec4 value){float type=value.x;if(type==0.){return value.y*(t1*t1-t0*t0)/2.;}else if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateByTimeLineSeg(t1,p0,p1)-integrateByTimeLineSeg(t0,p0,p1);}if(type==3.){return integrateByTimeFromLineSeg(t1,value.y,value.z)-integrateByTimeFromLineSeg(t0,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*(t1*t1-t0*t0)/2.;}if(type==5.){return integrateFromBezierCurveFrames(t1,value.z,value.w)-integrateFromBezierCurveFrames(t0,value.z,value.w);}return 0.;}const float d2r=3.141592653589793/180.;attribute vec3 aPos;attribute vec4 aOffset;attribute vec4 aColor;attribute vec3 aDirX;attribute vec3 aDirY;attribute vec3 aTranslation;attribute vec3 aRotation0;attribute vec3 aRotation1;attribute vec3 aRotation2;attribute vec3 aLinearMove;\n#ifdef USE_SPRITE\nattribute vec3 aSprite;uniform vec4 uSprite;struct UVDetail{vec2 uv0;vec3 uv1;};UVDetail getSpriteUV(vec2 uv,float lifeTime);varying vec4 vTexCoordBlend;\n#endif\n#ifdef FINAL_TARGET\nuniform vec3 uFinalTarget;uniform vec4 uForceCurve;\n#endif\nuniform mat4 effects_ObjectToWorld;uniform mat4 effects_MatrixV;uniform mat4 effects_MatrixVP;uniform vec4 uParams;uniform vec4 uOpacityOverLifetimeValue;\n#ifdef COLOR_OVER_LIFETIME\nuniform sampler2D uColorOverLifetime;\n#endif\nuniform vec4 uOrbXByLifetimeValue;uniform vec4 uOrbYByLifetimeValue;uniform vec4 uOrbZByLifetimeValue;uniform vec3 uOrbCenter;uniform vec4 uSizeByLifetimeValue;\n#ifdef SIZE_Y_BY_LIFE\nuniform vec4 uSizeYByLifetimeValue;\n#endif\nvarying float vLife;varying vec4 vColor;varying vec2 vTexCoord;\n#ifdef ENV_EDITOR\nuniform vec4 uEditorTransform;\n#endif\nvec3 calOrbitalMov(float _life,float _dur){vec3 orb=vec3(0.0);\n#ifdef AS_ORBITAL_MOVEMENT\n#define FUNC(a) getValueFromTime(_life,a)\n#else\n#define FUNC(a) getIntegrateFromTime0(_life,a) * _dur\n#endif\n#if ORB_VEL_X\norb.x=FUNC(uOrbXByLifetimeValue);\n#endif\n#if ORB_VEL_Y\norb.y=FUNC(uOrbYByLifetimeValue);\n#endif\n#if ORB_VEL_Z\norb.z=FUNC(uOrbZByLifetimeValue);\n#endif\n#undef FUNC\nreturn orb;}mat3 mat3FromRotation(vec3 rotation){vec3 sinR=sin(rotation*d2r);vec3 cosR=cos(rotation*d2r);return mat3(cosR.z,-sinR.z,0.,sinR.z,cosR.z,0.,0.,0.,1.)*mat3(cosR.y,0.,sinR.y,0.,1.,0.,-sinR.y,0,cosR.y)*mat3(1.,0.,0.,0,cosR.x,-sinR.x,0.,sinR.x,cosR.x);}\n#ifdef USE_SPRITE\nUVDetail getSpriteUV(vec2 uv,float lifeTime){float t=fract(clamp((lifeTime-aSprite.x)/aSprite.y,0.0,1.)*aSprite.z);float frame=uSprite.z*t;float frameIndex=max(ceil(frame)-1.,0.);float row=floor((frameIndex+0.1)/uSprite.x);float col=frameIndex-row*uSprite.x;vec2 retUV=(vec2(col,row)+uv)/uSprite.xy;UVDetail ret;if(uSprite.w>0.){float blend=frame-frameIndex;float frameIndex1=min(ceil(frame),uSprite.z-1.);float row1=floor((frameIndex1+0.1)/uSprite.x);float col1=frameIndex1-row1*uSprite.x;vec2 coord=(vec2(col1,row1)+uv)/uSprite.xy-retUV;ret.uv1=vec3(coord.x,1.-coord.y,blend);}ret.uv0=vec2(retUV.x,1.-retUV.y);return ret;}\n#endif\nvoid main(){float time=uParams.x-aOffset.z;float dur=aOffset.w;if(time<0.||time>dur){gl_Position=vec4(-3.,-3.,-3.,1.);}else{float life=clamp(time/dur,0.0,1.0);vLife=life;\n#ifdef USE_SPRITE\nUVDetail uvD=getSpriteUV(aOffset.xy,time);vTexCoord=uvD.uv0;vTexCoordBlend=vec4(uvD.uv1,uSprite.w);\n#else\nvTexCoord=aOffset.xy;\n#endif\nvColor=aColor;\n#ifdef COLOR_OVER_LIFETIME\n#ifdef ENABLE_VERTEX_TEXTURE\nvColor*=texture2D(uColorOverLifetime,vec2(life,0.));\n#endif\n#endif\nvColor.a*=clamp(getValueFromTime(life,uOpacityOverLifetimeValue),0.,1.);vec3 size=vec3(vec2(getValueFromTime(life,uSizeByLifetimeValue)),1.0);\n#ifdef SIZE_Y_BY_LIFE\nsize.y=getValueFromTime(life,uSizeYByLifetimeValue);\n#endif\nmat3 aRotation=mat3(aRotation0,aRotation1,aRotation2);vec3 point=aRotation*(aDirX*size.x+aDirY*size.y);vec3 _pos=aPos+aTranslation;\n#if ORB_VEL_X + ORB_VEL_Y + ORB_VEL_Z\n_pos=mat3FromRotation(calOrbitalMov(life,dur))*(_pos-uOrbCenter);_pos+=uOrbCenter;\n#endif\n_pos.xyz+=aLinearMove;\n#ifdef FINAL_TARGET\nfloat force=getValueFromTime(life,uForceCurve);vec4 pos=vec4(mix(_pos,uFinalTarget,force),1.);\n#else\nvec4 pos=vec4(_pos,1.0);\n#endif\n#if RENDER_MODE == 1\npos.xyz+=point;pos=effects_ObjectToWorld*pos;\n#elif RENDER_MODE == 3\npos=effects_ObjectToWorld*pos;pos.xyz+=effects_MatrixV[0].xyz*point.x+effects_MatrixV[2].xyz*point.y;\n#elif RENDER_MODE == 2\npos=effects_ObjectToWorld*pos;pos.xy+=point.xy;\n#elif RENDER_MODE == 0\npos=effects_ObjectToWorld*pos;pos.xyz+=effects_MatrixV[0].xyz*point.x+effects_MatrixV[1].xyz*point.y;\n#endif\ngl_Position=effects_MatrixVP*pos;vSeed=aSeed;gl_PointSize=6.0;\n#ifdef ENV_EDITOR\ngl_Position=vec4(gl_Position.xy*uEditorTransform.xy+uEditorTransform.zw*gl_Position.w,gl_Position.zw);\n#endif\n}}";
+
+var trailVert = "#version 100\nprecision mediump float;\n#define SHADER_VERTEX 1\n#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n#define NONE_CONST_INDEX 1\n#ifdef SHADER_VERTEX\nattribute float aSeed;varying float vSeed;\n#endif\n#ifdef SHADER_VERTEX\n#define MAX_C VERT_MAX_KEY_FRAME_COUNT\n#else\n#define MAX_C FRAG_MAX_KEY_FRAME_COUNT\n#endif\nmat4 cubicBezierMatrix=mat4(1.0,-3.0,3.0,-1.0,0.0,3.0,-6.0,3.0,0.0,0.0,3.0,-3.0,0.0,0.0,0.0,1.0);float cubicBezier(float t,float y1,float y2,float y3,float y4){vec4 tVec=vec4(1.0,t,t*t,t*t*t);vec4 yVec=vec4(y1,y2,y3,y4);vec4 result=tVec*cubicBezierMatrix*yVec;return result.x+result.y+result.z+result.w;}float binarySearchT(float x,float x1,float x2,float x3,float x4){float left=0.0;float right=1.0;float mid=0.0;float computedX;for(int i=0;i<8;i++){mid=(left+right)*0.5;computedX=cubicBezier(mid,x1,x2,x3,x4);if(abs(computedX-x)<0.0001){break;}else if(computedX>x){right=mid;}else{left=mid;}}return mid;}float valueFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);for(int i=0;i<ITR_END;i+=2){if(i>=count){break;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return k0.y;}if(i==int(frameCount-2.)&&time>=k1.x){return k1.y;}if(time>=k0.x&&time<=k1.x){float t=(time-k0.x)/(k1.x-k0.x);float nt=binarySearchT(time,k0.x,k0.z,k1.z,k1.x);return cubicBezier(nt,k0.y,k0.w,k1.w,k1.y);}}}float evaluteLineSeg(float t,vec2 p0,vec2 p1){return p0.y+(p1.y-p0.y)*(t-p0.x)/(p1.x-p0.x);}float valueFromLineSegs(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){if(i>count){return lookup_curve(i).w;}vec4 seg=lookup_curve(i+start);vec2 p0=seg.xy;vec2 p1=seg.zw;if(time>=p0.x&&time<=p1.x){return evaluteLineSeg(time,p0,p1);}vec2 p2=lookup_curve(i+start+1).xy;if(time>p1.x&&time<=p2.x){return evaluteLineSeg(time,p1,p2);}}return lookup_curve(0).y;}float getValueFromTime(float time,vec4 value){float type=value.x;if(type==0.){return value.y;}if(type==1.){return mix(value.y,value.z,time/value.w);}if(type==3.){return valueFromLineSegs(time,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed);}if(type==5.){return valueFromBezierCurveFrames(time,value.z,value.w);}return 0.;}attribute vec4 aPos;attribute vec3 aDir;attribute vec3 aInfo;attribute vec4 aColor;attribute float aTime;\n#ifdef ATTR_TRAIL_START\nattribute float aTrailStart;\n#else\nuniform float uTrailStart[64];attribute float aTrailStartIndex;\n#endif\nuniform mat4 effects_MatrixInvV;uniform mat4 effects_ObjectToWorld;uniform mat4 effects_MatrixVP;uniform vec4 uTextureMap;uniform float uTime;uniform vec4 uParams;uniform vec4 uColorParams;uniform vec4 uOpacityOverLifetimeValue;uniform vec4 uWidthOverTrail;\n#ifdef COLOR_OVER_TRAIL\nuniform sampler2D uColorOverTrail;\n#endif\n#ifdef COLOR_OVER_LIFETIME\nuniform sampler2D uColorOverLifetime;\n#endif\nvarying float vLife;varying vec2 vTexCoord;varying vec4 vColor;\n#ifdef ENV_EDITOR\nuniform vec4 uEditorTransform;\n#endif\nvoid main(){vec4 _pa=effects_MatrixVP*vec4(aPos.xyz,1.);vec4 _pb=effects_MatrixVP*vec4(aPos.xyz+aDir,1.);vec2 dir=normalize(_pb.xy/_pb.w-_pa.xy/_pa.w);vec2 screen_xy=vec2(-dir.y,dir.x);vec4 pos=effects_ObjectToWorld*vec4(aPos.xyz,1.);\n#ifdef ATTR_TRAIL_START\nfloat ts=aTrailStart;\n#else\nfloat ts=uTrailStart[int(aTrailStartIndex)];\n#endif\nfloat trail=(ts-aInfo.y)/uParams.y;float width=aPos.w*getValueFromTime(trail,uWidthOverTrail)/max(abs(screen_xy.x),abs(screen_xy.y));pos.xyz+=(effects_MatrixInvV[0].xyz*screen_xy.x+effects_MatrixInvV[1].xyz*screen_xy.y)*width;float time=min((uTime-aTime)/aInfo.x,1.0);gl_Position=effects_MatrixVP*pos;vColor=aColor;\n#ifdef COLOR_OVER_LIFETIME\n#ifdef ENABLE_VERTEX_TEXTURE\nvColor*=texture2D(uColorOverLifetime,vec2(time,0.));\n#endif\n#endif\n#ifdef COLOR_OVER_TRAIL\nvColor*=texture2D(uColorOverTrail,vec2(trail,0.));\n#endif\nvColor.a*=clamp(getValueFromTime(time,uOpacityOverLifetimeValue),0.,1.);vLife=time;vTexCoord=uTextureMap.xy+vec2(trail,aInfo.z)*uTextureMap.zw;vSeed=aSeed;\n#ifdef ENV_EDITOR\ngl_Position=vec4(gl_Position.xy*uEditorTransform.xy+uEditorTransform.zw*gl_Position.w,gl_Position.zw);\n#endif\n}";
+
+var value = "#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n#define NONE_CONST_INDEX 1\n#ifdef SHADER_VERTEX\nattribute float aSeed;varying float vSeed;\n#endif\n#ifdef SHADER_VERTEX\n#define MAX_C VERT_MAX_KEY_FRAME_COUNT\n#else\n#define MAX_C FRAG_MAX_KEY_FRAME_COUNT\n#endif\nmat4 cubicBezierMatrix=mat4(1.0,-3.0,3.0,-1.0,0.0,3.0,-6.0,3.0,0.0,0.0,3.0,-3.0,0.0,0.0,0.0,1.0);float cubicBezier(float t,float y1,float y2,float y3,float y4){vec4 tVec=vec4(1.0,t,t*t,t*t*t);vec4 yVec=vec4(y1,y2,y3,y4);vec4 result=tVec*cubicBezierMatrix*yVec;return result.x+result.y+result.z+result.w;}float binarySearchT(float x,float x1,float x2,float x3,float x4){float left=0.0;float right=1.0;float mid=0.0;float computedX;for(int i=0;i<8;i++){mid=(left+right)*0.5;computedX=cubicBezier(mid,x1,x2,x3,x4);if(abs(computedX-x)<0.0001){break;}else if(computedX>x){right=mid;}else{left=mid;}}return mid;}float valueFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);for(int i=0;i<ITR_END;i+=2){if(i>=count){break;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return k0.y;}if(i==int(frameCount-2.)&&time>=k1.x){return k1.y;}if(time>=k0.x&&time<=k1.x){float t=(time-k0.x)/(k1.x-k0.x);float nt=binarySearchT(time,k0.x,k0.z,k1.z,k1.x);return cubicBezier(nt,k0.y,k0.w,k1.w,k1.y);}}}float evaluteLineSeg(float t,vec2 p0,vec2 p1){return p0.y+(p1.y-p0.y)*(t-p0.x)/(p1.x-p0.x);}float valueFromLineSegs(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){if(i>count){return lookup_curve(i).w;}vec4 seg=lookup_curve(i+start);vec2 p0=seg.xy;vec2 p1=seg.zw;if(time>=p0.x&&time<=p1.x){return evaluteLineSeg(time,p0,p1);}vec2 p2=lookup_curve(i+start+1).xy;if(time>p1.x&&time<=p2.x){return evaluteLineSeg(time,p1,p2);}}return lookup_curve(0).y;}float getValueFromTime(float time,vec4 value){float type=value.x;if(type==0.){return value.y;}if(type==1.){return mix(value.y,value.z,time/value.w);}if(type==3.){return valueFromLineSegs(time,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed);}if(type==5.){return valueFromBezierCurveFrames(time,value.z,value.w);}return 0.;}";
+
+var valueDefine = "#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n";
+
+var screenMeshVert = "precision highp float;attribute vec2 aPos;varying vec2 uv;void main(){gl_Position=vec4(aPos,0.,1.0);uv=(aPos+vec2(1.0))/2.;}";
+
+var colorGradingFrag = "precision highp float;\n#define HALF_MAX 60000.0\n#define ACEScc_MIDGRAY 0.4135884\nvarying vec2 uv;uniform sampler2D _GaussianTex;uniform sampler2D _SceneTex;uniform float _BloomIntensity;uniform float _Brightness;uniform float _Saturation;uniform float _Contrast;uniform bool _UseBloom;uniform bool _UseToneMapping;uniform vec3 _VignetteColor;uniform vec2 _VignetteCenter;uniform float _VignetteIntensity;uniform float _VignetteSmoothness;uniform float _VignetteRoundness;mat3 LinearToACES=mat3(0.59719,0.07600,0.02840,0.35458,0.90834,0.13383,0.04823,0.01566,0.83777);mat3 ACESToLinear=mat3(1.60475,-0.10208,-0.00327,-0.53108,1.10813,-0.07276,-0.07367,-0.00605,1.07602);float log10(float x){return log(x)/log(10.0);}vec3 log10(vec3 v){return vec3(log10(v.x),log10(v.y),log10(v.z));}vec3 LinearToLogC(vec3 x){return 0.244161*log10(5.555556*x+0.047996)+0.386036;}vec3 LogCToLinear(vec3 x){return(pow(vec3(10.0),(x-0.386036)/0.244161)-0.047996)/5.555556;}vec3 rrt_and_odt_fit(vec3 col){vec3 a=col*(col+0.0245786)-0.000090537;vec3 b=col*(0.983729*col+0.4329510)+0.238081;return a/b;}vec3 ACESToneMapping(vec3 col){vec3 aces=LinearToACES*col;aces=rrt_and_odt_fit(aces);col=ACESToLinear*aces;return col;}vec3 LinearToSrgb(vec3 c){return mix(1.055*pow(c,vec3(1./2.4))-0.055,12.92*c,step(c,vec3(0.0031308)));}vec3 GammaCorrection(vec3 c){return pow(c,vec3(1.0/2.2));}vec3 ApplyVignette(vec3 inputColor,vec2 uv,vec2 center,float intensity,float roundness,float smoothness,vec3 color){vec2 dist=abs(uv-center)*intensity;dist.x*=roundness;float vfactor=pow(clamp((1.0-dot(dist,dist)),0.0,1.0),smoothness);return inputColor*mix(color,vec3(1.0),vfactor);}void main(){vec4 hdrColor=texture2D(_SceneTex,uv);hdrColor.rgb=pow(hdrColor.rgb,vec3(2.2));vec3 finalColor=hdrColor.rgb;if(_UseBloom){vec4 bloomColor=texture2D(_GaussianTex,uv);bloomColor.rgb*=_BloomIntensity;finalColor+=bloomColor.rgb;}if(_VignetteIntensity>0.0){finalColor=ApplyVignette(finalColor,uv,_VignetteCenter,_VignetteIntensity,_VignetteRoundness,_VignetteSmoothness,_VignetteColor);}finalColor=finalColor*_Brightness;vec3 colorLog=LinearToLogC(finalColor);colorLog=(colorLog-ACEScc_MIDGRAY)*_Contrast+ACEScc_MIDGRAY;finalColor=LogCToLinear(colorLog);finalColor=max(finalColor,0.0);float luminance=0.2125*finalColor.r+0.7154*finalColor.g+0.0721*finalColor.b;vec3 luminanceColor=vec3(luminance,luminance,luminance);finalColor=(finalColor-luminanceColor)*_Saturation+luminanceColor;finalColor=max(finalColor,0.0);if(_UseToneMapping){finalColor=max(vec3(0.0),ACESToneMapping(finalColor));}float alpha=min(hdrColor.a,1.0);gl_FragColor=vec4(clamp(GammaCorrection(finalColor),0.0,1.0),alpha);}";
+
+var gaussianDown_frag = "precision highp float;varying vec2 uv;uniform sampler2D _MainTex;uniform vec2 _TextureSize;float GaussWeight2D(float x,float y,float sigma){float PI=3.14159265358;float E=2.71828182846;float sigma_2=pow(sigma,2.0);float a=-(x*x+y*y)/(2.0*sigma_2);return pow(E,a)/(2.0*PI*sigma_2);}vec3 GaussNxN(sampler2D tex,vec2 uv,vec2 stride,float sigma){vec3 color=vec3(0.,0.,0.);const int r=5/2;float weight=0.0;for(int i=-r;i<=r;i++){for(int j=-r;j<=r;j++){float w=GaussWeight2D(float(i),float(j),sigma);vec2 coord=uv+vec2(i,j)*stride;color+=texture2D(tex,coord).rgb*w;weight+=w;}}color/=weight;return color;}void main(){vec4 mainColor=texture2D(_MainTex,uv);vec3 color=mainColor.rgb;color=GaussNxN(_MainTex,uv,1.0/_TextureSize,1.0);gl_FragColor=vec4(color,1.0);}";
+
+var gaussianDownHFrag = "precision highp float;varying vec2 uv;uniform sampler2D _MainTex;uniform vec2 _TextureSize;vec3 GaussH(sampler2D tex,vec2 uv){vec3 color=vec3(0.0);float offsets[9];offsets[0]=-4.0;offsets[1]=-3.0;offsets[2]=-2.0;offsets[3]=-1.0;offsets[4]=0.0;offsets[5]=1.0;offsets[6]=2.0;offsets[7]=3.0;offsets[8]=4.0;float weights[9];weights[0]=0.01621622;weights[1]=0.05405405;weights[2]=0.12162162;weights[3]=0.19459459;weights[4]=0.22702703;weights[5]=0.19459459;weights[6]=0.12162162;weights[7]=0.05405405;weights[8]=0.01621622;for(int i=0;i<9;i++){vec2 offset=vec2(offsets[i]*2.0*(1.0/_TextureSize.x),0);color+=texture2D(tex,uv+offset).rgb*weights[i];}return color;}void main(){vec3 color=GaussH(_MainTex,uv);gl_FragColor=vec4(color,1.0);}";
+
+var gaussianDownVFrag = "precision highp float;varying vec2 uv;uniform sampler2D _MainTex;uniform vec2 _TextureSize;vec3 GaussV(sampler2D tex,vec2 uv){vec3 color=vec3(0.0);float offsets[5];offsets[0]=-3.23076923;offsets[1]=-1.38461538;offsets[2]=0.0;offsets[3]=1.38461538;offsets[4]=3.23076923;float weights[5];weights[0]=0.07027027;weights[1]=0.31621622;weights[2]=0.22702703;weights[3]=0.31621622;weights[4]=0.07027027;for(int i=0;i<5;i++){vec2 offset=vec2(0,offsets[i]*(1.0/_TextureSize.y));color+=texture2D(tex,uv+offset).rgb*weights[i];}return color;}void main(){vec3 color=GaussV(_MainTex,uv);gl_FragColor=vec4(color,1.0);}";
+
+var gaussianUpFrag = "precision highp float;varying vec2 uv;uniform sampler2D _MainTex;uniform sampler2D _GaussianDownTex;uniform vec2 _GaussianDownTextureSize;float GaussWeight2D(float x,float y,float sigma){float PI=3.14159265358;float E=2.71828182846;float sigma_2=pow(sigma,2.0);float a=-(x*x+y*y)/(2.0*sigma_2);return pow(E,a)/(2.0*PI*sigma_2);}vec3 GaussNxN(sampler2D tex,vec2 uv,vec2 stride,float sigma){vec3 color=vec3(0.,0.,0.);const int r=1;float weight=0.0;for(int i=-r;i<=r;i++){for(int j=-r;j<=r;j++){float w=GaussWeight2D(float(i),float(j),sigma);vec2 coord=uv+vec2(i,j)*stride;color+=texture2D(tex,coord).rgb*w;weight+=w;}}color/=weight;return color;}void main(){vec3 lowResColor=GaussNxN(_MainTex,uv,0.5/_GaussianDownTextureSize,1.0);vec3 highResColor=GaussNxN(_GaussianDownTex,uv,1.0/_GaussianDownTextureSize,1.0);vec3 color=mix(highResColor,lowResColor,0.7);gl_FragColor=vec4(color,1.0);}";
+
+var thresholdFrag = "precision highp float;varying vec2 uv;uniform sampler2D _MainTex;uniform float _Threshold;void main(){vec4 mainTex=texture2D(_MainTex,uv);mainTex.rgb=pow(mainTex.rgb,vec3(2.2));float brightness=max(mainTex.r,max(mainTex.g,mainTex.b));float w=max(0.0,brightness-_Threshold)/max(brightness,0.00001);mainTex.rgb*=w;mainTex.rgb*=mainTex.a;gl_FragColor=vec4(mainTex.rgb,1.0);}";
+
+var shaderLib = {};
+var ShaderFactory = /*#__PURE__*/ function() {
+    function ShaderFactory() {}
+    ShaderFactory.registerInclude = function registerInclude(includeName, includeSource) {
+        if (shaderLib[includeName]) {
+            logger.warn('The "' + includeName + '" shader include already exist.');
+        }
+        shaderLib[includeName] = includeSource;
+    };
+    ShaderFactory.unRegisterInclude = function unRegisterInclude(includeName) {
+        delete shaderLib[includeName];
+    };
+    ShaderFactory.unRegisterAllIncludes = function unRegisterAllIncludes() {
+        Object.keys(shaderLib).forEach(function(key) {
+            ShaderFactory.unRegisterInclude(key);
+        });
+    };
+    /**
+   * 生成 shader，检测到 WebGL1 上下文会降级
+   * @param macros - 宏定义数组
+   * @param shader - 原始 shader 文本
+   * @param shaderType - shader 类型
+   * @return 去除版本号的 shader 文本
+   */ ShaderFactory.genFinalShaderCode = function genFinalShaderCode(options) {
+        var level = options.level, shaderType = options.shaderType, shader = options.shader, macros = options.macros, removeVersion = options.removeVersion;
+        var macroString = ShaderFactory.genMacroString(level, macros);
+        var versionString = ShaderFactory.genShaderVersion(level);
+        var source = ShaderFactory.parseIncludes(shader);
+        var isVersion300 = ShaderFactory.isVersion300(source);
+        source = ShaderFactory.removeWebGLVersion(source);
+        if (level === 2 && !isVersion300) {
+            source = ShaderFactory.convertTo300(source, shaderType === exports.ShaderType.fragment);
+        }
+        if (removeVersion) {
+            return macroString + source;
+        }
+        return versionString + macroString + source;
+    };
+    /**
+   * Convert lower GLSL version to GLSL 300 es.
+   * @param source - code
+   * @param isFragment - Whether it is a fragment shader.
+   * */ ShaderFactory.convertTo300 = function convertTo300(source, isFragment) {
+        source = source.replace(/\bvarying\b/g, isFragment ? "in" : "out");
+        source = source.replace(/\btexture(2D|Cube)\b/g, "texture");
+        // Remove extensions
+        var regex = /#extension.+(GL_OES_standard_derivatives|GL_EXT_shader_texture_lod|GL_EXT_frag_depth|GL_EXT_draw_buffers).+(enable|require)/g;
+        source = source.replace(regex, "");
+        if (isFragment) {
+            source = source.replace(/\btexture(2D|Cube)LodEXT\b/g, "textureLod");
+            source = source.replace(/\btexture(2D|Cube)GradEXT\b/g, "textureGrad");
+            source = source.replace(/\bgl_FragDepthEXT\b/g, "gl_FragDepth");
+            if (!ShaderFactory.has300Output(source)) {
+                var isMRT = /\bgl_FragData\[.+?\]/g.test(source);
+                if (isMRT) {
+                    source = source.replace(/\bgl_FragColor\b/g, "gl_FragData[0]");
+                    var result = source.match(/\bgl_FragData\[.+?\]/g);
+                    if (result) {
+                        source = ShaderFactory.replaceMRTShader(source, result);
+                    }
+                } else {
+                    source = source.replace(/void\s+?main\s*\(/g, "out vec4 glFragColor;\nvoid main(");
+                    source = source.replace(/\bgl_FragColor\b/g, "glFragColor");
+                }
+            }
+        } else {
+            source = source.replace(/\battribute\b/g, "in");
+        }
+        return source;
+    };
+    ShaderFactory.parseIncludes = function parseIncludes(source, regex) {
+        if (regex === void 0) regex = /#include <(.+)>/gm;
+        var match;
+        while((match = regex.exec(source)) !== null){
+            var shaderName = match[1];
+            var replace = shaderLib[shaderName];
+            if (replace === undefined) {
+                throw new Error("Can't find include shader name " + shaderName);
+            }
+            source = source.replace(match[0], replace);
+        }
+        return source;
+    };
+    ShaderFactory.genMacroString = function genMacroString(level, macros, addRuntimeMacro) {
+        if (addRuntimeMacro === void 0) addRuntimeMacro = true;
+        var macroList = [];
+        var webGLVersion = "WEBGL" + level;
+        macroList.push("#ifndef " + webGLVersion);
+        macroList.push("#define " + webGLVersion);
+        macroList.push("#endif");
+        if (addRuntimeMacro) {
+            macroList.push("#define GE_RUNTIME");
+        }
+        if (macros && macros.length) {
+            macros.forEach(function(param) {
+                var key = param[0], value = param[1];
+                if (value === true) {
+                    macroList.push("#define " + key);
+                } else if (Number.isFinite(value)) {
+                    macroList.push("#define " + key + " " + value);
+                }
+            });
+        }
+        if (macroList.length) {
+            return macroList.join("\n") + "\n";
+        }
+        return "";
+    };
+    ShaderFactory.genShaderVersion = function genShaderVersion(level) {
+        if (level === 1) {
+            return "#version 100\n";
+        }
+        return "#version 300 es\n";
+    };
+    ShaderFactory.isVersion300 = function isVersion300(source) {
+        var versionTag = /#version\s+\b\d{3}\b\s*(es)?/;
+        var match = source.match(versionTag);
+        var version = match ? match[0] : "";
+        return version.includes("300");
+    };
+    ShaderFactory.removeWebGLVersion = function removeWebGLVersion(source) {
+        var versionTag = /#version\s+\b\d{3}\b\s*(es)?/;
+        var match = source.match(versionTag);
+        if (match) {
+            return source.replace(match[0], "");
+        }
+        return source;
+    };
+    ShaderFactory.has300Output = function has300Output(fragmentShader) {
+        // [layout(location = 0)] out [highp] vec4 [color];
+        var fragReg = /\bout\s+(?:\w+\s+)?(?:vec4)\s+(?:\w+)\s*;/;
+        return fragReg.test(fragmentShader);
+    };
+    ShaderFactory.replaceMRTShader = function replaceMRTShader(source, result) {
+        var mrtIndexSet = new Set();
+        var declaration = "";
+        for(var i = 0; i < result.length; i++){
+            var res = result[i].match(/\bgl_FragData\[(.+?)\]/);
+            if (res) {
+                mrtIndexSet.add(res[1]);
+            }
+        }
+        mrtIndexSet.forEach(function(index) {
+            declaration += "layout(location=" + index + ") out vec4 fragOutColor" + index + ";\n";
+        });
+        declaration += "void main(";
+        source = source.replace(/\bgl_FragData\[(.+?)\]/g, "fragOutColor$1");
+        source = source.replace(/void\s+?main\s*\(/g, declaration);
+        return source;
+    };
+    return ShaderFactory;
+}();
+
+// Bloom 阈值 Pass
+var BloomThresholdPass = /*#__PURE__*/ function(RenderPass) {
+    _inherits(BloomThresholdPass, RenderPass);
+    function BloomThresholdPass(renderer, option) {
+        var _this;
+        _this = RenderPass.call(this, renderer, option) || this;
+        var engine = _this.renderer.engine;
+        var geometry = Geometry.create(engine, {
+            mode: glContext.TRIANGLE_STRIP,
+            attributes: {
+                aPos: {
+                    type: glContext.FLOAT,
+                    size: 2,
+                    data: new Float32Array([
+                        -1,
+                        1,
+                        -1,
+                        -1,
+                        1,
+                        1,
+                        1,
+                        -1
+                    ])
+                }
+            },
+            drawCount: 4
+        });
+        var material = Material.create(engine, {
+            shader: {
+                vertex: screenMeshVert,
+                fragment: thresholdFrag,
+                glslVersion: exports.GLSLVersion.GLSL1
+            }
+        });
+        material.blending = false;
+        material.depthTest = false;
+        material.culling = false;
+        _this.screenMesh = Mesh.create(engine, {
+            geometry: geometry,
+            material: material,
+            priority: 0
+        });
+        _this.priority = 5000;
+        return _this;
+    }
+    var _proto = BloomThresholdPass.prototype;
+    _proto.configure = function configure(renderer) {
+        this.mainTexture = renderer.getFramebuffer().getColorTextures()[0];
+        this.sceneTextureHandle.texture = this.mainTexture;
+        renderer.setFramebuffer(this.framebuffer);
+    };
+    _proto.execute = function execute(renderer) {
+        var _renderer_renderingData_currentFrame_globalVolume_bloom, _renderer_renderingData_currentFrame_globalVolume;
+        renderer.clear({
+            colorAction: exports.TextureStoreAction.clear,
+            depthAction: exports.TextureStoreAction.clear,
+            stencilAction: exports.TextureStoreAction.clear
+        });
+        this.screenMesh.material.setTexture("_MainTex", this.mainTexture);
+        var _renderer_renderingData_currentFrame_globalVolume_bloom_threshold;
+        var threshold = (_renderer_renderingData_currentFrame_globalVolume_bloom_threshold = (_renderer_renderingData_currentFrame_globalVolume = renderer.renderingData.currentFrame.globalVolume) == null ? void 0 : (_renderer_renderingData_currentFrame_globalVolume_bloom = _renderer_renderingData_currentFrame_globalVolume.bloom) == null ? void 0 : _renderer_renderingData_currentFrame_globalVolume_bloom.threshold) != null ? _renderer_renderingData_currentFrame_globalVolume_bloom_threshold : 1.0;
+        this.screenMesh.material.setFloat("_Threshold", threshold);
+        renderer.renderMeshes([
+            this.screenMesh
+        ]);
+    };
+    return BloomThresholdPass;
+}(RenderPass);
+var HQGaussianDownSamplePass = /*#__PURE__*/ function(RenderPass) {
+    _inherits(HQGaussianDownSamplePass, RenderPass);
+    function HQGaussianDownSamplePass(renderer, type, options) {
+        var _this;
+        _this = RenderPass.call(this, renderer, options) || this;
+        _this.type = type;
+        var engine = _this.renderer.engine;
+        var name = "PostProcess";
+        var geometry = Geometry.create(engine, {
+            name: name,
+            mode: glContext.TRIANGLE_STRIP,
+            attributes: {
+                aPos: {
+                    type: glContext.FLOAT,
+                    size: 2,
+                    data: new Float32Array([
+                        -1,
+                        1,
+                        -1,
+                        -1,
+                        1,
+                        1,
+                        1,
+                        -1
+                    ])
+                }
+            },
+            drawCount: 4
+        });
+        var fragment = type == "H" ? gaussianDownHFrag : gaussianDownVFrag;
+        var shader = {
+            vertex: screenMeshVert,
+            fragment: fragment,
+            glslVersion: exports.GLSLVersion.GLSL1
+        };
+        var material = Material.create(engine, {
+            name: name,
+            shader: shader
+        });
+        material.blending = false;
+        material.depthTest = false;
+        material.culling = false;
+        _this.screenMesh = Mesh.create(engine, {
+            name: name,
+            geometry: geometry,
+            material: material,
+            priority: 0
+        });
+        _this.priority = 5000;
+        return _this;
+    }
+    var _proto = HQGaussianDownSamplePass.prototype;
+    _proto.configure = function configure(renderer) {
+        this.mainTexture = renderer.getFramebuffer().getColorTextures()[0];
+        renderer.setFramebuffer(this.framebuffer);
+    };
+    _proto.execute = function execute(renderer) {
+        renderer.clear({
+            colorAction: exports.TextureStoreAction.clear,
+            depthAction: exports.TextureStoreAction.clear,
+            stencilAction: exports.TextureStoreAction.clear
+        });
+        this.screenMesh.material.setTexture("_MainTex", this.mainTexture);
+        this.screenMesh.material.setVector2("_TextureSize", getTextureSize(this.mainTexture));
+        renderer.renderMeshes([
+            this.screenMesh
+        ]);
+        if (this.type === "V") {
+            this.gaussianResult.texture = renderer.getFramebuffer().getColorTextures()[0];
+        }
+    };
+    return HQGaussianDownSamplePass;
+}(RenderPass);
+var HQGaussianUpSamplePass = /*#__PURE__*/ function(RenderPass) {
+    _inherits(HQGaussianUpSamplePass, RenderPass);
+    function HQGaussianUpSamplePass(renderer, options) {
+        var _this;
+        _this = RenderPass.call(this, renderer, options) || this;
+        var name = "PostProcess";
+        var engine = _this.renderer.engine;
+        var geometry = Geometry.create(engine, {
+            name: name,
+            mode: glContext.TRIANGLE_STRIP,
+            attributes: {
+                aPos: {
+                    type: glContext.FLOAT,
+                    size: 2,
+                    data: new Float32Array([
+                        -1,
+                        1,
+                        -1,
+                        -1,
+                        1,
+                        1,
+                        1,
+                        -1
+                    ])
+                }
+            },
+            drawCount: 4
+        });
+        var shader = {
+            vertex: screenMeshVert,
+            fragment: gaussianUpFrag
+        };
+        var material = Material.create(engine, {
+            name: name,
+            shader: shader
+        });
+        material.blending = false;
+        material.depthTest = false;
+        material.culling = false;
+        _this.screenMesh = Mesh.create(engine, {
+            name: name,
+            geometry: geometry,
+            material: material,
+            priority: 0
+        });
+        _this.priority = 5000;
+        return _this;
+    }
+    var _proto = HQGaussianUpSamplePass.prototype;
+    _proto.configure = function configure(renderer) {
+        this.mainTexture = renderer.getFramebuffer().getColorTextures()[0];
+        renderer.setFramebuffer(this.framebuffer);
+    };
+    _proto.execute = function execute(renderer) {
+        renderer.clear({
+            colorAction: exports.TextureStoreAction.clear,
+            depthAction: exports.TextureStoreAction.clear,
+            stencilAction: exports.TextureStoreAction.clear
+        });
+        this.screenMesh.material.setTexture("_MainTex", this.mainTexture);
+        this.screenMesh.material.setTexture("_GaussianDownTex", this.gaussianDownSampleResult.texture);
+        this.screenMesh.material.setVector2("_GaussianDownTextureSize", getTextureSize(this.gaussianDownSampleResult.texture));
+        renderer.renderMeshes([
+            this.screenMesh
+        ]);
+    };
+    return HQGaussianUpSamplePass;
+}(RenderPass);
+// 合并Bloom的高斯模糊结果，并应用ACES Tonemapping
+var ToneMappingPass = /*#__PURE__*/ function(RenderPass) {
+    _inherits(ToneMappingPass, RenderPass);
+    function ToneMappingPass(renderer, sceneTextureHandle) {
+        var _this;
+        _this = RenderPass.call(this, renderer, {}) || this;
+        var name = "PostProcess";
+        var engine = _this.renderer.engine;
+        _this.sceneTextureHandle = sceneTextureHandle ? sceneTextureHandle : new RenderTargetHandle(engine);
+        var geometry = Geometry.create(engine, {
+            name: name,
+            mode: glContext.TRIANGLE_STRIP,
+            attributes: {
+                aPos: {
+                    type: glContext.FLOAT,
+                    size: 2,
+                    data: new Float32Array([
+                        -1,
+                        1,
+                        -1,
+                        -1,
+                        1,
+                        1,
+                        1,
+                        -1
+                    ])
+                }
+            },
+            drawCount: 4
+        });
+        var material = Material.create(engine, {
+            name: name,
+            shader: {
+                vertex: screenMeshVert,
+                fragment: colorGradingFrag,
+                glslVersion: exports.GLSLVersion.GLSL1
+            }
+        });
+        material.blending = false;
+        material.depthTest = false;
+        material.culling = false;
+        _this.screenMesh = Mesh.create(engine, {
+            name: name,
+            geometry: geometry,
+            material: material,
+            priority: 0
+        });
+        _this.priority = 5000;
+        return _this;
+    }
+    var _proto = ToneMappingPass.prototype;
+    _proto.configure = function configure(renderer) {
+        this.mainTexture = renderer.getFramebuffer().getColorTextures()[0];
+        if (!this.sceneTextureHandle.texture) {
+            this.sceneTextureHandle.texture = this.mainTexture;
+        }
+        renderer.setFramebuffer(null);
+    };
+    _proto.execute = function execute(renderer) {
+        renderer.clear({
+            colorAction: exports.TextureStoreAction.clear,
+            depthAction: exports.TextureStoreAction.clear,
+            stencilAction: exports.TextureStoreAction.clear
+        });
+        var globalVolume = renderer.renderingData.currentFrame.globalVolume;
+        var bloom = _extends({
+            threshold: 0,
+            intensity: 0,
+            active: false
+        }, globalVolume == null ? void 0 : globalVolume.bloom);
+        var vignette = _extends({
+            intensity: 0,
+            smoothness: 0,
+            roundness: 0,
+            active: false
+        }, globalVolume == null ? void 0 : globalVolume.vignette);
+        var colorAdjustments = _extends({
+            brightness: 0,
+            saturation: 0,
+            contrast: 0,
+            active: false
+        }, globalVolume == null ? void 0 : globalVolume.colorAdjustments);
+        var tonemapping = _extends({
+            active: false
+        }, globalVolume == null ? void 0 : globalVolume.tonemapping);
+        this.screenMesh.material.setTexture("_SceneTex", this.sceneTextureHandle.texture);
+        this.screenMesh.material.setFloat("_Brightness", Math.pow(2, colorAdjustments.brightness));
+        this.screenMesh.material.setFloat("_Saturation", colorAdjustments.saturation * 0.01 + 1);
+        this.screenMesh.material.setFloat("_Contrast", colorAdjustments.contrast * 0.01 + 1);
+        this.screenMesh.material.setInt("_UseBloom", Number(bloom.active));
+        if (bloom.active) {
+            this.screenMesh.material.setTexture("_GaussianTex", this.mainTexture);
+            this.screenMesh.material.setFloat("_BloomIntensity", bloom.intensity);
+        }
+        if (vignette.intensity > 0) {
+            this.screenMesh.material.setFloat("_VignetteIntensity", vignette.intensity);
+            this.screenMesh.material.setFloat("_VignetteSmoothness", vignette.smoothness);
+            this.screenMesh.material.setFloat("_VignetteRoundness", vignette.roundness);
+            this.screenMesh.material.setVector2("_VignetteCenter", new Vector2(0.5, 0.5));
+            this.screenMesh.material.setVector3("_VignetteColor", new Vector3(0.0, 0.0, 0.0));
+        }
+        this.screenMesh.material.setInt("_UseToneMapping", Number(tonemapping.active));
+        renderer.renderMeshes([
+            this.screenMesh
+        ]);
+    };
+    return ToneMappingPass;
+}(RenderPass);
+
+var RENDER_PASS_NAME_PREFIX = "_effects_default_";
+var seed$9 = 1;
+/**
+ * RenderFrame 抽象类
+ */ var RenderFrame = /*#__PURE__*/ function() {
+    function RenderFrame(options) {
+        var _this_renderer_getShaderLibrary;
+        // TODO: 是否有用
+        this.renderQueue = [];
+        this.destroyed = false;
+        this.renderPassInfoMap = new WeakMap();
+        var camera = options.camera, keepColorBuffer = options.keepColorBuffer, renderer = options.renderer, _options_editorTransform = options.editorTransform, editorTransform = _options_editorTransform === void 0 ? [
+            1,
+            1,
+            0,
+            0
+        ] : _options_editorTransform, globalVolume = options.globalVolume, _options_postProcessingEnabled = options.postProcessingEnabled, postProcessingEnabled = _options_postProcessingEnabled === void 0 ? false : _options_postProcessingEnabled, _options_clearAction = options.clearAction, clearAction = _options_clearAction === void 0 ? {
+            colorAction: exports.TextureLoadAction.whatever,
+            stencilAction: exports.TextureLoadAction.clear,
+            depthAction: exports.TextureLoadAction.whatever
+        } : _options_clearAction;
+        var engine = renderer.engine;
+        if (globalVolume) {
+            this.globalVolume = globalVolume;
+        }
+        this.globalUniforms = new GlobalUniforms();
+        var attachments = []; //渲染场景物体Pass的RT
+        var depthStencilAttachment;
+        var drawObjectPassClearAction = {};
+        this.renderer = renderer;
+        if (postProcessingEnabled) {
+            var enableHDR = true;
+            if (!this.renderer.engine.gpuCapability.detail.halfFloatTexture) {
+                throw new Error("Half float texture is not supported.");
+            }
+            // 使用HDR浮点纹理，FLOAT在IOS上报错，使用HALF_FLOAT
+            var textureType = enableHDR ? glContext.HALF_FLOAT : glContext.UNSIGNED_BYTE;
+            attachments = [
+                {
+                    texture: {
+                        format: glContext.RGBA,
+                        type: textureType,
+                        magFilter: glContext.LINEAR,
+                        minFilter: glContext.LINEAR
+                    }
+                }
+            ];
+            depthStencilAttachment = {
+                storageType: exports.RenderPassAttachmentStorageType.depth_stencil_opaque
+            };
+            drawObjectPassClearAction = {
+                colorAction: exports.TextureLoadAction.clear,
+                stencilAction: exports.TextureLoadAction.clear,
+                depthAction: exports.TextureLoadAction.clear
+            };
+        }
+        this.drawObjectPass = new RenderPass(renderer, {
+            name: RENDER_PASS_NAME_PREFIX,
+            priority: RenderPassPriorityNormal,
+            meshOrder: exports.OrderType.ascending,
+            depthStencilAttachment: depthStencilAttachment,
+            attachments: attachments,
+            clearAction: drawObjectPassClearAction
+        });
+        var renderPasses = [
+            this.drawObjectPass
+        ];
+        this.setRenderPasses(renderPasses);
+        if (postProcessingEnabled) {
+            var sceneTextureHandle = new RenderTargetHandle(engine); //保存后处理前的屏幕图像
+            var gaussianStep = 7; // 高斯模糊的迭代次数，次数越高模糊范围越大
+            var viewport = [
+                0,
+                0,
+                this.renderer.getWidth() / 2,
+                this.renderer.getHeight() / 2
+            ];
+            var gaussianDownResults = new Array(gaussianStep); //存放多个高斯Pass的模糊结果，用于Bloom
+            var enableHDR1 = true;
+            var textureType1 = enableHDR1 ? glContext.HALF_FLOAT : glContext.UNSIGNED_BYTE;
+            var bloomThresholdPass = new BloomThresholdPass(renderer, {
+                name: "BloomThresholdPass",
+                attachments: [
+                    {
+                        texture: {
+                            format: glContext.RGBA,
+                            type: textureType1,
+                            minFilter: glContext.LINEAR,
+                            magFilter: glContext.LINEAR
+                        }
+                    }
+                ]
+            });
+            bloomThresholdPass.sceneTextureHandle = sceneTextureHandle;
+            this.addRenderPass(bloomThresholdPass);
+            for(var i = 0; i < gaussianStep; i++){
+                gaussianDownResults[i] = new RenderTargetHandle(engine);
+                var gaussianDownHPass = new HQGaussianDownSamplePass(renderer, "H", {
+                    name: "GaussianDownPassH" + i,
+                    viewport: viewport,
+                    attachments: [
+                        {
+                            texture: {
+                                format: glContext.RGBA,
+                                type: textureType1,
+                                minFilter: glContext.LINEAR,
+                                magFilter: glContext.LINEAR
+                            }
+                        }
+                    ]
+                });
+                var gaussianDownVPass = new HQGaussianDownSamplePass(renderer, "V", {
+                    name: "GaussianDownPassV" + i,
+                    viewport: viewport,
+                    attachments: [
+                        {
+                            texture: {
+                                format: glContext.RGBA,
+                                type: textureType1,
+                                minFilter: glContext.LINEAR,
+                                magFilter: glContext.LINEAR
+                            }
+                        }
+                    ]
+                });
+                gaussianDownVPass.gaussianResult = gaussianDownResults[i];
+                this.addRenderPass(gaussianDownHPass);
+                this.addRenderPass(gaussianDownVPass);
+                viewport[2] /= 2;
+                viewport[3] /= 2;
+            // TODO 限制最大迭代
+            }
+            viewport[2] *= 4;
+            viewport[3] *= 4;
+            for(var i1 = 0; i1 < gaussianStep - 1; i1++){
+                var gaussianUpPass = new HQGaussianUpSamplePass(renderer, {
+                    name: "GaussianUpPass" + i1,
+                    viewport: viewport,
+                    attachments: [
+                        {
+                            texture: {
+                                format: glContext.RGBA,
+                                type: textureType1,
+                                minFilter: glContext.LINEAR,
+                                magFilter: glContext.LINEAR
+                            }
+                        }
+                    ]
+                });
+                gaussianUpPass.gaussianDownSampleResult = gaussianDownResults[gaussianStep - 2 - i1];
+                this.addRenderPass(gaussianUpPass);
+                viewport[2] *= 2;
+                viewport[3] *= 2;
+            }
+            var postProcessPass = new ToneMappingPass(renderer, sceneTextureHandle);
+            this.addRenderPass(postProcessPass);
+        }
+        this.semantics = new SemanticMap(options.semantics);
+        this.clearAction = clearAction;
+        this.name = "RenderFrame" + seed$9++;
+        var firstRP = renderPasses[0];
+        this.emptyTexture = generateWhiteTexture(engine);
+        this.transparentTexture = generateTransparentTexture(engine);
+        this.camera = camera;
+        this.keepColorBuffer = keepColorBuffer;
+        this.renderPassInfoMap.set(firstRP, {
+            listStart: 0,
+            listEnd: 0,
+            renderPass: firstRP,
+            intermedia: false
+        });
+        this.editorTransform = Vector4$1.fromArray(editorTransform);
+        if (!options.clearAction) {
+            this.resetClearActions();
+        }
+        this.passTextureCache = new PassTextureCache(engine);
+        // FIXME: addShader是为了性能考虑，如果影响不大，下面代码可以删除
+        var _engine_gpuCapability = engine.gpuCapability, detail = _engine_gpuCapability.detail, level = _engine_gpuCapability.level;
+        var writeDepth = detail.readableDepthStencilTextures && detail.writableFragDepth;
+        var shader = createCopyShader(level, writeDepth);
+        (_this_renderer_getShaderLibrary = this.renderer.getShaderLibrary()) == null ? void 0 : _this_renderer_getShaderLibrary.addShader(shader);
+    }
+    var _proto = RenderFrame.prototype;
+    /**
+   * 根据 Mesh 优先级添加到 RenderPass
+   * @param mesh - 要添加的 Mesh 对象
+   */ _proto.addMeshToDefaultRenderPass = function addMeshToDefaultRenderPass(mesh) {
+        this.drawObjectPass.addMesh(mesh);
+    };
+    /**
+   * 把 Mesh 从 RenderPass 中移除，
+   * 如果 renderPass 中没有 mesh，此 renderPass 会被删除
+   * @param mesh - 要删除的 Mesh 对象
+   */ _proto.removeMeshFromDefaultRenderPass = function removeMeshFromDefaultRenderPass(mesh) {
+        this.drawObjectPass.removeMesh(mesh);
+    };
+    /**
+   * 销毁 RenderFrame
+   * @param options - 可以有选择销毁一些对象
+   */ _proto.dispose = function dispose(options) {
+        if ((options == null ? void 0 : options.semantics) !== exports.DestroyOptions.keep) {
+            this.semantics.dispose();
+        }
+        var pass = (options == null ? void 0 : options.passes) ? options.passes : undefined;
+        if (pass !== exports.DestroyOptions.keep) {
+            this._renderPasses.forEach(function(renderPass) {
+                renderPass.dispose(pass);
+            });
+        }
+        this.passTextureCache.dispose();
+        this._renderPasses.length = 0;
+        this.emptyTexture.dispose();
+        this.transparentTexture.dispose();
+        if (this.resource) {
+            var _this_resource_depthStencil_texture, _this_resource_depthStencil;
+            this.resource.color_a.dispose();
+            this.resource.color_b.dispose();
+            (_this_resource_depthStencil = this.resource.depthStencil) == null ? void 0 : (_this_resource_depthStencil_texture = _this_resource_depthStencil.texture) == null ? void 0 : _this_resource_depthStencil_texture.dispose();
+            this.resource.finalCopyRP.dispose();
+            this.resource.resRP.dispose();
+            // @ts-expect-error
+            this.resource = null;
+        }
+        this.destroyed = true;
+    };
+    /**
+   * 重置 RenderPass ColorAttachment，解决 Framebuffer 即读又写的问题
+   * @param renderPasses - RenderPass 对象数组
+   * @param startIndex - 开始重置的索引
+   */ _proto.resetRenderPassDefaultAttachment = function resetRenderPassDefaultAttachment(renderPasses, startIndex) {
+        var pre;
+        var _this_resource = this.resource, color_a = _this_resource.color_a, color_b = _this_resource.color_b;
+        for(var i = startIndex; i < renderPasses.length; i++){
+            var _rp_attachments_, _rp_attachments_1;
+            var rp = renderPasses[i];
+            var tex = (_rp_attachments_ = rp.attachments[0]) == null ? void 0 : _rp_attachments_.texture;
+            // @ts-expect-error
+            if (tex && pre === tex) {
+                var next = tex === color_a ? color_b : color_a;
+                rp.resetColorAttachments([
+                    next
+                ]);
+            //this.renderer.extension.resetColorAttachments?.(rp as GLRenderPass, [next as GLTexture]);
+            }
+            tex = (_rp_attachments_1 = rp.attachments[0]) == null ? void 0 : _rp_attachments_1.texture;
+            if (tex) {
+                pre = tex;
+            }
+        }
+    };
+    /**
+   * 查找 Mesh 所在的 RenderPass 索引，没找到是-1
+   * @param mesh - 需要查找的 Mesh
+   */ _proto.findMeshRenderPassIndex = function findMeshRenderPassIndex(mesh) {
+        var index = -1;
+        this.renderPasses.every(function(rp, idx) {
+            if (rp.name.startsWith(RENDER_PASS_NAME_PREFIX) && rp.meshes.includes(mesh)) {
+                index = idx;
+                return false;
+            }
+            return true;
+        });
+        return index;
+    };
+    _proto.addToRenderPass = function addToRenderPass(renderPass, mesh) {
+        var info = this.renderPassInfoMap.get(renderPass);
+        var priority = mesh.priority;
+        if (!info) {
+            return;
+        }
+        if (renderPass.meshes.length === 0) {
+            info.listStart = info.listEnd = priority;
+        } else {
+            if (priority < info.listStart) {
+                info.listStart = priority;
+            } else if (priority > info.listEnd) {
+                info.listEnd = priority;
+            }
+        }
+        renderPass.addMesh(mesh);
+    };
+    _proto.getRPAttachments = function getRPAttachments(attachments, preRP) {
+        if ((attachments == null ? void 0 : attachments.length) === 1) {
+            var _attachments_ = attachments[0], texture = _attachments_.texture, persistent = _attachments_.persistent;
+            var format = texture.format;
+            var _preRP_getInitAttachments;
+            var previousAttachmens = (_preRP_getInitAttachments = preRP == null ? void 0 : preRP.getInitAttachments()) != null ? _preRP_getInitAttachments : [];
+            if (format === glContext.RGBA && !persistent) {
+                var texA = this.resource.color_a;
+                if (previousAttachmens.length === 0) {
+                    return [
+                        {
+                            texture: texA
+                        }
+                    ];
+                }
+                var texture1 = previousAttachmens[0].texture === texA ? this.resource.color_b : texA;
+                return [
+                    {
+                        texture: texture1
+                    }
+                ];
+            }
+        }
+        return attachments;
+    };
+    _proto.resetClearActions = function resetClearActions() {
+        var action = this.renderPasses.length > 1 ? exports.TextureLoadAction.clear : exports.TextureLoadAction.whatever;
+        this.clearAction.stencilAction = action;
+        this.clearAction.depthAction = action;
+        this.clearAction.colorAction = action;
+        if (this.keepColorBuffer) {
+            this.clearAction.colorAction = exports.TextureLoadAction.whatever;
+        }
+    };
+    /**
+   * 设置 RenderPass 数组，直接修改内部的 RenderPass 数组
+   * @param passes - RenderPass 数组
+   */ _proto.setRenderPasses = function setRenderPasses(passes) {
+        var _this = this;
+        if (this.renderer !== undefined) {
+            passes.forEach(function(pass) {
+                return pass.initialize(_this.renderer);
+            });
+        }
+        this._renderPasses = passes.slice();
+    };
+    /**
+   * 添加 RenderPass
+   * @param pass - 需要添加的 RenderPass
+   */ _proto.addRenderPass = function addRenderPass(pass) {
+        if (this.renderer !== undefined) {
+            pass.initialize(this.renderer);
+        }
+        this._renderPasses.push(pass);
+    };
+    /**
+   * 创建 RenderPass 切分时需要的 GPU 资源
+   */ _proto.createResource = function createResource() {
+        var engine = this.renderer.engine;
+        if (!this.resource) {
+            var _resRP_getDepthAttachment;
+            var _engine_gpuCapability = engine.gpuCapability, detail = _engine_gpuCapability.detail, level = _engine_gpuCapability.level;
+            var width = this.renderer.getWidth();
+            var height = this.renderer.getHeight();
+            var filter = level === 2 ? glContext.LINEAR : glContext.NEAREST;
+            var texA = Texture.create(engine, {
+                sourceType: exports.TextureSourceType.framebuffer,
+                format: glContext.RGBA,
+                name: "frame_a",
+                minFilter: filter,
+                magFilter: filter
+            });
+            var texB = Texture.create(engine, {
+                sourceType: exports.TextureSourceType.framebuffer,
+                format: glContext.RGBA,
+                data: {
+                    width: width,
+                    height: height
+                },
+                minFilter: filter,
+                magFilter: filter,
+                name: "frame_b"
+            });
+            var depthStencilType = detail.readableDepthStencilTextures && detail.writableFragDepth ? exports.RenderPassAttachmentStorageType.depth_24_stencil_8_texture : exports.RenderPassAttachmentStorageType.depth_stencil_opaque;
+            var resRP = new RenderPass(this.renderer, {
+                depthStencilAttachment: {
+                    storageType: depthStencilType
+                },
+                attachments: [
+                    {
+                        texture: texA
+                    }
+                ]
+            }).initialize(this.renderer);
+            var finalCopyRP = new FinalCopyRP(this.renderer, {
+                name: "effects-final-copy",
+                priority: RenderPassPriorityNormal + 600,
+                clearAction: {
+                    depthAction: exports.TextureLoadAction.clear,
+                    stencilAction: exports.TextureLoadAction.clear,
+                    colorAction: exports.TextureLoadAction.clear
+                },
+                meshOrder: exports.OrderType.ascending,
+                meshes: [
+                    this.createCopyMesh({
+                        blend: true,
+                        depthTexture: (_resRP_getDepthAttachment = resRP.getDepthAttachment()) == null ? void 0 : _resRP_getDepthAttachment.texture
+                    })
+                ]
+            });
+            this.resource = {
+                color_a: resRP.attachments[0].texture,
+                color_b: texB,
+                finalCopyRP: finalCopyRP,
+                depthStencil: resRP.depthAttachment,
+                resRP: resRP
+            };
+        }
+    };
+    // TODO tex和size没有地方用到。
+    /**
+   * 创建拷贝 RenderPass 用到的 Mesh 对象
+   * @param semantics - RenderPass 渲染时 Framebuffer 的颜色和深度纹理、大小和是否混合
+   */ _proto.createCopyMesh = function createCopyMesh(semantics) {
+        var // FIXME: 如果不把shader添加进shaderLibrary，这里可以移到core中，有性能上的考虑
+        _this_renderer_getShaderLibrary;
+        var name = EFFECTS_COPY_MESH_NAME;
+        var engine = this.renderer.engine;
+        var geometry = Geometry.create(engine, {
+            name: name,
+            mode: glContext.TRIANGLE_STRIP,
+            attributes: {
+                aPos: {
+                    type: glContext.FLOAT,
+                    size: 2,
+                    data: new Float32Array([
+                        -1,
+                        1,
+                        -1,
+                        -1,
+                        1,
+                        1,
+                        1,
+                        -1
+                    ])
+                }
+            },
+            drawCount: 4
+        });
+        var shader = createCopyShader(engine.gpuCapability.level, !!(semantics == null ? void 0 : semantics.depthTexture));
+        (_this_renderer_getShaderLibrary = this.renderer.getShaderLibrary()) == null ? void 0 : _this_renderer_getShaderLibrary.addShader(shader);
+        var material = Material.create(engine, {
+            uniformValues: {
+                // @ts-expect-error
+                uDepth: semantics == null ? void 0 : semantics.depthTexture
+            },
+            name: name,
+            shader: shader
+        });
+        material.blending = false;
+        material.depthTest = false;
+        material.culling = false;
+        if (semantics == null ? void 0 : semantics.blend) {
+            material.blending = true;
+            material.blendFunction = [
+                glContext.SRC_ALPHA,
+                glContext.ONE_MINUS_SRC_ALPHA,
+                glContext.SRC_ALPHA,
+                glContext.ONE_MINUS_SRC_ALPHA
+            ];
+        }
+        return Mesh.create(engine, {
+            name: name,
+            geometry: geometry,
+            material: material,
+            priority: 0
+        });
+    };
+    /**
+   * 移除 RenderPass
+   * @param pass - 需要移除的 RenderPass
+   */ _proto.removeRenderPass = function removeRenderPass(pass) {
+        removeItem(this._renderPasses, pass);
+    };
+    _create_class(RenderFrame, [
+        {
+            key: "renderPasses",
+            get: function get() {
+                return this._renderPasses.slice();
+            }
+        },
+        {
+            key: "isDestroyed",
+            get: function get() {
+                return this.destroyed;
+            }
+        }
+    ]);
+    return RenderFrame;
+}();
+function getTextureSize(tex) {
+    return tex ? new Vector2(tex.getWidth(), tex.getHeight()) : new Vector2();
+}
+function findPreviousRenderPass(renderPasses, renderPass) {
+    var index = renderPasses.indexOf(renderPass);
+    return renderPasses[index - 1];
+}
+var FinalCopyRP = /*#__PURE__*/ function(RenderPass) {
+    _inherits(FinalCopyRP, RenderPass);
+    function FinalCopyRP() {
+        return RenderPass.apply(this, arguments);
+    }
+    var _proto = FinalCopyRP.prototype;
+    _proto.configure = function configure(renderer) {
+        var framebuffer = renderer.getFramebuffer();
+        if (framebuffer) {
+            this.prePassTexture = framebuffer.getColorTextures()[0];
+        }
+        renderer.setFramebuffer(null);
+    };
+    _proto.execute = function execute(renderer) {
+        renderer.clear(this.clearAction);
+        this.meshes[0].material.setTexture("uFilterSource", this.prePassTexture);
+        this.meshes[0].material.setVector2("uFilterSourceSize", getTextureSize(this.prePassTexture));
+        renderer.renderMeshes(this.meshes);
+        if (this.storeAction) {
+            renderer.clear(this.storeAction);
+        }
+    };
+    return FinalCopyRP;
+}(RenderPass);
+var GlobalUniforms = function GlobalUniforms() {
+    this.floats = {};
+    this.ints = {};
+    this.vector3s = {};
+    this.vector4s = {};
+    this.matrices = {};
+    //...
+    this.samplers = [] // 存放的sampler名称。
+    ;
+    this.uniforms = [] // 存放的uniform名称（不包括sampler）。
+    ;
+};
+
+var Renderbuffer = /*#__PURE__*/ function() {
+    function Renderbuffer(props) {
+        this.size = [
+            0,
+            0
+        ];
+        this.multiSample = 1;
+        this.destroyed = false;
+        var storageType = props.storageType, format = props.format, attachment = props.attachment;
+        this.storageType = storageType;
+        this.format = format;
+        this.attachment = attachment;
+    }
+    _create_class(Renderbuffer, [
+        {
+            key: "isDestroyed",
+            get: function get() {
+                return this.destroyed;
+            }
+        }
+    ]);
+    return Renderbuffer;
+}();
+
+var isWebGL2Available = typeof alipay.WebGL2RenderingContext === "function";
+var GPUCapability = /*#__PURE__*/ function() {
+    function GPUCapability(gl) {
+        this.setupCapability(gl);
+    }
+    var _proto = GPUCapability.prototype;
+    _proto.setupCapability = function setupCapability(gl) {
+        var _gl_getExtension;
+        var level = isWebGL2Available && _instanceof1(gl, alipay.WebGL2RenderingContext) ? 2 : 1;
+        var level2 = level === 2;
+        var textureAnisotropicExt = gl.getExtension("EXT_texture_filter_anisotropic") || gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic");
+        var depthTextureExtension = gl.getExtension("WEBGL_depth_texture");
+        var halfFloatLinear = !!gl.getExtension("OES_texture_half_float_linear");
+        var floatLinear = !!gl.getExtension("OES_texture_float_linear");
+        this.level = level;
+        this.type = level2 ? "webgl2" : "webgl";
+        this.vaoExt = gl.getExtension("OES_vertex_array_object");
+        this.glAsyncCompileExt = gl.getExtension("KHR_parallel_shader_compile");
+        this.UNSIGNED_INT_24_8 = gl.UNSIGNED_INT_24_8;
+        this.drawBufferExtension = gl.getExtension("WEBGL_draw_buffers");
+        if (depthTextureExtension) {
+            this.UNSIGNED_INT_24_8 = depthTextureExtension.UNSIGNED_INT_24_8_WEBGL;
+        }
+        if (level2 && !halfFloatLinear) {
+            halfFloatLinear = checkLinearTextureFilter(gl, gl.HALF_FLOAT);
+        }
+        if (level2 && !floatLinear) {
+            floatLinear = checkLinearTextureFilter(gl, gl.FLOAT);
+        }
+        this.internalFormatDepth16 = level2 ? gl.DEPTH_COMPONENT16 : gl.DEPTH_COMPONENT;
+        this.internalFormatDepth24_stencil8 = level2 ? gl.DEPTH24_STENCIL8 : gl.DEPTH_STENCIL;
+        var floatTexture = level2 || gl.getExtension("OES_texture_float") ? gl.FLOAT : 0;
+        var halfFloatTexture = level2 ? alipay.WebGL2RenderingContext.HALF_FLOAT : ((_gl_getExtension = gl.getExtension("OES_texture_half_float")) == null ? void 0 : _gl_getExtension.HALF_FLOAT_OES) || 0;
+        var detail = {
+            floatTexture: floatTexture,
+            halfFloatTexture: halfFloatTexture,
+            maxSample: level2 ? gl.getParameter(gl.MAX_SAMPLES) : 1,
+            maxVertexUniforms: gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS),
+            maxVertexTextures: gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS),
+            maxFragmentUniforms: gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS),
+            maxFragmentTextures: gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS),
+            floatColorAttachment: level2 ? !!gl.getExtension("EXT_color_buffer_float") : floatTexture > 0 && !!gl.getExtension("WEBGL_color_buffer_float"),
+            halfFloatColorAttachment: level2 ? !!gl.getExtension("EXT_color_buffer_float") : halfFloatTexture > 0 && !!gl.getExtension("EXT_color_buffer_half_float"),
+            maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
+            maxShaderTexCount: gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS),
+            compressedTexture: registerCompressedTexture(gl),
+            halfFloatLinear: halfFloatLinear,
+            floatLinear: floatLinear,
+            maxTextureAnisotropy: textureAnisotropicExt ? gl.getParameter(textureAnisotropicExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0,
+            shaderTextureLod: level2 || !!gl.getExtension("EXT_shader_texture_lod"),
+            instanceDraw: level2 || !!gl.getExtension("ANGLE_instanced_arrays"),
+            drawBuffers: level2 || !!this.drawBufferExtension,
+            asyncShaderCompile: !!this.glAsyncCompileExt,
+            intIndexElementBuffer: !!gl.getExtension("OES_element_index_uint"),
+            standardDerivatives: level2 || !!gl.getExtension("OES_standard_derivatives"),
+            readableDepthStencilTextures: level2 || !!depthTextureExtension,
+            writableFragDepth: level2 || !!gl.getExtension("EXT_frag_depth")
+        };
+        this["detail"] = detail;
+        if (textureAnisotropicExt) {
+            this.textureMaxAnisotropyExt = textureAnisotropicExt.TEXTURE_MAX_ANISOTROPY_EXT;
+        }
+    };
+    _proto.framebufferTexture2D = function framebufferTexture2D(gl, target, index, textarget, texture) {
+        var ext = this.drawBufferExtension;
+        if (this.level === 1 && !ext && index > 0) {
+            throw new Error("Draw multiple color buffers not available.");
+        }
+        var attachment = ext ? ext["COLOR_ATTACHMENT" + index + "_WEBGL"] : gl["COLOR_ATTACHMENT" + index];
+        if (attachment) {
+            gl.framebufferTexture2D(target, attachment, textarget, texture, 0);
+        } else {
+            console.error("Invalid color attachment index: " + index + ".");
+        }
+    };
+    _proto.drawBuffers = function drawBuffers(gl, bufferStates) {
+        var ext = this.drawBufferExtension;
+        if (this.level === 1 && !ext) {
+            if (bufferStates.length > 1) {
+                throw new Error("Draw buffers not available.");
+            } else {
+                return;
+            }
+        }
+        var buffers = bufferStates.map(function(enabled, index) {
+            if (enabled) {
+                return ext ? ext["COLOR_ATTACHMENT" + index + "_WEBGL"] : gl["COLOR_ATTACHMENT" + index];
+            }
+            return gl.NONE;
+        });
+        if (ext) {
+            ext.drawBuffersWEBGL(buffers);
+        } else {
+            gl.drawBuffers(buffers);
+        }
+    };
+    _proto.setTextureAnisotropic = function setTextureAnisotropic(gl, target, level) {
+        var maxTextureAnisotropy = this.detail.maxTextureAnisotropy;
+        if (maxTextureAnisotropy) {
+            gl.texParameterf(target, this.textureMaxAnisotropyExt, Math.min(maxTextureAnisotropy, level || 4));
+        }
+    };
+    return GPUCapability;
+}();
+function checkLinearTextureFilter(gl, type) {
+    var tex = gl.createTexture();
+    var ret = false;
+    gl.getError();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16F, 1, 1, 0, gl.RED, type, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    if (!gl.getError()) {
+        ret = true;
+    }
+    gl.deleteTexture(tex);
+    return ret;
+}
+exports.COMPRESSED_TEXTURE = void 0;
+(function(COMPRESSED_TEXTURE) {
+    COMPRESSED_TEXTURE[COMPRESSED_TEXTURE["NONE"] = 0] = "NONE";
+    COMPRESSED_TEXTURE[COMPRESSED_TEXTURE["PVRTC"] = 1] = "PVRTC";
+    COMPRESSED_TEXTURE[COMPRESSED_TEXTURE["ASTC"] = 2] = "ASTC";
+})(exports.COMPRESSED_TEXTURE || (exports.COMPRESSED_TEXTURE = {}));
+function registerCompressedTexture(gl) {
+    if (gl.getExtension("WEBGL_compressed_texture_astc")) {
+        return 2;
+    }
+    if (gl.getExtension("WEBGL_compressed_texture_pvrtc") || gl.getExtension("WEBKIT_WEBGL_compressed_texture_pvrtc")) {
+        return 1;
+    }
+    return 0;
+}
+
+exports.FilterMode = void 0;
+(function(FilterMode) {
+    FilterMode[FilterMode["Nearest"] = 0] = "Nearest";
+    FilterMode[FilterMode["Linear"] = 1] = "Linear";
+})(exports.FilterMode || (exports.FilterMode = {}));
+exports.RenderTextureFormat = void 0;
+(function(RenderTextureFormat) {
+    RenderTextureFormat[RenderTextureFormat["RGBA32"] = 0] = "RGBA32";
+    RenderTextureFormat[RenderTextureFormat["RGBAHalf"] = 1] = "RGBAHalf";
+})(exports.RenderTextureFormat || (exports.RenderTextureFormat = {}));
+/**
+ *
+ */ var Framebuffer = /*#__PURE__*/ function() {
+    function Framebuffer() {}
+    var _proto = Framebuffer.prototype;
+    _proto.resize = function resize(x, y, width, height) {
+    // OVERRIDE
+    };
+    _proto.resetColorTextures = function resetColorTextures(textures) {
+    // OVERRIDE
+    };
+    _proto.unbind = function unbind() {
+    // OVERRIDE
+    };
+    _proto.bind = function bind() {
+    // OVERRIDE
+    };
+    _proto.getDepthTexture = function getDepthTexture() {
+        // OVERRIDE
+        return undefined;
+    };
+    _proto.getStencilTexture = function getStencilTexture() {
+        // OVERRIDE
+        return undefined;
+    };
+    _proto.getColorTextures = function getColorTextures() {
+        // OVERRIDE
+        return [];
+    };
+    _proto.dispose = function dispose(options) {
+    // OVERRIDE
+    };
+    _create_class(Framebuffer, [
+        {
+            key: "stencilStorage",
+            get: function get() {
+                // OVERRIDE
+                return undefined;
+            }
+        },
+        {
+            key: "depthStorage",
+            get: function get() {
+                // OVERRIDE
+                return undefined;
+            }
+        }
+    ]);
+    return Framebuffer;
+}();
+
+var Renderer = /*#__PURE__*/ function() {
+    function Renderer() {}
+    var _proto = Renderer.prototype;
+    _proto.setGlobalFloat = function setGlobalFloat(name, value) {
+    // OVERRIDE
+    };
+    _proto.setGlobalInt = function setGlobalInt(name, value) {
+    // OVERRIDE
+    };
+    _proto.setGlobalVector4 = function setGlobalVector4(name, value) {
+    // OVERRIDE
+    };
+    _proto.setGlobalVector3 = function setGlobalVector3(name, value) {
+    // OVERRIDE
+    };
+    _proto.setGlobalMatrix = function setGlobalMatrix(name, value) {
+    // OVERRIDE
+    };
+    _proto.getFramebuffer = function getFramebuffer() {
+        // OVERRIDE
+        return null;
+    };
+    _proto.setFramebuffer = function setFramebuffer(framebuffer) {
+    // OVERRIDE
+    };
+    _proto.setViewport = function setViewport(x, y, width, height) {
+    // OVERRIDE
+    };
+    _proto.resize = function resize(canvasWidth, canvasHeight) {
+    // OVERRIDE
+    };
+    _proto.clear = function clear(action) {
+    // OVERRIDE
+    };
+    _proto.getWidth = function getWidth() {
+        // OVERRIDE
+        return 0;
+    };
+    _proto.getHeight = function getHeight() {
+        // OVERRIDE
+        return 0;
+    };
+    /**
+   * 添加 webglcontextlost 事件回调
+   * @override
+   * @param lostHandler
+   */ _proto.addLostHandler = function addLostHandler(lostHandler) {
+    // OVERRIDE
+    };
+    /**
+   * 添加 webglContextrestored 事件的回调
+   * @override
+   * @param restoreHandler
+   */ _proto.addRestoreHandler = function addRestoreHandler(restoreHandler) {
+    // OVERRIDE
+    };
+    /**
+   * @override
+   * @param e
+   */ _proto.lost = function lost(e) {
+    // OVERRIDE
+    };
+    /**
+   * @override
+   */ _proto.restore = function restore() {
+    // OVERRIDE
+    };
+    /**
+   *
+   * @override
+   * @returns
+   */ _proto.getShaderLibrary = function getShaderLibrary() {
+        // OVERRIDE
+        return undefined;
+    };
+    _proto.renderRenderFrame = function renderRenderFrame(renderFrame) {
+    // OVERRIDE
+    };
+    _proto.renderMeshes = function renderMeshes(meshes) {
+    // OVERRIDE
+    };
+    _proto.drawGeometry = function drawGeometry(geometry, material, subMeshIndex) {
+    // OVERRIDE
+    };
+    _proto.getTemporaryRT = function getTemporaryRT(name, width, height, depthBuffer, filter, format) {
+        // OVERRIDE
+        return null;
+    };
+    _proto.dispose = function dispose(haltGL) {
+    // OVERRIDE
+    };
+    return Renderer;
+}();
 
 var toHalf = function() {
     var floatView = new Float32Array(1);
@@ -12474,35 +14924,35 @@ function vecMulCombine(out, a, b) {
     }
     return out;
 }
-var _obj$9;
-var particleOriginTranslateMap$1 = (_obj$9 = {}, _obj$9[ParticleOrigin.PARTICLE_ORIGIN_CENTER] = [
+var _obj$8;
+var particleOriginTranslateMap$1 = (_obj$8 = {}, _obj$8[ParticleOrigin.PARTICLE_ORIGIN_CENTER] = [
     0,
     0
-], _obj$9[ParticleOrigin.PARTICLE_ORIGIN_CENTER_BOTTOM] = [
+], _obj$8[ParticleOrigin.PARTICLE_ORIGIN_CENTER_BOTTOM] = [
     0,
     -0.5
-], _obj$9[ParticleOrigin.PARTICLE_ORIGIN_CENTER_TOP] = [
+], _obj$8[ParticleOrigin.PARTICLE_ORIGIN_CENTER_TOP] = [
     0,
     0.5
-], _obj$9[ParticleOrigin.PARTICLE_ORIGIN_LEFT_TOP] = [
+], _obj$8[ParticleOrigin.PARTICLE_ORIGIN_LEFT_TOP] = [
     -0.5,
     0.5
-], _obj$9[ParticleOrigin.PARTICLE_ORIGIN_LEFT_CENTER] = [
+], _obj$8[ParticleOrigin.PARTICLE_ORIGIN_LEFT_CENTER] = [
     -0.5,
     0
-], _obj$9[ParticleOrigin.PARTICLE_ORIGIN_LEFT_BOTTOM] = [
+], _obj$8[ParticleOrigin.PARTICLE_ORIGIN_LEFT_BOTTOM] = [
     -0.5,
     -0.5
-], _obj$9[ParticleOrigin.PARTICLE_ORIGIN_RIGHT_CENTER] = [
+], _obj$8[ParticleOrigin.PARTICLE_ORIGIN_RIGHT_CENTER] = [
     0.5,
     0
-], _obj$9[ParticleOrigin.PARTICLE_ORIGIN_RIGHT_BOTTOM] = [
+], _obj$8[ParticleOrigin.PARTICLE_ORIGIN_RIGHT_BOTTOM] = [
     0.5,
     -0.5
-], _obj$9[ParticleOrigin.PARTICLE_ORIGIN_RIGHT_TOP] = [
+], _obj$8[ParticleOrigin.PARTICLE_ORIGIN_RIGHT_TOP] = [
     0.5,
     0.5
-], _obj$9);
+], _obj$8);
 function nearestPowerOfTwo(value) {
     return Math.pow(2, Math.round(Math.log(value) / Math.LN2));
 }
@@ -12542,35 +14992,6 @@ function numberToFix(a, fixed) {
     if (fixed === void 0) fixed = 2;
     var base = Math.pow(10, fixed);
     return Math.floor(a * base) / base;
-}
-
-function _is_native_reflect_construct() {
-    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-    if (Reflect.construct.sham) return false;
-    if (typeof Proxy === "function") return true;
-    try {
-        Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function() {}));
-        return true;
-    } catch (e) {
-        return false;
-    }
-}
-
-function _construct(Parent, args, Class) {
-    if (_is_native_reflect_construct()) _construct = Reflect.construct;
-    else {
-        _construct = function construct(Parent, args, Class) {
-            var a = [
-                null
-            ];
-            a.push.apply(a, args);
-            var Constructor = Function.bind.apply(Parent, a);
-            var instance = new Constructor();
-            if (Class) _set_prototype_of(instance, Class.prototype);
-            return instance;
-        };
-    }
-    return _construct.apply(null, arguments);
 }
 
 var keyframeInfo = {
@@ -13229,8 +15650,13 @@ var RandomValue = /*#__PURE__*/ function(ValueGetter) {
         this.min = props[0];
         this.max = props[1];
     };
-    _proto.getValue = function getValue(time) {
-        return randomInRange(this.min, this.max);
+    _proto.getValue = function getValue(time, seed) {
+        var randomSeed = seed != null ? seed : Math.random();
+        return this.min + randomSeed * (this.max - this.min);
+    };
+    _proto.getIntegrateValue = function getIntegrateValue(t0, t1, timeScale) {
+        var seed = timeScale != null ? timeScale : 1.0;
+        return (this.min + seed * (this.max - this.min)) * (t1 - t0);
     };
     _proto.toUniform = function toUniform() {
         return new Float32Array([
@@ -13489,15 +15915,20 @@ var BezierCurve = /*#__PURE__*/ function(ValueGetter) {
                 points: points,
                 timeInterval: timeInterval,
                 valueInterval: valueInterval,
-                curve: curve
+                curve: curve,
+                timeStart: Number(s.x),
+                timeEnd: Number(e.x)
             };
         }
+        this.keyTimeData = Object.keys(this.curveMap);
     };
     _proto.getValue = function getValue(time) {
         var result = 0;
-        var keyTimeData = Object.keys(this.curveMap);
-        var keyTimeStart = Number(keyTimeData[0].split("&")[0]);
-        var keyTimeEnd = Number(keyTimeData[keyTimeData.length - 1].split("&")[1]);
+        var keyTimeData = this.keyTimeData;
+        var keyTimeStart = this.curveMap[keyTimeData[0]].timeStart;
+        var keyTimeEnd = this.curveMap[keyTimeData[keyTimeData.length - 1]].timeEnd;
+        // const keyTimeStart = Number(keyTimeData[0].split('&')[0]);
+        // const keyTimeEnd = Number(keyTimeData[keyTimeData.length - 1].split('&')[1]);
         if (time <= keyTimeStart) {
             return this.getCurveValue(keyTimeData[0], keyTimeStart);
         }
@@ -13505,7 +15936,9 @@ var BezierCurve = /*#__PURE__*/ function(ValueGetter) {
             return this.getCurveValue(keyTimeData[keyTimeData.length - 1], keyTimeEnd);
         }
         for(var i = 0; i < keyTimeData.length; i++){
-            var _keyTimeData_i_split = keyTimeData[i].split("&"), xMin = _keyTimeData_i_split[0], xMax = _keyTimeData_i_split[1];
+            var xMin = this.curveMap[keyTimeData[i]].timeStart;
+            var xMax = this.curveMap[keyTimeData[i]].timeEnd;
+            // const [xMin, xMax] = keyTimeData[i].split('&');
             if (time >= Number(xMin) && time < Number(xMax)) {
                 result = this.getCurveValue(keyTimeData[i], time);
                 break;
@@ -13518,12 +15951,13 @@ var BezierCurve = /*#__PURE__*/ function(ValueGetter) {
         var time = (t1 - t0) / ts;
         var result = 0;
         var keyTimeData = Object.keys(this.curveMap);
-        var keyTimeStart = Number(keyTimeData[0].split("&")[0]);
+        var keyTimeStart = this.curveMap[keyTimeData[0]].timeStart;
         if (time <= keyTimeStart) {
             return 0;
         }
         for(var i = 0; i < keyTimeData.length; i++){
-            var _keyTimeData_i_split = keyTimeData[i].split("&"), xMin = _keyTimeData_i_split[0], xMax = _keyTimeData_i_split[1];
+            var xMin = this.curveMap[keyTimeData[i]].timeStart;
+            var xMax = this.curveMap[keyTimeData[i]].timeEnd;
             if (time >= Number(xMax)) {
                 result += ts * this.getCurveIntegrateValue(keyTimeData[i], Number(xMax));
             }
@@ -13793,67 +16227,6 @@ var BezierCurveQuat = /*#__PURE__*/ function(ValueGetter) {
     };
     return BezierCurveQuat;
 }(ValueGetter);
-var _obj$8;
-var map$2 = (_obj$8 = {}, _obj$8[ValueType.RANDOM] = function(props) {
-    if (_instanceof1(props[0], Array)) {
-        return new RandomVectorValue(props);
-    }
-    return new RandomValue(props);
-}, _obj$8[ValueType.CONSTANT] = function(props) {
-    return new StaticValue(props);
-}, _obj$8[ValueType.CONSTANT_VEC2] = function(props) {
-    return new StaticValue(props);
-}, _obj$8[ValueType.CONSTANT_VEC3] = function(props) {
-    return new StaticValue(props);
-}, _obj$8[ValueType.CONSTANT_VEC4] = function(props) {
-    return new StaticValue(props);
-}, _obj$8[ValueType.RGBA_COLOR] = function(props) {
-    return new StaticValue(props);
-}, _obj$8[ValueType.COLORS] = function(props) {
-    return new RandomSetValue(props.map(function(c) {
-        return colorToArr$1(c, false);
-    }));
-}, _obj$8[ValueType.LINE] = function(props) {
-    if (props.length === 2 && props[0][0] === 0 && props[1][0] === 1) {
-        return new LinearValue([
-            props[0][1],
-            props[1][1]
-        ]);
-    }
-    return new LineSegments(props);
-}, _obj$8[ValueType.GRADIENT_COLOR] = function(props) {
-    return new GradientValue(props);
-}, _obj$8[ValueType.LINEAR_PATH] = function(pros) {
-    return new PathSegments(pros);
-}, _obj$8[ValueType.BEZIER_CURVE] = function(props) {
-    if (props.length === 1) {
-        return new StaticValue(props[0][1][1]);
-    }
-    return new BezierCurve(props);
-}, _obj$8[ValueType.BEZIER_CURVE_PATH] = function(props) {
-    if (props[0].length === 1) {
-        return new StaticValue(_construct(Vector3, [].concat(props[1][0])));
-    }
-    return new BezierCurvePath(props);
-}, _obj$8[ValueType.BEZIER_CURVE_QUAT] = function(props) {
-    if (props[0].length === 1) {
-        return new StaticValue(_construct(Quaternion, [].concat(props[1][0])));
-    }
-    return new BezierCurveQuat(props);
-}, _obj$8);
-function createValueGetter(args) {
-    if (!args || !isNaN(+args)) {
-        return new StaticValue(args || 0);
-    }
-    if (_instanceof1(args, ValueGetter)) {
-        return args;
-    }
-    if (isFunction(map$2[args[0]])) {
-        return map$2[args[0]](args[1]);
-    } else {
-        throw new Error("ValueType: " + args[0] + " is not supported, see " + HELP_LINK$1["ValueType: 21/22 is not supported"] + ".");
-    }
-}
 function lineSegIntegrate(t, t0, t1, y0, y1) {
     var h = t - t0;
     return (y0 + y0 + (y1 - y0) * h / (t1 - t0)) * h / 2;
@@ -13930,265 +16303,227 @@ function createKeyFrameMeta() {
     };
 }
 
-exports.ShaderCompileResultStatus = void 0;
-(function(ShaderCompileResultStatus) {
-    ShaderCompileResultStatus[ShaderCompileResultStatus["noShader"] = 0] = "noShader";
-    ShaderCompileResultStatus[ShaderCompileResultStatus["success"] = 1] = "success";
-    ShaderCompileResultStatus[ShaderCompileResultStatus["fail"] = 2] = "fail";
-    ShaderCompileResultStatus[ShaderCompileResultStatus["compiling"] = 3] = "compiling";
-})(exports.ShaderCompileResultStatus || (exports.ShaderCompileResultStatus = {}));
-exports.GLSLVersion = void 0;
-(function(GLSLVersion) {
-    GLSLVersion["GLSL1"] = "100";
-    GLSLVersion["GLSL3"] = "300 es";
-})(exports.GLSLVersion || (exports.GLSLVersion = {}));
-var ShaderVariant = /*#__PURE__*/ function(EffectsObject) {
-    _inherits(ShaderVariant, EffectsObject);
-    function ShaderVariant(engine, source) {
-        var _this;
-        _this = EffectsObject.call(this, engine) || this;
-        _this.source = source;
-        return _this;
+function _is_native_reflect_construct() {
+    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
+    if (Reflect.construct.sham) return false;
+    if (typeof Proxy === "function") return true;
+    try {
+        Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function() {}));
+        return true;
+    } catch (e) {
+        return false;
     }
-    return ShaderVariant;
-}(EffectsObject);
-exports.Shader = /*#__PURE__*/ function(EffectsObject) {
-    _inherits(Shader, EffectsObject);
-    function Shader() {
-        return EffectsObject.apply(this, arguments);
-    }
-    var _proto = Shader.prototype;
-    _proto.createVariant = function createVariant(macros) {
-        var shaderMacros = [];
-        if (macros) {
-            for(var _iterator = _create_for_of_iterator_helper_loose(Object.keys(macros)), _step; !(_step = _iterator()).done;){
-                var key = _step.value;
-                shaderMacros.push([
-                    key,
-                    macros[key]
-                ]);
-            }
-        }
-        var shaderVariant = this.engine.getShaderLibrary().createShader(this.shaderData, shaderMacros);
-        shaderVariant.shader = this;
-        return shaderVariant;
-    };
-    _proto.fromData = function fromData(data) {
-        EffectsObject.prototype.fromData.call(this, data);
-        this.shaderData = data;
-    };
-    return Shader;
-}(EffectsObject);
-exports.Shader = __decorate([
-    effectsClass("Shader")
-], exports.Shader);
-
-var EFFECTS_COPY_MESH_NAME = "effects-internal-copy";
-var COPY_MESH_SHADER_ID = "effects-internal-copy-mesh";
-var COPY_VERTEX_SHADER = "\nprecision highp float;\nattribute vec2 aPos;\nvarying vec2 vTex;\nvoid main(){\n    gl_Position = vec4(aPos,0.,1.0);\n    vTex = (aPos + vec2(1.0))/2.;\n}";
-var COPY_FRAGMENT_SHADER = "precision mediump float;\nvarying vec2 vTex;\n\n#ifdef DEPTH_TEXTURE\nuniform sampler2D uDepth;\n#extension GL_EXT_frag_depth : enable\n#endif\nvoid main(){\n    #ifdef DEPTH_TEXTURE\n    gl_FragDepthEXT = texture2D(uDepth,vTex).r;\n    #endif\n}\n";
-function createCopyShader(level, writeDepth) {
-    var webgl2 = level === 2;
-    return {
-        name: EFFECTS_COPY_MESH_NAME,
-        vertex: COPY_VERTEX_SHADER,
-        fragment: COPY_FRAGMENT_SHADER,
-        glslVersion: webgl2 ? exports.GLSLVersion.GLSL3 : exports.GLSLVersion.GLSL1,
-        macros: [
-            [
-                "DEPTH_TEXTURE",
-                !!writeDepth
-            ]
-        ],
-        // @ts-expect-error
-        cacheId: COPY_MESH_SHADER_ID + +writeDepth
-    };
 }
 
-var def = {
-    format: glContext.RGBA,
-    type: glContext.UNSIGNED_BYTE,
-    minFilter: glContext.LINEAR,
-    magFilter: glContext.LINEAR,
-    wrapS: glContext.CLAMP_TO_EDGE,
-    wrapT: glContext.CLAMP_TO_EDGE
-};
-var disposeSymbol = Symbol("dispose");
-var PassTextureCache = /*#__PURE__*/ function() {
-    function PassTextureCache(engine) {
-        this.textureCache = {};
-        this.textureRef = {};
-        this.engine = engine;
-    }
-    var _proto = PassTextureCache.prototype;
-    _proto.requestColorAttachmentTexture = function requestColorAttachmentTexture(request) {
-        var _this = this;
-        var width = request.width, height = request.height, name = request.name;
-        var options = {
-            sourceType: exports.TextureSourceType.framebuffer,
-            data: {
-                width: width,
-                height: height
-            },
-            name: name
+function _construct(Parent, args, Class) {
+    if (_is_native_reflect_construct()) _construct = Reflect.construct;
+    else {
+        _construct = function construct(Parent, args, Class) {
+            var a = [
+                null
+            ];
+            a.push.apply(a, args);
+            var Constructor = Function.bind.apply(Parent, a);
+            var instance = new Constructor();
+            if (Class) _set_prototype_of(instance, Class.prototype);
+            return instance;
         };
-        var keys = [
-            name
-        ];
-        Object.getOwnPropertyNames(def).forEach(function(name) {
-            var _request_name;
-            var value = (_request_name = request[name]) != null ? _request_name : def[name];
-            options[name] = value;
-            keys.push(name, value);
-        });
-        var cacheId = keys.join(":");
-        var tex = this.textureCache[cacheId];
-        if (tex) {
-            this.textureRef[cacheId]++;
-        } else {
-            var engine = this.engine;
-            assertExist(engine);
-            tex = Texture.create(engine, options);
-            this.textureCache[cacheId] = tex;
-            this.textureRef[cacheId] = 1;
-            // @ts-expect-error
-            tex[disposeSymbol] = tex.dispose;
-            tex.dispose = function() {
-                return _this.removeTexture(cacheId);
-            };
-        }
-        return tex;
-    };
-    _proto.removeTexture = function removeTexture(id) {
-        var refCount = this.textureRef[id];
-        if (refCount <= 1) {
-            if (refCount < 0) {
-                console.error("Ref count < 0.");
-            }
-            var tex = this.textureCache[id];
-            if (tex) {
-                // @ts-expect-error
-                tex[disposeSymbol]();
-                // @ts-expect-error
-                tex.dispose = tex[disposeSymbol];
-            }
-            delete this.textureCache[id];
-            delete this.textureRef[id];
-        } else {
-            this.textureRef[id] = refCount - 1;
-        }
-    };
-    _proto.dispose = function dispose() {
-        var _this = this;
-        Object.keys(this.textureCache).forEach(function(key) {
-            var texture = _this.textureCache[key];
-            // @ts-expect-error
-            texture[disposeSymbol]();
-            // @ts-expect-error
-            texture.dispose = texture[disposeSymbol];
-        });
-        this.textureCache = {};
-        this.textureRef = {};
-        this.engine = undefined;
-    };
-    return PassTextureCache;
-}();
-
-var SemanticMap = /*#__PURE__*/ function() {
-    function SemanticMap(semantics) {
-        if (semantics === void 0) semantics = {};
-        this.semantics = _extends({}, semantics);
     }
-    var _proto = SemanticMap.prototype;
-    _proto.toObject = function toObject() {
-        return _extends({}, this.semantics);
+    return _construct.apply(null, arguments);
+}
+
+var Vector4Curve = /*#__PURE__*/ function(ValueGetter) {
+    _inherits(Vector4Curve, ValueGetter);
+    function Vector4Curve() {
+        var _this;
+        _this = ValueGetter.apply(this, arguments) || this;
+        _this.value = new Vector4$1();
+        return _this;
+    }
+    var _proto = Vector4Curve.prototype;
+    _proto.onCreate = function onCreate(arg) {
+        this.xCurve = createValueGetter(arg[0]);
+        this.yCurve = createValueGetter(arg[1]);
+        this.zCurve = createValueGetter(arg[2]);
+        this.wCurve = createValueGetter(arg[3]);
     };
-    _proto.setSemantic = function setSemantic(name, value) {
-        if (value === undefined) {
-            delete this.semantics[name];
-        } else {
-            this.semantics[name] = value;
-        }
+    _proto.getValue = function getValue(t) {
+        var x = this.xCurve.getValue(t);
+        var y = this.yCurve.getValue(t);
+        var z = this.zCurve.getValue(t);
+        var w = this.wCurve.getValue(t);
+        this.value.set(x, y, z, w);
+        return this.value;
     };
-    _proto.getSemanticValue = function getSemanticValue(name, state) {
-        var ret = this.semantics[name];
-        if (isFunction(ret)) {
-            return ret(state);
-        }
-        return ret;
-    };
-    _proto.hasSemanticValue = function hasSemanticValue(name) {
-        return name in this.semantics;
-    };
-    _proto.dispose = function dispose() {
-        var _this = this;
-        Object.keys(this.semantics).forEach(function(name) {
-            delete _this.semantics[name];
-        });
-    };
-    return SemanticMap;
-}();
+    return Vector4Curve;
+}(ValueGetter);
+
+var SPRITE_VERTEX_STRIDE = 6;
+var SEMANTIC_PRE_COLOR_ATTACHMENT_0 = "PRE_COLOR_0";
+var SEMANTIC_PRE_COLOR_ATTACHMENT_SIZE_0 = "PRE_COLOR_SIZE_0";
+var SEMANTIC_MAIN_PRE_COLOR_ATTACHMENT_0 = "PRE_MAIN_COLOR_0";
+var SEMANTIC_MAIN_PRE_COLOR_ATTACHMENT_SIZE_0 = "PRE_MAIN_COLOR_SIZE_0";
+var PLAYER_OPTIONS_ENV_EDITOR = "editor";
+var HELP_LINK$1 = {
+    "Item duration can't be less than 0": "https://www.galacean.com/effects/user/gasrv4ka5sacrwpg#AOnQS",
+    "ValueType: 21/22 is not supported": "https://www.galacean.com/effects/user/gasrv4ka5sacrwpg#smO1b"
+};
 
 var _obj$7;
-var BYTES_TYPE_MAP = (_obj$7 = {}, _obj$7[glContext.FLOAT] = Float32Array.BYTES_PER_ELEMENT, _obj$7[glContext.INT] = Int32Array.BYTES_PER_ELEMENT, _obj$7[glContext.SHORT] = Int16Array.BYTES_PER_ELEMENT, _obj$7[glContext.BYTE] = Int8Array.BYTES_PER_ELEMENT, _obj$7);
-/**
- * Geometry 抽象类
- */ var Geometry = /*#__PURE__*/ function(EffectsObject) {
-    _inherits(Geometry, EffectsObject);
-    function Geometry() {
-        return EffectsObject.apply(this, arguments);
+var map$2 = (_obj$7 = {}, _obj$7[ValueType.RANDOM] = function(props) {
+    if (_instanceof1(props[0], Array)) {
+        return new RandomVectorValue(props);
     }
-    var _proto = Geometry.prototype;
-    /**
-   * 初始化 GPU 资源
-   * @override
-   */ _proto.initialize = function initialize() {
-    // OVERRIDE
-    };
-    /**
-   * 几何数据刷新
-   */ _proto.flush = function flush() {
-    // OVERRIDE
-    };
-    return Geometry;
-}(EffectsObject);
-function generateEmptyTypedArray(type) {
-    if (type === glContext.INT) {
-        return new Int32Array(0);
+    return new RandomValue(props);
+}, _obj$7[ValueType.CONSTANT] = function(props) {
+    return new StaticValue(props);
+}, _obj$7[ValueType.CONSTANT_VEC2] = function(props) {
+    return new StaticValue(props);
+}, _obj$7[ValueType.CONSTANT_VEC3] = function(props) {
+    return new StaticValue(props);
+}, _obj$7[ValueType.CONSTANT_VEC4] = function(props) {
+    return new StaticValue(props);
+}, _obj$7[ValueType.RGBA_COLOR] = function(props) {
+    return new StaticValue(props);
+}, _obj$7[ValueType.COLORS] = function(props) {
+    return new RandomSetValue(props.map(function(c) {
+        return colorToArr$1(c, false);
+    }));
+}, _obj$7[ValueType.LINE] = function(props) {
+    if (props.length === 2 && props[0][0] === 0 && props[1][0] === 1) {
+        return new LinearValue([
+            props[0][1],
+            props[1][1]
+        ]);
     }
-    if (type === glContext.SHORT) {
-        return new Int16Array(0);
+    return new LineSegments(props);
+}, _obj$7[ValueType.GRADIENT_COLOR] = function(props) {
+    return new GradientValue(props);
+}, _obj$7[ValueType.LINEAR_PATH] = function(pros) {
+    return new PathSegments(pros);
+}, _obj$7[ValueType.BEZIER_CURVE] = function(props) {
+    if (props.length === 1) {
+        return new StaticValue(props[0][1][1]);
     }
-    return new Float32Array(0);
+    return new BezierCurve(props);
+}, _obj$7[ValueType.BEZIER_CURVE_PATH] = function(props) {
+    if (props[0].length === 1) {
+        return new StaticValue(_construct(Vector3, [].concat(props[1][0])));
+    }
+    return new BezierCurvePath(props);
+}, _obj$7[ValueType.BEZIER_CURVE_QUAT] = function(props) {
+    if (props[0].length === 1) {
+        return new StaticValue(_construct(Quaternion, [].concat(props[1][0])));
+    }
+    return new BezierCurveQuat(props);
+}, _obj$7[ValueType.COLOR_CURVE] = function(props) {
+    return new ColorCurve(props);
+}, _obj$7[ValueType.VECTOR4_CURVE] = function(props) {
+    return new Vector4Curve(props);
+}, _obj$7);
+function createValueGetter(args) {
+    if (!args || !isNaN(+args)) {
+        return new StaticValue(args || 0);
+    }
+    if (_instanceof1(args, ValueGetter)) {
+        return args;
+    }
+    if (isFunction(map$2[args[0]])) {
+        return map$2[args[0]](args[1]);
+    } else {
+        throw new Error("ValueType: " + args[0] + " is not supported, see " + HELP_LINK$1["ValueType: 21/22 is not supported"] + ".");
+    }
 }
 
-var seed$a = 1;
-/**
- * Mesh 抽象类
- */ var Mesh = /*#__PURE__*/ function(RendererComponent) {
-    _inherits(Mesh, RendererComponent);
-    function Mesh(engine, props) {
+var ColorCurve = /*#__PURE__*/ function(ValueGetter) {
+    _inherits(ColorCurve, ValueGetter);
+    function ColorCurve() {
         var _this;
-        _this = RendererComponent.call(this, engine) || this;
-        _this.destroyed = false;
-        _this.visible = true;
-        if (props) {
-            var material = props.material, geometry = props.geometry, _props_name = props.name, name = _props_name === void 0 ? "<unnamed>" : _props_name, _props_priority = props.priority, priority = _props_priority === void 0 ? 0 : _props_priority, _props_worldMatrix = props.worldMatrix, worldMatrix = _props_worldMatrix === void 0 ? Matrix4$1.fromIdentity() : _props_worldMatrix;
-            _this.id = "Mesh" + seed$a++;
-            _this.name = name;
-            _this.geometry = geometry;
-            _this.material = material;
-            _this.priority = priority;
-            _this.worldMatrix = worldMatrix;
-        } else {
-            _this.id = "Mesh" + seed$a++;
-            _this.name = "<unnamed>";
-            _this.worldMatrix = Matrix4$1.fromIdentity();
-            _this._priority = 0;
-        }
+        _this = ValueGetter.apply(this, arguments) || this;
+        _this.value = new Color();
         return _this;
     }
-    var _proto = Mesh.prototype;
+    var _proto = ColorCurve.prototype;
+    _proto.onCreate = function onCreate(arg) {
+        this.rCurve = createValueGetter(arg[0]);
+        this.gCurve = createValueGetter(arg[1]);
+        this.bCurve = createValueGetter(arg[2]);
+        this.aCurve = createValueGetter(arg[3]);
+    };
+    _proto.getValue = function getValue(t) {
+        var r = this.rCurve.getValue(t);
+        var g = this.gCurve.getValue(t);
+        var b = this.bCurve.getValue(t);
+        var a = this.aCurve.getValue(t);
+        this.value.set(r, g, b, a);
+        return this.value;
+    };
+    return ColorCurve;
+}(ValueGetter);
+
+/**
+ * @since 2.1.0
+ */ var BaseRenderComponent = /*#__PURE__*/ function(RendererComponent) {
+    _inherits(BaseRenderComponent, RendererComponent);
+    function BaseRenderComponent(engine) {
+        var _this;
+        _this = RendererComponent.call(this, engine) || this;
+        _this.cachePrefix = "-";
+        _this.color = [
+            1,
+            1,
+            1,
+            1
+        ];
+        _this.visible = true;
+        _this.isManualTimeSet = false;
+        _this.frameAnimationTime = 0;
+        _this.getHitTestParams = function(force) {
+            var ui = _this.interaction;
+            if (force || ui) {
+                var area = _this.getBoundingBox();
+                if (area) {
+                    var _this_interaction;
+                    return {
+                        behavior: ((_this_interaction = _this.interaction) == null ? void 0 : _this_interaction.behavior) || 0,
+                        type: area.type,
+                        triangles: area.area,
+                        backfaceCulling: _this.renderer.side === SideMode.FRONT
+                    };
+                }
+            }
+        };
+        _this.renderer = {
+            renderMode: RenderMode.MESH,
+            blending: BlendingMode.ALPHA,
+            texture: _this.engine.emptyTexture,
+            occlusion: false,
+            transparentOcclusion: false,
+            side: SideMode.DOUBLE,
+            mask: 0,
+            maskMode: MaskMode.NONE,
+            order: 0
+        };
+        _this.emptyTexture = _this.engine.emptyTexture;
+        _this.renderInfo = getImageItemRenderInfo(_assert_this_initialized(_this));
+        var material = _this.createMaterial(_this.renderInfo, 2);
+        _this.worldMatrix = Matrix4$1.fromIdentity();
+        _this.material = material;
+        _this.material.setVector4("_Color", new Vector4$1().setFromArray([
+            1,
+            1,
+            1,
+            1
+        ]));
+        _this.material.setVector4("_TexOffset", new Vector4$1().setFromArray([
+            0,
+            0,
+            1,
+            1
+        ]));
+        return _this;
+    }
+    var _proto = BaseRenderComponent.prototype;
     /**
    * 设置当前 Mesh 的可见性。
    * @param visible - true：可见，false：不可见
@@ -14200,2130 +16535,3151 @@ var seed$a = 1;
    */ _proto.getVisible = function getVisible() {
         return this.visible;
     };
+    /**
+   * 设置当前图层的颜色
+   * > Tips: 透明度也属于颜色的一部分，当有透明度/颜色 K 帧变化时，该 API 会失效
+   * @since 2.0.0
+   * @param color - 颜色值
+   */ _proto.setColor = function setColor(color) {
+        this.color = color;
+        this.material.setVector4("_Color", new Vector4$1().setFromArray(color));
+    };
+    /**
+   * 设置当前 Mesh 的纹理
+   * @since 2.0.0
+   * @param texture - 纹理对象
+   */ _proto.setTexture = function setTexture(texture) {
+        this.renderer.texture = texture;
+        this.material.setTexture("_MainTex", texture);
+    };
+    /**
+   * @internal
+   */ _proto.setAnimationTime = function setAnimationTime(time) {
+        this.frameAnimationTime = time;
+        this.isManualTimeSet = true;
+    };
     _proto.render = function render(renderer) {
-        if (this.isDestroyed) {
-            // console.error(`mesh ${mesh.name} destroyed`, mesh);
-            return;
-        }
         if (!this.getVisible()) {
             return;
         }
+        var material = this.material;
+        var geo = this.geometry;
         if (renderer.renderingData.currentFrame.globalUniforms) {
-            renderer.setGlobalMatrix("effects_ObjectToWorld", this.worldMatrix);
+            renderer.setGlobalMatrix("effects_ObjectToWorld", this.transform.getWorldMatrix());
         }
-        renderer.drawGeometry(this.geometry, this.material);
+        this.material.setVector2("_Size", this.transform.size);
+        if (this.renderer.renderMode === RenderMode.BILLBOARD || this.renderer.renderMode === RenderMode.VERTICAL_BILLBOARD || this.renderer.renderMode === RenderMode.HORIZONTAL_BILLBOARD) {
+            this.material.setVector3("_Scale", this.transform.scale);
+        }
+        renderer.drawGeometry(geo, material);
     };
-    /**
-   * 获取当前 Mesh 的第一个 geometry。
-   */ _proto.firstGeometry = function firstGeometry() {
-        return this.geometry;
+    _proto.onStart = function onStart() {
+        this.item.getHitTestParams = this.getHitTestParams;
     };
-    /**
-   * 设置当前 Mesh 的材质
-   * @param material - 要设置的材质
-   * @param destroy - 可选的材质销毁选项
-   */ _proto.setMaterial = function setMaterial(material, destroy) {
-        if (destroy !== exports.DestroyOptions.keep) {
-            this.material.dispose(destroy);
-        }
-        this.material = material;
-    };
-    _proto.restore = function restore() {};
-    /**
-   * 销毁当前资源
-   * @param options - 可选的销毁选项
-   */ _proto.dispose = function dispose(options) {
-        if (this.destroyed) {
-            //console.error('call mesh.destroy multiple times', this);
-            return;
-        }
-        if ((options == null ? void 0 : options.geometries) !== exports.DestroyOptions.keep) {
-            this.geometry.dispose();
-        }
-        var materialDestroyOption = options == null ? void 0 : options.material;
-        if (materialDestroyOption !== exports.DestroyOptions.keep) {
-            this.material.dispose(materialDestroyOption);
-        }
-        this.destroyed = true;
-        if (this.engine !== undefined) {
-            this.engine.removeMesh(this);
-            // @ts-expect-error
-            this.engine = undefined;
+    _proto.onDestroy = function onDestroy() {
+        if (this.item && this.item.composition) {
+            this.item.composition.destroyTextures(this.getTextures());
         }
     };
-    _create_class(Mesh, [
-        {
-            key: "isDestroyed",
-            get: function get() {
-                return this.destroyed;
+    _proto.getItemInitData = function getItemInitData() {
+        this.geoData = this.getItemGeometryData();
+        var _this_geoData = this.geoData, index = _this_geoData.index, atlasOffset = _this_geoData.atlasOffset;
+        var idxCount = index.length;
+        // @ts-expect-error
+        var indexData = this.wireframe ? new Uint8Array([
+            0,
+            1,
+            1,
+            3,
+            2,
+            3,
+            2,
+            0
+        ]) : new index.constructor(idxCount);
+        if (!this.wireframe) {
+            for(var i = 0; i < idxCount; i++){
+                indexData[i] = 0 + index[i];
             }
         }
-    ]);
-    return Mesh;
-}(RendererComponent);
-
-var RenderPassPriorityPrepare = 0;
-var RenderPassPriorityNormal = 1000;
-var RenderPassPriorityPostprocess = 3000;
-exports.RenderPassAttachmentStorageType = void 0;
-(function(RenderPassAttachmentStorageType) {
-    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["none"] = 0] = "none";
-    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["color"] = 1] = "color";
-    //stencil 8 render buffer
-    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["stencil_8_opaque"] = 2] = "stencil_8_opaque";
-    //stencil 16 render buffer
-    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["depth_16_opaque"] = 3] = "depth_16_opaque";
-    //depth 16 & stencil 8 render buffer
-    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["depth_stencil_opaque"] = 4] = "depth_stencil_opaque";
-    //depth 16 texture, need gpu.capability.readableDepthStencilTextures
-    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["depth_16_texture"] = 5] = "depth_16_texture";
-    //depth 24 texture, need gpu.capability.readableDepthStencilTextures
-    RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["depth_24_stencil_8_texture"] = 6] = "depth_24_stencil_8_texture";
-})(exports.RenderPassAttachmentStorageType || (exports.RenderPassAttachmentStorageType = {}));
-exports.TextureStoreAction = void 0;
-(function(TextureStoreAction) {
-    /**
-   * 不清除 Attachment
-   */ TextureStoreAction[TextureStoreAction["store"] = 0] = "store";
-    /**
-   * 清除 Attachment
-   */ TextureStoreAction[TextureStoreAction["clear"] = 2] = "clear";
-})(exports.TextureStoreAction || (exports.TextureStoreAction = {}));
-var RenderTargetHandle = /*#__PURE__*/ function() {
-    function RenderTargetHandle(engine, options) {
-        this.destroyed = false;
-        if (!options) {
-            return;
+        return {
+            atlasOffset: atlasOffset,
+            index: indexData
+        };
+    };
+    _proto.setItem = function setItem() {
+        var textures = [];
+        var texture = this.renderer.texture;
+        if (texture) {
+            addItem(textures, texture);
         }
-        var texture = options.texture, size = options.size;
-        if (_instanceof1(texture, Texture)) {
-            this.texture = texture;
-            this.externalTexture = true;
-        } else if (texture) {
-            var wrapT = texture.wrapT, wrapS = texture.wrapS, minFilter = texture.minFilter, magFilter = texture.magFilter, internalFormat = texture.internalFormat, _texture_format = texture.format, format = _texture_format === void 0 ? glContext.RGBA : _texture_format, _texture_type = texture.type, type = _texture_type === void 0 ? glContext.UNSIGNED_BYTE : _texture_type;
-            this.externalTexture = false;
-            this.textureOptions = {
-                size: size,
-                format: format,
-                type: type,
-                internalFormat: internalFormat || format,
-                wrapT: wrapT,
-                wrapS: wrapS,
-                minFilter: minFilter,
-                magFilter: magFilter,
-                name: options.name
+        texture = this.renderer.texture;
+        var data = this.getItemInitData();
+        var renderer = this.renderer;
+        var texParams = this.material.getVector4("_TexParams");
+        if (texParams) {
+            texParams.x = renderer.occlusion ? +renderer.transparentOcclusion : 1;
+            texParams.y = +this.preMultiAlpha;
+            texParams.z = renderer.renderMode;
+            if (texParams.x === 0) {
+                this.material.enableMacro("ALPHA_CLIP");
+            } else {
+                this.material.disableMacro("ALPHA_CLIP");
+            }
+        }
+        var attributes = {
+            atlasOffset: new Float32Array(data.atlasOffset.length),
+            index: new Uint16Array(data.index.length)
+        };
+        attributes.atlasOffset.set(data.atlasOffset);
+        attributes.index.set(data.index);
+        var _this = this, material = _this.material, geometry = _this.geometry;
+        var indexData = attributes.index;
+        geometry.setIndexData(indexData);
+        geometry.setAttributeData("atlasOffset", attributes.atlasOffset);
+        geometry.setDrawCount(data.index.length);
+        material.setTexture("_MainTex", texture);
+    };
+    _proto.getItemGeometryData = function getItemGeometryData() {
+        var renderer = this.renderer;
+        if (renderer.shape) {
+            var _renderer_shape = renderer.shape, _renderer_shape_index = _renderer_shape.index, index = _renderer_shape_index === void 0 ? [] : _renderer_shape_index, _renderer_shape_aPoint = _renderer_shape.aPoint, aPoint = _renderer_shape_aPoint === void 0 ? [] : _renderer_shape_aPoint;
+            var point = new Float32Array(aPoint);
+            var position = [];
+            var atlasOffset = [];
+            for(var i = 0; i < point.length; i += 6){
+                atlasOffset.push(aPoint[i + 2], aPoint[i + 3]);
+                position.push(point[i], point[i + 1], 0.0);
+            }
+            this.geometry.setAttributeData("aPos", new Float32Array(position));
+            return {
+                index: index,
+                atlasOffset: atlasOffset
             };
-            this.texture = Texture.create(engine, _extends({}, this.textureOptions, {
-                sourceType: exports.TextureSourceType.framebuffer,
-                data: {
-                    width: size[0],
-                    height: size[1]
-                }
-            }));
-        } else ;
-    }
-    var _proto = RenderTargetHandle.prototype;
-    _proto.dispose = function dispose() {
-        if (this.destroyed) {
-            return;
-        }
-        this.texture.dispose();
-        this.destroyed = true;
-    };
-    _create_class(RenderTargetHandle, [
-        {
-            key: "isDestroyed",
-            get: function get() {
-                return this.destroyed;
-            }
-        },
-        {
-            key: "storageType",
-            get: function get() {
-                return 1;
-            }
-        },
-        {
-            key: "size",
-            get: function get() {
-                var tex = this.texture;
-                return tex ? [
-                    tex.getWidth(),
-                    tex.getHeight()
-                ] : [
+        } else {
+            this.geometry.setAttributeData("aPos", new Float32Array([
+                -0.5,
+                0.5,
+                0,
+                -0.5,
+                -0.5,
+                0,
+                0.5,
+                0.5,
+                0,
+                0.5,
+                -0.5,
+                0
+            ]));
+            return {
+                index: [
                     0,
+                    1,
+                    2,
+                    2,
+                    1,
+                    3
+                ],
+                atlasOffset: [
+                    0,
+                    1,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1,
                     0
-                ];
-            }
-        },
-        {
-            key: "width",
-            get: function get() {
-                return this.texture.getWidth() || 0;
-            }
-        },
-        {
-            key: "height",
-            get: function get() {
-                return this.texture.getHeight() || 0;
-            }
-        }
-    ]);
-    return RenderTargetHandle;
-}();
-exports.RenderPassDestroyAttachmentType = void 0;
-(function(RenderPassDestroyAttachmentType) {
-    /**
-   * 强制销毁
-   */ RenderPassDestroyAttachmentType[RenderPassDestroyAttachmentType["force"] = 0] = "force";
-    /**
-   * 保留，不销毁
-   */ RenderPassDestroyAttachmentType[RenderPassDestroyAttachmentType["keep"] = 1] = "keep";
-    /**
-   * 如果是外部传入的 Attachment，就不销毁
-   */ RenderPassDestroyAttachmentType[RenderPassDestroyAttachmentType["keepExternal"] = 2] = "keepExternal";
-    /**
-   * 强制销毁
-   */ RenderPassDestroyAttachmentType[RenderPassDestroyAttachmentType["destroy"] = 0] = "destroy";
-})(exports.RenderPassDestroyAttachmentType || (exports.RenderPassDestroyAttachmentType = {}));
-var seed$9 = 1;
-/**
- * RenderPass 抽象类
- */ var RenderPass = /*#__PURE__*/ function() {
-    function RenderPass(renderer, options) {
-        /**
-   * ColorAttachment 数组
-   */ this.attachments = [];
-        this.destroyed = false;
-        this.initialized = false;
-        var _options_name = options.name, name = _options_name === void 0 ? "RenderPass_" + seed$9++ : _options_name, clearAction = options.clearAction, semantics = options.semantics, depthStencilAttachment = options.depthStencilAttachment, storeAction = options.storeAction, _options_priority = options.priority, priority = _options_priority === void 0 ? 0 : _options_priority, _options_meshOrder = options.meshOrder, meshOrder = _options_meshOrder === void 0 ? exports.OrderType.ascending : _options_meshOrder, _options_meshes = options.meshes, meshes = _options_meshes === void 0 ? [] : _options_meshes, _options_delegate = options.delegate, delegate = _options_delegate === void 0 ? {} : _options_delegate;
-        this.name = name;
-        this.renderer = renderer;
-        this.priority = priority;
-        this.meshOrder = meshOrder;
-        this.meshes = sortByOrder(meshes.slice(), this.meshOrder);
-        this.depthStencilType = (depthStencilAttachment == null ? void 0 : depthStencilAttachment.storageType) || 0;
-        this.clearAction = _extends({}, clearAction);
-        this.storeAction = _extends({
-            colorAction: 0,
-            depthAction: 0,
-            stencilAction: 0
-        }, storeAction);
-        this.semantics = new SemanticMap(semantics);
-        this.options = options;
-        this.delegate = delegate;
-        this.setViewportOptions(options);
-    }
-    var _proto = RenderPass.prototype;
-    _proto.addMesh = function addMesh(mesh) {
-        addByOrder(this.meshes, mesh, this.meshOrder);
-    };
-    _proto.removeMesh = function removeMesh(mesh) {
-        removeItem(this.meshes, mesh);
-    };
-    _proto.setMeshes = function setMeshes(meshes) {
-        var _this_meshes;
-        this.meshes.length = 0;
-        (_this_meshes = this.meshes).splice.apply(_this_meshes, [].concat([
-            0,
-            0
-        ], meshes));
-        sortByOrder(this.meshes, this.meshOrder);
-        return this.meshes;
-    };
-    /**
-   * 获取当前 Attachment 数组，注意 RenderPass 可能没有创建完成
-   */ _proto.getInitAttachments = function getInitAttachments() {
-        if (this.attachments.length > 0) {
-            return this.attachments;
-        } else {
-            return this.options.attachments;
+                ]
+            };
         }
     };
-    // TODO 所有pass在子类配置
-    /**
-   * 配置当前pass的RT，在每帧渲染前调用
-   */ _proto.configure = function configure(renderer) {
-        if (this.framebuffer) {
-            renderer.setFramebuffer(this.framebuffer);
-        } else {
-            var _this_getViewport = this.getViewport(), x = _this_getViewport[0], y = _this_getViewport[1], width = _this_getViewport[2], height = _this_getViewport[3];
-            renderer.setViewport(x, y, width, height);
-        }
-    };
-    /**
-   * 执行当前pass，每帧调用一次
-   */ _proto.execute = function execute(renderer) {
-        renderer.clear(this.clearAction);
-        renderer.renderMeshes(this.meshes);
-        renderer.clear(this.storeAction);
-    };
-    /**
-   * 每帧所有的pass渲染完后调用，通常用于清空临时的RT资源
-   */ _proto.frameCleanup = function frameCleanup(renderer) {};
-    /**
-   * 重置 ColorAttachment 数组，会直接替换掉
-   * @param colors - 纹理数组，作为新的 ColorAttachment
-   */ _proto.resetColorAttachments = function resetColorAttachments(colors) {
-        var _this = this;
-        if (!colors.length) {
-            this.resetAttachments({
-                attachments: []
-            });
-        }
-        if (!this.attachments.length) {
-            this.resetAttachments({
-                attachments: colors.map(function(t) {
-                    return {
-                        texture: t
-                    };
-                })
-            });
-        } else {
-            var attachments = colors.map(function(texture) {
-                texture.updateSource({
-                    sourceType: exports.TextureSourceType.framebuffer
-                });
-                return new RenderTargetHandle(_this.renderer.engine, {
-                    texture: texture
-                });
-            });
-            this.attachments.forEach(function(att) {
-                return !att.externalTexture && att.dispose();
-            });
-            this.attachments = attachments;
-            if (this.framebuffer) {
-                this.framebuffer.bind();
-                this.framebuffer.resetColorTextures(colors.map(function(color) {
-                    return color;
-                }));
-            }
-        }
-    };
-    /**
-   * 重置所有 Attachment，会替换掉所有 Attachment
-   * @param options - Attachment 和视口数据
-   */ _proto.resetAttachments = function resetAttachments(options) {
-        this.options = options;
-        this.setViewportOptions(options);
-        if (this.renderer) {
-            this._resetAttachments();
-        }
-    };
-    _proto.setViewportOptions = function setViewportOptions(options) {
-        if (options.viewport) {
-            this.isCustomViewport = true;
-            this.viewportScale = 1;
-            this.customViewport = options.viewport.slice(0, 4);
-            if (this.framebuffer) {
-                var vp = this.customViewport;
-                // TODO 为什么framebuffer和renderpass的isCustomViewport不一样？
-                this.framebuffer.isCustomViewport = false;
-                this.framebuffer.resize(vp[0], vp[1], vp[2], vp[3]);
-            }
-        } else {
-            this.isCustomViewport = false;
-            this.viewportScale = options.viewportScale || 1;
-            if (this.framebuffer) {
-                this.framebuffer.isCustomViewport = true;
-                this.framebuffer.viewportScale = this.viewportScale;
-            }
-        }
-    };
-    _proto._resetAttachments = function _resetAttachments() {
-        var _this = this;
-        var _options_attachments;
-        var renderer = this.renderer;
-        var options = this.options;
-        if (this.attachments.length) {
-            var _this_framebuffer;
-            this.attachments.forEach(function(att) {
-                return !att.externalTexture && att.dispose();
-            });
-            this.attachments.length = 0;
-            (_this_framebuffer = this.framebuffer) == null ? void 0 : _this_framebuffer.dispose({
-                depthStencilAttachment: 2
-            });
-            this.framebuffer = null;
-        }
-        var vs = this.viewportScale;
-        // renderpass 的 viewport 相关参数都需要动态的修改
-        var viewport = this.isCustomViewport ? this.customViewport : [
-            0,
-            0,
-            renderer.getWidth() * vs,
-            renderer.getHeight() * vs
-        ];
-        var size = [
-            viewport[2],
-            viewport[3]
-        ];
-        var name = this.name;
-        if ((_options_attachments = options.attachments) == null ? void 0 : _options_attachments.length) {
-            var attachments = options.attachments.map(function(attr, index) {
-                var _attr_texture;
-                var attachment = new RenderTargetHandle(_this.renderer.engine, _extends({
-                    size: size,
-                    name: ((_attr_texture = attr.texture) == null ? void 0 : _attr_texture.name) || name + "##color_" + index
-                }, attr));
-                return attachment;
-            });
-            this.attachments = attachments;
-            var framebuffer = Framebuffer.create({
-                storeAction: this.storeAction,
-                name: name,
-                viewport: viewport,
-                viewportScale: this.viewportScale,
-                isCustomViewport: this.isCustomViewport,
-                attachments: attachments.map(function(att) {
-                    return att.texture;
-                }),
-                depthStencilAttachment: options.depthStencilAttachment || {
-                    storageType: 0
+    _proto.createGeometry = function createGeometry(mode) {
+        return Geometry.create(this.engine, {
+            attributes: {
+                aPos: {
+                    type: glContext.FLOAT,
+                    size: 3,
+                    data: new Float32Array([
+                        -0.5,
+                        0.5,
+                        0,
+                        -0.5,
+                        -0.5,
+                        0,
+                        0.5,
+                        0.5,
+                        0,
+                        0.5,
+                        -0.5,
+                        0
+                    ])
+                },
+                atlasOffset: {
+                    size: 2,
+                    offset: 0,
+                    releasable: true,
+                    type: glContext.FLOAT,
+                    data: new Float32Array(0)
                 }
-            }, renderer);
-            framebuffer.bind();
-            framebuffer.unbind();
-            this.framebuffer = framebuffer;
-        } else {
-            this.attachments.length = 0;
+            },
+            indices: {
+                data: new Uint16Array(0),
+                releasable: true
+            },
+            mode: mode,
+            maxVertex: 4
+        });
+    };
+    _proto.createMaterial = function createMaterial(renderInfo, count) {
+        var side = renderInfo.side, occlusion = renderInfo.occlusion, blending = renderInfo.blending, maskMode = renderInfo.maskMode, mask = renderInfo.mask;
+        var materialProps = {
+            shader: spriteMeshShaderFromRenderInfo(renderInfo, count, 1)
+        };
+        this.preMultiAlpha = getPreMultiAlpha(blending);
+        var material = Material.create(this.engine, materialProps);
+        var states = {
+            side: side,
+            blending: true,
+            blendMode: blending,
+            mask: mask,
+            maskMode: maskMode,
+            depthTest: true,
+            depthMask: occlusion
+        };
+        material.blending = states.blending;
+        material.stencilRef = states.mask !== undefined ? [
+            states.mask,
+            states.mask
+        ] : undefined;
+        material.depthTest = states.depthTest;
+        material.depthMask = states.depthMask;
+        setBlendMode(material, states.blendMode);
+        setMaskMode(material, states.maskMode);
+        setSideMode(material, states.side);
+        material.shader.shaderData.properties = '_MainTex("_MainTex",2D) = "white" {}';
+        if (!material.hasUniform("_Color")) {
+            material.setVector4("_Color", new Vector4$1(0, 0, 0, 1));
         }
+        if (!material.hasUniform("_TexOffset")) {
+            material.setVector4("_TexOffset", new Vector4$1());
+        }
+        if (!material.hasUniform("_TexParams")) {
+            material.setVector4("_TexParams", new Vector4$1());
+        }
+        return material;
+    };
+    _proto.getTextures = function getTextures() {
+        var ret = [];
+        var tex = this.renderer.texture;
+        if (tex) {
+            ret.push(tex);
+        }
+        return ret;
     };
     /**
-   * 获取当前视口大小，格式：[x偏移，y偏移，宽度，高度]
-   */ _proto.getViewport = function getViewport() {
-        var _this_framebuffer;
-        var ret = ((_this_framebuffer = this.framebuffer) == null ? void 0 : _this_framebuffer.viewport) || this.customViewport;
-        if (ret) {
-            return ret;
+   * 获取图层包围盒的类型和世界坐标
+   * @returns
+   */ _proto.getBoundingBox = function getBoundingBox() {
+        if (!this.item) {
+            return;
         }
-        var renderer = this.renderer;
-        var vs = this.viewportScale;
-        return renderer ? [
-            0,
-            0,
-            renderer.getWidth() * vs,
-            renderer.getHeight() * vs
-        ] : [
-            0,
-            0,
-            0,
-            0
+        var worldMatrix = this.transform.getWorldMatrix();
+        var triangles = trianglesFromRect(Vector3.ZERO, 0.5 * this.transform.size.x, 0.5 * this.transform.size.y);
+        triangles.forEach(function(triangle) {
+            worldMatrix.transformPoint(triangle.p0);
+            worldMatrix.transformPoint(triangle.p1);
+            worldMatrix.transformPoint(triangle.p2);
+        });
+        return {
+            type: exports.HitTestType.triangle,
+            area: triangles
+        };
+    };
+    return BaseRenderComponent;
+}(RendererComponent);
+function getImageItemRenderInfo(item) {
+    var renderer = item.renderer;
+    var blending = renderer.blending, side = renderer.side, occlusion = renderer.occlusion, mask = renderer.mask, maskMode = renderer.maskMode, order = renderer.order;
+    var blendingCache = +blending;
+    var cachePrefix = item.cachePrefix || "-";
+    return {
+        side: side,
+        occlusion: occlusion,
+        blending: blending,
+        mask: mask,
+        maskMode: maskMode,
+        cachePrefix: cachePrefix,
+        cacheId: cachePrefix + "." + +side + "+" + +occlusion + "+" + blendingCache + "+" + order + "+" + maskMode + "." + mask
+    };
+}
+
+var ShapePrimitive = function ShapePrimitive() {
+};
+
+var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+var libtess_min = {exports: {}};
+
+/*
+
+ Copyright 2000, Silicon Graphics, Inc. All Rights Reserved.
+ Copyright 2015, Google Inc. All Rights Reserved.
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to
+ deal in the Software without restriction, including without limitation the
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ sell copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice including the dates of first publication and
+ either this permission notice or a reference to http://oss.sgi.com/projects/FreeB/
+ shall be included in all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ SILICON GRAPHICS, INC. BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+ Original Code. The Original Code is: OpenGL Sample Implementation,
+ Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
+ Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
+ Copyright in any portions created by third parties is as indicated
+ elsewhere herein. All Rights Reserved.
+*/
+
+(function (module) {
+var n;
+function t(a, b) {
+    return a.b === b.b && a.a === b.a;
+}
+function u(a, b) {
+    return a.b < b.b || a.b === b.b && a.a <= b.a;
+}
+function v(a, b, c) {
+    var d = b.b - a.b, e = c.b - b.b;
+    return 0 < d + e ? d < e ? b.a - a.a + d / (d + e) * (a.a - c.a) : b.a - c.a + e / (d + e) * (c.a - a.a) : 0;
+}
+function x(a, b, c) {
+    var d = b.b - a.b, e = c.b - b.b;
+    return 0 < d + e ? (b.a - c.a) * d + (b.a - a.a) * e : 0;
+}
+function z(a, b) {
+    return a.a < b.a || a.a === b.a && a.b <= b.b;
+}
+function aa(a, b, c) {
+    var d = b.a - a.a, e = c.a - b.a;
+    return 0 < d + e ? d < e ? b.b - a.b + d / (d + e) * (a.b - c.b) : b.b - c.b + e / (d + e) * (c.b - a.b) : 0;
+}
+function ba(a, b, c) {
+    var d = b.a - a.a, e = c.a - b.a;
+    return 0 < d + e ? (b.b - c.b) * d + (b.b - a.b) * e : 0;
+}
+function ca(a) {
+    return u(a.b.a, a.a);
+}
+function da(a) {
+    return u(a.a, a.b.a);
+}
+function A(a, b, c, d) {
+    a = 0 > a ? 0 : a;
+    c = 0 > c ? 0 : c;
+    return a <= c ? 0 === c ? (b + d) / 2 : b + a / (a + c) * (d - b) : d + c / (a + c) * (b - d);
+}
+function ea(a) {
+    var b = B(a.b);
+    C(b, a.c);
+    C(b.b, a.c);
+    D(b, a.a);
+    return b;
+}
+function E(a, b) {
+    var c = !1, d = !1;
+    a !== b && (b.a !== a.a && (d = !0, F(b.a, a.a)), b.d !== a.d && (c = !0, G(b.d, a.d)), H(b, a), d || (C(b, a.a), a.a.c = a), c || (D(b, a.d), a.d.a = a));
+}
+function I(a) {
+    var b = a.b, c = !1;
+    a.d !== a.b.d && (c = !0, G(a.d, a.b.d));
+    a.c === a ? F(a.a, null) : (a.b.d.a = J(a), a.a.c = a.c, H(a, J(a)), c || D(a, a.d));
+    b.c === b ? (F(b.a, null), G(b.d, null)) : (a.d.a = J(b), b.a.c = b.c, H(b, J(b)));
+    fa(a);
+}
+function K(a) {
+    var b = B(a), c = b.b;
+    H(b, a.e);
+    b.a = a.b.a;
+    C(c, b.a);
+    b.d = c.d = a.d;
+    b = b.b;
+    H(a.b, J(a.b));
+    H(a.b, b);
+    a.b.a = b.a;
+    b.b.a.c = b.b;
+    b.b.d = a.b.d;
+    b.f = a.f;
+    b.b.f = a.b.f;
+    return b;
+}
+function L(a, b) {
+    var c = !1, d = B(a), e = d.b;
+    b.d !== a.d && (c = !0, G(b.d, a.d));
+    H(d, a.e);
+    H(e, b);
+    d.a = a.b.a;
+    e.a = b.a;
+    d.d = e.d = a.d;
+    a.d.a = e;
+    c || D(d, a.d);
+    return d;
+}
+function B(a) {
+    var b = new M, c = new M, d = a.b.h;
+    c.h = d;
+    d.b.h = b;
+    b.h = a;
+    a.b.h = c;
+    b.b = c;
+    b.c = b;
+    b.e = c;
+    c.b = b;
+    c.c = c;
+    return c.e = b;
+}
+function H(a, b) {
+    var c = a.c, d = b.c;
+    c.b.e = b;
+    d.b.e = a;
+    a.c = d;
+    b.c = c;
+}
+function C(a, b) {
+    var c = b.f, d = new N(b, c);
+    c.e = d;
+    b.f = d;
+    c = d.c = a;
+    do c.a = d, c = c.c;
+    while (c !== a);
+}
+function D(a, b) {
+    var c = b.d, d = new ga(b, c);
+    c.b = d;
+    b.d = d;
+    d.a = a;
+    d.c = b.c;
+    c = a;
+    do c.d = d, c = c.e;
+    while (c !== a);
+}
+function fa(a) {
+    var b = a.h;
+    a = a.b.h;
+    b.b.h = a;
+    a.b.h = b;
+}
+function F(a, b) {
+    var c = a.c, d = c;
+    do d.a = b, d = d.c;
+    while (d !== c);
+    c = a.f;
+    d = a.e;
+    d.f = c;
+    c.e = d;
+}
+function G(a, b) {
+    var c = a.a, d = c;
+    do d.d = b, d = d.e;
+    while (d !== c);
+    c = a.d;
+    d = a.b;
+    d.d = c;
+    c.b = d;
+}
+function ha(a) {
+    var b = 0;
+    Math.abs(a[1]) > Math.abs(a[0]) && (b = 1);
+    Math.abs(a[2]) > Math.abs(a[b]) && (b = 2);
+    return b;
+}
+var O = 4 * 1E150;
+function P(a, b) {
+    a.f += b.f;
+    a.b.f += b.b.f;
+}
+function ia(a, b, c) {
+    a = a.a;
+    b = b.a;
+    c = c.a;
+    if (b.b.a === a) return c.b.a === a ? u(b.a, c.a) ? 0 >= x(c.b.a, b.a, c.a) : 0 <= x(b.b.a, c.a, b.a) : 0 >= x(c.b.a, a, c.a);
+    if (c.b.a === a) return 0 <= x(b.b.a, a, b.a);
+    b = v(b.b.a, a, b.a);
+    a = v(c.b.a, a, c.a);
+    return b >= a;
+}
+function Q(a) {
+    a.a.i = null;
+    var b = a.e;
+    b.a.c = b.c;
+    b.c.a = b.a;
+    a.e = null;
+}
+function ja(a, b) {
+    I(a.a);
+    a.c = !1;
+    a.a = b;
+    b.i = a;
+}
+function ka(a) {
+    var b = a.a.a;
+    do a = R(a);
+    while (a.a.a === b);
+    a.c && (b = L(S(a).a.b, a.a.e), ja(a, b), a = R(a));
+    return a;
+}
+function la(a, b, c) {
+    var d = new ma;
+    d.a = c;
+    d.e = na(a.f, b.e, d);
+    return c.i = d;
+}
+function oa(a, b) {
+    switch(a.s){
+        case 100130:
+            return 0 !== (b & 1);
+        case 100131:
+            return 0 !== b;
+        case 100132:
+            return 0 < b;
+        case 100133:
+            return 0 > b;
+        case 100134:
+            return 2 <= b || -2 >= b;
+    }
+    return !1;
+}
+function pa(a) {
+    var b = a.a, c = b.d;
+    c.c = a.d;
+    c.a = b;
+    Q(a);
+}
+function T(a, b, c) {
+    a = b;
+    for(b = b.a; a !== c;){
+        a.c = !1;
+        var d = S(a), e = d.a;
+        if (e.a !== b.a) {
+            if (!d.c) {
+                pa(a);
+                break;
+            }
+            e = L(b.c.b, e.b);
+            ja(d, e);
+        }
+        b.c !== e && (E(J(e), e), E(b, e));
+        pa(a);
+        b = d.a;
+        a = d;
+    }
+    return b;
+}
+function U(a, b, c, d, e, f) {
+    var g = !0;
+    do la(a, b, c.b), c = c.c;
+    while (c !== d);
+    for(null === e && (e = S(b).a.b.c);;){
+        d = S(b);
+        c = d.a.b;
+        if (c.a !== e.a) break;
+        c.c !== e && (E(J(c), c), E(J(e), c));
+        d.f = b.f - c.f;
+        d.d = oa(a, d.f);
+        b.b = !0;
+        !g && qa(a, b) && (P(c, e), Q(b), I(e));
+        g = !1;
+        b = d;
+        e = c;
+    }
+    b.b = !0;
+    f && ra(a, b);
+}
+function sa(a, b, c, d, e) {
+    var f = [
+        b.g[0],
+        b.g[1],
+        b.g[2]
+    ];
+    b.d = null;
+    b.d = a.o ? a.o(f, c, d, a.c) || null : null;
+    null === b.d && (e ? a.n || (V(a, 100156), a.n = !0) : b.d = c[0]);
+}
+function ta(a, b, c) {
+    var d = [
+        null,
+        null,
+        null,
+        null
+    ];
+    d[0] = b.a.d;
+    d[1] = c.a.d;
+    sa(a, b.a, d, [
+        .5,
+        .5,
+        0,
+        0
+    ], !1);
+    E(b, c);
+}
+function ua(a, b, c, d, e) {
+    var f = Math.abs(b.b - a.b) + Math.abs(b.a - a.a), g = Math.abs(c.b - a.b) + Math.abs(c.a - a.a), h = e + 1;
+    d[e] = .5 * g / (f + g);
+    d[h] = .5 * f / (f + g);
+    a.g[0] += d[e] * b.g[0] + d[h] * c.g[0];
+    a.g[1] += d[e] * b.g[1] + d[h] * c.g[1];
+    a.g[2] += d[e] * b.g[2] + d[h] * c.g[2];
+}
+function qa(a, b) {
+    var c = S(b), d = b.a, e = c.a;
+    if (u(d.a, e.a)) {
+        if (0 < x(e.b.a, d.a, e.a)) return !1;
+        if (!t(d.a, e.a)) K(e.b), E(d, J(e)), b.b = c.b = !0;
+        else if (d.a !== e.a) {
+            var c = a.e, f = d.a.h;
+            if (0 <= f) {
+                var c = c.b, g = c.d, h = c.e, k = c.c, l = k[f];
+                g[l] = g[c.a];
+                k[g[l]] = l;
+                l <= --c.a && (1 >= l ? W(c, l) : u(h[g[l >> 1]], h[g[l]]) ? W(c, l) : va(c, l));
+                h[f] = null;
+                k[f] = c.b;
+                c.b = f;
+            } else for(c.c[-(f + 1)] = null; 0 < c.a && null === c.c[c.d[c.a - 1]];)--c.a;
+            ta(a, J(e), d);
+        }
+    } else {
+        if (0 > x(d.b.a, e.a, d.a)) return !1;
+        R(b).b = b.b = !0;
+        K(d.b);
+        E(J(e), d);
+    }
+    return !0;
+}
+function wa(a, b) {
+    var c = S(b), d = b.a, e = c.a, f = d.a, g = e.a, h = d.b.a, k = e.b.a, l = new N;
+    x(h, a.a, f);
+    x(k, a.a, g);
+    if (f === g || Math.min(f.a, h.a) > Math.max(g.a, k.a)) return !1;
+    if (u(f, g)) {
+        if (0 < x(k, f, g)) return !1;
+    } else if (0 > x(h, g, f)) return !1;
+    var r = h, p = f, q = k, y = g, m, w;
+    u(r, p) || (m = r, r = p, p = m);
+    u(q, y) || (m = q, q = y, y = m);
+    u(r, q) || (m = r, r = q, q = m, m = p, p = y, y = m);
+    u(q, p) ? u(p, y) ? (m = v(r, q, p), w = v(q, p, y), 0 > m + w && (m = -m, w = -w), l.b = A(m, q.b, w, p.b)) : (m = x(r, q, p), w = -x(r, y, p), 0 > m + w && (m = -m, w = -w), l.b = A(m, q.b, w, y.b)) : l.b = (q.b + p.b) / 2;
+    z(r, p) || (m = r, r = p, p = m);
+    z(q, y) || (m = q, q = y, y = m);
+    z(r, q) || (m = r, r = q, q = m, m = p, p = y, y = m);
+    z(q, p) ? z(p, y) ? (m = aa(r, q, p), w = aa(q, p, y), 0 > m + w && (m = -m, w = -w), l.a = A(m, q.a, w, p.a)) : (m = ba(r, q, p), w = -ba(r, y, p), 0 > m + w && (m = -m, w = -w), l.a = A(m, q.a, w, y.a)) : l.a = (q.a + p.a) / 2;
+    u(l, a.a) && (l.b = a.a.b, l.a = a.a.a);
+    r = u(f, g) ? f : g;
+    u(r, l) && (l.b = r.b, l.a = r.a);
+    if (t(l, f) || t(l, g)) return qa(a, b), !1;
+    if (!t(h, a.a) && 0 <= x(h, a.a, l) || !t(k, a.a) && 0 >= x(k, a.a, l)) {
+        if (k === a.a) return K(d.b), E(e.b, d), b = ka(b), d = S(b).a, T(a, S(b), c), U(a, b, J(d), d, d, !0), !0;
+        if (h === a.a) {
+            K(e.b);
+            E(d.e, J(e));
+            f = c = b;
+            g = f.a.b.a;
+            do f = R(f);
+            while (f.a.b.a === g);
+            b = f;
+            f = S(b).a.b.c;
+            c.a = J(e);
+            e = T(a, c, null);
+            U(a, b, e.c, d.b.c, f, !0);
+            return !0;
+        }
+        0 <= x(h, a.a, l) && (R(b).b = b.b = !0, K(d.b), d.a.b = a.a.b, d.a.a = a.a.a);
+        0 >= x(k, a.a, l) && (b.b = c.b = !0, K(e.b), e.a.b = a.a.b, e.a.a = a.a.a);
+        return !1;
+    }
+    K(d.b);
+    K(e.b);
+    E(J(e), d);
+    d.a.b = l.b;
+    d.a.a = l.a;
+    d.a.h = xa(a.e, d.a);
+    d = d.a;
+    e = [
+        0,
+        0,
+        0,
+        0
+    ];
+    l = [
+        f.d,
+        h.d,
+        g.d,
+        k.d
+    ];
+    d.g[0] = d.g[1] = d.g[2] = 0;
+    ua(d, f, h, e, 0);
+    ua(d, g, k, e, 2);
+    sa(a, d, l, e, !0);
+    R(b).b = b.b = c.b = !0;
+    return !1;
+}
+function ra(a, b) {
+    for(var c = S(b);;){
+        for(; c.b;)b = c, c = S(c);
+        if (!b.b && (c = b, b = R(b), null === b || !b.b)) break;
+        b.b = !1;
+        var d = b.a, e = c.a, f;
+        if (f = d.b.a !== e.b.a) a: {
+            f = b;
+            var g = S(f), h = f.a, k = g.a, l = void 0;
+            if (u(h.b.a, k.b.a)) {
+                if (0 > x(h.b.a, k.b.a, h.a)) {
+                    f = !1;
+                    break a;
+                }
+                R(f).b = f.b = !0;
+                l = K(h);
+                E(k.b, l);
+                l.d.c = f.d;
+            } else {
+                if (0 < x(k.b.a, h.b.a, k.a)) {
+                    f = !1;
+                    break a;
+                }
+                f.b = g.b = !0;
+                l = K(k);
+                E(h.e, k.b);
+                l.b.d.c = f.d;
+            }
+            f = !0;
+        }
+        f && (c.c ? (Q(c), I(e), c = S(b), e = c.a) : b.c && (Q(b), I(d), b = R(c), d = b.a));
+        if (d.a !== e.a) {
+            if (d.b.a === e.b.a || b.c || c.c || d.b.a !== a.a && e.b.a !== a.a) qa(a, b);
+            else if (wa(a, b)) break;
+        }
+        d.a === e.a && d.b.a === e.b.a && (P(e, d), Q(b), I(d), b = R(c));
+    }
+}
+function ya(a, b) {
+    a.a = b;
+    for(var c = b.c; null === c.i;)if (c = c.c, c === b.c) {
+        var c = a, d = b, e = new ma;
+        e.a = d.c.b;
+        var f = c.f, g = f.a;
+        do g = g.a;
+        while (null !== g.b && !f.c(f.b, e, g.b));
+        var f = g.b, h = S(f), e = f.a, g = h.a;
+        if (0 === x(e.b.a, d, e.a)) e = f.a, t(e.a, d) || t(e.b.a, d) || (K(e.b), f.c && (I(e.c), f.c = !1), E(d.c, e), ya(c, d));
+        else {
+            var k = u(g.b.a, e.b.a) ? f : h, h = void 0;
+            f.d || k.c ? (k === f ? h = L(d.c.b, e.e) : h = L(g.b.c.b, d.c).b, k.c ? ja(k, h) : (e = c, f = la(c, f, h), f.f = R(f).f + f.a.f, f.d = oa(e, f.f)), ya(c, d)) : U(c, f, d.c, d.c, null, !0);
+        }
+        return;
+    }
+    c = ka(c.i);
+    e = S(c);
+    f = e.a;
+    e = T(a, e, null);
+    if (e.c === f) {
+        var f = e, e = f.c, g = S(c), h = c.a, k = g.a, l = !1;
+        h.b.a !== k.b.a && wa(a, c);
+        t(h.a, a.a) && (E(J(e), h), c = ka(c), e = S(c).a, T(a, S(c), g), l = !0);
+        t(k.a, a.a) && (E(f, J(k)), f = T(a, g, null), l = !0);
+        l ? U(a, c, f.c, e, e, !0) : (u(k.a, h.a) ? d = J(k) : d = h, d = L(f.c.b, d), U(a, c, d, d.c, d.c, !1), d.b.i.c = !0, ra(a, c));
+    } else U(a, c, e.c, f, f, !0);
+}
+function za(a, b) {
+    var c = new ma, d = ea(a.b);
+    d.a.b = O;
+    d.a.a = b;
+    d.b.a.b = -O;
+    d.b.a.a = b;
+    a.a = d.b.a;
+    c.a = d;
+    c.f = 0;
+    c.d = !1;
+    c.c = !1;
+    c.h = !0;
+    c.b = !1;
+    d = a.f;
+    d = na(d, d.a, c);
+    c.e = d;
+}
+function Aa(a) {
+    this.a = new Ba;
+    this.b = a;
+    this.c = ia;
+}
+function na(a, b, c) {
+    do b = b.c;
+    while (null !== b.b && !a.c(a.b, b.b, c));
+    a = new Ba(c, b.a, b);
+    b.a.c = a;
+    return b.a = a;
+}
+function Ba(a, b, c) {
+    this.b = a || null;
+    this.a = b || this;
+    this.c = c || this;
+}
+function X() {
+    this.d = Y;
+    this.p = this.b = this.q = null;
+    this.j = [
+        0,
+        0,
+        0
+    ];
+    this.s = 100130;
+    this.n = !1;
+    this.o = this.a = this.e = this.f = null;
+    this.m = !1;
+    this.c = this.r = this.i = this.k = this.l = this.h = null;
+}
+var Y = 0;
+n = X.prototype;
+n.x = function() {
+    Z(this, Y);
+};
+n.B = function(a, b) {
+    switch(a){
+        case 100142:
+            return;
+        case 100140:
+            switch(b){
+                case 100130:
+                case 100131:
+                case 100132:
+                case 100133:
+                case 100134:
+                    this.s = b;
+                    return;
+            }
+            break;
+        case 100141:
+            this.m = !!b;
+            return;
+        default:
+            V(this, 100900);
+            return;
+    }
+    V(this, 100901);
+};
+n.y = function(a) {
+    switch(a){
+        case 100142:
+            return 0;
+        case 100140:
+            return this.s;
+        case 100141:
+            return this.m;
+        default:
+            V(this, 100900);
+    }
+    return !1;
+};
+n.A = function(a, b, c) {
+    this.j[0] = a;
+    this.j[1] = b;
+    this.j[2] = c;
+};
+n.z = function(a, b) {
+    var c = b ? b : null;
+    switch(a){
+        case 100100:
+        case 100106:
+            this.h = c;
+            break;
+        case 100104:
+        case 100110:
+            this.l = c;
+            break;
+        case 100101:
+        case 100107:
+            this.k = c;
+            break;
+        case 100102:
+        case 100108:
+            this.i = c;
+            break;
+        case 100103:
+        case 100109:
+            this.p = c;
+            break;
+        case 100105:
+        case 100111:
+            this.o = c;
+            break;
+        case 100112:
+            this.r = c;
+            break;
+        default:
+            V(this, 100900);
+    }
+};
+n.C = function(a, b) {
+    var c = !1, d = [
+        0,
+        0,
+        0
+    ];
+    Z(this, 2);
+    for(var e = 0; 3 > e; ++e){
+        var f = a[e];
+        -1E150 > f && (f = -1E150, c = !0);
+        1E150 < f && (f = 1E150, c = !0);
+        d[e] = f;
+    }
+    c && V(this, 100155);
+    c = this.q;
+    null === c ? (c = ea(this.b), E(c, c.b)) : (K(c), c = c.e);
+    c.a.d = b;
+    c.a.g[0] = d[0];
+    c.a.g[1] = d[1];
+    c.a.g[2] = d[2];
+    c.f = 1;
+    c.b.f = -1;
+    this.q = c;
+};
+n.u = function(a) {
+    Z(this, Y);
+    this.d = 1;
+    this.b = new Ca;
+    this.c = a;
+};
+n.t = function() {
+    Z(this, 1);
+    this.d = 2;
+    this.q = null;
+};
+n.v = function() {
+    Z(this, 2);
+    this.d = 1;
+};
+n.w = function() {
+    Z(this, 1);
+    this.d = Y;
+    var a = this.j[0], b = this.j[1], c = this.j[2], d = !1, e = [
+        a,
+        b,
+        c
+    ];
+    if (0 === a && 0 === b && 0 === c) {
+        for(var b = [
+            -2 * 1E150,
+            -2 * 1E150,
+            -2 * 1E150
+        ], f = [
+            2 * 1E150,
+            2 * 1E150,
+            2 * 1E150
+        ], c = [], g = [], d = this.b.c, a = d.e; a !== d; a = a.e)for(var h = 0; 3 > h; ++h){
+            var k = a.g[h];
+            k < f[h] && (f[h] = k, g[h] = a);
+            k > b[h] && (b[h] = k, c[h] = a);
+        }
+        a = 0;
+        b[1] - f[1] > b[0] - f[0] && (a = 1);
+        b[2] - f[2] > b[a] - f[a] && (a = 2);
+        if (f[a] >= b[a]) e[0] = 0, e[1] = 0, e[2] = 1;
+        else {
+            b = 0;
+            f = g[a];
+            c = c[a];
+            g = [
+                0,
+                0,
+                0
+            ];
+            f = [
+                f.g[0] - c.g[0],
+                f.g[1] - c.g[1],
+                f.g[2] - c.g[2]
+            ];
+            h = [
+                0,
+                0,
+                0
+            ];
+            for(a = d.e; a !== d; a = a.e)h[0] = a.g[0] - c.g[0], h[1] = a.g[1] - c.g[1], h[2] = a.g[2] - c.g[2], g[0] = f[1] * h[2] - f[2] * h[1], g[1] = f[2] * h[0] - f[0] * h[2], g[2] = f[0] * h[1] - f[1] * h[0], k = g[0] * g[0] + g[1] * g[1] + g[2] * g[2], k > b && (b = k, e[0] = g[0], e[1] = g[1], e[2] = g[2]);
+            0 >= b && (e[0] = e[1] = e[2] = 0, e[ha(f)] = 1);
+        }
+        d = !0;
+    }
+    g = ha(e);
+    a = this.b.c;
+    b = (g + 1) % 3;
+    c = (g + 2) % 3;
+    g = 0 < e[g] ? 1 : -1;
+    for(e = a.e; e !== a; e = e.e)e.b = e.g[b], e.a = g * e.g[c];
+    if (d) {
+        e = 0;
+        d = this.b.a;
+        for(a = d.b; a !== d; a = a.b)if (b = a.a, !(0 >= b.f)) {
+            do e += (b.a.b - b.b.a.b) * (b.a.a + b.b.a.a), b = b.e;
+            while (b !== a.a);
+        }
+        if (0 > e) for(e = this.b.c, d = e.e; d !== e; d = d.e)d.a = -d.a;
+    }
+    this.n = !1;
+    e = this.b.b;
+    for(a = e.h; a !== e; a = d)if (d = a.h, b = a.e, t(a.a, a.b.a) && a.e.e !== a && (ta(this, b, a), I(a), a = b, b = a.e), b.e === a) {
+        if (b !== a) {
+            if (b === d || b === d.b) d = d.h;
+            I(b);
+        }
+        if (a === d || a === d.b) d = d.h;
+        I(a);
+    }
+    this.e = e = new Da;
+    d = this.b.c;
+    for(a = d.e; a !== d; a = a.e)a.h = xa(e, a);
+    Ea(e);
+    this.f = new Aa(this);
+    za(this, -O);
+    for(za(this, O); null !== (e = Fa(this.e));){
+        for(;;){
+            a: if (a = this.e, 0 === a.a) d = Ga(a.b);
+            else if (d = a.c[a.d[a.a - 1]], 0 !== a.b.a && (a = Ga(a.b), u(a, d))) {
+                d = a;
+                break a;
+            }
+            if (null === d || !t(d, e)) break;
+            d = Fa(this.e);
+            ta(this, e.c, d.c);
+        }
+        ya(this, e);
+    }
+    this.a = this.f.a.a.b.a.a;
+    for(e = 0; null !== (d = this.f.a.a.b);)d.h || ++e, Q(d);
+    this.f = null;
+    e = this.e;
+    e.b = null;
+    e.d = null;
+    this.e = e.c = null;
+    e = this.b;
+    for(a = e.a.b; a !== e.a; a = d)d = a.b, a = a.a, a.e.e === a && (P(a.c, a), I(a));
+    if (!this.n) {
+        e = this.b;
+        if (this.m) for(a = e.b.h; a !== e.b; a = d)d = a.h, a.b.d.c !== a.d.c ? a.f = a.d.c ? 1 : -1 : I(a);
+        else for(a = e.a.b; a !== e.a; a = d)if (d = a.b, a.c) {
+            for(a = a.a; u(a.b.a, a.a); a = a.c.b);
+            for(; u(a.a, a.b.a); a = a.e);
+            b = a.c.b;
+            for(c = void 0; a.e !== b;)if (u(a.b.a, b.a)) {
+                for(; b.e !== a && (ca(b.e) || 0 >= x(b.a, b.b.a, b.e.b.a));)c = L(b.e, b), b = c.b;
+                b = b.c.b;
+            } else {
+                for(; b.e !== a && (da(a.c.b) || 0 <= x(a.b.a, a.a, a.c.b.a));)c = L(a, a.c.b), a = c.b;
+                a = a.e;
+            }
+            for(; b.e.e !== a;)c = L(b.e, b), b = c.b;
+        }
+        if (this.h || this.i || this.k || this.l) if (this.m) for(e = this.b, d = e.a.b; d !== e.a; d = d.b){
+            if (d.c) {
+                this.h && this.h(2, this.c);
+                a = d.a;
+                do this.k && this.k(a.a.d, this.c), a = a.e;
+                while (a !== d.a);
+                this.i && this.i(this.c);
+            }
+        }
+        else {
+            e = this.b;
+            d = !!this.l;
+            a = !1;
+            b = -1;
+            for(c = e.a.d; c !== e.a; c = c.d)if (c.c) {
+                a || (this.h && this.h(4, this.c), a = !0);
+                g = c.a;
+                do d && (f = g.b.d.c ? 0 : 1, b !== f && (b = f, this.l && this.l(!!b, this.c))), this.k && this.k(g.a.d, this.c), g = g.e;
+                while (g !== c.a);
+            }
+            a && this.i && this.i(this.c);
+        }
+        if (this.r) {
+            e = this.b;
+            for(a = e.a.b; a !== e.a; a = d)if (d = a.b, !a.c) {
+                b = a.a;
+                c = b.e;
+                g = void 0;
+                do g = c, c = g.e, g.d = null, null === g.b.d && (g.c === g ? F(g.a, null) : (g.a.c = g.c, H(g, J(g))), f = g.b, f.c === f ? F(f.a, null) : (f.a.c = f.c, H(f, J(f))), fa(g));
+                while (g !== b);
+                b = a.d;
+                a = a.b;
+                a.d = b;
+                b.b = a;
+            }
+            this.r(this.b);
+            this.c = this.b = null;
+            return;
+        }
+    }
+    this.b = this.c = null;
+};
+function Z(a, b) {
+    if (a.d !== b) for(; a.d !== b;)if (a.d < b) switch(a.d){
+        case Y:
+            V(a, 100151);
+            a.u(null);
+            break;
+        case 1:
+            V(a, 100152), a.t();
+    }
+    else switch(a.d){
+        case 2:
+            V(a, 100154);
+            a.v();
+            break;
+        case 1:
+            V(a, 100153), a.w();
+    }
+}
+function V(a, b) {
+    a.p && a.p(b, a.c);
+}
+function ga(a, b) {
+    this.b = a || this;
+    this.d = b || this;
+    this.a = null;
+    this.c = !1;
+}
+function M() {
+    this.h = this;
+    this.i = this.d = this.a = this.e = this.c = this.b = null;
+    this.f = 0;
+}
+function J(a) {
+    return a.b.e;
+}
+function Ca() {
+    this.c = new N;
+    this.a = new ga;
+    this.b = new M;
+    this.d = new M;
+    this.b.b = this.d;
+    this.d.b = this.b;
+}
+function N(a, b) {
+    this.e = a || this;
+    this.f = b || this;
+    this.d = this.c = null;
+    this.g = [
+        0,
+        0,
+        0
+    ];
+    this.h = this.a = this.b = 0;
+}
+function Da() {
+    this.c = [];
+    this.d = null;
+    this.a = 0;
+    this.e = !1;
+    this.b = new Ha;
+}
+function Ea(a) {
+    a.d = [];
+    for(var b = 0; b < a.a; b++)a.d[b] = b;
+    a.d.sort(function(a) {
+        return function(b, e) {
+            return u(a[b], a[e]) ? 1 : -1;
+        };
+    }(a.c));
+    a.e = !0;
+    Ia(a.b);
+}
+function xa(a, b) {
+    if (a.e) {
+        var c = a.b, d = ++c.a;
+        2 * d > c.f && (c.f *= 2, c.c = Ja(c.c, c.f + 1));
+        var e;
+        0 === c.b ? e = d : (e = c.b, c.b = c.c[c.b]);
+        c.e[e] = b;
+        c.c[e] = d;
+        c.d[d] = e;
+        c.h && va(c, d);
+        return e;
+    }
+    c = a.a++;
+    a.c[c] = b;
+    return -(c + 1);
+}
+function Fa(a) {
+    if (0 === a.a) return Ka(a.b);
+    var b = a.c[a.d[a.a - 1]];
+    if (0 !== a.b.a && u(Ga(a.b), b)) return Ka(a.b);
+    do --a.a;
+    while (0 < a.a && null === a.c[a.d[a.a - 1]]);
+    return b;
+}
+function Ha() {
+    this.d = Ja([
+        0
+    ], 33);
+    this.e = [
+        null,
+        null
+    ];
+    this.c = [
+        0,
+        0
+    ];
+    this.a = 0;
+    this.f = 32;
+    this.b = 0;
+    this.h = !1;
+    this.d[1] = 1;
+}
+function Ja(a, b) {
+    for(var c = Array(b), d = 0; d < a.length; d++)c[d] = a[d];
+    for(; d < b; d++)c[d] = 0;
+    return c;
+}
+function Ia(a) {
+    for(var b = a.a; 1 <= b; --b)W(a, b);
+    a.h = !0;
+}
+function Ga(a) {
+    return a.e[a.d[1]];
+}
+function Ka(a) {
+    var b = a.d, c = a.e, d = a.c, e = b[1], f = c[e];
+    0 < a.a && (b[1] = b[a.a], d[b[1]] = 1, c[e] = null, d[e] = a.b, a.b = e, 0 < --a.a && W(a, 1));
+    return f;
+}
+function W(a, b) {
+    for(var c = a.d, d = a.e, e = a.c, f = b, g = c[f];;){
+        var h = f << 1;
+        h < a.a && u(d[c[h + 1]], d[c[h]]) && (h += 1);
+        var k = c[h];
+        if (h > a.a || u(d[g], d[k])) {
+            c[f] = g;
+            e[g] = f;
+            break;
+        }
+        c[f] = k;
+        e[k] = f;
+        f = h;
+    }
+}
+function va(a, b) {
+    for(var c = a.d, d = a.e, e = a.c, f = b, g = c[f];;){
+        var h = f >> 1, k = c[h];
+        if (0 === h || u(d[k], d[g])) {
+            c[f] = g;
+            e[g] = f;
+            break;
+        }
+        c[f] = k;
+        e[k] = f;
+        f = h;
+    }
+}
+function ma() {
+    this.e = this.a = null;
+    this.f = 0;
+    this.c = this.b = this.h = this.d = !1;
+}
+function S(a) {
+    return a.e.c.b;
+}
+function R(a) {
+    return a.e.a.b;
+}
+commonjsGlobal.libtess = {
+    GluTesselator: X,
+    windingRule: {
+        GLU_TESS_WINDING_ODD: 100130,
+        GLU_TESS_WINDING_NONZERO: 100131,
+        GLU_TESS_WINDING_POSITIVE: 100132,
+        GLU_TESS_WINDING_NEGATIVE: 100133,
+        GLU_TESS_WINDING_ABS_GEQ_TWO: 100134
+    },
+    primitiveType: {
+        GL_LINE_LOOP: 2,
+        GL_TRIANGLES: 4,
+        GL_TRIANGLE_STRIP: 5,
+        GL_TRIANGLE_FAN: 6
+    },
+    errorType: {
+        GLU_TESS_MISSING_BEGIN_POLYGON: 100151,
+        GLU_TESS_MISSING_END_POLYGON: 100153,
+        GLU_TESS_MISSING_BEGIN_CONTOUR: 100152,
+        GLU_TESS_MISSING_END_CONTOUR: 100154,
+        GLU_TESS_COORD_TOO_LARGE: 100155,
+        GLU_TESS_NEED_COMBINE_CALLBACK: 100156
+    },
+    gluEnum: {
+        GLU_TESS_MESH: 100112,
+        GLU_TESS_TOLERANCE: 100142,
+        GLU_TESS_WINDING_RULE: 100140,
+        GLU_TESS_BOUNDARY_ONLY: 100141,
+        GLU_INVALID_ENUM: 100900,
+        GLU_INVALID_VALUE: 100901,
+        GLU_TESS_BEGIN: 100100,
+        GLU_TESS_VERTEX: 100101,
+        GLU_TESS_END: 100102,
+        GLU_TESS_ERROR: 100103,
+        GLU_TESS_EDGE_FLAG: 100104,
+        GLU_TESS_COMBINE: 100105,
+        GLU_TESS_BEGIN_DATA: 100106,
+        GLU_TESS_VERTEX_DATA: 100107,
+        GLU_TESS_END_DATA: 100108,
+        GLU_TESS_ERROR_DATA: 100109,
+        GLU_TESS_EDGE_FLAG_DATA: 100110,
+        GLU_TESS_COMBINE_DATA: 100111
+    }
+};
+X.prototype.gluDeleteTess = X.prototype.x;
+X.prototype.gluTessProperty = X.prototype.B;
+X.prototype.gluGetTessProperty = X.prototype.y;
+X.prototype.gluTessNormal = X.prototype.A;
+X.prototype.gluTessCallback = X.prototype.z;
+X.prototype.gluTessVertex = X.prototype.C;
+X.prototype.gluTessBeginPolygon = X.prototype.u;
+X.prototype.gluTessBeginContour = X.prototype.t;
+X.prototype.gluTessEndContour = X.prototype.v;
+X.prototype.gluTessEndPolygon = X.prototype.w;
+{
+    module.exports = commonjsGlobal.libtess;
+}
+}(libtess_min));
+
+var tessy = function initTesselator() {
+    // function called for each vertex of tesselator output
+    function vertexCallback(data, polyVertArray) {
+        polyVertArray[polyVertArray.length] = data[0];
+        polyVertArray[polyVertArray.length] = data[1];
+    }
+    function begincallback(type) {
+        if (type !== libtess_min.exports.primitiveType.GL_TRIANGLES) {
+            console.info("expected TRIANGLES but got type: " + type);
+        }
+    }
+    function errorcallback(errno) {
+        console.error("error callback, error number: " + errno);
+    }
+    // callback for when segments intersect and must be split
+    function combinecallback(coords, data, weight) {
+        // console.log('combine callback');
+        return [
+            coords[0],
+            coords[1],
+            coords[2]
         ];
+    }
+    function edgeCallback(flag) {
+    // don't really care about the flag, but need no-strip/no-fan behavior
+    // console.log('edge flag: ' + flag);
+    }
+    var tessy = new libtess_min.exports.GluTesselator();
+    // tessy.gluTessProperty(libtess.gluEnum.GLU_TESS_WINDING_RULE, libtess.windingRule.GLU_TESS_WINDING_POSITIVE);
+    tessy.gluTessCallback(libtess_min.exports.gluEnum.GLU_TESS_VERTEX_DATA, vertexCallback);
+    tessy.gluTessCallback(libtess_min.exports.gluEnum.GLU_TESS_BEGIN, begincallback);
+    tessy.gluTessCallback(libtess_min.exports.gluEnum.GLU_TESS_ERROR, errorcallback);
+    tessy.gluTessCallback(libtess_min.exports.gluEnum.GLU_TESS_COMBINE, combinecallback);
+    tessy.gluTessCallback(libtess_min.exports.gluEnum.GLU_TESS_EDGE_FLAG, edgeCallback);
+    return tessy;
+}();
+function triangulate(contours) {
+    // libtess will take 3d verts and flatten to a plane for tesselation
+    // since only doing 2d tesselation here, provide z=1 normal to skip
+    // iterating over verts only to get the same answer.
+    // comment out to test normal-generation code
+    tessy.gluTessNormal(0, 0, 1);
+    var triangleVerts = [];
+    tessy.gluTessBeginPolygon(triangleVerts);
+    for(var i = 0; i < contours.length; i++){
+        tessy.gluTessBeginContour();
+        var contour = contours[i];
+        for(var j = 0; j < contour.length; j += 2){
+            var coords = [
+                contour[j],
+                contour[j + 1],
+                0
+            ];
+            tessy.gluTessVertex(coords, coords);
+        }
+        tessy.gluTessEndContour();
+    }
+    // finish polygon
+    tessy.gluTessEndPolygon();
+    return triangleVerts;
+}
+
+/**
+ * A class to define a shape via user defined coordinates.
+ */ var Polygon = /*#__PURE__*/ function(ShapePrimitive) {
+    _inherits(Polygon, ShapePrimitive);
+    function Polygon() {
+        for(var _len = arguments.length, points = new Array(_len), _key = 0; _key < _len; _key++){
+            points[_key] = arguments[_key];
+        }
+        var _this;
+        _this = ShapePrimitive.call(this) || this;
+        /**
+   * An array of the points of this polygon.
+   */ _this.points = [];
+        /**
+   * `false` after moveTo, `true` after `closePath`. In all other cases it is `true`.
+   */ _this.closePath = false;
+        var flat = Array.isArray(points[0]) ? points[0] : points;
+        // if this is an array of points, convert it to a flat array of numbers
+        if (typeof flat[0] !== "number") {
+            var p = [];
+            for(var i = 0, il = flat.length; i < il; i++){
+                p.push(flat[i].x, flat[i].y);
+            }
+            flat = p;
+        }
+        _this.points = flat;
+        _this.closePath = true;
+        return _this;
+    }
+    var _proto = Polygon.prototype;
+    /**
+   * Creates a clone of this polygon.
+   * @returns - A copy of the polygon.
+   */ _proto.clone = function clone() {
+        var points = this.points.slice();
+        var polygon = new Polygon(points);
+        polygon.closePath = this.closePath;
+        return polygon;
     };
     /**
-   * 获取深度 Attachment，可能没有
-   */ _proto.getDepthAttachment = function getDepthAttachment() {
-        var framebuffer = this.framebuffer;
-        if (framebuffer) {
-            var depthTexture = framebuffer.getDepthTexture();
-            var texture = depthTexture ? this.getDepthTexture(depthTexture, framebuffer.externalStorage) : undefined;
-            return {
-                storageType: framebuffer.depthStencilStorageType,
-                storage: framebuffer.depthStorage,
-                texture: texture
-            };
+   * Checks whether the x and y coordinates passed to this function are contained within this polygon.
+   * @param x - The X coordinate of the point to test.
+   * @param y - The Y coordinate of the point to test.
+   * @returns - Whether the x/y coordinates are within this polygon.
+   */ _proto.contains = function contains(x, y) {
+        var inside = false;
+        // use some raycasting to test hits
+        // https://github.com/substack/point-in-polygon/blob/master/index.js
+        var length = this.points.length / 2;
+        for(var i = 0, j = length - 1; i < length; j = i++){
+            var xi = this.points[i * 2];
+            var yi = this.points[i * 2 + 1];
+            var xj = this.points[j * 2];
+            var yj = this.points[j * 2 + 1];
+            var intersect = yi > y !== yj > y && x < (xj - xi) * ((y - yi) / (yj - yi)) + xi;
+            if (intersect) {
+                inside = !inside;
+            }
         }
+        return inside;
     };
     /**
-   * 获取蒙版 Attachment，可能没有
-   */ _proto.getStencilAttachment = function getStencilAttachment() {
-        var framebuffer = this.framebuffer;
-        if (framebuffer) {
-            var stencilTexture = framebuffer.getStencilTexture();
-            var texture = stencilTexture ? this.getDepthTexture(stencilTexture, framebuffer.externalStorage) : undefined;
-            return {
-                storageType: framebuffer.depthStencilStorageType,
-                storage: framebuffer.stencilStorage,
-                texture: texture
-            };
-        }
-    };
-    _proto.getDepthTexture = function getDepthTexture(texture, external) {
-        if (!this.depthTexture) {
-            var _this_options_depthStencilAttachment;
-            var outTex = (_this_options_depthStencilAttachment = this.options.depthStencilAttachment) == null ? void 0 : _this_options_depthStencilAttachment.texture;
-            var tex = texture === outTex ? outTex : texture;
-            // TODO 为什么要initialize？
-            //tex.initialize(this.renderer.glRenderer.pipelineContext);
-            if (!external) {
-                this.depthTexture = tex;
-            }
-            return tex;
-        }
-        return this.depthTexture;
-    };
-    _proto.getStencilTexture = function getStencilTexture(texture, external) {
-        if (!this.stencilTexture) {
-            var _this_options_depthStencilAttachment;
-            var outTex = (_this_options_depthStencilAttachment = this.options.depthStencilAttachment) == null ? void 0 : _this_options_depthStencilAttachment.texture;
-            var tex = texture === outTex ? outTex : texture;
-            if (!external) {
-                this.stencilTexture = tex;
-            }
-            return tex;
-        }
-        return this.stencilTexture;
-    };
-    // 生成并初始化帧缓冲
-    _proto.initialize = function initialize(renderer) {
-        if (!this.initialized) {
-            this._resetAttachments();
-            this.initialized = true;
-        }
+   * Copies another polygon to this one.
+   * @param polygon - The polygon to copy from.
+   * @returns Returns itself.
+   */ _proto.copyFrom = function copyFrom(polygon) {
+        this.points = polygon.points.slice();
+        this.closePath = polygon.closePath;
         return this;
     };
     /**
-   * 销毁 RenderPass
-   * @param options - 有选择销毁内部对象
-   */ _proto.dispose = function dispose(options) {
-        if (this.destroyed) {
-            return;
-        }
-        var destroyMeshOption = (options == null ? void 0 : options.meshes) || undefined;
-        if (destroyMeshOption !== exports.DestroyOptions.keep) {
-            this.meshes.forEach(function(mesh) {
-                mesh.dispose(destroyMeshOption);
-            });
-        }
-        this.meshes.length = 0;
-        var colorOpt = (options == null ? void 0 : options.colorAttachment) ? options.colorAttachment : 0;
-        this.attachments.forEach(function(att) {
-            var keep = att.externalTexture && colorOpt === 2 || colorOpt === 1;
-            if (!keep) {
-                att.dispose();
-            }
-        });
-        this.attachments.length = 0;
-        if ((options == null ? void 0 : options.semantics) !== exports.DestroyOptions.keep) {
-            this.semantics.dispose();
-        }
-        this.destroyed = true;
-        var depthStencilOpt = (options == null ? void 0 : options.depthStencilAttachment) ? options.depthStencilAttachment : 0;
-        var fbo = this.framebuffer;
-        if (fbo) {
-            fbo.dispose({
-                depthStencilAttachment: depthStencilOpt
-            });
-            var keep = fbo.externalStorage && depthStencilOpt === 2 || depthStencilOpt === 1;
-            if (!keep) {
-                var _this_stencilTexture, _this_depthTexture;
-                (_this_stencilTexture = this.stencilTexture) == null ? void 0 : _this_stencilTexture.dispose();
-                (_this_depthTexture = this.depthTexture) == null ? void 0 : _this_depthTexture.dispose();
-            }
-        }
-        // @ts-expect-error safe to assign
-        this.options = this.renderer = null;
-        this.initialize = throwDestroyedError;
+   * Copies this polygon to another one.
+   * @param polygon - The polygon to copy to.
+   * @returns Returns given parameter.
+   */ _proto.copyTo = function copyTo(polygon) {
+        polygon.copyFrom(this);
+        return polygon;
     };
-    _create_class(RenderPass, [
+    /**
+   * Get the first X coordinate of the polygon
+   * @readonly
+   */ _proto.getX = function getX() {
+        return this.points[this.points.length - 2];
+    };
+    /**
+   * Get the first Y coordinate of the polygon
+   * @readonly
+   */ _proto.getY = function getY() {
+        return this.points[this.points.length - 1];
+    };
+    _proto.build = function build(points) {
+        for(var i = 0; i < this.points.length; i++){
+            points[i] = this.points[i];
+        }
+    };
+    _proto.triangulate = function triangulate1(points, vertices, verticesOffset, indices, indicesOffset) {
+        var triangles = triangulate([
+            points
+        ]);
+        for(var i = 0; i < triangles.length; i++){
+            vertices[verticesOffset + i] = triangles[i];
+        }
+        var vertexCount = triangles.length / 2;
+        for(var i1 = 0; i1 < vertexCount; i1++){
+            indices[indicesOffset + i1] = i1;
+        }
+    };
+    _create_class(Polygon, [
         {
-            key: "isDestroyed",
-            get: function get() {
-                return this.destroyed;
+            key: "lastX",
+            get: /**
+   * Get the last X coordinate of the polygon
+   * @readonly
+   */ function get() {
+                return this.points[this.points.length - 2];
             }
         },
         {
-            key: "viewport",
-            get: function get() {
-                return this.getViewport();
-            }
-        },
-        {
-            key: "stencilAttachment",
-            get: function get() {
-                return this.getStencilAttachment();
-            }
-        },
-        {
-            key: "depthAttachment",
-            get: function get() {
-                return this.getDepthAttachment();
+            key: "lastY",
+            get: /**
+   * Get the last Y coordinate of the polygon
+   * @readonly
+   */ function get() {
+                return this.points[this.points.length - 1];
             }
         }
     ]);
-    return RenderPass;
-}();
+    return Polygon;
+}(ShapePrimitive);
 
-var blend = "vec4 blendColor(vec4 color,vec4 vc,float mode){vec4 ret=color*vc;float alpha=ret.a;if(mode==1.){ret.rgb*=alpha;}else if(mode==2.){ret.rgb*=alpha;ret.a=dot(ret.rgb,vec3(0.33333333));}else if(mode==3.){alpha=color.r*alpha;ret=vec4(vc.rgb*alpha,alpha);}return ret;}";
-
-var itemFrameFrag = "#version 100\nprecision highp float;vec4 blendColor(vec4 color,vec4 vc,float mode){vec4 ret=color*vc;float alpha=ret.a;if(mode==1.){ret.rgb*=alpha;}else if(mode==2.){ret.rgb*=alpha;ret.a=dot(ret.rgb,vec3(0.33333333));}else if(mode==3.){alpha=color.r*alpha;ret=vec4(vc.rgb*alpha,alpha);}return ret;}varying vec4 vColor;varying vec4 vTexCoord;varying highp vec2 vParams;uniform vec3 uFrameColor;void main(){gl_FragColor=vec4(uFrameColor.xyz,1.0);}";
-
-var integrate = "float calculateMovement(float t,vec2 p1,vec2 p2,vec2 p3,vec2 p4){float movement=0.0;float h=(t-p1.x)*0.05;for(int i=0;i<=20;i++){float t=float(i)*h;float nt=binarySearchT(t,p1.x,p2.x,p3.x,p4.x);float y=cubicBezier(nt,p1.y,p2.y,p3.y,p4.y);float weight=(i==0||i==20)? 1.0 :(mod(float(i),2.)!=0.)? 4.0 : 2.0;movement+=weight*y;}movement*=h/3.;return movement;}float integrateFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i+=2){vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return ret;}vec2 p1=vec2(k0.x,k0.y);vec2 p2=vec2(k0.z,k0.w);vec2 p3=vec2(k1.z,k1.w);vec2 p4=vec2(k1.x,k1.y);if(time>=k1.x){ret+=calculateMovement(k1.x,p1,p2,p3,p4);}if(time>=k0.x&&time<k1.x){return ret+calculateMovement(time,p1,p2,p3,p4);}}return ret;}float integrateByTimeLineSeg(float t,vec2 p0,vec2 p1){float t0=p0.x;float t1=p1.x;float y0=p0.y;float y1=p1.y;vec4 tSqr=vec4(t,t,t0,t0);tSqr=tSqr*tSqr;vec4 a=vec4(2.*t,3.,-t0,3.)*tSqr;float t1y0=t1*y0;vec4 b=vec4(y0-y1,t0*y1-t1y0,2.*y0+y1,t1y0);float r=dot(a,b);return r/(t0-t1)*0.16666667;}float integrateLineSeg(float time,vec2 p0,vec2 p1){float h=time-p0.x;float y0=p0.y;return(y0+y0+(p1.y-y0)*h/(p1.x-p0.x))*h/2.;}float integrateFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateLineSeg(time,k0,k1);}ret+=integrateLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateLineSeg(time,k1,k2);}ret+=integrateLineSeg(k2.x,k1,k2);}return ret;}float integrateByTimeFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateByTimeLineSeg(time,k0,k1);}ret+=integrateByTimeLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateByTimeLineSeg(time,k1,k2);}ret+=integrateByTimeLineSeg(k2.x,k1,k2);}return ret;}float getIntegrateFromTime0(float t1,vec4 value){float type=value.x;if(type==0.){return value.y*t1;}if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateLineSeg(t1,p0,p1);}if(type==3.){return integrateFromLineSeg(t1,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*t1;}if(type==5.){return integrateFromBezierCurveFrames(t1,value.z,value.w);}return 0.;}float getIntegrateByTimeFromTime(float t0,float t1,vec4 value){float type=value.x;if(type==0.){return value.y*(t1*t1-t0*t0)/2.;}else if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateByTimeLineSeg(t1,p0,p1)-integrateByTimeLineSeg(t0,p0,p1);}if(type==3.){return integrateByTimeFromLineSeg(t1,value.y,value.z)-integrateByTimeFromLineSeg(t0,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*(t1*t1-t0*t0)/2.;}if(type==5.){return integrateFromBezierCurveFrames(t1,value.z,value.w)-integrateFromBezierCurveFrames(t0,value.z,value.w);}return 0.;}";
-
-var itemVert = "precision highp float;attribute vec2 atlasOffset;attribute vec3 aPos;varying vec2 vTexCoord;varying vec3 vParams;varying vec4 vColor;uniform vec2 _Size;uniform vec4 _Color;uniform vec4 _TexParams;uniform vec4 _TexOffset;uniform mat4 effects_MatrixVP;uniform mat4 effects_MatrixInvV;uniform mat4 effects_ObjectToWorld;\n#ifdef ENV_EDITOR\nuniform vec4 uEditorTransform;\n#endif\nvoid main(){vec4 texParams=_TexParams;vTexCoord=vec2(atlasOffset.xy*_TexOffset.zw+_TexOffset.xy);vColor=_Color;vParams=vec3(0.0,texParams.y,texParams.x);vec4 pos=vec4(aPos.xy*_Size,aPos.z,1.0);gl_Position=effects_MatrixVP*effects_ObjectToWorld*pos;\n#ifdef ENV_EDITOR\ngl_Position=vec4(gl_Position.xy*uEditorTransform.xy+uEditorTransform.zw*gl_Position.w,gl_Position.zw);\n#endif\n}";
-
-var itemFrag = "precision highp float;varying vec4 vColor;varying vec2 vTexCoord;varying vec3 vParams;uniform sampler2D uSampler0;vec4 blendColor(vec4 color,vec4 vc,float mode){vec4 ret=color*vc;float alpha=ret.a;if(mode==1.){ret.rgb*=alpha;}else if(mode==2.){ret.rgb*=alpha;ret.a=dot(ret.rgb,vec3(0.33333333));}else if(mode==3.){alpha=color.r*alpha;ret=vec4(vc.rgb*alpha,alpha);}return ret;}void main(){vec4 color=vec4(0.);vec4 texColor=texture2D(uSampler0,vTexCoord.xy);color=blendColor(texColor,vColor,floor(0.5+vParams.y));if(vParams.z==0.&&color.a<0.04){discard;}color.a=clamp(color.a,0.0,1.0);gl_FragColor=color;}";
-
-var particleFrag = "#version 100\nprecision mediump float;vec4 blendColor(vec4 color,vec4 vc,float mode){vec4 ret=color*vc;float alpha=ret.a;if(mode==1.){ret.rgb*=alpha;}else if(mode==2.){ret.rgb*=alpha;ret.a=dot(ret.rgb,vec3(0.33333333));}else if(mode==3.){alpha=color.r*alpha;ret=vec4(vc.rgb*alpha,alpha);}return ret;}\n#define PATICLE_SHADER 1\nvarying float vLife;varying vec2 vTexCoord;varying vec4 vColor;uniform vec3 emissionColor;uniform float emissionIntensity;uniform sampler2D uMaskTex;uniform vec4 uColorParams;uniform vec2 uTexOffset;\n#ifdef COLOR_OVER_LIFETIME\nuniform sampler2D uColorOverLifetime;\n#endif\n#ifdef USE_SPRITE\nvarying vec4 vTexCoordBlend;\n#endif\nvarying float vSeed;\n#ifdef PREVIEW_BORDER\nuniform vec4 uPreviewColor;\n#endif\n#ifdef USE_SPRITE\nvec4 getTextureColor(sampler2D tex,vec2 texCoord){if(vTexCoordBlend.w>0.){return mix(texture2D(tex,texCoord),texture2D(tex,vTexCoordBlend.xy+texCoord),vTexCoordBlend.z);}return texture2D(tex,texCoord);}\n#else\n#define getTextureColor texture2D\n#endif\n#ifndef WEBGL2\n#define round(a) floor(0.5+a)\n#endif\n#ifdef PREVIEW_BORDER\nvoid main(){gl_FragColor=uPreviewColor;}\n#else\nvoid main(){vec4 color=vec4(1.0);vec4 tempColor=vColor;vec2 texOffset=uTexOffset;if(vLife<0.){discard;}if(uColorParams.x>0.0){color=getTextureColor(uMaskTex,vTexCoord);}\n#ifdef COLOR_OVER_LIFETIME\n#ifndef ENABLE_VERTEX_TEXTURE\ntempColor*=texture2D(uColorOverLifetime,vec2(vLife,0.));\n#endif\n#endif\ncolor=blendColor(color,tempColor,round(uColorParams.y));if(color.a<=0.01&&uColorParams.w>0.){float _at=texture2D(uMaskTex,vTexCoord+texOffset).a+texture2D(uMaskTex,vTexCoord+texOffset*-1.).a;if(_at<=0.02){discard;}}vec3 emission=emissionColor*pow(2.0,emissionIntensity);color=vec4(pow(pow(color.rgb,vec3(2.2))+emission,vec3(1.0/2.2)),color.a);gl_FragColor=color;}\n#endif\n";
-
-var particleVert = "#version 100\nprecision mediump float;\n#define SHADER_VERTEX 1\n#define PATICLE_SHADER 1\n#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n#define NONE_CONST_INDEX 1\n#ifdef SHADER_VERTEX\nattribute float aSeed;varying float vSeed;\n#endif\n#ifdef SHADER_VERTEX\n#define MAX_C VERT_MAX_KEY_FRAME_COUNT\n#else\n#define MAX_C FRAG_MAX_KEY_FRAME_COUNT\n#endif\nmat4 cubicBezierMatrix=mat4(1.0,-3.0,3.0,-1.0,0.0,3.0,-6.0,3.0,0.0,0.0,3.0,-3.0,0.0,0.0,0.0,1.0);float cubicBezier(float t,float y1,float y2,float y3,float y4){vec4 tVec=vec4(1.0,t,t*t,t*t*t);vec4 yVec=vec4(y1,y2,y3,y4);vec4 result=tVec*cubicBezierMatrix*yVec;return result.x+result.y+result.z+result.w;}float binarySearchT(float x,float x1,float x2,float x3,float x4){float left=0.0;float right=1.0;float mid=0.0;float computedX;for(int i=0;i<8;i++){mid=(left+right)*0.5;computedX=cubicBezier(mid,x1,x2,x3,x4);if(abs(computedX-x)<0.0001){break;}else if(computedX>x){right=mid;}else{left=mid;}}return mid;}float valueFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);for(int i=0;i<ITR_END;i+=2){if(i>=count){break;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return k0.y;}if(i==int(frameCount-2.)&&time>=k1.x){return k1.y;}if(time>=k0.x&&time<=k1.x){float t=(time-k0.x)/(k1.x-k0.x);float nt=binarySearchT(time,k0.x,k0.z,k1.z,k1.x);return cubicBezier(nt,k0.y,k0.w,k1.w,k1.y);}}}float evaluteLineSeg(float t,vec2 p0,vec2 p1){return p0.y+(p1.y-p0.y)*(t-p0.x)/(p1.x-p0.x);}float valueFromLineSegs(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){if(i>count){return lookup_curve(i).w;}vec4 seg=lookup_curve(i+start);vec2 p0=seg.xy;vec2 p1=seg.zw;if(time>=p0.x&&time<=p1.x){return evaluteLineSeg(time,p0,p1);}vec2 p2=lookup_curve(i+start+1).xy;if(time>p1.x&&time<=p2.x){return evaluteLineSeg(time,p1,p2);}}return lookup_curve(0).y;}float getValueFromTime(float time,vec4 value){float type=value.x;if(type==0.){return value.y;}if(type==1.){return mix(value.y,value.z,time/value.w);}if(type==3.){return valueFromLineSegs(time,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed);}if(type==5.){return valueFromBezierCurveFrames(time,value.z,value.w);}return 0.;}float calculateMovement(float t,vec2 p1,vec2 p2,vec2 p3,vec2 p4){float movement=0.0;float h=(t-p1.x)*0.05;for(int i=0;i<=20;i++){float t=float(i)*h;float nt=binarySearchT(t,p1.x,p2.x,p3.x,p4.x);float y=cubicBezier(nt,p1.y,p2.y,p3.y,p4.y);float weight=(i==0||i==20)? 1.0 :(mod(float(i),2.)!=0.)? 4.0 : 2.0;movement+=weight*y;}movement*=h/3.;return movement;}float integrateFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i+=2){vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return ret;}vec2 p1=vec2(k0.x,k0.y);vec2 p2=vec2(k0.z,k0.w);vec2 p3=vec2(k1.z,k1.w);vec2 p4=vec2(k1.x,k1.y);if(time>=k1.x){ret+=calculateMovement(k1.x,p1,p2,p3,p4);}if(time>=k0.x&&time<k1.x){return ret+calculateMovement(time,p1,p2,p3,p4);}}return ret;}float integrateByTimeLineSeg(float t,vec2 p0,vec2 p1){float t0=p0.x;float t1=p1.x;float y0=p0.y;float y1=p1.y;vec4 tSqr=vec4(t,t,t0,t0);tSqr=tSqr*tSqr;vec4 a=vec4(2.*t,3.,-t0,3.)*tSqr;float t1y0=t1*y0;vec4 b=vec4(y0-y1,t0*y1-t1y0,2.*y0+y1,t1y0);float r=dot(a,b);return r/(t0-t1)*0.16666667;}float integrateLineSeg(float time,vec2 p0,vec2 p1){float h=time-p0.x;float y0=p0.y;return(y0+y0+(p1.y-y0)*h/(p1.x-p0.x))*h/2.;}float integrateFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateLineSeg(time,k0,k1);}ret+=integrateLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateLineSeg(time,k1,k2);}ret+=integrateLineSeg(k2.x,k1,k2);}return ret;}float integrateByTimeFromLineSeg(float time,float frameStart,float frameCount){if(time==0.){return 0.;}int start=int(frameStart);int count=int(frameCount-1.);float ret=0.;for(int i=0;i<ITR_END;i++){if(i>count){return ret;}vec4 ks=lookup_curve(i+start);vec2 k0=ks.xy;vec2 k1=ks.zw;if(time>k0.x&&time<=k1.x){return ret+integrateByTimeLineSeg(time,k0,k1);}ret+=integrateByTimeLineSeg(k1.x,k0,k1);vec2 k2=lookup_curve(i+start+1).xy;if(time>k1.x&&time<=k2.x){return ret+integrateByTimeLineSeg(time,k1,k2);}ret+=integrateByTimeLineSeg(k2.x,k1,k2);}return ret;}float getIntegrateFromTime0(float t1,vec4 value){float type=value.x;if(type==0.){return value.y*t1;}if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateLineSeg(t1,p0,p1);}if(type==3.){return integrateFromLineSeg(t1,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*t1;}if(type==5.){return integrateFromBezierCurveFrames(t1,value.z,value.w);}return 0.;}float getIntegrateByTimeFromTime(float t0,float t1,vec4 value){float type=value.x;if(type==0.){return value.y*(t1*t1-t0*t0)/2.;}else if(type==1.){vec2 p0=vec2(0.,value.y);vec2 p1=vec2(value.w,value.z);return integrateByTimeLineSeg(t1,p0,p1)-integrateByTimeLineSeg(t0,p0,p1);}if(type==3.){return integrateByTimeFromLineSeg(t1,value.y,value.z)-integrateByTimeFromLineSeg(t0,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed)*(t1*t1-t0*t0)/2.;}if(type==5.){return integrateFromBezierCurveFrames(t1,value.z,value.w)-integrateFromBezierCurveFrames(t0,value.z,value.w);}return 0.;}const float d2r=3.141592653589793/180.;attribute vec3 aPos;attribute vec4 aOffset;attribute vec3 aVel;attribute vec3 aRot;attribute vec4 aColor;attribute vec3 aDirX;attribute vec3 aDirY;\n#ifdef USE_SPRITE\nattribute vec3 aSprite;uniform vec4 uSprite;struct UVDetail{vec2 uv0;vec3 uv1;};UVDetail getSpriteUV(vec2 uv,float lifeTime);varying vec4 vTexCoordBlend;\n#endif\n#ifdef FINAL_TARGET\nuniform vec3 uFinalTarget;uniform vec4 uForceCurve;\n#endif\nuniform mat4 effects_ObjectToWorld;uniform mat4 effects_MatrixV;uniform mat4 effects_MatrixVP;uniform vec4 uParams;uniform vec4 uAcceleration;uniform vec4 uGravityModifierValue;uniform vec4 uOpacityOverLifetimeValue;\n#ifdef ROT_X_LIFETIME\nuniform vec4 uRXByLifeTimeValue;\n#endif\n#ifdef ROT_Y_LIFETIME\nuniform vec4 uRYByLifeTimeValue;\n#endif\n#ifdef ROT_Z_LIFETIME\nuniform vec4 uRZByLifeTimeValue;\n#endif\n#ifdef COLOR_OVER_LIFETIME\nuniform sampler2D uColorOverLifetime;\n#endif\n#if LINEAR_VEL_X + LINEAR_VEL_Y + LINEAR_VEL_Z\n#if LINEAR_VEL_X\nuniform vec4 uLinearXByLifetimeValue;\n#endif\n#if LINEAR_VEL_Y\nuniform vec4 uLinearYByLifetimeValue;\n#endif\n#if LINEAR_VEL_Z\nuniform vec4 uLinearZByLifetimeValue;\n#endif\n#endif\n#ifdef SPEED_OVER_LIFETIME\nuniform vec4 uSpeedLifetimeValue;\n#endif\n#if ORB_VEL_X + ORB_VEL_Y + ORB_VEL_Z\n#if ORB_VEL_X\nuniform vec4 uOrbXByLifetimeValue;\n#endif\n#if ORB_VEL_Y\nuniform vec4 uOrbYByLifetimeValue;\n#endif\n#if ORB_VEL_Z\nuniform vec4 uOrbZByLifetimeValue;\n#endif\nuniform vec3 uOrbCenter;\n#endif\nuniform vec4 uSizeByLifetimeValue;\n#ifdef SIZE_Y_BY_LIFE\nuniform vec4 uSizeYByLifetimeValue;\n#endif\nvarying float vLife;varying vec4 vColor;varying vec2 vTexCoord;\n#ifdef ENV_EDITOR\nuniform vec4 uEditorTransform;\n#endif\nvec3 calOrbitalMov(float _life,float _dur){vec3 orb=vec3(0.0);\n#ifdef AS_ORBITAL_MOVEMENT\n#define FUNC(a) getValueFromTime(_life,a)\n#else\n#define FUNC(a) getIntegrateFromTime0(_life,a) * _dur\n#endif\n#if ORB_VEL_X\norb.x=FUNC(uOrbXByLifetimeValue);\n#endif\n#if ORB_VEL_Y\norb.y=FUNC(uOrbYByLifetimeValue);\n#endif\n#if ORB_VEL_Z\norb.z=FUNC(uOrbZByLifetimeValue);\n#endif\n#undef FUNC\nreturn orb;}vec3 calLinearMov(float _life,float _dur){vec3 mov=vec3(0.0);\n#ifdef AS_LINEAR_MOVEMENT\n#define FUNC(a) getValueFromTime(_life,a)\n#else\n#define FUNC(a) getIntegrateFromTime0(_life,a) * _dur\n#endif\n#if LINEAR_VEL_X\nmov.x=FUNC(uLinearXByLifetimeValue);\n#endif\n#if LINEAR_VEL_Y\nmov.y=FUNC(uLinearYByLifetimeValue);\n#endif\n#if LINEAR_VEL_Z\nmov.z=FUNC(uLinearZByLifetimeValue);\n#endif\n#undef FUNC\nreturn mov;}mat3 mat3FromRotation(vec3 rotation){vec3 sinR=sin(rotation*d2r);vec3 cosR=cos(rotation*d2r);return mat3(cosR.z,-sinR.z,0.,sinR.z,cosR.z,0.,0.,0.,1.)*mat3(cosR.y,0.,sinR.y,0.,1.,0.,-sinR.y,0,cosR.y)*mat3(1.,0.,0.,0,cosR.x,-sinR.x,0.,sinR.x,cosR.x);}\n#ifdef USE_SPRITE\nUVDetail getSpriteUV(vec2 uv,float lifeTime){float t=fract(clamp((lifeTime-aSprite.x)/aSprite.y,0.0,1.)*aSprite.z);float frame=uSprite.z*t;float frameIndex=max(ceil(frame)-1.,0.);float row=floor((frameIndex+0.1)/uSprite.x);float col=frameIndex-row*uSprite.x;vec2 retUV=(vec2(col,row)+uv)/uSprite.xy;UVDetail ret;if(uSprite.w>0.){float blend=frame-frameIndex;float frameIndex1=min(ceil(frame),uSprite.z-1.);float row1=floor((frameIndex1+0.1)/uSprite.x);float col1=frameIndex1-row1*uSprite.x;vec2 coord=(vec2(col1,row1)+uv)/uSprite.xy-retUV;ret.uv1=vec3(coord.x,1.-coord.y,blend);}ret.uv0=vec2(retUV.x,1.-retUV.y);return ret;}\n#endif\nvec3 calculateTranslation(vec3 vel,float t0,float t1,float dur){float dt=t1-t0;float d=getIntegrateByTimeFromTime(0.,dt,uGravityModifierValue);vec3 acc=uAcceleration.xyz*d;\n#ifdef SPEED_OVER_LIFETIME\nreturn vel*getIntegrateFromTime0(dt/dur,uSpeedLifetimeValue)*dur+acc;\n#endif\nreturn vel*dt+acc;}mat3 transformFromRotation(vec3 rot,float _life,float _dur){vec3 rotation=rot;\n#ifdef ROT_LIFETIME_AS_MOVEMENT\n#define FUNC1(a) getValueFromTime(_life,a)\n#else\n#define FUNC1(a) getIntegrateFromTime0(_life,a) * _dur\n#endif\n#ifdef ROT_X_LIFETIME\nrotation.x+=FUNC1(uRXByLifeTimeValue);\n#endif\n#ifdef ROT_Y_LIFETIME\nrotation.y+=FUNC1(uRYByLifeTimeValue);\n#endif\n#ifdef ROT_Z_LIFETIME\nrotation.z+=FUNC1(uRZByLifeTimeValue);\n#endif\nif(dot(rotation,rotation)==0.0){return mat3(1.0);}\n#undef FUNC1\nreturn mat3FromRotation(rotation);}void main(){float time=uParams.x-aOffset.z;float dur=aOffset.w;if(time<0.||time>dur){gl_Position=vec4(-3.,-3.,-3.,1.);}else{float life=clamp(time/dur,0.0,1.0);vLife=life;\n#ifdef USE_SPRITE\nUVDetail uvD=getSpriteUV(aOffset.xy,time);vTexCoord=uvD.uv0;vTexCoordBlend=vec4(uvD.uv1,uSprite.w);\n#else\nvTexCoord=aOffset.xy;\n#endif\nvColor=aColor;\n#ifdef COLOR_OVER_LIFETIME\n#ifdef ENABLE_VERTEX_TEXTURE\nvColor*=texture2D(uColorOverLifetime,vec2(life,0.));\n#endif\n#endif\nvColor.a*=clamp(getValueFromTime(life,uOpacityOverLifetimeValue),0.,1.);vec3 size=vec3(vec2(getValueFromTime(life,uSizeByLifetimeValue)),1.0);\n#ifdef SIZE_Y_BY_LIFE\nsize.y=getValueFromTime(life,uSizeYByLifetimeValue);\n#endif\nvec3 point=transformFromRotation(aRot,life,dur)*(aDirX*size.x+aDirY*size.y);vec3 pt=calculateTranslation(aVel,aOffset.z,uParams.x,dur);vec3 _pos=aPos+pt;\n#if ORB_VEL_X + ORB_VEL_Y + ORB_VEL_Z\n_pos=mat3FromRotation(calOrbitalMov(life,dur))*(_pos-uOrbCenter);_pos+=uOrbCenter;\n#endif\n#if LINEAR_VEL_X + LINEAR_VEL_Y + LINEAR_VEL_Z\n_pos.xyz+=calLinearMov(life,dur);\n#endif\n#ifdef FINAL_TARGET\nfloat force=getValueFromTime(life,uForceCurve);vec4 pos=vec4(mix(_pos,uFinalTarget,force),1.);\n#else\nvec4 pos=vec4(_pos,1.0);\n#endif\n#if RENDER_MODE == 1\npos.xyz+=point;pos=effects_ObjectToWorld*pos;\n#elif RENDER_MODE == 3\npos=effects_ObjectToWorld*pos;pos.xyz+=effects_MatrixV[0].xyz*point.x+effects_MatrixV[2].xyz*point.y;\n#elif RENDER_MODE == 2\npos=effects_ObjectToWorld*pos;pos.xy+=point.xy;\n#elif RENDER_MODE == 0\npos=effects_ObjectToWorld*pos;pos.xyz+=effects_MatrixV[0].xyz*point.x+effects_MatrixV[1].xyz*point.y;\n#endif\ngl_Position=effects_MatrixVP*pos;vSeed=aSeed;gl_PointSize=6.0;\n#ifdef ENV_EDITOR\ngl_Position=vec4(gl_Position.xy*uEditorTransform.xy+uEditorTransform.zw*gl_Position.w,gl_Position.zw);\n#endif\n}}";
-
-var trailVert = "#version 100\nprecision mediump float;\n#define SHADER_VERTEX 1\n#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n#define NONE_CONST_INDEX 1\n#ifdef SHADER_VERTEX\nattribute float aSeed;varying float vSeed;\n#endif\n#ifdef SHADER_VERTEX\n#define MAX_C VERT_MAX_KEY_FRAME_COUNT\n#else\n#define MAX_C FRAG_MAX_KEY_FRAME_COUNT\n#endif\nmat4 cubicBezierMatrix=mat4(1.0,-3.0,3.0,-1.0,0.0,3.0,-6.0,3.0,0.0,0.0,3.0,-3.0,0.0,0.0,0.0,1.0);float cubicBezier(float t,float y1,float y2,float y3,float y4){vec4 tVec=vec4(1.0,t,t*t,t*t*t);vec4 yVec=vec4(y1,y2,y3,y4);vec4 result=tVec*cubicBezierMatrix*yVec;return result.x+result.y+result.z+result.w;}float binarySearchT(float x,float x1,float x2,float x3,float x4){float left=0.0;float right=1.0;float mid=0.0;float computedX;for(int i=0;i<8;i++){mid=(left+right)*0.5;computedX=cubicBezier(mid,x1,x2,x3,x4);if(abs(computedX-x)<0.0001){break;}else if(computedX>x){right=mid;}else{left=mid;}}return mid;}float valueFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);for(int i=0;i<ITR_END;i+=2){if(i>=count){break;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return k0.y;}if(i==int(frameCount-2.)&&time>=k1.x){return k1.y;}if(time>=k0.x&&time<=k1.x){float t=(time-k0.x)/(k1.x-k0.x);float nt=binarySearchT(time,k0.x,k0.z,k1.z,k1.x);return cubicBezier(nt,k0.y,k0.w,k1.w,k1.y);}}}float evaluteLineSeg(float t,vec2 p0,vec2 p1){return p0.y+(p1.y-p0.y)*(t-p0.x)/(p1.x-p0.x);}float valueFromLineSegs(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){if(i>count){return lookup_curve(i).w;}vec4 seg=lookup_curve(i+start);vec2 p0=seg.xy;vec2 p1=seg.zw;if(time>=p0.x&&time<=p1.x){return evaluteLineSeg(time,p0,p1);}vec2 p2=lookup_curve(i+start+1).xy;if(time>p1.x&&time<=p2.x){return evaluteLineSeg(time,p1,p2);}}return lookup_curve(0).y;}float getValueFromTime(float time,vec4 value){float type=value.x;if(type==0.){return value.y;}if(type==1.){return mix(value.y,value.z,time/value.w);}if(type==3.){return valueFromLineSegs(time,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed);}if(type==5.){return valueFromBezierCurveFrames(time,value.z,value.w);}return 0.;}attribute vec4 aPos;attribute vec3 aDir;attribute vec3 aInfo;attribute vec4 aColor;attribute float aTime;\n#ifdef ATTR_TRAIL_START\nattribute float aTrailStart;\n#else\nuniform float uTrailStart[64];attribute float aTrailStartIndex;\n#endif\nuniform mat4 effects_MatrixInvV;uniform mat4 effects_ObjectToWorld;uniform mat4 effects_MatrixVP;uniform vec4 uTextureMap;uniform float uTime;uniform vec4 uParams;uniform vec4 uColorParams;uniform vec4 uOpacityOverLifetimeValue;uniform vec4 uWidthOverTrail;\n#ifdef COLOR_OVER_TRAIL\nuniform sampler2D uColorOverTrail;\n#endif\n#ifdef COLOR_OVER_LIFETIME\nuniform sampler2D uColorOverLifetime;\n#endif\nvarying float vLife;varying vec2 vTexCoord;varying vec4 vColor;\n#ifdef ENV_EDITOR\nuniform vec4 uEditorTransform;\n#endif\nvoid main(){vec4 _pa=effects_MatrixVP*vec4(aPos.xyz,1.);vec4 _pb=effects_MatrixVP*vec4(aPos.xyz+aDir,1.);vec2 dir=normalize(_pb.xy/_pb.w-_pa.xy/_pa.w);vec2 screen_xy=vec2(-dir.y,dir.x);vec4 pos=effects_ObjectToWorld*vec4(aPos.xyz,1.);\n#ifdef ATTR_TRAIL_START\nfloat ts=aTrailStart;\n#else\nfloat ts=uTrailStart[int(aTrailStartIndex)];\n#endif\nfloat trail=(ts-aInfo.y)/uParams.y;float width=aPos.w*getValueFromTime(trail,uWidthOverTrail)/max(abs(screen_xy.x),abs(screen_xy.y));pos.xyz+=(effects_MatrixInvV[0].xyz*screen_xy.x+effects_MatrixInvV[1].xyz*screen_xy.y)*width;float time=min((uTime-aTime)/aInfo.x,1.0);gl_Position=effects_MatrixVP*pos;vColor=aColor;\n#ifdef COLOR_OVER_LIFETIME\n#ifdef ENABLE_VERTEX_TEXTURE\nvColor*=texture2D(uColorOverLifetime,vec2(time,0.));\n#endif\n#endif\n#ifdef COLOR_OVER_TRAIL\nvColor*=texture2D(uColorOverTrail,vec2(trail,0.));\n#endif\nvColor.a*=clamp(getValueFromTime(time,uOpacityOverLifetimeValue),0.,1.);vLife=time;vTexCoord=uTextureMap.xy+vec2(trail,aInfo.z)*uTextureMap.zw;vSeed=aSeed;\n#ifdef ENV_EDITOR\ngl_Position=vec4(gl_Position.xy*uEditorTransform.xy+uEditorTransform.zw*gl_Position.w,gl_Position.zw);\n#endif\n}";
-
-var value = "#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n#define NONE_CONST_INDEX 1\n#ifdef SHADER_VERTEX\nattribute float aSeed;varying float vSeed;\n#endif\n#ifdef SHADER_VERTEX\n#define MAX_C VERT_MAX_KEY_FRAME_COUNT\n#else\n#define MAX_C FRAG_MAX_KEY_FRAME_COUNT\n#endif\nmat4 cubicBezierMatrix=mat4(1.0,-3.0,3.0,-1.0,0.0,3.0,-6.0,3.0,0.0,0.0,3.0,-3.0,0.0,0.0,0.0,1.0);float cubicBezier(float t,float y1,float y2,float y3,float y4){vec4 tVec=vec4(1.0,t,t*t,t*t*t);vec4 yVec=vec4(y1,y2,y3,y4);vec4 result=tVec*cubicBezierMatrix*yVec;return result.x+result.y+result.z+result.w;}float binarySearchT(float x,float x1,float x2,float x3,float x4){float left=0.0;float right=1.0;float mid=0.0;float computedX;for(int i=0;i<8;i++){mid=(left+right)*0.5;computedX=cubicBezier(mid,x1,x2,x3,x4);if(abs(computedX-x)<0.0001){break;}else if(computedX>x){right=mid;}else{left=mid;}}return mid;}float valueFromBezierCurveFrames(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);for(int i=0;i<ITR_END;i+=2){if(i>=count){break;}vec4 k0=lookup_curve(i+start);vec4 k1=lookup_curve(i+1+start);if(i==0&&time<k0.x){return k0.y;}if(i==int(frameCount-2.)&&time>=k1.x){return k1.y;}if(time>=k0.x&&time<=k1.x){float t=(time-k0.x)/(k1.x-k0.x);float nt=binarySearchT(time,k0.x,k0.z,k1.z,k1.x);return cubicBezier(nt,k0.y,k0.w,k1.w,k1.y);}}}float evaluteLineSeg(float t,vec2 p0,vec2 p1){return p0.y+(p1.y-p0.y)*(t-p0.x)/(p1.x-p0.x);}float valueFromLineSegs(float time,float frameStart,float frameCount){int start=int(frameStart);int count=int(frameCount-1.);int end=start+count;for(int i=0;i<ITR_END;i++){if(i>count){return lookup_curve(i).w;}vec4 seg=lookup_curve(i+start);vec2 p0=seg.xy;vec2 p1=seg.zw;if(time>=p0.x&&time<=p1.x){return evaluteLineSeg(time,p0,p1);}vec2 p2=lookup_curve(i+start+1).xy;if(time>p1.x&&time<=p2.x){return evaluteLineSeg(time,p1,p2);}}return lookup_curve(0).y;}float getValueFromTime(float time,vec4 value){float type=value.x;if(type==0.){return value.y;}if(type==1.){return mix(value.y,value.z,time/value.w);}if(type==3.){return valueFromLineSegs(time,value.y,value.z);}if(type==4.){return mix(value.y,value.z,aSeed);}if(type==5.){return valueFromBezierCurveFrames(time,value.z,value.w);}return 0.;}";
-
-var valueDefine = "#ifdef SHADER_VERTEX\n#define CURVE_VALUE_TEXTURE uVCurveValueTexture\n#define CURVE_VALUE_ARRAY uVCurveValues\n#define CURVE_VALUE_COUNT VERT_CURVE_VALUE_COUNT\n#define FRAG_CURVE_VALUE_COUNT 0\n#else\n#define CURVE_VALUE_TEXTURE uFCurveValueTexture\n#define CURVE_VALUE_ARRAY uFCurveValues\n#define CURVE_VALUE_COUNT FRAG_CURVE_VALUE_COUNT\n#define VERT_CURVE_VALUE_COUNT 0\n#endif\n#if CURVE_VALUE_COUNT > 0\n#if LOOKUP_TEXTURE_CURVE\nuniform sampler2D CURVE_VALUE_TEXTURE;const float uCurveCount=1./float(CURVE_VALUE_COUNT);\n#define lookup_curve(i) texture2D(CURVE_VALUE_TEXTURE,vec2(float(i) * uCurveCount,0.))\n#else\nuniform vec4 CURVE_VALUE_ARRAY[CURVE_VALUE_COUNT];\n#define lookup_curve(i) CURVE_VALUE_ARRAY[i]\n#endif\n#else\n#define lookup_curve(i) vec4(0.)\n#endif\n#ifdef WEBGL2\n#define ITR_END (count + 1)\n#else\n#define ITR_END MAX_C\n#endif\n";
-
-var screenMeshVert = "precision highp float;attribute vec2 aPos;varying vec2 uv;void main(){gl_Position=vec4(aPos,0.,1.0);uv=(aPos+vec2(1.0))/2.;}";
-
-var colorGradingFrag = "precision highp float;\n#define HALF_MAX 60000.0\n#define ACEScc_MIDGRAY 0.4135884\nvarying vec2 uv;uniform sampler2D _GaussianTex;uniform sampler2D _SceneTex;uniform float _BloomIntensity;uniform float _Brightness;uniform float _Saturation;uniform float _Contrast;uniform bool _UseBloom;uniform bool _UseToneMapping;uniform vec3 _VignetteColor;uniform vec2 _VignetteCenter;uniform float _VignetteIntensity;uniform float _VignetteSmoothness;uniform float _VignetteRoundness;mat3 LinearToACES=mat3(0.59719,0.07600,0.02840,0.35458,0.90834,0.13383,0.04823,0.01566,0.83777);mat3 ACESToLinear=mat3(1.60475,-0.10208,-0.00327,-0.53108,1.10813,-0.07276,-0.07367,-0.00605,1.07602);float log10(float x){return log(x)/log(10.0);}vec3 log10(vec3 v){return vec3(log10(v.x),log10(v.y),log10(v.z));}vec3 LinearToLogC(vec3 x){return 0.244161*log10(5.555556*x+0.047996)+0.386036;}vec3 LogCToLinear(vec3 x){return(pow(vec3(10.0),(x-0.386036)/0.244161)-0.047996)/5.555556;}vec3 rrt_and_odt_fit(vec3 col){vec3 a=col*(col+0.0245786)-0.000090537;vec3 b=col*(0.983729*col+0.4329510)+0.238081;return a/b;}vec3 ACESToneMapping(vec3 col){vec3 aces=LinearToACES*col;aces=rrt_and_odt_fit(aces);col=ACESToLinear*aces;return col;}vec3 LinearToSrgb(vec3 c){return mix(1.055*pow(c,vec3(1./2.4))-0.055,12.92*c,step(c,vec3(0.0031308)));}vec3 GammaCorrection(vec3 c){return pow(c,vec3(1.0/2.2));}vec3 ApplyVignette(vec3 inputColor,vec2 uv,vec2 center,float intensity,float roundness,float smoothness,vec3 color){vec2 dist=abs(uv-center)*intensity;dist.x*=roundness;float vfactor=pow(clamp((1.0-dot(dist,dist)),0.0,1.0),smoothness);return inputColor*mix(color,vec3(1.0),vfactor);}void main(){vec4 hdrColor=texture2D(_SceneTex,uv);hdrColor*=hdrColor.a;hdrColor.rgb=pow(hdrColor.rgb,vec3(2.2));vec3 finalColor=hdrColor.rgb;if(_UseBloom){vec4 bloomColor=texture2D(_GaussianTex,uv);bloomColor.rgb*=_BloomIntensity;finalColor+=bloomColor.rgb;}if(_VignetteIntensity>0.0){finalColor=ApplyVignette(finalColor,uv,_VignetteCenter,_VignetteIntensity,_VignetteRoundness,_VignetteSmoothness,_VignetteColor);}finalColor=finalColor*_Brightness;vec3 colorLog=LinearToLogC(finalColor);colorLog=(colorLog-ACEScc_MIDGRAY)*_Contrast+ACEScc_MIDGRAY;finalColor=LogCToLinear(colorLog);finalColor=max(finalColor,0.0);float luminance=0.2125*finalColor.r+0.7154*finalColor.g+0.0721*finalColor.b;vec3 luminanceColor=vec3(luminance,luminance,luminance);finalColor=(finalColor-luminanceColor)*_Saturation+luminanceColor;finalColor=max(finalColor,0.0);if(_UseToneMapping){finalColor=max(vec3(0.0),ACESToneMapping(finalColor));}gl_FragColor=vec4(clamp(GammaCorrection(finalColor),0.0,1.0),1.0);}";
-
-var gaussianDown_frag = "precision highp float;varying vec2 uv;uniform sampler2D _MainTex;uniform vec2 _TextureSize;float GaussWeight2D(float x,float y,float sigma){float PI=3.14159265358;float E=2.71828182846;float sigma_2=pow(sigma,2.0);float a=-(x*x+y*y)/(2.0*sigma_2);return pow(E,a)/(2.0*PI*sigma_2);}vec3 GaussNxN(sampler2D tex,vec2 uv,vec2 stride,float sigma){vec3 color=vec3(0.,0.,0.);const int r=5/2;float weight=0.0;for(int i=-r;i<=r;i++){for(int j=-r;j<=r;j++){float w=GaussWeight2D(float(i),float(j),sigma);vec2 coord=uv+vec2(i,j)*stride;color+=texture2D(tex,coord).rgb*w;weight+=w;}}color/=weight;return color;}void main(){vec4 mainColor=texture2D(_MainTex,uv);vec3 color=mainColor.rgb;color=GaussNxN(_MainTex,uv,1.0/_TextureSize,1.0);gl_FragColor=vec4(color,1.0);}";
-
-var gaussianDownHFrag = "precision highp float;varying vec2 uv;uniform sampler2D _MainTex;uniform vec2 _TextureSize;vec3 GaussH(sampler2D tex,vec2 uv){vec3 color=vec3(0.0);float offsets[9];offsets[0]=-4.0;offsets[1]=-3.0;offsets[2]=-2.0;offsets[3]=-1.0;offsets[4]=0.0;offsets[5]=1.0;offsets[6]=2.0;offsets[7]=3.0;offsets[8]=4.0;float weights[9];weights[0]=0.01621622;weights[1]=0.05405405;weights[2]=0.12162162;weights[3]=0.19459459;weights[4]=0.22702703;weights[5]=0.19459459;weights[6]=0.12162162;weights[7]=0.05405405;weights[8]=0.01621622;for(int i=0;i<9;i++){vec2 offset=vec2(offsets[i]*2.0*(1.0/_TextureSize.x),0);color+=texture2D(tex,uv+offset).rgb*weights[i];}return color;}void main(){vec3 color=GaussH(_MainTex,uv);gl_FragColor=vec4(color,1.0);}";
-
-var gaussianDownVFrag = "precision highp float;varying vec2 uv;uniform sampler2D _MainTex;uniform vec2 _TextureSize;vec3 GaussV(sampler2D tex,vec2 uv){vec3 color=vec3(0.0);float offsets[5];offsets[0]=-3.23076923;offsets[1]=-1.38461538;offsets[2]=0.0;offsets[3]=1.38461538;offsets[4]=3.23076923;float weights[5];weights[0]=0.07027027;weights[1]=0.31621622;weights[2]=0.22702703;weights[3]=0.31621622;weights[4]=0.07027027;for(int i=0;i<5;i++){vec2 offset=vec2(0,offsets[i]*(1.0/_TextureSize.y));color+=texture2D(tex,uv+offset).rgb*weights[i];}return color;}void main(){vec3 color=GaussV(_MainTex,uv);gl_FragColor=vec4(color,1.0);}";
-
-var gaussianUpFrag = "precision highp float;varying vec2 uv;uniform sampler2D _MainTex;uniform sampler2D _GaussianDownTex;uniform vec2 _GaussianDownTextureSize;float GaussWeight2D(float x,float y,float sigma){float PI=3.14159265358;float E=2.71828182846;float sigma_2=pow(sigma,2.0);float a=-(x*x+y*y)/(2.0*sigma_2);return pow(E,a)/(2.0*PI*sigma_2);}vec3 GaussNxN(sampler2D tex,vec2 uv,vec2 stride,float sigma){vec3 color=vec3(0.,0.,0.);const int r=1;float weight=0.0;for(int i=-r;i<=r;i++){for(int j=-r;j<=r;j++){float w=GaussWeight2D(float(i),float(j),sigma);vec2 coord=uv+vec2(i,j)*stride;color+=texture2D(tex,coord).rgb*w;weight+=w;}}color/=weight;return color;}void main(){vec3 lowResColor=GaussNxN(_MainTex,uv,0.5/_GaussianDownTextureSize,1.0);vec3 highResColor=GaussNxN(_GaussianDownTex,uv,1.0/_GaussianDownTextureSize,1.0);vec3 color=mix(highResColor,lowResColor,0.7);gl_FragColor=vec4(color,1.0);}";
-
-var thresholdFrag = "precision highp float;varying vec2 uv;uniform sampler2D _MainTex;uniform float _Threshold;void main(){vec4 mainTex=texture2D(_MainTex,uv);mainTex.rgb=pow(mainTex.rgb,vec3(2.2));float brightness=max(mainTex.r,max(mainTex.g,mainTex.b));float w=max(0.0,brightness-_Threshold)/max(brightness,0.00001);mainTex.rgb*=w;mainTex.rgb*=mainTex.a;gl_FragColor=vec4(mainTex.rgb,1.0);}";
-
-var shaderLib = {};
-var ShaderFactory = /*#__PURE__*/ function() {
-    function ShaderFactory() {}
-    ShaderFactory.registerInclude = function registerInclude(includeName, includeSource) {
-        if (shaderLib[includeName]) {
-            logger.warn('The "' + includeName + '" shader include already exist.');
-        }
-        shaderLib[includeName] = includeSource;
-    };
-    ShaderFactory.unRegisterInclude = function unRegisterInclude(includeName) {
-        delete shaderLib[includeName];
-    };
-    ShaderFactory.unRegisterAllIncludes = function unRegisterAllIncludes() {
-        Object.keys(shaderLib).forEach(function(key) {
-            ShaderFactory.unRegisterInclude(key);
-        });
-    };
-    /**
-   * 生成 shader，检测到 WebGL1 上下文会降级
-   * @param macros - 宏定义数组
-   * @param shader - 原始 shader 文本
-   * @param shaderType - shader 类型
-   * @return 去除版本号的 shader 文本
-   */ ShaderFactory.genFinalShaderCode = function genFinalShaderCode(options) {
-        var level = options.level, shaderType = options.shaderType, shader = options.shader, macros = options.macros, removeVersion = options.removeVersion;
-        var macroString = ShaderFactory.genMacroString(level, macros);
-        var versionString = ShaderFactory.genShaderVersion(level);
-        var source = ShaderFactory.parseIncludes(shader);
-        var isVersion300 = ShaderFactory.isVersion300(source);
-        source = ShaderFactory.removeWebGLVersion(source);
-        if (level === 2 && !isVersion300) {
-            source = ShaderFactory.convertTo300(source, shaderType === exports.ShaderType.fragment);
-        }
-        if (removeVersion) {
-            return macroString + source;
-        }
-        return versionString + macroString + source;
-    };
-    /**
-   * Convert lower GLSL version to GLSL 300 es.
-   * @param source - code
-   * @param isFragment - Whether it is a fragment shader.
-   * */ ShaderFactory.convertTo300 = function convertTo300(source, isFragment) {
-        source = source.replace(/\bvarying\b/g, isFragment ? "in" : "out");
-        source = source.replace(/\btexture(2D|Cube)\b/g, "texture");
-        // Remove extensions
-        var regex = /#extension.+(GL_OES_standard_derivatives|GL_EXT_shader_texture_lod|GL_EXT_frag_depth|GL_EXT_draw_buffers).+(enable|require)/g;
-        source = source.replace(regex, "");
-        if (isFragment) {
-            source = source.replace(/\btexture(2D|Cube)LodEXT\b/g, "textureLod");
-            source = source.replace(/\btexture(2D|Cube)GradEXT\b/g, "textureGrad");
-            source = source.replace(/\bgl_FragDepthEXT\b/g, "gl_FragDepth");
-            if (!ShaderFactory.has300Output(source)) {
-                var isMRT = /\bgl_FragData\[.+?\]/g.test(source);
-                if (isMRT) {
-                    source = source.replace(/\bgl_FragColor\b/g, "gl_FragData[0]");
-                    var result = source.match(/\bgl_FragData\[.+?\]/g);
-                    if (result) {
-                        source = ShaderFactory.replaceMRTShader(source, result);
-                    }
-                } else {
-                    source = source.replace(/void\s+?main\s*\(/g, "out vec4 glFragColor;\nvoid main(");
-                    source = source.replace(/\bgl_FragColor\b/g, "glFragColor");
-                }
-            }
-        } else {
-            source = source.replace(/\battribute\b/g, "in");
-        }
-        return source;
-    };
-    ShaderFactory.parseIncludes = function parseIncludes(source, regex) {
-        if (regex === void 0) regex = /#include <(.+)>/gm;
-        var match;
-        while((match = regex.exec(source)) !== null){
-            var shaderName = match[1];
-            var replace = shaderLib[shaderName];
-            if (replace === undefined) {
-                throw new Error("Can't find include shader name " + shaderName);
-            }
-            source = source.replace(match[0], replace);
-        }
-        return source;
-    };
-    ShaderFactory.genMacroString = function genMacroString(level, macros, addRuntimeMacro) {
-        if (addRuntimeMacro === void 0) addRuntimeMacro = true;
-        var macroList = [];
-        var webGLVersion = "WEBGL" + level;
-        macroList.push("#ifndef " + webGLVersion);
-        macroList.push("#define " + webGLVersion);
-        macroList.push("#endif");
-        if (addRuntimeMacro) {
-            macroList.push("#define GE_RUNTIME");
-        }
-        if (macros && macros.length) {
-            macros.forEach(function(param) {
-                var key = param[0], value = param[1];
-                if (value === true) {
-                    macroList.push("#define " + key);
-                } else if (Number.isFinite(value)) {
-                    macroList.push("#define " + key + " " + value);
-                }
-            });
-        }
-        if (macroList.length) {
-            return macroList.join("\n") + "\n";
-        }
-        return "";
-    };
-    ShaderFactory.genShaderVersion = function genShaderVersion(level) {
-        if (level === 1) {
-            return "#version 100\n";
-        }
-        return "#version 300 es\n";
-    };
-    ShaderFactory.isVersion300 = function isVersion300(source) {
-        var versionTag = /#version\s+\b\d{3}\b\s*(es)?/;
-        var match = source.match(versionTag);
-        var version = match ? match[0] : "";
-        return version.includes("300");
-    };
-    ShaderFactory.removeWebGLVersion = function removeWebGLVersion(source) {
-        var versionTag = /#version\s+\b\d{3}\b\s*(es)?/;
-        var match = source.match(versionTag);
-        if (match) {
-            return source.replace(match[0], "");
-        }
-        return source;
-    };
-    ShaderFactory.has300Output = function has300Output(fragmentShader) {
-        // [layout(location = 0)] out [highp] vec4 [color];
-        var fragReg = /\bout\s+(?:\w+\s+)?(?:vec4)\s+(?:\w+)\s*;/;
-        return fragReg.test(fragmentShader);
-    };
-    ShaderFactory.replaceMRTShader = function replaceMRTShader(source, result) {
-        var mrtIndexSet = new Set();
-        var declaration = "";
-        for(var i = 0; i < result.length; i++){
-            var res = result[i].match(/\bgl_FragData\[(.+?)\]/);
-            if (res) {
-                mrtIndexSet.add(res[1]);
-            }
-        }
-        mrtIndexSet.forEach(function(index) {
-            declaration += "layout(location=" + index + ") out vec4 fragOutColor" + index + ";\n";
-        });
-        declaration += "void main(";
-        source = source.replace(/\bgl_FragData\[(.+?)\]/g, "fragOutColor$1");
-        source = source.replace(/void\s+?main\s*\(/g, declaration);
-        return source;
-    };
-    return ShaderFactory;
-}();
-
-// Bloom 阈值 Pass
-var BloomThresholdPass = /*#__PURE__*/ function(RenderPass) {
-    _inherits(BloomThresholdPass, RenderPass);
-    function BloomThresholdPass(renderer, option) {
-        var _this;
-        _this = RenderPass.call(this, renderer, option) || this;
-        var engine = _this.renderer.engine;
-        var geometry = Geometry.create(engine, {
-            mode: glContext.TRIANGLE_STRIP,
-            attributes: {
-                aPos: {
-                    type: glContext.FLOAT,
-                    size: 2,
-                    data: new Float32Array([
-                        -1,
-                        1,
-                        -1,
-                        -1,
-                        1,
-                        1,
-                        1,
-                        -1
-                    ])
-                }
-            },
-            drawCount: 4
-        });
-        var material = Material.create(engine, {
-            shader: {
-                vertex: screenMeshVert,
-                fragment: thresholdFrag,
-                glslVersion: exports.GLSLVersion.GLSL1
-            }
-        });
-        material.blending = false;
-        material.depthTest = false;
-        material.culling = false;
-        _this.screenMesh = Mesh.create(engine, {
-            geometry: geometry,
-            material: material,
-            priority: 0
-        });
-        _this.priority = 5000;
-        return _this;
+// thanks to https://github.com/mattdesl/adaptive-bezier-curve
+// for the original code!
+var RECURSION_LIMIT = 8;
+var FLT_EPSILON = 1.19209290e-7;
+var PATH_DISTANCE_EPSILON = 1.0;
+var defaultBezierSmoothness = 0.5;
+function buildAdaptiveBezier(points, sX, sY, cp1x, cp1y, cp2x, cp2y, eX, eY, smoothness) {
+    // TODO expose as a parameter
+    var scale = 5;
+    var smoothing = Math.min(0.99, Math.max(0, smoothness != null ? smoothness : defaultBezierSmoothness));
+    var distanceTolerance = (PATH_DISTANCE_EPSILON - smoothing) / scale;
+    distanceTolerance *= distanceTolerance;
+    begin(sX, sY, cp1x, cp1y, cp2x, cp2y, eX, eY, points, distanceTolerance);
+    return points;
+}
+//// Based on:
+//// https://github.com/pelson/antigrain/blob/master/agg-2.4/src/agg_curves.cpp
+function begin(sX, sY, cp1x, cp1y, cp2x, cp2y, eX, eY, points, distanceTolerance) {
+    // dont need to actually ad this!
+    // points.push(sX, sY);
+    recursive(sX, sY, cp1x, cp1y, cp2x, cp2y, eX, eY, points, distanceTolerance, 0);
+    points.push(eX, eY);
+}
+// eslint-disable-next-line max-params
+function recursive(x1, y1, x2, y2, x3, y3, x4, y4, points, distanceTolerance, level) {
+    if (level > RECURSION_LIMIT) {
+        return;
     }
-    var _proto = BloomThresholdPass.prototype;
-    _proto.configure = function configure(renderer) {
-        this.mainTexture = renderer.getFramebuffer().getColorTextures()[0];
-        this.sceneTextureHandle.texture = this.mainTexture;
-        renderer.setFramebuffer(this.framebuffer);
-    };
-    _proto.execute = function execute(renderer) {
-        renderer.clear({
-            colorAction: exports.TextureStoreAction.clear,
-            depthAction: exports.TextureStoreAction.clear,
-            stencilAction: exports.TextureStoreAction.clear
-        });
-        this.screenMesh.material.setTexture("_MainTex", this.mainTexture);
-        var threshold = renderer.renderingData.currentFrame.globalVolume.threshold;
-        this.screenMesh.material.setFloat("_Threshold", threshold);
-        renderer.renderMeshes([
-            this.screenMesh
-        ]);
-    };
-    return BloomThresholdPass;
-}(RenderPass);
-var HQGaussianDownSamplePass = /*#__PURE__*/ function(RenderPass) {
-    _inherits(HQGaussianDownSamplePass, RenderPass);
-    function HQGaussianDownSamplePass(renderer, type, options) {
-        var _this;
-        _this = RenderPass.call(this, renderer, options) || this;
-        _this.type = type;
-        var engine = _this.renderer.engine;
-        var name = "PostProcess";
-        var geometry = Geometry.create(engine, {
-            name: name,
-            mode: glContext.TRIANGLE_STRIP,
-            attributes: {
-                aPos: {
-                    type: glContext.FLOAT,
-                    size: 2,
-                    data: new Float32Array([
-                        -1,
-                        1,
-                        -1,
-                        -1,
-                        1,
-                        1,
-                        1,
-                        -1
-                    ])
-                }
-            },
-            drawCount: 4
-        });
-        var fragment = type == "H" ? gaussianDownHFrag : gaussianDownVFrag;
-        var shader = {
-            vertex: screenMeshVert,
-            fragment: fragment,
-            glslVersion: exports.GLSLVersion.GLSL1
-        };
-        var material = Material.create(engine, {
-            name: name,
-            shader: shader
-        });
-        material.blending = false;
-        material.depthTest = false;
-        material.culling = false;
-        _this.screenMesh = Mesh.create(engine, {
-            name: name,
-            geometry: geometry,
-            material: material,
-            priority: 0
-        });
-        _this.priority = 5000;
-        return _this;
-    }
-    var _proto = HQGaussianDownSamplePass.prototype;
-    _proto.configure = function configure(renderer) {
-        this.mainTexture = renderer.getFramebuffer().getColorTextures()[0];
-        renderer.setFramebuffer(this.framebuffer);
-    };
-    _proto.execute = function execute(renderer) {
-        renderer.clear({
-            colorAction: exports.TextureStoreAction.clear,
-            depthAction: exports.TextureStoreAction.clear,
-            stencilAction: exports.TextureStoreAction.clear
-        });
-        this.screenMesh.material.setTexture("_MainTex", this.mainTexture);
-        this.screenMesh.material.setVector2("_TextureSize", getTextureSize(this.mainTexture));
-        renderer.renderMeshes([
-            this.screenMesh
-        ]);
-        if (this.type === "V") {
-            this.gaussianResult.texture = renderer.getFramebuffer().getColorTextures()[0];
-        }
-    };
-    return HQGaussianDownSamplePass;
-}(RenderPass);
-var HQGaussianUpSamplePass = /*#__PURE__*/ function(RenderPass) {
-    _inherits(HQGaussianUpSamplePass, RenderPass);
-    function HQGaussianUpSamplePass(renderer, options) {
-        var _this;
-        _this = RenderPass.call(this, renderer, options) || this;
-        var name = "PostProcess";
-        var engine = _this.renderer.engine;
-        var geometry = Geometry.create(engine, {
-            name: name,
-            mode: glContext.TRIANGLE_STRIP,
-            attributes: {
-                aPos: {
-                    type: glContext.FLOAT,
-                    size: 2,
-                    data: new Float32Array([
-                        -1,
-                        1,
-                        -1,
-                        -1,
-                        1,
-                        1,
-                        1,
-                        -1
-                    ])
-                }
-            },
-            drawCount: 4
-        });
-        var shader = {
-            vertex: screenMeshVert,
-            fragment: gaussianUpFrag
-        };
-        var material = Material.create(engine, {
-            name: name,
-            shader: shader
-        });
-        material.blending = false;
-        material.depthTest = false;
-        material.culling = false;
-        _this.screenMesh = Mesh.create(engine, {
-            name: name,
-            geometry: geometry,
-            material: material,
-            priority: 0
-        });
-        _this.priority = 5000;
-        return _this;
-    }
-    var _proto = HQGaussianUpSamplePass.prototype;
-    _proto.configure = function configure(renderer) {
-        this.mainTexture = renderer.getFramebuffer().getColorTextures()[0];
-        renderer.setFramebuffer(this.framebuffer);
-    };
-    _proto.execute = function execute(renderer) {
-        renderer.clear({
-            colorAction: exports.TextureStoreAction.clear,
-            depthAction: exports.TextureStoreAction.clear,
-            stencilAction: exports.TextureStoreAction.clear
-        });
-        this.screenMesh.material.setTexture("_MainTex", this.mainTexture);
-        this.screenMesh.material.setTexture("_GaussianDownTex", this.gaussianDownSampleResult.texture);
-        this.screenMesh.material.setVector2("_GaussianDownTextureSize", getTextureSize(this.gaussianDownSampleResult.texture));
-        renderer.renderMeshes([
-            this.screenMesh
-        ]);
-    };
-    return HQGaussianUpSamplePass;
-}(RenderPass);
-// 合并Bloom的高斯模糊结果，并应用ACES Tonemapping
-var ToneMappingPass = /*#__PURE__*/ function(RenderPass) {
-    _inherits(ToneMappingPass, RenderPass);
-    function ToneMappingPass(renderer, sceneTextureHandle) {
-        var _this;
-        _this = RenderPass.call(this, renderer, {}) || this;
-        var name = "PostProcess";
-        var engine = _this.renderer.engine;
-        _this.sceneTextureHandle = sceneTextureHandle ? sceneTextureHandle : new RenderTargetHandle(engine);
-        var geometry = Geometry.create(engine, {
-            name: name,
-            mode: glContext.TRIANGLE_STRIP,
-            attributes: {
-                aPos: {
-                    type: glContext.FLOAT,
-                    size: 2,
-                    data: new Float32Array([
-                        -1,
-                        1,
-                        -1,
-                        -1,
-                        1,
-                        1,
-                        1,
-                        -1
-                    ])
-                }
-            },
-            drawCount: 4
-        });
-        var material = Material.create(engine, {
-            name: name,
-            shader: {
-                vertex: screenMeshVert,
-                fragment: colorGradingFrag,
-                glslVersion: exports.GLSLVersion.GLSL1
-            }
-        });
-        material.blending = false;
-        material.depthTest = false;
-        material.culling = false;
-        _this.screenMesh = Mesh.create(engine, {
-            name: name,
-            geometry: geometry,
-            material: material,
-            priority: 0
-        });
-        _this.priority = 5000;
-        return _this;
-    }
-    var _proto = ToneMappingPass.prototype;
-    _proto.configure = function configure(renderer) {
-        this.mainTexture = renderer.getFramebuffer().getColorTextures()[0];
-        if (!this.sceneTextureHandle.texture) {
-            this.sceneTextureHandle.texture = this.mainTexture;
-        }
-        renderer.setFramebuffer(null);
-    };
-    _proto.execute = function execute(renderer) {
-        renderer.clear({
-            colorAction: exports.TextureStoreAction.clear,
-            depthAction: exports.TextureStoreAction.clear,
-            stencilAction: exports.TextureStoreAction.clear
-        });
-        var _renderer_renderingData_currentFrame_globalVolume = renderer.renderingData.currentFrame.globalVolume, useBloom = _renderer_renderingData_currentFrame_globalVolume.useBloom, bloomIntensity = _renderer_renderingData_currentFrame_globalVolume.bloomIntensity, brightness = _renderer_renderingData_currentFrame_globalVolume.brightness, saturation = _renderer_renderingData_currentFrame_globalVolume.saturation, contrast = _renderer_renderingData_currentFrame_globalVolume.contrast, useToneMapping = _renderer_renderingData_currentFrame_globalVolume.useToneMapping, vignetteIntensity = _renderer_renderingData_currentFrame_globalVolume.vignetteIntensity, vignetteSmoothness = _renderer_renderingData_currentFrame_globalVolume.vignetteSmoothness, vignetteRoundness = _renderer_renderingData_currentFrame_globalVolume.vignetteRoundness;
-        this.screenMesh.material.setTexture("_SceneTex", this.sceneTextureHandle.texture);
-        this.screenMesh.material.setFloat("_Brightness", brightness);
-        this.screenMesh.material.setFloat("_Saturation", saturation);
-        this.screenMesh.material.setFloat("_Contrast", contrast);
-        this.screenMesh.material.setInt("_UseBloom", Number(useBloom));
-        if (useBloom) {
-            this.screenMesh.material.setTexture("_GaussianTex", this.mainTexture);
-            this.screenMesh.material.setFloat("_BloomIntensity", bloomIntensity);
-        }
-        if (vignetteIntensity > 0) {
-            this.screenMesh.material.setFloat("_VignetteIntensity", vignetteIntensity);
-            this.screenMesh.material.setFloat("_VignetteSmoothness", vignetteSmoothness);
-            this.screenMesh.material.setFloat("_VignetteRoundness", vignetteRoundness);
-            this.screenMesh.material.setVector2("_VignetteCenter", new Vector2(0.5, 0.5));
-            this.screenMesh.material.setVector3("_VignetteColor", new Vector3(0.0, 0.0, 0.0));
-        }
-        this.screenMesh.material.setInt("_UseToneMapping", Number(useToneMapping));
-        renderer.renderMeshes([
-            this.screenMesh
-        ]);
-    };
-    return ToneMappingPass;
-}(RenderPass);
-
-var RENDER_PASS_NAME_PREFIX = "_effects_default_";
-var seed$8 = 1;
-/**
- * RenderFrame 抽象类
- */ var RenderFrame = /*#__PURE__*/ function() {
-    function RenderFrame(options) {
-        var _this_renderer_getShaderLibrary;
-        // TODO: 是否有用
-        this.renderQueue = [];
-        this.destroyed = false;
-        this.renderPassInfoMap = new WeakMap();
-        var camera = options.camera, keepColorBuffer = options.keepColorBuffer, renderer = options.renderer, _options_editorTransform = options.editorTransform, editorTransform = _options_editorTransform === void 0 ? [
-            1,
-            1,
-            0,
-            0
-        ] : _options_editorTransform, globalVolume = options.globalVolume, _options_clearAction = options.clearAction, clearAction = _options_clearAction === void 0 ? {
-            colorAction: exports.TextureLoadAction.whatever,
-            stencilAction: exports.TextureLoadAction.clear,
-            depthAction: exports.TextureLoadAction.whatever
-        } : _options_clearAction;
-        var engine = renderer.engine;
-        if (globalVolume) {
-            this.globalVolume = globalVolume;
-        }
-        this.globalUniforms = new GlobalUniforms();
-        var attachments = []; //渲染场景物体Pass的RT
-        var depthStencilAttachment;
-        var drawObjectPassClearAction = {};
-        this.renderer = renderer;
-        if (this.globalVolume) {
-            var useHDR = this.globalVolume.useHDR;
-            // 使用HDR浮点纹理，FLOAT在IOS上报错，使用HALF_FLOAT
-            var textureType = useHDR ? glContext.HALF_FLOAT : glContext.UNSIGNED_BYTE;
-            attachments = [
+    // Calculate all the mid-points of the line segments
+    // ----------------------
+    var x12 = (x1 + x2) / 2;
+    var y12 = (y1 + y2) / 2;
+    var x23 = (x2 + x3) / 2;
+    var y23 = (y2 + y3) / 2;
+    var x34 = (x3 + x4) / 2;
+    var y34 = (y3 + y4) / 2;
+    var x123 = (x12 + x23) / 2;
+    var y123 = (y12 + y23) / 2;
+    var x234 = (x23 + x34) / 2;
+    var y234 = (y23 + y34) / 2;
+    var x1234 = (x123 + x234) / 2;
+    var y1234 = (y123 + y234) / 2;
+    if (level > 0) {
+        // Try to approximate the full cubic curve by a single straight line
+        // ------------------
+        var dx = x4 - x1;
+        var dy = y4 - y1;
+        var d2 = Math.abs((x2 - x4) * dy - (y2 - y4) * dx);
+        var d3 = Math.abs((x3 - x4) * dy - (y3 - y4) * dx);
+        if (d2 > FLT_EPSILON && d3 > FLT_EPSILON) {
+            // Regular care
+            // -----------------
+            if ((d2 + d3) * (d2 + d3) <= distanceTolerance * (dx * dx + dy * dy)) {
+                // If the curvature doesn't exceed the distanceTolerance value
+                // we tend to finish subdivisions.
+                // ----------------------
                 {
-                    texture: {
-                        format: glContext.RGBA,
-                        type: textureType,
-                        magFilter: glContext.LINEAR,
-                        minFilter: glContext.LINEAR
-                    }
+                    points.push(x1234, y1234);
+                    return;
                 }
-            ];
-            depthStencilAttachment = {
-                storageType: exports.RenderPassAttachmentStorageType.depth_stencil_opaque
-            };
-            drawObjectPassClearAction = {
-                colorAction: exports.TextureLoadAction.clear,
-                stencilAction: exports.TextureLoadAction.clear,
-                depthAction: exports.TextureLoadAction.clear
-            };
-        }
-        // 创建 drawObjectPass
-        var renderPasses = [
-            new RenderPass(renderer, {
-                name: RENDER_PASS_NAME_PREFIX,
-                priority: RenderPassPriorityNormal,
-                meshOrder: exports.OrderType.ascending,
-                depthStencilAttachment: depthStencilAttachment,
-                attachments: attachments,
-                clearAction: drawObjectPassClearAction
-            })
-        ];
-        this.setRenderPasses(renderPasses);
-        if (this.globalVolume) {
-            var sceneTextureHandle = new RenderTargetHandle(engine); //保存后处理前的屏幕图像
-            var gaussianStep = 7; // 高斯模糊的迭代次数，次数越高模糊范围越大
-            var viewport = [
-                0,
-                0,
-                this.renderer.getWidth() / 2,
-                this.renderer.getHeight() / 2
-            ];
-            var gaussianDownResults = new Array(gaussianStep); //存放多个高斯Pass的模糊结果，用于Bloom
-            var textureType1 = this.globalVolume.useHDR ? glContext.HALF_FLOAT : glContext.UNSIGNED_BYTE;
-            var bloomThresholdPass = new BloomThresholdPass(renderer, {
-                name: "BloomThresholdPass",
-                attachments: [
-                    {
-                        texture: {
-                            format: glContext.RGBA,
-                            type: textureType1,
-                            minFilter: glContext.LINEAR,
-                            magFilter: glContext.LINEAR
-                        }
-                    }
-                ]
-            });
-            bloomThresholdPass.sceneTextureHandle = sceneTextureHandle;
-            this.addRenderPass(bloomThresholdPass);
-            for(var i = 0; i < gaussianStep; i++){
-                gaussianDownResults[i] = new RenderTargetHandle(engine);
-                var gaussianDownHPass = new HQGaussianDownSamplePass(renderer, "H", {
-                    name: "GaussianDownPassH" + i,
-                    viewport: viewport,
-                    attachments: [
-                        {
-                            texture: {
-                                format: glContext.RGBA,
-                                type: textureType1,
-                                minFilter: glContext.LINEAR,
-                                magFilter: glContext.LINEAR
-                            }
-                        }
-                    ]
-                });
-                var gaussianDownVPass = new HQGaussianDownSamplePass(renderer, "V", {
-                    name: "GaussianDownPassV" + i,
-                    viewport: viewport,
-                    attachments: [
-                        {
-                            texture: {
-                                format: glContext.RGBA,
-                                type: textureType1,
-                                minFilter: glContext.LINEAR,
-                                magFilter: glContext.LINEAR
-                            }
-                        }
-                    ]
-                });
-                gaussianDownVPass.gaussianResult = gaussianDownResults[i];
-                this.addRenderPass(gaussianDownHPass);
-                this.addRenderPass(gaussianDownVPass);
-                viewport[2] /= 2;
-                viewport[3] /= 2;
-            // TODO 限制最大迭代
             }
-            viewport[2] *= 4;
-            viewport[3] *= 4;
-            for(var i1 = 0; i1 < gaussianStep - 1; i1++){
-                var gaussianUpPass = new HQGaussianUpSamplePass(renderer, {
-                    name: "GaussianUpPass" + i1,
-                    viewport: viewport,
-                    attachments: [
-                        {
-                            texture: {
-                                format: glContext.RGBA,
-                                type: textureType1,
-                                minFilter: glContext.LINEAR,
-                                magFilter: glContext.LINEAR
-                            }
-                        }
-                    ]
-                });
-                gaussianUpPass.gaussianDownSampleResult = gaussianDownResults[gaussianStep - 2 - i1];
-                this.addRenderPass(gaussianUpPass);
-                viewport[2] *= 2;
-                viewport[3] *= 2;
+        } else if (d2 > FLT_EPSILON) {
+            // p1,p3,p4 are collinear, p2 is considerable
+            // ----------------------
+            if (d2 * d2 <= distanceTolerance * (dx * dx + dy * dy)) {
+                {
+                    points.push(x1234, y1234);
+                    return;
+                }
             }
-            var postProcessPass = new ToneMappingPass(renderer, sceneTextureHandle);
-            this.addRenderPass(postProcessPass);
-        }
-        this.semantics = new SemanticMap(options.semantics);
-        this.clearAction = clearAction;
-        this.name = "RenderFrame" + seed$8++;
-        var firstRP = renderPasses[0];
-        this.emptyTexture = generateWhiteTexture(engine);
-        this.transparentTexture = generateTransparentTexture(engine);
-        this.camera = camera;
-        this.keepColorBuffer = keepColorBuffer;
-        this.renderPassInfoMap.set(firstRP, {
-            listStart: 0,
-            listEnd: 0,
-            renderPass: firstRP,
-            intermedia: false
-        });
-        this.editorTransform = Vector4$1.fromArray(editorTransform);
-        if (!options.clearAction) {
-            this.resetClearActions();
-        }
-        this.passTextureCache = new PassTextureCache(engine);
-        // FIXME: addShader是为了性能考虑，如果影响不大，下面代码可以删除
-        var _engine_gpuCapability = engine.gpuCapability, detail = _engine_gpuCapability.detail, level = _engine_gpuCapability.level;
-        var writeDepth = detail.readableDepthStencilTextures && detail.writableFragDepth;
-        var shader = createCopyShader(level, writeDepth);
-        (_this_renderer_getShaderLibrary = this.renderer.getShaderLibrary()) == null ? void 0 : _this_renderer_getShaderLibrary.addShader(shader);
-    }
-    var _proto = RenderFrame.prototype;
-    /**
-   * 根据 Mesh 优先级添加到 RenderPass
-   * @param mesh - 要添加的 Mesh 对象
-   */ _proto.addMeshToDefaultRenderPass = function addMeshToDefaultRenderPass(mesh) {
-        if (!mesh) {
-            return;
-        }
-        this.renderPasses[0].addMesh(mesh);
-    // const renderPasses = this.renderPasses;
-    // const infoMap = this.renderPassInfoMap;
-    // const { priority } = mesh;
-    // for (let i = 1; i < renderPasses.length; i++) {
-    //   const renderPass = renderPasses[i - 1];
-    //   const info = infoMap.get(renderPasses[i])!;
-    //   if (info && info.listStart > priority && (priority > infoMap.get(renderPass)!.listEnd || i === 1)) {
-    //     return this.addToRenderPass(renderPass, mesh);
-    //   }
-    // }
-    // // TODO: diff逻辑待优化，有时会添加进找不到的元素
-    // let last = renderPasses[renderPasses.length - 1];
-    // // TODO: 是否添加mesh到pass的判断方式需要优化，先通过长度判断是否有postprocess
-    // for (const pass of renderPasses) {
-    //   if (!(pass instanceof HQGaussianDownSamplePass
-    //     || pass instanceof BloomThresholdPass
-    //     || pass instanceof ToneMappingPass
-    //     || pass instanceof HQGaussianUpSamplePass
-    //     || pass.name === 'mars-final-copy')) {
-    //     last = pass;
-    //   }
-    // }
-    // // if (priority > infoMap.get(last)!.listStart || renderPasses.length === 1) {
-    // //   return this.addToRenderPass(last, mesh);
-    // // }
-    // return this.addToRenderPass(last, mesh);
-    // if (false) {
-    //   throw Error('render pass not found');
-    // }
-    };
-    /**
-   * 把 Mesh 从 RenderPass 中移除，
-   * 如果 renderPass 中没有 mesh，此 renderPass 会被删除
-   * @param mesh - 要删除的 Mesh 对象
-   */ _proto.removeMeshFromDefaultRenderPass = function removeMeshFromDefaultRenderPass(mesh) {
-    // const renderPasses = this.renderPasses;
-    // const infoMap = this.renderPassInfoMap;
-    // for (let i = renderPasses.length - 1; i >= 0; i--) {
-    //   const renderPass = renderPasses[i];
-    //   const info = infoMap.get(renderPass)!;
-    //   // 只有渲染场景物体的pass才有 info
-    //   if (!info) {
-    //     continue;
-    //   }
-    //   if (info.listStart <= mesh.priority && info.listEnd >= mesh.priority) {
-    //     const idx = renderPass.meshes.indexOf(mesh);
-    //     if (idx === -1) {
-    //       return;
-    //     }
-    //     // TODO hack: 现在的除了rp1和finalcopy pass，所有renderpass的meshes是一个copy加上一个filter mesh，这里的判断当filter mesh被删除后当前pass需不需要删除，
-    //     // 判断需要更鲁棒。
-    //     const shouldRestoreRenderPass = idx === 1 && renderPass.meshes[0].name === MARS_COPY_MESH_NAME;
-    //     renderPass.removeMesh(mesh);
-    //     if (shouldRestoreRenderPass) {
-    //       const nextRenderPass = renderPasses[i + 1];
-    //       const meshes = renderPass.meshes;
-    //       if (!info.intermedia) {
-    //         info.preRenderPass?.resetColorAttachments([]);
-    //         //this.renderer.extension.resetColorAttachments?.(info.preRenderPass, []);
-    //       }
-    //       for (let j = 1; j < meshes.length; j++) {
-    //         info.preRenderPass?.addMesh(meshes[j]);
-    //       }
-    //       const cp = renderPass.attachments[0]?.texture;
-    //       const keepColor = cp === this.resource.color_a || cp === this.resource.color_b;
-    //       renderPass.dispose({
-    //         meshes: DestroyOptions.keep,
-    //         colorAttachment: keepColor ? RenderPassDestroyAttachmentType.keep : RenderPassDestroyAttachmentType.destroy,
-    //         depthStencilAttachment: RenderPassDestroyAttachmentType.keep,
-    //       });
-    //       removeItem(renderPasses, renderPass);
-    //       this.removeRenderPass(renderPass);
-    //       infoMap.delete(renderPass);
-    //       if (nextRenderPass) {
-    //         this.updateRenderInfo(nextRenderPass);
-    //       }
-    //       if (info.preRenderPass) {
-    //         this.updateRenderInfo(info.preRenderPass);
-    //       }
-    //       if (info.prePasses) {
-    //         info.prePasses.forEach(rp => {
-    //           this.removeRenderPass(rp.pass);
-    //           if (rp?.destroyOptions !== false) {
-    //             rp.pass.attachments.forEach(c => {
-    //               if (c.texture !== this.resource.color_b || c.texture !== this.resource.color_a) {
-    //                 c.texture.dispose();
-    //               }
-    //             });
-    //             const options: RenderPassDestroyOptions = {
-    //               ...(rp?.destroyOptions ? rp.destroyOptions as RenderPassDestroyOptions : {}),
-    //               depthStencilAttachment: RenderPassDestroyAttachmentType.keep,
-    //             };
-    //             rp.pass.dispose(options);
-    //           }
-    //         });
-    //       }
-    //       this.resetRenderPassDefaultAttachment(renderPasses, Math.max(i - 1, 0));
-    //       if (renderPasses.length === 1) {
-    //         renderPasses[0].resetColorAttachments([]);
-    //         //this.renderer.extension.resetColorAttachments?.(renderPasses[0], []);
-    //         this.removeRenderPass(this.resource.finalCopyRP);
-    //       }
-    //     }
-    //     return this.resetClearActions();
-    //   }
-    // }
-    };
-    // /**
-    //  * 将 Mesh 所有在 RenderPass 进行切分
-    //  * @param mesh - 目标 Mesh 对象
-    //  * @param options - 切分选项，包含 RenderPass 相关的 Attachment 等数据
-    //  */
-    // splitDefaultRenderPassByMesh (mesh: Mesh, options: RenderPassSplitOptions): RenderPass {
-    //   const index = this.findMeshRenderPassIndex(mesh);
-    //   const renderPass = this.renderPasses[index];
-    //   if (false) {
-    //     if (!renderPass) {
-    //       throw Error('RenderPassNotFound');
-    //     }
-    //   }
-    //   this.createResource();
-    //   const meshIndex = renderPass.meshes.indexOf(mesh);
-    //   const ms0 = renderPass.meshes.slice(0, meshIndex);
-    //   const ms1 = renderPass.meshes.slice(meshIndex);
-    //   const infoMap = this.renderPassInfoMap;
-    //   // TODO 为什么要加这个判断？
-    //   // if (renderPass.attachments[0] && this.renderPasses[index + 1] !== this.resource.finalCopyRP) {
-    //   //   throw Error('not implement');
-    //   // } else {
-    //   if (!options.attachments?.length) {
-    //     throw Error('should include at least one color attachment');
-    //   }
-    //   const defRPS = this.renderPasses;
-    //   const defIndex = defRPS.indexOf(renderPass);
-    //   const lastDefRP = defRPS[defIndex - 1];
-    //   removeItem(defRPS, renderPass);
-    //   const lastInfo = infoMap.get(renderPass);
-    //   infoMap.delete(renderPass);
-    //   const filter = GPUCapability.getInstance().level === 2 ? glContext.LINEAR : glContext.NEAREST;
-    //   const rp0 = new RenderPass({
-    //     name: RENDER_PASS_NAME_PREFIX + defIndex,
-    //     priority: renderPass.priority,
-    //     attachments: [{
-    //       texture: {
-    //         sourceType: TextureSourceType.framebuffer,
-    //         format: glContext.RGBA,
-    //         name: 'frame_a',
-    //         minFilter: filter,
-    //         magFilter: filter,
-    //       },
-    //     }],
-    //     clearAction: renderPass.clearAction || { colorAction: TextureLoadAction.clear },
-    //     storeAction: renderPass.storeAction,
-    //     depthStencilAttachment: this.resource.depthStencil,
-    //     meshes: ms0,
-    //     meshOrder: OrderType.ascending,
-    //   });
-    //   ms1.unshift(this.createCopyMesh());
-    //   const renderPasses = this.renderPasses;
-    //   renderPasses[index] = rp0;
-    //   const prePasses: RenderPass[] = [];
-    //   const restMeshes = ms1.slice();
-    //   if (options.prePasses) {
-    //     options.prePasses.forEach((pass, i) => {
-    //       pass.priority = renderPass.priority + 1 + i;
-    //       pass.setMeshes(ms1);
-    //       prePasses.push(pass);
-    //     });
-    //     renderPasses.splice(index + 1, 0, ...prePasses);
-    //     restMeshes.splice(0, 2);
-    //   }
-    //   const copyRP = this.resource.finalCopyRP;
-    //   if (!renderPasses.includes(copyRP)) {
-    //     renderPasses.push(copyRP);
-    //   }
-    //   // let sourcePass = (prePasses.length && !options.useLastDefaultPassColor) ? prePasses[prePasses.length - 1] : rp0;
-    //   const finalFilterPass = prePasses[prePasses.length - 1];
-    //   finalFilterPass.initialize(this.renderer);
-    //   // 不切RT，接着上一个pass的渲染结果渲染
-    //   const rp1 = new RenderPass({
-    //     name: RENDER_PASS_NAME_PREFIX + (defIndex + 1),
-    //     priority: renderPass.priority + 1 + (options.prePasses?.length || 0),
-    //     meshes: restMeshes,
-    //     meshOrder: OrderType.ascending,
-    //     depthStencilAttachment: this.resource.depthStencil,
-    //     storeAction: options.storeAction,
-    //     clearAction: {
-    //       depthAction: TextureLoadAction.whatever,
-    //       stencilAction: TextureLoadAction.whatever,
-    //       colorAction: TextureLoadAction.whatever,
-    //     },
-    //   });
-    //   renderPasses.splice(index + 1 + (options.prePasses?.length || 0), 0, rp1);
-    //   this.setRenderPasses(renderPasses);
-    //   this.updateRenderInfo(finalFilterPass);
-    //   this.updateRenderInfo(rp0);
-    //   this.updateRenderInfo(rp1);
-    //   // 目的是删除滤镜元素后，把之前滤镜用到的prePass给删除，逻辑有些复杂，考虑优化
-    //   infoMap.get(rp0)!.prePasses = lastInfo!.prePasses;
-    //   prePasses.pop();
-    //   infoMap.get(finalFilterPass)!.prePasses = prePasses.map((pass, i) => {
-    //     return { pass, destroyOptions: false };
-    //   });
-    //   this.resetClearActions();
-    //   return finalFilterPass;
-    // }
-    /**
-   * 销毁 RenderFrame
-   * @param options - 可以有选择销毁一些对象
-   */ _proto.dispose = function dispose(options) {
-        if ((options == null ? void 0 : options.semantics) !== exports.DestroyOptions.keep) {
-            this.semantics.dispose();
-        }
-        var pass = (options == null ? void 0 : options.passes) ? options.passes : undefined;
-        if (pass !== exports.DestroyOptions.keep) {
-            this._renderPasses.forEach(function(renderPass) {
-                renderPass.dispose(pass);
-            });
-        }
-        this.passTextureCache.dispose();
-        this._renderPasses.length = 0;
-        this.emptyTexture.dispose();
-        this.transparentTexture.dispose();
-        if (this.resource) {
-            var _this_resource_depthStencil_texture, _this_resource_depthStencil;
-            this.resource.color_a.dispose();
-            this.resource.color_b.dispose();
-            (_this_resource_depthStencil = this.resource.depthStencil) == null ? void 0 : (_this_resource_depthStencil_texture = _this_resource_depthStencil.texture) == null ? void 0 : _this_resource_depthStencil_texture.dispose();
-            this.resource.finalCopyRP.dispose();
-            this.resource.resRP.dispose();
-            // @ts-expect-error
-            this.resource = null;
-        }
-        this.destroyed = true;
-    };
-    /**
-   * 重置 RenderPass ColorAttachment，解决 Framebuffer 即读又写的问题
-   * @param renderPasses - RenderPass 对象数组
-   * @param startIndex - 开始重置的索引
-   */ _proto.resetRenderPassDefaultAttachment = function resetRenderPassDefaultAttachment(renderPasses, startIndex) {
-        var pre;
-        var _this_resource = this.resource, color_a = _this_resource.color_a, color_b = _this_resource.color_b;
-        for(var i = startIndex; i < renderPasses.length; i++){
-            var _rp_attachments_, _rp_attachments_1;
-            var rp = renderPasses[i];
-            var tex = (_rp_attachments_ = rp.attachments[0]) == null ? void 0 : _rp_attachments_.texture;
-            // @ts-expect-error
-            if (tex && pre === tex) {
-                var next = tex === color_a ? color_b : color_a;
-                rp.resetColorAttachments([
-                    next
-                ]);
-            //this.renderer.extension.resetColorAttachments?.(rp as GLRenderPass, [next as GLTexture]);
+        } else if (d3 > FLT_EPSILON) {
+            // p1,p2,p4 are collinear, p3 is considerable
+            // ----------------------
+            if (d3 * d3 <= distanceTolerance * (dx * dx + dy * dy)) {
+                {
+                    points.push(x1234, y1234);
+                    return;
+                }
             }
-            tex = (_rp_attachments_1 = rp.attachments[0]) == null ? void 0 : _rp_attachments_1.texture;
-            if (tex) {
-                pre = tex;
-            }
-        }
-    };
-    /**
-   * 查找 Mesh 所在的 RenderPass 索引，没找到是-1
-   * @param mesh - 需要查找的 Mesh
-   */ _proto.findMeshRenderPassIndex = function findMeshRenderPassIndex(mesh) {
-        var index = -1;
-        this.renderPasses.every(function(rp, idx) {
-            if (rp.name.startsWith(RENDER_PASS_NAME_PREFIX) && rp.meshes.includes(mesh)) {
-                index = idx;
-                return false;
-            }
-            return true;
-        });
-        return index;
-    };
-    _proto.addToRenderPass = function addToRenderPass(renderPass, mesh) {
-        var info = this.renderPassInfoMap.get(renderPass);
-        var priority = mesh.priority;
-        if (!info) {
-            return;
-        }
-        if (renderPass.meshes.length === 0) {
-            info.listStart = info.listEnd = priority;
         } else {
-            if (priority < info.listStart) {
-                info.listStart = priority;
-            } else if (priority > info.listEnd) {
-                info.listEnd = priority;
-            }
-        }
-        renderPass.addMesh(mesh);
-    };
-    _proto.getRPAttachments = function getRPAttachments(attachments, preRP) {
-        if ((attachments == null ? void 0 : attachments.length) === 1) {
-            var _attachments_ = attachments[0], texture = _attachments_.texture, persistent = _attachments_.persistent;
-            var format = texture.format;
-            var _preRP_getInitAttachments;
-            var previousAttachmens = (_preRP_getInitAttachments = preRP == null ? void 0 : preRP.getInitAttachments()) != null ? _preRP_getInitAttachments : [];
-            if (format === glContext.RGBA && !persistent) {
-                var texA = this.resource.color_a;
-                if (previousAttachmens.length === 0) {
-                    return [
-                        {
-                            texture: texA
-                        }
-                    ];
-                }
-                var texture1 = previousAttachmens[0].texture === texA ? this.resource.color_b : texA;
-                return [
-                    {
-                        texture: texture1
-                    }
-                ];
-            }
-        }
-        return attachments;
-    };
-    _proto.resetClearActions = function resetClearActions() {
-        var action = this.renderPasses.length > 1 ? exports.TextureLoadAction.clear : exports.TextureLoadAction.whatever;
-        this.clearAction.stencilAction = action;
-        this.clearAction.depthAction = action;
-        this.clearAction.colorAction = action;
-        if (this.keepColorBuffer) {
-            this.clearAction.colorAction = exports.TextureLoadAction.whatever;
-        }
-    };
-    // protected updateRenderInfo (renderPass: RenderPass): RenderPassInfo {
-    //   const map = this.renderPassInfoMap;
-    //   const passes = this.renderPasses;
-    //   let info: RenderPassInfo;
-    //   if (!map.has(renderPass)) {
-    //     info = {
-    //       intermedia: false,
-    //       renderPass: renderPass,
-    //       listStart: 0,
-    //       listEnd: 0,
-    //     };
-    //     map.set(renderPass, info);
-    //   } else {
-    //     info = map.get(renderPass)!;
-    //   }
-    //   info.intermedia = renderPass.attachments.length > 0;
-    //   const meshes = renderPass.meshes;
-    //   if (meshes[0]) {
-    //     info.listStart = (meshes[0].name === MARS_COPY_MESH_NAME ? meshes[1] : meshes[0]).priority;
-    //     info.listEnd = meshes[meshes.length - 1].priority;
-    //   } else {
-    //     info.listStart = 0;
-    //     info.listEnd = 0;
-    //   }
-    //   const index = passes.indexOf(renderPass);
-    //   const depthStencilActon = index === 0 ? TextureLoadAction.clear : TextureLoadAction.whatever;
-    //   if (index === 0) {
-    //     renderPass.clearAction.colorAction = TextureLoadAction.clear;
-    //   }
-    //   renderPass.clearAction.depthAction = depthStencilActon;
-    //   renderPass.clearAction.stencilAction = depthStencilActon;
-    //   if (index > -1) {
-    //     renderPass.semantics.setSemantic('EDITOR_TRANSFORM', () => this.editorTransform);
-    //   } else {
-    //     renderPass.semantics.setSemantic('EDITOR_TRANSFORM', undefined);
-    //   }
-    //   info.preRenderPass = passes[index - 1];
-    //   return info;
-    // }
-    /**
-   * 设置 RenderPass 数组，直接修改内部的 RenderPass 数组
-   * @param passes - RenderPass 数组
-   */ _proto.setRenderPasses = function setRenderPasses(passes) {
-        var _this = this;
-        if (this.renderer !== undefined) {
-            passes.forEach(function(pass) {
-                return pass.initialize(_this.renderer);
-            });
-        }
-        this._renderPasses = passes.slice();
-    };
-    /**
-   * 添加 RenderPass
-   * @param pass - 需要添加的 RenderPass
-   */ _proto.addRenderPass = function addRenderPass(pass) {
-        if (this.renderer !== undefined) {
-            pass.initialize(this.renderer);
-        }
-        this._renderPasses.push(pass);
-    };
-    /**
-   * 创建 RenderPass 切分时需要的 GPU 资源
-   */ _proto.createResource = function createResource() {
-        var engine = this.renderer.engine;
-        if (!this.resource) {
-            var _resRP_getDepthAttachment;
-            var _engine_gpuCapability = engine.gpuCapability, detail = _engine_gpuCapability.detail, level = _engine_gpuCapability.level;
-            var width = this.renderer.getWidth();
-            var height = this.renderer.getHeight();
-            var filter = level === 2 ? glContext.LINEAR : glContext.NEAREST;
-            var texA = Texture.create(engine, {
-                sourceType: exports.TextureSourceType.framebuffer,
-                format: glContext.RGBA,
-                name: "frame_a",
-                minFilter: filter,
-                magFilter: filter
-            });
-            var texB = Texture.create(engine, {
-                sourceType: exports.TextureSourceType.framebuffer,
-                format: glContext.RGBA,
-                data: {
-                    width: width,
-                    height: height
-                },
-                minFilter: filter,
-                magFilter: filter,
-                name: "frame_b"
-            });
-            var depthStencilType = detail.readableDepthStencilTextures && detail.writableFragDepth ? exports.RenderPassAttachmentStorageType.depth_24_stencil_8_texture : exports.RenderPassAttachmentStorageType.depth_stencil_opaque;
-            var resRP = new RenderPass(this.renderer, {
-                depthStencilAttachment: {
-                    storageType: depthStencilType
-                },
-                attachments: [
-                    {
-                        texture: texA
-                    }
-                ]
-            }).initialize(this.renderer);
-            var finalCopyRP = new FinalCopyRP(this.renderer, {
-                name: "effects-final-copy",
-                priority: RenderPassPriorityNormal + 600,
-                clearAction: {
-                    depthAction: exports.TextureLoadAction.clear,
-                    stencilAction: exports.TextureLoadAction.clear,
-                    colorAction: exports.TextureLoadAction.clear
-                },
-                meshOrder: exports.OrderType.ascending,
-                meshes: [
-                    this.createCopyMesh({
-                        blend: true,
-                        depthTexture: (_resRP_getDepthAttachment = resRP.getDepthAttachment()) == null ? void 0 : _resRP_getDepthAttachment.texture
-                    })
-                ]
-            });
-            this.resource = {
-                color_a: resRP.attachments[0].texture,
-                color_b: texB,
-                finalCopyRP: finalCopyRP,
-                depthStencil: resRP.depthAttachment,
-                resRP: resRP
-            };
-        }
-    };
-    // TODO tex和size没有地方用到。
-    /**
-   * 创建拷贝 RenderPass 用到的 Mesh 对象
-   * @param semantics - RenderPass 渲染时 Framebuffer 的颜色和深度纹理、大小和是否混合
-   */ _proto.createCopyMesh = function createCopyMesh(semantics) {
-        var // FIXME: 如果不把shader添加进shaderLibrary，这里可以移到core中，有性能上的考虑
-        _this_renderer_getShaderLibrary;
-        var name = EFFECTS_COPY_MESH_NAME;
-        var engine = this.renderer.engine;
-        var geometry = Geometry.create(engine, {
-            name: name,
-            mode: glContext.TRIANGLE_STRIP,
-            attributes: {
-                aPos: {
-                    type: glContext.FLOAT,
-                    size: 2,
-                    data: new Float32Array([
-                        -1,
-                        1,
-                        -1,
-                        -1,
-                        1,
-                        1,
-                        1,
-                        -1
-                    ])
-                }
-            },
-            drawCount: 4
-        });
-        var shader = createCopyShader(engine.gpuCapability.level, !!(semantics == null ? void 0 : semantics.depthTexture));
-        (_this_renderer_getShaderLibrary = this.renderer.getShaderLibrary()) == null ? void 0 : _this_renderer_getShaderLibrary.addShader(shader);
-        var material = Material.create(engine, {
-            uniformValues: {
-                // @ts-expect-error
-                uDepth: semantics == null ? void 0 : semantics.depthTexture
-            },
-            name: name,
-            shader: shader
-        });
-        material.blending = false;
-        material.depthTest = false;
-        material.culling = false;
-        if (semantics == null ? void 0 : semantics.blend) {
-            material.blending = true;
-            material.blendFunction = [
-                glContext.SRC_ALPHA,
-                glContext.ONE_MINUS_SRC_ALPHA,
-                glContext.SRC_ALPHA,
-                glContext.ONE_MINUS_SRC_ALPHA
-            ];
-        }
-        return Mesh.create(engine, {
-            name: name,
-            geometry: geometry,
-            material: material,
-            priority: 0
-        });
-    };
-    /**
-   * 移除 RenderPass
-   * @param pass - 需要移除的 RenderPass
-   */ _proto.removeRenderPass = function removeRenderPass(pass) {
-        removeItem(this._renderPasses, pass);
-    };
-    _create_class(RenderFrame, [
-        {
-            key: "renderPasses",
-            get: function get() {
-                return this._renderPasses.slice();
-            }
-        },
-        {
-            key: "isDestroyed",
-            get: function get() {
-                return this.destroyed;
-            }
-        }
-    ]);
-    return RenderFrame;
-}();
-function getTextureSize(tex) {
-    return tex ? new Vector2(tex.getWidth(), tex.getHeight()) : new Vector2();
-}
-function findPreviousRenderPass(renderPasses, renderPass) {
-    var index = renderPasses.indexOf(renderPass);
-    return renderPasses[index - 1];
-}
-var FinalCopyRP = /*#__PURE__*/ function(RenderPass) {
-    _inherits(FinalCopyRP, RenderPass);
-    function FinalCopyRP() {
-        return RenderPass.apply(this, arguments);
-    }
-    var _proto = FinalCopyRP.prototype;
-    _proto.configure = function configure(renderer) {
-        var framebuffer = renderer.getFramebuffer();
-        if (framebuffer) {
-            this.prePassTexture = framebuffer.getColorTextures()[0];
-        }
-        renderer.setFramebuffer(null);
-    };
-    _proto.execute = function execute(renderer) {
-        renderer.clear(this.clearAction);
-        this.meshes[0].material.setTexture("uFilterSource", this.prePassTexture);
-        this.meshes[0].material.setVector2("uFilterSourceSize", getTextureSize(this.prePassTexture));
-        renderer.renderMeshes(this.meshes);
-        if (this.storeAction) {
-            renderer.clear(this.storeAction);
-        }
-    };
-    return FinalCopyRP;
-}(RenderPass);
-var GlobalUniforms = function GlobalUniforms() {
-    this.floats = {};
-    this.ints = {};
-    // vector3s: Record<string, vec3> = {};
-    this.vector4s = {};
-    this.matrices = {};
-    //...
-    this.samplers = [] // 存放的sampler名称。
-    ;
-    this.uniforms = [] // 存放的uniform名称（不包括sampler）。
-    ;
-};
-
-var Renderbuffer = /*#__PURE__*/ function() {
-    function Renderbuffer(props) {
-        this.size = [
-            0,
-            0
-        ];
-        this.multiSample = 1;
-        this.destroyed = false;
-        var storageType = props.storageType, format = props.format, attachment = props.attachment;
-        this.storageType = storageType;
-        this.format = format;
-        this.attachment = attachment;
-    }
-    _create_class(Renderbuffer, [
-        {
-            key: "isDestroyed",
-            get: function get() {
-                return this.destroyed;
-            }
-        }
-    ]);
-    return Renderbuffer;
-}();
-
-var isWebGL2Available = typeof alipay.WebGL2RenderingContext === "function";
-var GPUCapability = /*#__PURE__*/ function() {
-    function GPUCapability(gl) {
-        this.setupCapability(gl);
-    }
-    var _proto = GPUCapability.prototype;
-    _proto.setupCapability = function setupCapability(gl) {
-        var _gl_getExtension;
-        var level = isWebGL2Available && _instanceof1(gl, alipay.WebGL2RenderingContext) ? 2 : 1;
-        var level2 = level === 2;
-        var textureAnisotropicExt = gl.getExtension("EXT_texture_filter_anisotropic") || gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic");
-        var depthTextureExtension = gl.getExtension("WEBGL_depth_texture");
-        var halfFloatLinear = !!gl.getExtension("OES_texture_half_float_linear");
-        var floatLinear = !!gl.getExtension("OES_texture_float_linear");
-        this.level = level;
-        this.type = level2 ? "webgl2" : "webgl";
-        this.vaoExt = gl.getExtension("OES_vertex_array_object");
-        this.glAsyncCompileExt = gl.getExtension("KHR_parallel_shader_compile");
-        this.UNSIGNED_INT_24_8 = gl.UNSIGNED_INT_24_8;
-        this.drawBufferExtension = gl.getExtension("WEBGL_draw_buffers");
-        if (depthTextureExtension) {
-            this.UNSIGNED_INT_24_8 = depthTextureExtension.UNSIGNED_INT_24_8_WEBGL;
-        }
-        if (level2 && !halfFloatLinear) {
-            halfFloatLinear = checkLinearTextureFilter(gl, gl.HALF_FLOAT);
-        }
-        if (level2 && !floatLinear) {
-            floatLinear = checkLinearTextureFilter(gl, gl.FLOAT);
-        }
-        this.internalFormatDepth16 = level2 ? gl.DEPTH_COMPONENT16 : gl.DEPTH_COMPONENT;
-        this.internalFormatDepth24_stencil8 = level2 ? gl.DEPTH24_STENCIL8 : gl.DEPTH_STENCIL;
-        var floatTexture = level2 || gl.getExtension("OES_texture_float") ? gl.FLOAT : 0;
-        var halfFloatTexture = level2 ? alipay.WebGL2RenderingContext.HALF_FLOAT : ((_gl_getExtension = gl.getExtension("OES_texture_half_float")) == null ? void 0 : _gl_getExtension.HALF_FLOAT_OES) || 0;
-        var detail = {
-            floatTexture: floatTexture,
-            halfFloatTexture: halfFloatTexture,
-            maxSample: level2 ? gl.getParameter(gl.MAX_SAMPLES) : 1,
-            maxVertexUniforms: gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS),
-            maxVertexTextures: gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS),
-            maxFragmentUniforms: gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS),
-            maxFragmentTextures: gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS),
-            floatColorAttachment: level2 ? !!gl.getExtension("EXT_color_buffer_float") : floatTexture > 0 && !!gl.getExtension("WEBGL_color_buffer_float"),
-            halfFloatColorAttachment: level2 ? !!gl.getExtension("EXT_color_buffer_float") : halfFloatTexture > 0 && !!gl.getExtension("EXT_color_buffer_half_float"),
-            maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
-            maxShaderTexCount: gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS),
-            compressedTexture: registerCompressedTexture(gl),
-            halfFloatLinear: halfFloatLinear,
-            floatLinear: floatLinear,
-            maxTextureAnisotropy: textureAnisotropicExt ? gl.getParameter(textureAnisotropicExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0,
-            shaderTextureLod: level2 || !!gl.getExtension("EXT_shader_texture_lod"),
-            instanceDraw: level2 || !!gl.getExtension("ANGLE_instanced_arrays"),
-            drawBuffers: level2 || !!this.drawBufferExtension,
-            asyncShaderCompile: !!gl.getExtension("KHR_parallel_shader_compile"),
-            intIndexElementBuffer: !!gl.getExtension("OES_element_index_uint"),
-            standardDerivatives: level2 || !!gl.getExtension("OES_standard_derivatives"),
-            readableDepthStencilTextures: level2 || !!depthTextureExtension,
-            writableFragDepth: level2 || !!gl.getExtension("EXT_frag_depth")
-        };
-        this["detail"] = detail;
-        if (textureAnisotropicExt) {
-            this.textureMaxAnisotropyExt = textureAnisotropicExt.TEXTURE_MAX_ANISOTROPY_EXT;
-        }
-    };
-    _proto.framebufferTexture2D = function framebufferTexture2D(gl, target, index, textarget, texture) {
-        var ext = this.drawBufferExtension;
-        if (this.level === 1 && !ext && index > 0) {
-            throw new Error("Draw multiple color buffers not available.");
-        }
-        var attachment = ext ? ext["COLOR_ATTACHMENT" + index + "_WEBGL"] : gl["COLOR_ATTACHMENT" + index];
-        if (attachment) {
-            gl.framebufferTexture2D(target, attachment, textarget, texture, 0);
-        } else {
-            console.error("Invalid color attachment index: " + index + ".");
-        }
-    };
-    _proto.drawBuffers = function drawBuffers(gl, bufferStates) {
-        var ext = this.drawBufferExtension;
-        if (this.level === 1 && !ext) {
-            if (bufferStates.length > 1) {
-                throw new Error("Draw buffers not available.");
-            } else {
+            // Collinear case
+            // -----------------
+            dx = x1234 - (x1 + x4) / 2;
+            dy = y1234 - (y1 + y4) / 2;
+            if (dx * dx + dy * dy <= distanceTolerance) {
+                points.push(x1234, y1234);
                 return;
             }
         }
-        var buffers = bufferStates.map(function(enabled, index) {
-            if (enabled) {
-                return ext ? ext["COLOR_ATTACHMENT" + index + "_WEBGL"] : gl["COLOR_ATTACHMENT" + index];
-            }
-            return gl.NONE;
-        });
-        if (ext) {
-            ext.drawBuffersWEBGL(buffers);
-        } else {
-            gl.drawBuffers(buffers);
-        }
-    };
-    _proto.setTextureAnisotropic = function setTextureAnisotropic(gl, target, level) {
-        var maxTextureAnisotropy = this.detail.maxTextureAnisotropy;
-        if (maxTextureAnisotropy) {
-            gl.texParameterf(target, this.textureMaxAnisotropyExt, Math.min(maxTextureAnisotropy, level || 4));
-        }
-    };
-    return GPUCapability;
-}();
-function checkLinearTextureFilter(gl, type) {
-    var tex = gl.createTexture();
-    var ret = false;
-    gl.getError();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16F, 1, 1, 0, gl.RED, type, null);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    if (!gl.getError()) {
-        ret = true;
     }
-    gl.deleteTexture(tex);
-    return ret;
-}
-exports.COMPRESSED_TEXTURE = void 0;
-(function(COMPRESSED_TEXTURE) {
-    COMPRESSED_TEXTURE[COMPRESSED_TEXTURE["NONE"] = 0] = "NONE";
-    COMPRESSED_TEXTURE[COMPRESSED_TEXTURE["PVRTC"] = 1] = "PVRTC";
-    COMPRESSED_TEXTURE[COMPRESSED_TEXTURE["ASTC"] = 2] = "ASTC";
-})(exports.COMPRESSED_TEXTURE || (exports.COMPRESSED_TEXTURE = {}));
-function registerCompressedTexture(gl) {
-    if (gl.getExtension("WEBGL_compressed_texture_astc")) {
-        return 2;
-    }
-    if (gl.getExtension("WEBGL_compressed_texture_pvrtc") || gl.getExtension("WEBKIT_WEBGL_compressed_texture_pvrtc")) {
-        return 1;
-    }
-    return 0;
+    // Continue subdivision
+    // ----------------------
+    recursive(x1, y1, x12, y12, x123, y123, x1234, y1234, points, distanceTolerance, level + 1);
+    recursive(x1234, y1234, x234, y234, x34, y34, x4, y4, points, distanceTolerance, level + 1);
 }
 
-exports.FilterMode = void 0;
-(function(FilterMode) {
-    FilterMode[FilterMode["Nearest"] = 0] = "Nearest";
-    FilterMode[FilterMode["Linear"] = 1] = "Linear";
-})(exports.FilterMode || (exports.FilterMode = {}));
-exports.RenderTextureFormat = void 0;
-(function(RenderTextureFormat) {
-    RenderTextureFormat[RenderTextureFormat["RGBA32"] = 0] = "RGBA32";
-    RenderTextureFormat[RenderTextureFormat["RGBAHalf"] = 1] = "RGBAHalf";
-})(exports.RenderTextureFormat || (exports.RenderTextureFormat = {}));
 /**
- *
- */ var Framebuffer = /*#__PURE__*/ function() {
-    function Framebuffer() {}
-    var _proto = Framebuffer.prototype;
-    _proto.resize = function resize(x, y, width, height) {
-    // OVERRIDE
+ * The Ellipse object is used to help draw graphics and can also be used to specify a hit area for containers.
+ */ var Ellipse = /*#__PURE__*/ function(ShapePrimitive) {
+    _inherits(Ellipse, ShapePrimitive);
+    function Ellipse(x, y, halfWidth, halfHeight) {
+        if (x === void 0) x = 0;
+        if (y === void 0) y = 0;
+        if (halfWidth === void 0) halfWidth = 0;
+        if (halfHeight === void 0) halfHeight = 0;
+        var _this;
+        _this = ShapePrimitive.call(this) || this;
+        /**
+   * The type of the object, mainly used to avoid `instanceof` checks
+   * @default 'ellipse'
+   */ _this.type = "ellipse";
+        _this.x = x;
+        _this.y = y;
+        _this.halfWidth = halfWidth;
+        _this.halfHeight = halfHeight;
+        return _this;
+    }
+    var _proto = Ellipse.prototype;
+    /**
+   * Creates a clone of this Ellipse instance
+   * @returns {Ellipse} A copy of the ellipse
+   */ _proto.clone = function clone() {
+        return new Ellipse(this.x, this.y, this.halfWidth, this.halfHeight);
     };
-    _proto.resetColorTextures = function resetColorTextures(textures) {
-    // OVERRIDE
+    /**
+   * Checks whether the x and y coordinates given are contained within this ellipse
+   * @param x - The X coordinate of the point to test
+   * @param y - The Y coordinate of the point to test
+   * @returns Whether the x/y coords are within this ellipse
+   */ _proto.contains = function contains(x, y) {
+        if (this.halfWidth <= 0 || this.halfHeight <= 0) {
+            return false;
+        }
+        // normalize the coords to an ellipse with center 0,0
+        var normx = (x - this.x) / this.halfWidth;
+        var normy = (y - this.y) / this.halfHeight;
+        normx *= normx;
+        normy *= normy;
+        return normx + normy <= 1;
     };
-    _proto.unbind = function unbind() {
-    // OVERRIDE
+    /**
+   * Checks whether the x and y coordinates given are contained within this ellipse including stroke
+   * @param x - The X coordinate of the point to test
+   * @param y - The Y coordinate of the point to test
+   * @param width
+   * @returns Whether the x/y coords are within this ellipse
+   */ _proto.strokeContains = function strokeContains(x, y, width) {
+        var _this = this, halfWidth = _this.halfWidth, halfHeight = _this.halfHeight;
+        if (halfWidth <= 0 || halfHeight <= 0) {
+            return false;
+        }
+        var halfStrokeWidth = width / 2;
+        var innerA = halfWidth - halfStrokeWidth;
+        var innerB = halfHeight - halfStrokeWidth;
+        var outerA = halfWidth + halfStrokeWidth;
+        var outerB = halfHeight + halfStrokeWidth;
+        var normalizedX = x - this.x;
+        var normalizedY = y - this.y;
+        var innerEllipse = normalizedX * normalizedX / (innerA * innerA) + normalizedY * normalizedY / (innerB * innerB);
+        var outerEllipse = normalizedX * normalizedX / (outerA * outerA) + normalizedY * normalizedY / (outerB * outerB);
+        return innerEllipse > 1 && outerEllipse <= 1;
     };
-    _proto.bind = function bind() {
-    // OVERRIDE
+    /**
+   * Returns the framing rectangle of the ellipse as a Rectangle object
+   * @param out
+   * @returns The framing rectangle
+   */ //   getBounds (out?: Rectangle): Rectangle {
+    //     out = out || new Rectangle();
+    //     out.x = this.x - this.halfWidth;
+    //     out.y = this.y - this.halfHeight;
+    //     out.width = this.halfWidth * 2;
+    //     out.height = this.halfHeight * 2;
+    //     return out;
+    //   }
+    /**
+   * Copies another ellipse to this one.
+   * @param ellipse - The ellipse to copy from.
+   * @returns Returns itself.
+   */ _proto.copyFrom = function copyFrom(ellipse) {
+        this.x = ellipse.x;
+        this.y = ellipse.y;
+        this.halfWidth = ellipse.halfWidth;
+        this.halfHeight = ellipse.halfHeight;
+        return this;
     };
-    _proto.getDepthTexture = function getDepthTexture() {
-        // OVERRIDE
-        return undefined;
+    /**
+   * Copies this ellipse to another one.
+   * @param ellipse - The ellipse to copy to.
+   * @returns Returns given parameter.
+   */ _proto.copyTo = function copyTo(ellipse) {
+        ellipse.copyFrom(this);
+        return ellipse;
     };
-    _proto.getStencilTexture = function getStencilTexture() {
-        // OVERRIDE
-        return undefined;
+    _proto.getX = function getX() {
+        return this.x;
     };
-    _proto.getColorTextures = function getColorTextures() {
-        // OVERRIDE
-        return [];
+    _proto.getY = function getY() {
+        return this.y;
     };
-    _proto.dispose = function dispose(options) {
-    // OVERRIDE
+    _proto.build = function build(points) {
+        var x = this.x;
+        var y = this.y;
+        var rx = this.halfWidth;
+        var ry = this.halfHeight;
+        var dx = 0;
+        var dy = 0;
+        if (!(rx >= 0 && ry >= 0 && dx >= 0 && dy >= 0)) {
+            return points;
+        }
+        // Choose a number of segments such that the maximum absolute deviation from the circle is approximately 0.029
+        var sampleDensity = 5;
+        var n = Math.ceil(sampleDensity * Math.sqrt(rx + ry));
+        var m = n * 8 + (0) + (0);
+        if (m === 0) {
+            return points;
+        }
+        if (n === 0) {
+            points[0] = points[6] = x + dx;
+            points[1] = points[3] = y + dy;
+            points[2] = points[4] = x - dx;
+            points[5] = points[7] = y - dy;
+            return points;
+        }
+        var j1 = 0;
+        var j2 = n * 4 + (0) + 2;
+        var j3 = j2;
+        var j4 = m;
+        var x0 = dx + rx;
+        var y0 = dy;
+        var x1 = x + x0;
+        var x2 = x - x0;
+        var y1 = y + y0;
+        points[j1++] = x1;
+        points[j1++] = y1;
+        points[--j2] = y1;
+        points[--j2] = x2;
+        for(var i = 1; i < n; i++){
+            var a = Math.PI / 2 * (i / n);
+            var x01 = dx + Math.cos(a) * rx;
+            var y01 = dy + Math.sin(a) * ry;
+            var x11 = x + x01;
+            var x21 = x - x01;
+            var y11 = y + y01;
+            var y21 = y - y01;
+            points[j1++] = x11;
+            points[j1++] = y11;
+            points[--j2] = y11;
+            points[--j2] = x21;
+            points[j3++] = x21;
+            points[j3++] = y21;
+            points[--j4] = y21;
+            points[--j4] = x11;
+        }
+        x0 = dx;
+        y0 = dy + ry;
+        x1 = x + x0;
+        x2 = x - x0;
+        y1 = y + y0;
+        var y22 = y - y0;
+        points[j1++] = x1;
+        points[j1++] = y1;
+        points[--j4] = y22;
+        points[--j4] = x1;
+        return points;
     };
-    _create_class(Framebuffer, [
+    _proto.triangulate = function triangulate(points, vertices, verticesOffset, indices, indicesOffset) {
+        if (points.length === 0) {
+            return;
+        }
+        // Compute center (average of all points)
+        var centerX = 0;
+        var centerY = 0;
+        for(var i = 0; i < points.length; i += 2){
+            centerX += points[i];
+            centerY += points[i + 1];
+        }
+        centerX /= points.length / 2;
+        centerY /= points.length / 2;
+        // Set center vertex
+        var count = verticesOffset;
+        vertices[count * 2] = centerX;
+        vertices[count * 2 + 1] = centerY;
+        var centerIndex = count++;
+        // Set edge vertices and indices
+        for(var i1 = 0; i1 < points.length; i1 += 2){
+            vertices[count * 2] = points[i1];
+            vertices[count * 2 + 1] = points[i1 + 1];
+            if (i1 > 0) {
+                indices[indicesOffset++] = count;
+                indices[indicesOffset++] = centerIndex;
+                indices[indicesOffset++] = count - 1;
+            }
+            count++;
+        }
+        // Connect last point to the first edge point
+        indices[indicesOffset++] = centerIndex + 1;
+        indices[indicesOffset++] = centerIndex;
+        indices[indicesOffset++] = count - 1;
+    };
+    return Ellipse;
+}(ShapePrimitive);
+
+var StarType;
+(function(StarType) {
+    StarType[StarType["Star"] = 0] = "Star";
+    StarType[StarType["Polygon"] = 1] = "Polygon";
+})(StarType || (StarType = {}));
+var PolyStar = /*#__PURE__*/ function(ShapePrimitive) {
+    _inherits(PolyStar, ShapePrimitive);
+    function PolyStar(pointCount, outerRadius, innerRadius, outerRoundness, innerRoundness, starType) {
+        if (pointCount === void 0) pointCount = 0;
+        if (outerRadius === void 0) outerRadius = 0;
+        if (innerRadius === void 0) innerRadius = 0;
+        if (outerRoundness === void 0) outerRoundness = 0;
+        if (innerRoundness === void 0) innerRoundness = 0;
+        if (starType === void 0) starType = 0;
+        var _this;
+        _this = ShapePrimitive.call(this) || this;
+        _this.pointCount = pointCount;
+        _this.outerRadius = outerRadius;
+        _this.innerRadius = innerRadius;
+        _this.outerRoundness = outerRoundness;
+        _this.innerRoundness = innerRoundness;
+        _this.starType = starType;
+        _this.v = [];
+        _this.in = [];
+        _this.out = [];
+        return _this;
+    }
+    var _proto = PolyStar.prototype;
+    _proto.clone = function clone() {
+        var polyStar = new PolyStar(this.pointCount, this.outerRadius, this.innerRadius, this.outerRoundness, this.innerRoundness, this.starType);
+        return polyStar;
+    };
+    _proto.copyFrom = function copyFrom(source) {
+        this.pointCount = source.pointCount;
+        this.outerRadius = source.outerRadius;
+        this.innerRadius = source.innerRadius;
+        this.outerRoundness = source.outerRoundness;
+        this.innerRoundness = source.innerRoundness;
+        this.starType = source.starType;
+    };
+    _proto.copyTo = function copyTo(destination) {
+        destination.copyFrom(this);
+    };
+    _proto.build = function build(points) {
+        switch(this.starType){
+            case 0:
+                {
+                    this.buildStarPath();
+                    break;
+                }
+            case 1:
+                {
+                    this.buildPolygonPath();
+                    break;
+                }
+        }
+        var smoothness = 1;
+        for(var i = 0; i < this.v.length - 2; i += 2){
+            buildAdaptiveBezier(points, this.v[i], this.v[i + 1], this.out[i], this.out[i + 1], this.in[i + 2], this.in[i + 3], this.v[i + 2], this.v[i + 3], smoothness);
+        }
+        // draw last curve
+        var lastIndex = this.v.length - 1;
+        buildAdaptiveBezier(points, this.v[lastIndex - 1], this.v[lastIndex], this.out[lastIndex - 1], this.out[lastIndex], this.in[0], this.in[1], this.v[0], this.v[1], smoothness);
+    };
+    _proto.triangulate = function triangulate1(points, vertices, verticesOffset, indices, indicesOffset) {
+        var triangles = triangulate([
+            points
+        ]);
+        for(var i = 0; i < triangles.length; i++){
+            vertices[verticesOffset + i] = triangles[i];
+        }
+        var vertexCount = triangles.length / 2;
+        for(var i1 = 0; i1 < vertexCount; i1++){
+            indices[indicesOffset + i1] = i1;
+        }
+    };
+    _proto.buildStarPath = function buildStarPath() {
+        this.v = [];
+        this.in = [];
+        this.out = [];
+        var numPts = Math.floor(this.pointCount) * 2;
+        var angle = Math.PI * 2 / numPts;
+        var longFlag = true;
+        var longRad = this.outerRadius;
+        var shortRad = this.innerRadius;
+        var longRound = this.outerRoundness / 100;
+        var shortRound = this.innerRoundness / 100;
+        var longPerimSegment = 2 * Math.PI * longRad / (numPts * 2);
+        var shortPerimSegment = 2 * Math.PI * shortRad / (numPts * 2);
+        var i;
+        var rad;
+        var roundness;
+        var perimSegment;
+        var currentAng = -Math.PI / 2;
+        var dir = 1;
+        for(i = 0; i < numPts; i++){
+            rad = longFlag ? longRad : shortRad;
+            roundness = longFlag ? longRound : shortRound;
+            perimSegment = longFlag ? longPerimSegment : shortPerimSegment;
+            var x = rad * Math.cos(currentAng);
+            var y = rad * Math.sin(currentAng);
+            var ox = x === 0 && y === 0 ? 0 : y / Math.sqrt(x * x + y * y);
+            var oy = x === 0 && y === 0 ? 0 : -x / Math.sqrt(x * x + y * y);
+            var offset = i * 2;
+            this.v[offset] = x;
+            this.v[offset + 1] = y;
+            this.in[offset] = x + ox * perimSegment * roundness * dir;
+            this.in[offset + 1] = y + oy * perimSegment * roundness * dir;
+            this.out[offset] = x - ox * perimSegment * roundness * dir;
+            this.out[offset + 1] = y - oy * perimSegment * roundness * dir;
+            longFlag = !longFlag;
+            currentAng += angle * dir;
+        }
+    };
+    _proto.buildPolygonPath = function buildPolygonPath() {
+        this.v = [];
+        this.in = [];
+        this.out = [];
+        var numPts = Math.floor(this.pointCount);
+        var angle = Math.PI * 2 / numPts;
+        var rad = this.outerRadius;
+        var roundness = this.outerRoundness / 100;
+        var perimSegment = 2 * Math.PI * rad / (numPts * 4);
+        var i;
+        var currentAng = -Math.PI * 0.5;
+        var dir = 1;
+        for(i = 0; i < numPts; i++){
+            var x = rad * Math.cos(currentAng);
+            var y = rad * Math.sin(currentAng);
+            var ox = x === 0 && y === 0 ? 0 : y / Math.sqrt(x * x + y * y);
+            var oy = x === 0 && y === 0 ? 0 : -x / Math.sqrt(x * x + y * y);
+            var offset = i * 2;
+            this.v[offset] = x;
+            this.v[offset + 1] = y;
+            this.in[offset] = x + ox * perimSegment * roundness * dir;
+            this.in[offset + 1] = y + oy * perimSegment * roundness * dir;
+            this.out[offset] = x - ox * perimSegment * roundness * dir;
+            this.out[offset + 1] = y - oy * perimSegment * roundness * dir;
+            currentAng += angle * dir;
+        }
+    };
+    return PolyStar;
+}(ShapePrimitive);
+
+// const tempPoints = [new Point(), new Point(), new Point(), new Point()];
+/**
+ * The `Rectangle` object is an area defined by its position, as indicated by its upper-left corner
+ * point (`x`, `y`) and by its `width` and its `height`.
+ */ var Rectangle$1 = /*#__PURE__*/ function(ShapePrimitive) {
+    _inherits(Rectangle, ShapePrimitive);
+    function Rectangle(x, y, width, height) {
+        if (x === void 0) x = 0;
+        if (y === void 0) y = 0;
+        if (width === void 0) width = 0;
+        if (height === void 0) height = 0;
+        var _this;
+        _this = ShapePrimitive.call(this) || this;
+        _this.x = Number(x);
+        _this.y = Number(y);
+        _this.width = Number(width);
+        _this.height = Number(height);
+        return _this;
+    }
+    var _proto = Rectangle.prototype;
+    /** Determines whether the Rectangle is empty. */ _proto.isEmpty = function isEmpty() {
+        return this.left === this.right || this.top === this.bottom;
+    };
+    /**
+   * Creates a clone of this Rectangle
+   * @returns a copy of the rectangle
+   */ _proto.clone = function clone() {
+        return new Rectangle(this.x, this.y, this.width, this.height);
+    };
+    /**
+   * Converts a Bounds object to a Rectangle object.
+   * @param bounds - The bounds to copy and convert to a rectangle.
+   * @returns Returns itself.
+   */ //   copyFromBounds (bounds: Bounds): this {
+    //     this.x = bounds.minX;
+    //     this.y = bounds.minY;
+    //     this.width = bounds.maxX - bounds.minX;
+    //     this.height = bounds.maxY - bounds.minY;
+    //     return this;
+    //   }
+    /**
+   * Copies another rectangle to this one.
+   * @param rectangle - The rectangle to copy from.
+   * @returns Returns itself.
+   */ _proto.copyFrom = function copyFrom(rectangle) {
+        this.x = rectangle.x;
+        this.y = rectangle.y;
+        this.width = rectangle.width;
+        this.height = rectangle.height;
+        return this;
+    };
+    /**
+   * Copies this rectangle to another one.
+   * @param rectangle - The rectangle to copy to.
+   * @returns Returns given parameter.
+   */ _proto.copyTo = function copyTo(rectangle) {
+        rectangle.copyFrom(this);
+        return rectangle;
+    };
+    /**
+   * Checks whether the x and y coordinates given are contained within this Rectangle
+   * @param x - The X coordinate of the point to test
+   * @param y - The Y coordinate of the point to test
+   * @returns Whether the x/y coordinates are within this Rectangle
+   */ _proto.contains = function contains(x, y) {
+        if (this.width <= 0 || this.height <= 0) {
+            return false;
+        }
+        if (x >= this.x && x < this.x + this.width) {
+            if (y >= this.y && y < this.y + this.height) {
+                return true;
+            }
+        }
+        return false;
+    };
+    /**
+   * Checks whether the x and y coordinates given are contained within this rectangle including the stroke.
+   * @param x - The X coordinate of the point to test
+   * @param y - The Y coordinate of the point to test
+   * @param strokeWidth - The width of the line to check
+   * @returns Whether the x/y coordinates are within this rectangle
+   */ _proto.strokeContains = function strokeContains(x, y, strokeWidth) {
+        var _this = this, width = _this.width, height = _this.height;
+        if (width <= 0 || height <= 0) {
+            return false;
+        }
+        var _x = this.x;
+        var _y = this.y;
+        var outerLeft = _x - strokeWidth / 2;
+        var outerRight = _x + width + strokeWidth / 2;
+        var outerTop = _y - strokeWidth / 2;
+        var outerBottom = _y + height + strokeWidth / 2;
+        var innerLeft = _x + strokeWidth / 2;
+        var innerRight = _x + width - strokeWidth / 2;
+        var innerTop = _y + strokeWidth / 2;
+        var innerBottom = _y + height - strokeWidth / 2;
+        return x >= outerLeft && x <= outerRight && y >= outerTop && y <= outerBottom && !(x > innerLeft && x < innerRight && y > innerTop && y < innerBottom);
+    };
+    /**
+   * Determines whether the `other` Rectangle transformed by `transform` intersects with `this` Rectangle object.
+   * Returns true only if the area of the intersection is >0, this means that Rectangles
+   * sharing a side are not overlapping. Another side effect is that an arealess rectangle
+   * (width or height equal to zero) can't intersect any other rectangle.
+   * @param {Rectangle} other - The Rectangle to intersect with `this`.
+   * @param {Matrix} transform - The transformation matrix of `other`.
+   * @returns {boolean} A value of `true` if the transformed `other` Rectangle intersects with `this`; otherwise `false`.
+   */ //   intersects (other: Rectangle, transform?: Matrix4): boolean {
+    //     if (!transform) {
+    //       const x0 = this.x < other.x ? other.x : this.x;
+    //       const x1 = this.right > other.right ? other.right : this.right;
+    //       if (x1 <= x0) {
+    //         return false;
+    //       }
+    //       const y0 = this.y < other.y ? other.y : this.y;
+    //       const y1 = this.bottom > other.bottom ? other.bottom : this.bottom;
+    //       return y1 > y0;
+    //     }
+    //     const x0 = this.left;
+    //     const x1 = this.right;
+    //     const y0 = this.top;
+    //     const y1 = this.bottom;
+    //     if (x1 <= x0 || y1 <= y0) {
+    //       return false;
+    //     }
+    //     const lt = tempPoints[0].set(other.left, other.top);
+    //     const lb = tempPoints[1].set(other.left, other.bottom);
+    //     const rt = tempPoints[2].set(other.right, other.top);
+    //     const rb = tempPoints[3].set(other.right, other.bottom);
+    //     if (rt.x <= lt.x || lb.y <= lt.y) {
+    //       return false;
+    //     }
+    //     const s = Math.sign((transform.a * transform.d) - (transform.b * transform.c));
+    //     if (s === 0) {
+    //       return false;
+    //     }
+    //     transform.apply(lt, lt);
+    //     transform.apply(lb, lb);
+    //     transform.apply(rt, rt);
+    //     transform.apply(rb, rb);
+    //     if (Math.max(lt.x, lb.x, rt.x, rb.x) <= x0
+    //             || Math.min(lt.x, lb.x, rt.x, rb.x) >= x1
+    //             || Math.max(lt.y, lb.y, rt.y, rb.y) <= y0
+    //             || Math.min(lt.y, lb.y, rt.y, rb.y) >= y1) {
+    //       return false;
+    //     }
+    //     const nx = s * (lb.y - lt.y);
+    //     const ny = s * (lt.x - lb.x);
+    //     const n00 = (nx * x0) + (ny * y0);
+    //     const n10 = (nx * x1) + (ny * y0);
+    //     const n01 = (nx * x0) + (ny * y1);
+    //     const n11 = (nx * x1) + (ny * y1);
+    //     if (Math.max(n00, n10, n01, n11) <= (nx * lt.x) + (ny * lt.y)
+    //             || Math.min(n00, n10, n01, n11) >= (nx * rb.x) + (ny * rb.y)) {
+    //       return false;
+    //     }
+    //     const mx = s * (lt.y - rt.y);
+    //     const my = s * (rt.x - lt.x);
+    //     const m00 = (mx * x0) + (my * y0);
+    //     const m10 = (mx * x1) + (my * y0);
+    //     const m01 = (mx * x0) + (my * y1);
+    //     const m11 = (mx * x1) + (my * y1);
+    //     if (Math.max(m00, m10, m01, m11) <= (mx * lt.x) + (my * lt.y)
+    //             || Math.min(m00, m10, m01, m11) >= (mx * rb.x) + (my * rb.y)) {
+    //       return false;
+    //     }
+    //     return true;
+    //   }
+    /**
+   * Pads the rectangle making it grow in all directions.
+   * If paddingY is omitted, both paddingX and paddingY will be set to paddingX.
+   * @param paddingX - The horizontal padding amount.
+   * @param paddingY - The vertical padding amount.
+   * @returns Returns itself.
+   */ _proto.pad = function pad(paddingX, paddingY) {
+        if (paddingX === void 0) paddingX = 0;
+        if (paddingY === void 0) paddingY = paddingX;
+        this.x -= paddingX;
+        this.y -= paddingY;
+        this.width += paddingX * 2;
+        this.height += paddingY * 2;
+        return this;
+    };
+    /**
+   * Fits this rectangle around the passed one.
+   * @param rectangle - The rectangle to fit.
+   * @returns Returns itself.
+   */ _proto.fit = function fit(rectangle) {
+        var x1 = Math.max(this.x, rectangle.x);
+        var x2 = Math.min(this.x + this.width, rectangle.x + rectangle.width);
+        var y1 = Math.max(this.y, rectangle.y);
+        var y2 = Math.min(this.y + this.height, rectangle.y + rectangle.height);
+        this.x = x1;
+        this.width = Math.max(x2 - x1, 0);
+        this.y = y1;
+        this.height = Math.max(y2 - y1, 0);
+        return this;
+    };
+    /**
+   * Enlarges rectangle that way its corners lie on grid
+   * @param resolution - resolution
+   * @param eps - precision
+   * @returns Returns itself.
+   */ _proto.ceil = function ceil(resolution, eps) {
+        if (resolution === void 0) resolution = 1;
+        if (eps === void 0) eps = 0.001;
+        var x2 = Math.ceil((this.x + this.width - eps) * resolution) / resolution;
+        var y2 = Math.ceil((this.y + this.height - eps) * resolution) / resolution;
+        this.x = Math.floor((this.x + eps) * resolution) / resolution;
+        this.y = Math.floor((this.y + eps) * resolution) / resolution;
+        this.width = x2 - this.x;
+        this.height = y2 - this.y;
+        return this;
+    };
+    /**
+   * Enlarges this rectangle to include the passed rectangle.
+   * @param rectangle - The rectangle to include.
+   * @returns Returns itself.
+   */ _proto.enlarge = function enlarge(rectangle) {
+        var x1 = Math.min(this.x, rectangle.x);
+        var x2 = Math.max(this.x + this.width, rectangle.x + rectangle.width);
+        var y1 = Math.min(this.y, rectangle.y);
+        var y2 = Math.max(this.y + this.height, rectangle.y + rectangle.height);
+        this.x = x1;
+        this.width = x2 - x1;
+        this.y = y1;
+        this.height = y2 - y1;
+        return this;
+    };
+    /**
+   * Returns the framing rectangle of the rectangle as a Rectangle object
+   * @param out - optional rectangle to store the result
+   * @returns The framing rectangle
+   */ _proto.getBounds = function getBounds(out) {
+        out = out || new Rectangle();
+        out.copyFrom(this);
+        return out;
+    };
+    _proto.getX = function getX() {
+        return this.x;
+    };
+    _proto.getY = function getY() {
+        return this.y;
+    };
+    _proto.build = function build(points) {
+        var x = this.x;
+        var y = this.y;
+        var width = this.width;
+        var height = this.height;
+        if (!(width >= 0 && height >= 0)) {
+            return points;
+        }
+        points[0] = x;
+        points[1] = y;
+        points[2] = x + width;
+        points[3] = y;
+        points[4] = x + width;
+        points[5] = y + height;
+        points[6] = x;
+        points[7] = y + height;
+        return points;
+    };
+    _proto.triangulate = function triangulate(points, vertices, verticesOffset, indices, indicesOffset) {
+        var count = 0;
+        var verticesStride = 2;
+        verticesOffset *= verticesStride;
+        vertices[verticesOffset + count] = points[0];
+        vertices[verticesOffset + count + 1] = points[1];
+        count += verticesStride;
+        vertices[verticesOffset + count] = points[2];
+        vertices[verticesOffset + count + 1] = points[3];
+        count += verticesStride;
+        vertices[verticesOffset + count] = points[6];
+        vertices[verticesOffset + count + 1] = points[7];
+        count += verticesStride;
+        vertices[verticesOffset + count] = points[4];
+        vertices[verticesOffset + count + 1] = points[5];
+        count += verticesStride;
+        var verticesIndex = verticesOffset / verticesStride;
+        // triangle 1
+        indices[indicesOffset++] = verticesIndex;
+        indices[indicesOffset++] = verticesIndex + 1;
+        indices[indicesOffset++] = verticesIndex + 2;
+        // triangle 2
+        indices[indicesOffset++] = verticesIndex + 1;
+        indices[indicesOffset++] = verticesIndex + 3;
+        indices[indicesOffset++] = verticesIndex + 2;
+    };
+    _create_class(Rectangle, [
         {
-            key: "stencilStorage",
-            get: function get() {
-                // OVERRIDE
-                return undefined;
+            key: "left",
+            get: /** Returns the left edge of the rectangle. */ function get() {
+                return this.x;
             }
         },
         {
-            key: "depthStorage",
-            get: function get() {
-                // OVERRIDE
-                return undefined;
+            key: "right",
+            get: /** Returns the right edge of the rectangle. */ function get() {
+                return this.x + this.width;
+            }
+        },
+        {
+            key: "top",
+            get: /** Returns the top edge of the rectangle. */ function get() {
+                return this.y;
+            }
+        },
+        {
+            key: "bottom",
+            get: /** Returns the bottom edge of the rectangle. */ function get() {
+                return this.y + this.height;
+            }
+        }
+    ], [
+        {
+            key: "EMPTY",
+            get: /** A constant empty rectangle. This is a new object every time the property is accessed */ function get() {
+                return new Rectangle(0, 0, 0, 0);
             }
         }
     ]);
-    return Framebuffer;
+    return Rectangle;
+}(ShapePrimitive);
+
+var ShapePath = /*#__PURE__*/ function() {
+    function ShapePath(graphicsPath) {
+        this.graphicsPath = graphicsPath;
+        this.currentPoly = null;
+        this.shapePrimitives = [];
+    }
+    var _proto = ShapePath.prototype;
+    /** Builds the path. */ _proto.buildPath = function buildPath() {
+        this.currentPoly = null;
+        this.shapePrimitives.length = 0;
+        var path = this.graphicsPath;
+        for(var _iterator = _create_for_of_iterator_helper_loose(path.instructions), _step; !(_step = _iterator()).done;){
+            var instruction = _step.value;
+            var action = instruction.action;
+            var data = instruction.data;
+            switch(action){
+                case "bezierCurveTo":
+                    {
+                        this.bezierCurveTo(data[0], data[1], data[2], data[3], data[4], data[5], data[6]);
+                        break;
+                    }
+                case "moveTo":
+                    {
+                        this.moveTo(data[0], data[1]);
+                        break;
+                    }
+                case "ellipse":
+                    {
+                        this.ellipse(data[0], data[1], data[2], data[3], data[4]);
+                        break;
+                    }
+                case "polyStar":
+                    {
+                        this.polyStar(data[0], data[1], data[2], data[3], data[4], data[5], data[6]);
+                        break;
+                    }
+                case "rect":
+                    {
+                        this.rect(data[0], data[1], data[2], data[3], data[4]);
+                        break;
+                    }
+            }
+        }
+        this.endPoly();
+    };
+    /**
+   * Adds a cubic Bezier curve to the path.
+   * It requires three points: the first two are control points and the third one is the end point.
+   * The starting point is the last point in the current path.
+   * @param cp1x - The x-coordinate of the first control point.
+   * @param cp1y - The y-coordinate of the first control point.
+   * @param cp2x - The x-coordinate of the second control point.
+   * @param cp2y - The y-coordinate of the second control point.
+   * @param x - The x-coordinate of the end point.
+   * @param y - The y-coordinate of the end point.
+   * @param smoothness - Optional parameter to adjust the smoothness of the curve.
+   * @returns The instance of the current object for chaining.
+   */ _proto.bezierCurveTo = function bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y, smoothness) {
+        this.ensurePoly();
+        var currentPoly = this.currentPoly;
+        buildAdaptiveBezier(currentPoly.points, currentPoly.lastX, currentPoly.lastY, cp1x, cp1y, cp2x, cp2y, x, y, smoothness);
+        return this;
+    };
+    _proto.moveTo = function moveTo(x, y) {
+        this.startPoly(x, y);
+        return this;
+    };
+    /**
+   * Draws an ellipse at the specified location and with the given x and y radii.
+   * An optional transformation can be applied, allowing for rotation, scaling, and translation.
+   * @param x - The x-coordinate of the center of the ellipse.
+   * @param y - The y-coordinate of the center of the ellipse.
+   * @param radiusX - The horizontal radius of the ellipse.
+   * @param radiusY - The vertical radius of the ellipse.
+   * @param transform - An optional `Matrix` object to apply a transformation to the ellipse. This can include rotations.
+   * @returns The instance of the current object for chaining.
+   */ _proto.ellipse = function ellipse(x, y, radiusX, radiusY, transform) {
+        // TODO apply rotation to transform...
+        this.drawShape(new Ellipse(x, y, radiusX, radiusY), transform);
+        return this;
+    };
+    _proto.polyStar = function polyStar(pointCount, outerRadius, innerRadius, outerRoundness, innerRoundness, starType, transform) {
+        this.drawShape(new PolyStar(pointCount, outerRadius, innerRadius, outerRoundness, innerRoundness, starType), transform);
+        return this;
+    };
+    /**
+   * Draws a rectangle shape. This method adds a new rectangle path to the current drawing.
+   * @param x - The x-coordinate of the upper-left corner of the rectangle.
+   * @param y - The y-coordinate of the upper-left corner of the rectangle.
+   * @param w - The width of the rectangle.
+   * @param h - The height of the rectangle.
+   * @param transform - An optional `Matrix` object to apply a transformation to the rectangle.
+   * @returns The instance of the current object for chaining.
+   */ _proto.rect = function rect(x, y, w, h, transform) {
+        this.drawShape(new Rectangle$1(x, y, w, h), transform);
+        return this;
+    };
+    /**
+   * Draws a given shape on the canvas.
+   * This is a generic method that can draw any type of shape specified by the `ShapePrimitive` parameter.
+   * An optional transformation matrix can be applied to the shape, allowing for complex transformations.
+   * @param shape - The shape to draw, defined as a `ShapePrimitive` object.
+   * @param matrix - An optional `Matrix` for transforming the shape. This can include rotations,
+   * scaling, and translations.
+   * @returns The instance of the current object for chaining.
+   */ _proto.drawShape = function drawShape(shape, matrix) {
+        this.endPoly();
+        this.shapePrimitives.push({
+            shape: shape,
+            transform: matrix
+        });
+        return this;
+    };
+    /**
+   * Starts a new polygon path from the specified starting point.
+   * This method initializes a new polygon or ends the current one if it exists.
+   * @param x - The x-coordinate of the starting point of the new polygon.
+   * @param y - The y-coordinate of the starting point of the new polygon.
+   * @returns The instance of the current object for chaining.
+   */ _proto.startPoly = function startPoly(x, y) {
+        var currentPoly = this.currentPoly;
+        if (currentPoly) {
+            this.endPoly();
+        }
+        currentPoly = new Polygon();
+        currentPoly.points.push(x, y);
+        this.currentPoly = currentPoly;
+        return this;
+    };
+    /**
+   * Ends the current polygon path. If `closePath` is set to true,
+   * the path is closed by connecting the last point to the first one.
+   * This method finalizes the current polygon and prepares it for drawing or adding to the shape primitives.
+   * @param closePath - A boolean indicating whether to close the polygon by connecting the last point
+   *  back to the starting point. False by default.
+   * @returns The instance of the current object for chaining.
+   */ _proto.endPoly = function endPoly(closePath) {
+        if (closePath === void 0) closePath = false;
+        var shape = this.currentPoly;
+        if (shape && shape.points.length > 2) {
+            shape.closePath = closePath;
+            this.shapePrimitives.push({
+                shape: shape
+            });
+        }
+        this.currentPoly = null;
+        return this;
+    };
+    _proto.ensurePoly = function ensurePoly(start) {
+        if (this.currentPoly) {
+            return;
+        }
+        this.currentPoly = new Polygon();
+        this.currentPoly.points.push(0, 0);
+    };
+    return ShapePath;
 }();
 
-var Renderer = /*#__PURE__*/ function() {
-    function Renderer() {}
-    var _proto = Renderer.prototype;
-    _proto.setGlobalFloat = function setGlobalFloat(name, value) {
-    // OVERRIDE
-    };
-    _proto.setGlobalInt = function setGlobalInt(name, value) {
-    // OVERRIDE
-    };
-    _proto.setGlobalVector4 = function setGlobalVector4(name, value) {
-    // OVERRIDE
-    };
-    _proto.setGlobalMatrix = function setGlobalMatrix(name, value) {
-    // OVERRIDE
-    };
-    _proto.getFramebuffer = function getFramebuffer() {
-        // OVERRIDE
-        return null;
-    };
-    _proto.setFramebuffer = function setFramebuffer(framebuffer) {
-    // OVERRIDE
-    };
-    _proto.setViewport = function setViewport(x, y, width, height) {
-    // OVERRIDE
-    };
-    _proto.resize = function resize(canvasWidth, canvasHeight) {
-    // OVERRIDE
-    };
-    _proto.clear = function clear(action) {
-    // OVERRIDE
-    };
-    _proto.getWidth = function getWidth() {
-        // OVERRIDE
-        return 0;
-    };
-    _proto.getHeight = function getHeight() {
-        // OVERRIDE
-        return 0;
+var GraphicsPath = /*#__PURE__*/ function() {
+    function GraphicsPath() {
+        this.instructions = [];
+        this.dirty = false;
+    }
+    var _proto = GraphicsPath.prototype;
+    /**
+   * Adds a cubic Bezier curve to the path.
+   * It requires three points: the first two are control points and the third one is the end point.
+   * The starting point is the last point in the current path.
+   * @param cp1x - The x-coordinate of the first control point.
+   * @param cp1y - The y-coordinate of the first control point.
+   * @param cp2x - The x-coordinate of the second control point.
+   * @param cp2y - The y-coordinate of the second control point.
+   * @param x - The x-coordinate of the end point.
+   * @param y - The y-coordinate of the end point.
+   * @param smoothness - Optional parameter to adjust the smoothness of the curve.
+   * @returns The instance of the current object for chaining.
+   */ _proto.bezierCurveTo = function bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y, smoothness) {
+        this.instructions.push({
+            action: "bezierCurveTo",
+            data: [
+                cp1x,
+                cp1y,
+                cp2x,
+                cp2y,
+                x,
+                y,
+                smoothness
+            ]
+        });
+        this.dirty = true;
+        return this;
     };
     /**
-   * 添加 webglcontextlost 事件回调
-   * @override
-   * @param lostHandler
-   */ _proto.addLostHandler = function addLostHandler(lostHandler) {
-    // OVERRIDE
+   * Sets the starting point for a new sub-path. Any subsequent drawing commands are considered part of this path.
+   * @param x - The x-coordinate for the starting point.
+   * @param y - The y-coordinate for the starting point.
+   * @returns The instance of the current object for chaining.
+   */ _proto.moveTo = function moveTo(x, y) {
+        this.instructions.push({
+            action: "moveTo",
+            data: [
+                x,
+                y
+            ]
+        });
+        this.dirty = true;
+        return this;
     };
     /**
-   * 添加 webglContextrestored 事件的回调
-   * @override
-   * @param restoreHandler
-   */ _proto.addRestoreHandler = function addRestoreHandler(restoreHandler) {
-    // OVERRIDE
+   * Draws an ellipse at the specified location and with the given x and y radii.
+   * An optional transformation can be applied, allowing for rotation, scaling, and translation.
+   * @param x - The x-coordinate of the center of the ellipse.
+   * @param y - The y-coordinate of the center of the ellipse.
+   * @param radiusX - The horizontal radius of the ellipse.
+   * @param radiusY - The vertical radius of the ellipse.
+   * @param transform - An optional `Matrix` object to apply a transformation to the ellipse. This can include rotations.
+   * @returns The instance of the current object for chaining.
+   */ _proto.ellipse = function ellipse(x, y, radiusX, radiusY, transform) {
+        this.instructions.push({
+            action: "ellipse",
+            data: [
+                x,
+                y,
+                radiusX,
+                radiusY,
+                transform
+            ]
+        });
+        this.dirty = true;
+        return this;
     };
     /**
-   * @override
-   * @param e
-   */ _proto.lost = function lost(e) {
-    // OVERRIDE
+   * Draws a rectangle shape. This method adds a new rectangle path to the current drawing.
+   * @param x - The x-coordinate of the upper-left corner of the rectangle.
+   * @param y - The y-coordinate of the upper-left corner of the rectangle.
+   * @param w - The width of the rectangle.
+   * @param h - The height of the rectangle.
+   * @param transform - An optional `Matrix` object to apply a transformation to the rectangle.
+   * @returns The instance of the current object for chaining.
+   */ _proto.rect = function rect(x, y, w, h, transform) {
+        this.instructions.push({
+            action: "rect",
+            data: [
+                x,
+                y,
+                w,
+                h,
+                transform
+            ]
+        });
+        this.dirty = true;
+        return this;
     };
-    /**
-   * @override
-   */ _proto.restore = function restore() {
-    // OVERRIDE
+    _proto.polyStar = function polyStar(pointCount, outerRadius, innerRadius, outerRoundness, innerRoundness, starType, transform) {
+        this.instructions.push({
+            action: "polyStar",
+            data: [
+                pointCount,
+                outerRadius,
+                innerRadius,
+                outerRoundness,
+                innerRoundness,
+                starType,
+                transform
+            ]
+        });
+        this.dirty = true;
+        return this;
     };
-    /**
-   *
-   * @override
-   * @returns
-   */ _proto.getShaderLibrary = function getShaderLibrary() {
-        // OVERRIDE
-        return undefined;
+    _proto.clear = function clear() {
+        this.instructions.length = 0;
+        this.dirty = true;
+        return this;
     };
-    _proto.renderRenderFrame = function renderRenderFrame(renderFrame) {
-    // OVERRIDE
-    };
-    _proto.renderMeshes = function renderMeshes(meshes) {
-    // OVERRIDE
-    };
-    _proto.drawGeometry = function drawGeometry(geometry, material, subMeshIndex) {
-    // OVERRIDE
-    };
-    _proto.getTemporaryRT = function getTemporaryRT(name, width, height, depthBuffer, filter, format) {
-        // OVERRIDE
-        return null;
-    };
-    _proto.dispose = function dispose(haltGL) {
-    // OVERRIDE
-    };
-    return Renderer;
+    _create_class(GraphicsPath, [
+        {
+            key: "shapePath",
+            get: /**
+   * Provides access to the internal shape path, ensuring it is up-to-date with the current instructions.
+   * @returns The `ShapePath` instance associated with this `GraphicsPath`.
+   */ function get() {
+                if (!this._shapePath) {
+                    this._shapePath = new ShapePath(this);
+                }
+                if (this.dirty) {
+                    this.dirty = false;
+                    this._shapePath.buildPath();
+                }
+                return this._shapePath;
+            }
+        }
+    ]);
+    return GraphicsPath;
 }();
 
-/**
- * 后处理配置
- */ var defaultGlobalVolume = {
-    useHDR: false,
-    /***** Material Uniform *****/ // Bloom
-    useBloom: true,
-    threshold: 1.0,
-    bloomIntensity: 1.0,
-    // ColorAdjustments
-    brightness: 1.0,
-    saturation: 1.0,
-    contrast: 1.0,
-    // Vignette
-    // vignetteColor: new math.Color(0, 0, 0, 1),
-    // vignetteCenter: new math.Vector2(0.5, 0.5),
-    vignetteIntensity: 0.2,
-    vignetteSmoothness: 0.4,
-    vignetteRoundness: 1.0,
-    // ToneMapping
-    useToneMapping: true
-};
+exports.ShapeComponent = /*#__PURE__*/ function(MeshComponent) {
+    _inherits(ShapeComponent, MeshComponent);
+    function ShapeComponent(engine) {
+        var _this;
+        _this = MeshComponent.call(this, engine) || this;
+        _this.path = new GraphicsPath();
+        _this.curveValues = [];
+        _this.animated = true;
+        _this.vert = "\nprecision highp float;\n\nattribute vec3 aPos;//x y\n\nuniform mat4 effects_MatrixVP;\nuniform mat4 effects_MatrixInvV;\nuniform mat4 effects_ObjectToWorld;\n\nvoid main() {\n  vec4 pos = vec4(aPos.xyz, 1.0);\n  gl_Position = effects_MatrixVP * effects_ObjectToWorld * pos;\n}\n";
+        _this.frag = "\nprecision highp float;\n\nuniform vec4 _Color;\n\nvoid main() {\n  vec4 color = _Color;\n  color.rgb *= color.a;\n  gl_FragColor = color;\n}\n";
+        if (!_this.geometry) {
+            _this.geometry = Geometry.create(engine, {
+                attributes: {
+                    aPos: {
+                        type: glContext.FLOAT,
+                        size: 3,
+                        data: new Float32Array([
+                            -0.5,
+                            0.5,
+                            0,
+                            -0.5,
+                            -0.5,
+                            0,
+                            0.5,
+                            0.5,
+                            0,
+                            0.5,
+                            -0.5,
+                            0
+                        ])
+                    },
+                    aUV: {
+                        type: glContext.FLOAT,
+                        size: 2,
+                        data: new Float32Array()
+                    }
+                },
+                mode: glContext.TRIANGLES,
+                drawCount: 4
+            });
+        }
+        if (!_this.material) {
+            var materialProps = {
+                shader: {
+                    vertex: _this.vert,
+                    fragment: _this.frag,
+                    glslVersion: exports.GLSLVersion.GLSL1
+                }
+            };
+            _this.material = Material.create(engine, materialProps);
+            _this.material.setColor("_Color", new Color(1, 1, 1, 1));
+            _this.material.depthMask = false;
+            _this.material.depthTest = true;
+            _this.material.blending = true;
+        }
+        return _this;
+    }
+    var _proto = ShapeComponent.prototype;
+    _proto.onStart = function onStart() {
+        this.item.getHitTestParams = this.getHitTestParams;
+    };
+    _proto.onUpdate = function onUpdate(dt) {
+        if (this.animated) {
+            this.buildPath(this.data);
+            this.buildGeometryFromPath(this.path.shapePath);
+        }
+    };
+    _proto.buildGeometryFromPath = function buildGeometryFromPath(shapePath) {
+        var shapePrimitives = shapePath.shapePrimitives;
+        var vertices = [];
+        var indices = [];
+        // triangulate shapePrimitive
+        for(var _iterator = _create_for_of_iterator_helper_loose(shapePrimitives), _step; !(_step = _iterator()).done;){
+            var shapePrimitive = _step.value;
+            var shape = shapePrimitive.shape;
+            var points = [];
+            var indexOffset = indices.length;
+            var vertOffset = vertices.length / 2;
+            shape.build(points);
+            shape.triangulate(points, vertices, vertOffset, indices, indexOffset);
+        }
+        var vertexCount = vertices.length / 2;
+        // get the current attribute and index arrays from the geometry, avoiding re-creation
+        var positionArray = this.geometry.getAttributeData("aPos");
+        var uvArray = this.geometry.getAttributeData("aUV");
+        var indexArray = this.geometry.getIndexData();
+        if (!positionArray || positionArray.length < vertexCount * 3) {
+            positionArray = new Float32Array(vertexCount * 3);
+        }
+        if (!uvArray || uvArray.length < vertexCount * 2) {
+            uvArray = new Float32Array(vertexCount * 2);
+        }
+        if (!indexArray) {
+            indexArray = new Uint16Array(indices.length);
+        }
+        // set position and uv attribute array
+        for(var i = 0; i < vertexCount; i++){
+            var pointsOffset = i * 3;
+            var positionArrayOffset = i * 2;
+            var uvOffset = i * 2;
+            positionArray[pointsOffset] = vertices[positionArrayOffset];
+            positionArray[pointsOffset + 1] = vertices[positionArrayOffset + 1];
+            positionArray[pointsOffset + 2] = 0;
+            uvArray[uvOffset] = positionArray[pointsOffset];
+            uvArray[uvOffset + 1] = positionArray[pointsOffset + 1];
+        }
+        // set index array
+        indexArray.set(indices);
+        // rewrite to geometry
+        this.geometry.setAttributeData("aPos", positionArray);
+        this.geometry.setAttributeData("aUV", uvArray);
+        this.geometry.setIndexData(indexArray);
+        this.geometry.setDrawCount(indices.length);
+    };
+    _proto.buildPath = function buildPath(data) {
+        this.path.clear();
+        var shapeData = data;
+        switch(shapeData.type){
+            case ShapePrimitiveType.Custom:
+                {
+                    var customData = shapeData;
+                    var points = customData.points;
+                    var easingIns = customData.easingIns;
+                    var easingOuts = customData.easingOuts;
+                    this.curveValues = [];
+                    for(var _iterator = _create_for_of_iterator_helper_loose(customData.shapes), _step; !(_step = _iterator()).done;){
+                        var shape = _step.value;
+                        this.setFillColor(shape.fill);
+                        var indices = shape.indexes;
+                        for(var i = 1; i < indices.length; i++){
+                            var pointIndex = indices[i];
+                            var lastPointIndex = indices[i - 1];
+                            this.curveValues.push({
+                                point: points[pointIndex.point],
+                                controlPoint1: easingOuts[lastPointIndex.easingOut],
+                                controlPoint2: easingIns[pointIndex.easingIn]
+                            });
+                        }
+                        // Push the last curve
+                        this.curveValues.push({
+                            point: points[indices[0].point],
+                            controlPoint1: easingOuts[indices[indices.length - 1].easingOut],
+                            controlPoint2: easingIns[indices[0].easingIn]
+                        });
+                    }
+                    this.path.moveTo(this.curveValues[this.curveValues.length - 1].point.x, this.curveValues[this.curveValues.length - 1].point.y);
+                    for(var _iterator1 = _create_for_of_iterator_helper_loose(this.curveValues), _step1; !(_step1 = _iterator1()).done;){
+                        var curveValue = _step1.value;
+                        var point = curveValue.point;
+                        var control1 = curveValue.controlPoint1;
+                        var control2 = curveValue.controlPoint2;
+                        this.path.bezierCurveTo(control1.x, control1.y, control2.x, control2.y, point.x, point.y, 1);
+                    }
+                    break;
+                }
+            case ShapePrimitiveType.Ellipse:
+                {
+                    var ellipseData = shapeData;
+                    this.path.ellipse(0, 0, ellipseData.xRadius, ellipseData.yRadius);
+                    this.setFillColor(ellipseData.fill);
+                    break;
+                }
+            case ShapePrimitiveType.Rectangle:
+                {
+                    var rectangleData = shapeData;
+                    this.path.rect(-rectangleData.width / 2, -rectangleData.height / 2, rectangleData.width, rectangleData.height);
+                    this.setFillColor(rectangleData.fill);
+                    break;
+                }
+            case ShapePrimitiveType.Star:
+                {
+                    var starData = shapeData;
+                    this.path.polyStar(starData.pointCount, starData.outerRadius, starData.innerRadius, starData.outerRoundness, starData.innerRoundness, StarType.Star);
+                    this.setFillColor(starData.fill);
+                    break;
+                }
+            case ShapePrimitiveType.Polygon:
+                {
+                    var polygonData = shapeData;
+                    this.path.polyStar(polygonData.pointCount, polygonData.radius, polygonData.radius, polygonData.roundness, polygonData.roundness, StarType.Polygon);
+                    this.setFillColor(polygonData.fill);
+                    break;
+                }
+        }
+    };
+    _proto.setFillColor = function setFillColor(fill) {
+        if (fill) {
+            var color = fill.color;
+            this.material.setColor("_Color", new Color(color.r, color.g, color.b, color.a));
+        }
+    };
+    _proto.fromData = function fromData(data) {
+        MeshComponent.prototype.fromData.call(this, data);
+        this.data = data;
+        var material = this.material;
+        //@ts-expect-error // TODO 新版蒙版上线后重构
+        material.stencilRef = data.renderer.mask !== undefined ? [
+            data.renderer.mask,
+            data.renderer.mask
+        ] : undefined;
+        //@ts-expect-error // TODO 新版蒙版上线后重构
+        setMaskMode(material, data.renderer.maskMode);
+    };
+    return ShapeComponent;
+}(MeshComponent);
+exports.ShapeComponent = __decorate([
+    effectsClass("ShapeComponent")
+], exports.ShapeComponent);
+
+exports.Fake3DComponent = /*#__PURE__*/ function(Component) {
+    _inherits(Fake3DComponent, Component);
+    function Fake3DComponent() {
+        var _this;
+        _this = Component.apply(this, arguments) || this;
+        _this.loop = false;
+        _this.amountOfMotion = 1.0;
+        _this.animationLength = 2.0;
+        _this.mode = 1;
+        _this.startPositionX = 0;
+        _this.startPositionY = 0;
+        _this.startPositionZ = 0;
+        _this.endPositionX = 0;
+        _this.endPositionY = 0;
+        _this.endPositionZ = 0;
+        _this.amplitudeX = 0;
+        _this.amplitudeY = 0;
+        _this.amplitudeZ = 0;
+        _this.phaseX = 0;
+        _this.phaseY = 0;
+        _this.phaseZ = 0;
+        return _this;
+    }
+    var _proto = Fake3DComponent.prototype;
+    _proto.onStart = function onStart() {
+        this.effectComponent = this.item.getComponent(exports.EffectComponent);
+    };
+    _proto.onUpdate = function onUpdate(dt) {
+        this.updateFake3D();
+    };
+    _proto.updateFake3D = function updateFake3D() {
+        if (!this.effectComponent) {
+            return;
+        }
+        var time = this.item.time % this.animationLength / this.animationLength;
+        var _PosX = 0;
+        var _PosY = 0;
+        var _PosZ = 0;
+        switch(this.mode){
+            case 0:
+                {
+                    var PI = Math.PI;
+                    _PosX = Math.sin(2.0 * PI * (time + this.phaseX)) * this.amplitudeX;
+                    _PosY = Math.sin(2.0 * PI * (time + this.phaseY)) * this.amplitudeY;
+                    _PosZ = Math.sin(2.0 * PI * (time + this.phaseZ)) * this.amplitudeZ;
+                    break;
+                }
+            case 1:
+                {
+                    var localTime = time;
+                    if (this.loop) {
+                        if (localTime > 0.5) {
+                            localTime = 1 - localTime;
+                        }
+                        localTime *= 2;
+                    }
+                    _PosX = this.startPositionX * (1 - localTime) + localTime * this.endPositionX;
+                    _PosY = this.startPositionY * (1 - localTime) + localTime * this.endPositionY;
+                    _PosZ = this.startPositionZ * (1 - localTime) + localTime * this.endPositionZ;
+                    break;
+                }
+        }
+        var material = this.effectComponent.material;
+        material.setFloat("_PosX", _PosX * this.amountOfMotion);
+        material.setFloat("_PosY", _PosY * this.amountOfMotion);
+        material.setFloat("_PosZ", _PosZ * this.amountOfMotion);
+    };
+    return Fake3DComponent;
+}(Component);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "loop", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "amountOfMotion", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "animationLength", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "mode", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "startPositionX", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "startPositionY", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "startPositionZ", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "endPositionX", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "endPositionY", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "endPositionZ", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "amplitudeX", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "amplitudeY", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "amplitudeZ", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "phaseX", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "phaseY", void 0);
+__decorate([
+    serialize()
+], exports.Fake3DComponent.prototype, "phaseZ", void 0);
+exports.Fake3DComponent = __decorate([
+    effectsClass("Fake3DComponent")
+], exports.Fake3DComponent);
+exports.Fake3DAnimationMode = void 0;
+(function(Fake3DAnimationMode) {
+    Fake3DAnimationMode[Fake3DAnimationMode["Circular"] = 0] = "Circular";
+    Fake3DAnimationMode[Fake3DAnimationMode["Linear"] = 1] = "Linear";
+})(exports.Fake3DAnimationMode || (exports.Fake3DAnimationMode = {}));
+
+exports.CameraController = /*#__PURE__*/ function(Behaviour) {
+    _inherits(CameraController, Behaviour);
+    function CameraController(engine, props) {
+        var _this;
+        _this = Behaviour.call(this, engine) || this;
+        if (props) {
+            _this.fromData(props);
+        }
+        return _this;
+    }
+    var _proto = CameraController.prototype;
+    _proto.onUpdate = function onUpdate() {
+        if (this.item.composition && this.item.transform.getValid()) {
+            var camera = this.item.composition.camera;
+            camera.near = this.options.near;
+            camera.far = this.options.far;
+            camera.fov = this.options.fov;
+            camera.clipMode = this.options.clipMode;
+            camera.position = this.transform.getWorldPosition();
+            camera.rotation = this.transform.getWorldRotation();
+        }
+    };
+    _proto.fromData = function fromData(data) {
+        Behaviour.prototype.fromData.call(this, data);
+        this.options = data.options;
+    };
+    return CameraController;
+}(Behaviour);
+exports.CameraController = __decorate([
+    effectsClass(DataType.CameraController)
+], exports.CameraController);
+
+var CameraVFXItemLoader = /*#__PURE__*/ function(AbstractPlugin) {
+    _inherits(CameraVFXItemLoader, AbstractPlugin);
+    function CameraVFXItemLoader() {
+        return AbstractPlugin.apply(this, arguments);
+    }
+    return CameraVFXItemLoader;
+}(AbstractPlugin);
+
+exports.HitTestType = void 0;
+(function(HitTestType) {
+    HitTestType[HitTestType["triangle"] = 1] = "triangle";
+    HitTestType[HitTestType["box"] = 2] = "box";
+    HitTestType[HitTestType["sphere"] = 3] = "sphere";
+    HitTestType[HitTestType["custom"] = 4] = "custom";
+})(exports.HitTestType || (exports.HitTestType = {}));
+
+var EVENT_TYPE_CLICK = "click";
+var EVENT_TYPE_TOUCH_START = "touchstart";
+var EVENT_TYPE_TOUCH_MOVE = "touchmove";
+var EVENT_TYPE_TOUCH_END = "touchend";
+var EventSystem = /*#__PURE__*/ function() {
+    function EventSystem(target, allowPropagation) {
+        if (allowPropagation === void 0) allowPropagation = false;
+        this.target = target;
+        this.allowPropagation = allowPropagation;
+        this.enabled = true;
+        this.handlers = {};
+        this.nativeHandlers = {};
+    }
+    var _proto = EventSystem.prototype;
+    _proto.bindListeners = function bindListeners() {
+        var _this = this;
+        var x;
+        var y;
+        var currentTouch;
+        var lastTouch;
+        var getTouch;
+        getTouch = function(event) {
+            return event;
+        };
+        var touchstart = "mousedown";
+        var touchmove = "mousemove";
+        var touchend = "mouseup";
+        var getTouchEventValue = function(event, x, y, dx, dy) {
+            if (dx === void 0) dx = 0;
+            if (dy === void 0) dy = 0;
+            var vx = 0;
+            var vy = 0;
+            var ts = alipay.performance.now();
+            if (!_this.target) {
+                logger.error("Trigger TouchEvent after EventSystem is disposed.");
+                return {
+                    x: x,
+                    y: y,
+                    vx: 0,
+                    vy: vy,
+                    dx: dx,
+                    dy: dy,
+                    ts: ts,
+                    width: 0,
+                    height: 0,
+                    origin: event
+                };
+            }
+            var _this_target = _this.target, width = _this_target.width, height = _this_target.height;
+            if (lastTouch) {
+                var dt = ts - lastTouch.ts;
+                vx = (dx - lastTouch.dx) / dt || 0;
+                vy = (dy - lastTouch.dy) / dt || 0;
+                lastTouch = {
+                    dx: dx,
+                    dy: dy,
+                    ts: ts
+                };
+            }
+            return {
+                x: x,
+                y: y,
+                vx: vx,
+                vy: vy,
+                dx: dx,
+                dy: dy,
+                ts: ts,
+                width: width,
+                height: height,
+                origin: event
+            };
+        };
+        if (isSimulatorCellPhone()) {
+            getTouch = function(event) {
+                var touches = event.touches, changedTouches = event.changedTouches;
+                return touches[0] || changedTouches[0];
+            };
+            touchstart = "touchstart";
+            touchmove = "touchmove";
+            touchend = "touchend";
+        }
+        var _obj;
+        this.nativeHandlers = (_obj = {}, _obj[touchstart] = function(event) {
+            if (_this.enabled) {
+                var touch = getTouch(event);
+                var cood = getCoord(touch);
+                x = cood.x;
+                y = cood.y;
+                lastTouch = currentTouch = {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY,
+                    ts: alipay.performance.now(),
+                    x: x,
+                    y: y
+                };
+                _this.dispatchEvent(EVENT_TYPE_TOUCH_START, getTouchEventValue(event, x, y));
+            }
+        }, _obj[touchmove] = function(event) {
+            if (currentTouch && _this.enabled) {
+                var cood = getCoord(getTouch(event));
+                x = cood.x;
+                y = cood.y;
+                _this.dispatchEvent(EVENT_TYPE_TOUCH_MOVE, getTouchEventValue(event, x, y, x - currentTouch.x, y - currentTouch.y));
+            }
+        }, _obj[touchend] = function(event) {
+            if (currentTouch && _this.enabled) {
+                if (!_this.allowPropagation && event.cancelable) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                var touch = getTouch(event);
+                var cood = getCoord(touch);
+                var dt = Math.abs(currentTouch.clientX - touch.clientX) + Math.abs(currentTouch.clientY - touch.clientY);
+                x = cood.x;
+                y = cood.y;
+                if (dt < 4) {
+                    _this.dispatchEvent(EVENT_TYPE_CLICK, getTouchEventValue(event, x, y));
+                }
+                _this.dispatchEvent(EVENT_TYPE_TOUCH_END, getTouchEventValue(event, x, y, x - currentTouch.x, y - currentTouch.y));
+            }
+            currentTouch = 0;
+        }, _obj);
+        Object.keys(this.nativeHandlers).forEach(function(name) {
+            var _this_target;
+            (_this_target = _this.target) == null ? void 0 : _this_target.addEventListener(String(name), _this.nativeHandlers[name]);
+        });
+    };
+    _proto.dispatchEvent = function dispatchEvent(type, event) {
+        var handlers = this.handlers[type];
+        handlers == null ? void 0 : handlers.forEach(function(fn) {
+            return fn(event);
+        });
+    };
+    _proto.addEventListener = function addEventListener(type, callback) {
+        var handlers = this.handlers[type];
+        if (!handlers) {
+            handlers = this.handlers[type] = [];
+        }
+        addItem(handlers, callback);
+        return function() {
+            removeItem(handlers, callback);
+        };
+    };
+    _proto.removeEventListener = function removeEventListener(type, callback) {
+        var handlers = this.handlers[type];
+        if (handlers) {
+            removeItem(handlers, callback);
+        }
+    };
+    _proto.dispose = function dispose() {
+        var _this = this;
+        if (this.target) {
+            this.handlers = {};
+            Object.keys(this.nativeHandlers).forEach(function(name) {
+                var _this_target;
+                (_this_target = _this.target) == null ? void 0 : _this_target.removeEventListener(String(name), _this.nativeHandlers[name]);
+            });
+            this.nativeHandlers = {};
+            this.target = null;
+        }
+    };
+    return EventSystem;
+}();
+function getCoord(event) {
+    var ele = event.target;
+    var clientX = event.clientX, clientY = event.clientY;
+    var _ele_getBoundingClientRect = ele.getBoundingClientRect(), left = _ele_getBoundingClientRect.left, top = _ele_getBoundingClientRect.top, width = _ele_getBoundingClientRect.width, height = _ele_getBoundingClientRect.height;
+    var x = (clientX - left) / width * 2 - 1;
+    var y = 1 - (clientY - top) / height * 2;
+    return {
+        x: x,
+        y: y
+    };
+}
+
+var InteractLoader = /*#__PURE__*/ function(AbstractPlugin) {
+    _inherits(InteractLoader, AbstractPlugin);
+    function InteractLoader() {
+        return AbstractPlugin.apply(this, arguments);
+    }
+    return InteractLoader;
+}(AbstractPlugin);
 
 var vertex = "\nprecision highp float;\n\nattribute vec2 aPoint;\nuniform vec4 uPos;\nuniform vec2 uSize;\nuniform vec4 uQuat;\nuniform vec4 uColor;\nuniform mat4 effects_ObjectToWorld;\nuniform mat4 effects_MatrixInvV;\nuniform mat4 effects_MatrixVP;\nvarying vec4 vColor;\n#ifdef ENV_EDITOR\n  uniform vec4 uEditorTransform;\n#endif\n\nvec3 rotateByQuat(vec3 a, vec4 quat){\n  vec3 qvec = quat.xyz;\n  vec3 uv = cross(qvec, a);\n  vec3 uuv = cross(qvec, uv) * 2.;\n  return a +(uv * 2. * quat.w + uuv);\n}\n\nvoid main() {\n  vec4 _pos = uPos;\n  vec3 point = rotateByQuat(vec3(aPoint.xy * uSize, 0.),uQuat);\n  vec4 pos = vec4(_pos.xyz, 1.0);\n  pos = effects_ObjectToWorld * pos;\n  pos.xyz += effects_MatrixInvV[0].xyz * point.x+ effects_MatrixInvV[1].xyz * point.y;\n  gl_Position = effects_MatrixVP * pos;\n  vColor = uColor;\n  #ifdef ENV_EDITOR\n    gl_Position = vec4(gl_Position.xy * uEditorTransform.xy + uEditorTransform.zw * gl_Position.w, gl_Position.zw);\n  #endif\n}\n";
 var fragment = "\nprecision highp float;\n\n#define fragColor gl_FragColor\n\nvarying vec4 vColor;\nvoid main() {\n  gl_FragColor = vColor*vColor.a;\n}\n";
-var seed$7 = 1;
+var seed$8 = 1;
 var InteractMesh = /*#__PURE__*/ function() {
     function InteractMesh(props, rendererOptions, transform, engine) {
         this.transform = transform;
@@ -16424,7 +19780,7 @@ var InteractMesh = /*#__PURE__*/ function() {
     };
     _proto.createMesh = function createMesh(geometry, material) {
         return Mesh.create(this.engine, {
-            name: "Interact_preview" + seed$7++,
+            name: "Interact_preview" + seed$8++,
             priority: 0,
             worldMatrix: Matrix4$1.fromIdentity(),
             geometry: geometry,
@@ -16448,8 +19804,20 @@ exports.InteractComponent = /*#__PURE__*/ function(RendererComponent) {
             1,
             1
         ];
+        /**
+   * 拖拽X范围
+   */ _this.dragRange = {
+            dxRange: [
+                0,
+                0
+            ],
+            dyRange: [
+                0,
+                0
+            ]
+        };
+        _this.duringPlay = false;
         /** 是否响应点击和拖拽交互事件 */ _this._interactive = true;
-        _this.hasBeenAddedToComposition = false;
         _this.getHitTestParams = function(force) {
             if (!_this.clickable) {
                 return;
@@ -16467,8 +19835,25 @@ exports.InteractComponent = /*#__PURE__*/ function(RendererComponent) {
         return _this;
     }
     var _proto = InteractComponent.prototype;
-    _proto.start = function start() {
-        var _this = this;
+    _proto.getDragRangeX = function getDragRangeX() {
+        return this.dragRange.dxRange;
+    };
+    _proto.setDragRangeX = function setDragRangeX(min, max) {
+        this.dragRange.dxRange = [
+            min,
+            max
+        ];
+    };
+    _proto.getDragRangeY = function getDragRangeY() {
+        return this.dragRange.dyRange;
+    };
+    _proto.setDragRangeY = function setDragRangeY(min, max) {
+        this.dragRange.dyRange = [
+            min,
+            max
+        ];
+    };
+    _proto.onStart = function onStart() {
         var options = this.item.props.content.options;
         var env = this.item.engine.renderer.env;
         var composition = this.item.composition;
@@ -16492,25 +19877,35 @@ exports.InteractComponent = /*#__PURE__*/ function(RendererComponent) {
             this.materials = this.previewContent.mesh.materials;
         }
         this.item.getHitTestParams = this.getHitTestParams;
-        this.item.onEnd = function() {
-            if (_this.item && _this.item.composition) {
-                var _this_previewContent;
-                _this.item.composition.removeInteractiveItem(_this.item, _this.item.props.content.options.type);
-                _this.clickable = false;
-                _this.hasBeenAddedToComposition = false;
-                (_this_previewContent = _this.previewContent) == null ? void 0 : _this_previewContent.mesh.dispose();
-                _this.endDragTarget();
-            }
-        };
     };
-    _proto.update = function update(dt) {
-        var _this_previewContent;
-        (_this_previewContent = this.previewContent) == null ? void 0 : _this_previewContent.updateMesh();
-        if (!this.hasBeenAddedToComposition && this.item.composition) {
-            var options = this.item.props.content.options;
-            this.item.composition.addInteractiveItem(this.item, options.type);
-            this.hasBeenAddedToComposition = true;
+    _proto.onDisable = function onDisable() {
+        RendererComponent.prototype.onDisable.call(this);
+        if (this.item && this.item.composition) {
+            if (this.duringPlay && !this.item.transform.getValid()) {
+                this.item.composition.removeInteractiveItem(this.item, this.item.props.content.options.type);
+                this.duringPlay = false;
+            }
+            this.clickable = false;
+            this.endDragTarget();
         }
+    };
+    _proto.onEnable = function onEnable() {
+        RendererComponent.prototype.onEnable.call(this);
+        var type = this.interactData.options.type;
+        if (type === InteractType.CLICK) {
+            this.clickable = true;
+        }
+    };
+    _proto.onUpdate = function onUpdate(dt) {
+        var _this_previewContent;
+        this.duringPlay = true;
+        // trigger messageBegin when item enter
+        if (this.item.time > 0 && this.item.time - dt / 1000 <= 0) {
+            var _this_item_composition;
+            var options = this.item.props.content.options;
+            (_this_item_composition = this.item.composition) == null ? void 0 : _this_item_composition.addInteractiveItem(this.item, options.type);
+        }
+        (_this_previewContent = this.previewContent) == null ? void 0 : _this_previewContent.updateMesh();
         if (!this.dragEvent || !this.bouncingArg) {
             return;
         }
@@ -16530,7 +19925,10 @@ exports.InteractComponent = /*#__PURE__*/ function(RendererComponent) {
             this.previewContent.mesh.render(renderer);
         }
     };
-    _proto.onDestroy = function onDestroy() {};
+    _proto.onDestroy = function onDestroy() {
+        var _this_previewContent;
+        (_this_previewContent = this.previewContent) == null ? void 0 : _this_previewContent.mesh.dispose();
+    };
     _proto.endDragTarget = function endDragTarget() {
     // OVERRIDE
     };
@@ -16538,7 +19936,6 @@ exports.InteractComponent = /*#__PURE__*/ function(RendererComponent) {
         if (!(evt == null ? void 0 : evt.cameraParam) || !this.canInteract() || !this.item.composition) {
             return;
         }
-        var options = this.item.props.content.options;
         var _evt_cameraParam = evt.cameraParam, position = _evt_cameraParam.position, fov = _evt_cameraParam.fov;
         var dy = event.dy;
         var dx = event.dx * event.width / event.height;
@@ -16546,23 +19943,20 @@ exports.InteractComponent = /*#__PURE__*/ function(RendererComponent) {
         var sp = Math.tan(fov * Math.PI / 180 / 2) * Math.abs(depth);
         var height = dy * sp;
         var width = dx * sp;
+        var _this_dragRange = this.dragRange, dxRange = _this_dragRange.dxRange, dyRange = _this_dragRange.dyRange;
         var nx = position[0] - this.dragRatio[0] * width;
         var ny = position[1] - this.dragRatio[1] * height;
-        if (options.dxRange) {
-            var _options_dxRange = options.dxRange, min = _options_dxRange[0], max = _options_dxRange[1];
-            nx = clamp$1(nx, min, max);
-            if (nx !== min && nx !== max && min !== max) {
-                var _event_origin;
-                (_event_origin = event.origin) == null ? void 0 : _event_origin.preventDefault();
-            }
+        var xMin = dxRange[0], xMax = dxRange[1];
+        var yMin = dyRange[0], yMax = dyRange[1];
+        nx = clamp$1(nx, xMin, xMax);
+        ny = clamp$1(ny, yMin, yMax);
+        if (nx !== xMin && nx !== xMax && xMin !== xMax) {
+            var _event_origin;
+            (_event_origin = event.origin) == null ? void 0 : _event_origin.preventDefault();
         }
-        if (options.dyRange) {
-            var _options_dyRange = options.dyRange, min1 = _options_dyRange[0], max1 = _options_dyRange[1];
-            ny = clamp$1(ny, min1, max1);
-            if (ny !== min1 && ny !== max1 && min1 !== max1) {
-                var _event_origin1;
-                (_event_origin1 = event.origin) == null ? void 0 : _event_origin1.preventDefault();
-            }
+        if (ny !== yMin && ny !== yMax && yMin !== yMax) {
+            var _event_origin1;
+            (_event_origin1 = event.origin) == null ? void 0 : _event_origin1.preventDefault();
         }
         this.item.composition.camera.position = new Vector3(nx, ny, depth);
     };
@@ -16643,6 +20037,15 @@ exports.InteractComponent = /*#__PURE__*/ function(RendererComponent) {
     _proto.fromData = function fromData(data) {
         RendererComponent.prototype.fromData.call(this, data);
         this.interactData = data;
+        if (data.options.type === InteractType.DRAG) {
+            var options = data.options;
+            if (options.dxRange) {
+                this.dragRange.dxRange = options.dxRange;
+            }
+            if (options.dyRange) {
+                this.dragRange.dyRange = options.dyRange;
+            }
+        }
     };
     _proto.canInteract = function canInteract() {
         var _this_item_composition;
@@ -16673,6 +20076,110 @@ function shouldIgnoreBouncing(arg, mul) {
     return arg && Math.abs(arg.vx || 0) < threshold && Math.abs(arg.vy || 0) < threshold;
 }
 
+/**
+ *
+ */ var MeshCollider = /*#__PURE__*/ function() {
+    function MeshCollider() {
+        this.triangles = [];
+    }
+    var _proto = MeshCollider.prototype;
+    _proto.getBoundingBoxData = function getBoundingBoxData() {
+        return this.boundingBoxData;
+    };
+    _proto.getBoundingBox = function getBoundingBox() {
+        var maxX = -Number.MAX_VALUE;
+        var maxY = -Number.MAX_VALUE;
+        var minX = Number.MAX_VALUE;
+        var minY = Number.MAX_VALUE;
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.boundingBoxData.area), _step; !(_step = _iterator()).done;){
+            var triangle = _step.value;
+            maxX = Math.max(triangle.p0.x, triangle.p1.x, triangle.p2.x, maxX);
+            maxY = Math.max(triangle.p0.y, triangle.p1.y, triangle.p2.y, maxY);
+            minX = Math.min(triangle.p0.x, triangle.p1.x, triangle.p2.x, minX);
+            minY = Math.min(triangle.p0.y, triangle.p1.y, triangle.p2.y, minY);
+        }
+        var area = [];
+        var point0 = new Vector3(minX, maxY, 0);
+        var point1 = new Vector3(maxX, maxY, 0);
+        var point2 = new Vector3(maxX, minY, 0);
+        var point3 = new Vector3(minX, minY, 0);
+        area.push({
+            p0: point0,
+            p1: point1,
+            p2: point2
+        });
+        area.push({
+            p0: point0,
+            p1: point2,
+            p2: point3
+        });
+        return {
+            type: exports.HitTestType.triangle,
+            area: area
+        };
+    };
+    _proto.setGeometry = function setGeometry(geometry, worldMatrix) {
+        if (this.geometry !== geometry) {
+            this.triangles = this.geometryToTriangles(geometry);
+            this.geometry = geometry;
+        }
+        var area = [];
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.triangles), _step; !(_step = _iterator()).done;){
+            var triangle = _step.value;
+            area.push({
+                p0: triangle.p0,
+                p1: triangle.p1,
+                p2: triangle.p2
+            });
+        }
+        if (worldMatrix) {
+            area.forEach(function(triangle) {
+                triangle.p0 = worldMatrix.transformPoint(triangle.p0, new Vector3());
+                triangle.p1 = worldMatrix.transformPoint(triangle.p1, new Vector3());
+                triangle.p2 = worldMatrix.transformPoint(triangle.p2, new Vector3());
+            });
+        }
+        this.boundingBoxData = {
+            type: exports.HitTestType.triangle,
+            area: area
+        };
+    };
+    _proto.geometryToTriangles = function geometryToTriangles(geometry) {
+        var _geometry_getIndexData;
+        var indices = (_geometry_getIndexData = geometry.getIndexData()) != null ? _geometry_getIndexData : [];
+        var _geometry_getAttributeData;
+        var vertices = (_geometry_getAttributeData = geometry.getAttributeData("aPos")) != null ? _geometry_getAttributeData : [];
+        var res = [];
+        for(var i = 0; i < indices.length; i += 3){
+            var index0 = indices[i] * 3;
+            var index1 = indices[i + 1] * 3;
+            var index2 = indices[i + 2] * 3;
+            var p0 = {
+                x: vertices[index0],
+                y: vertices[index0 + 1],
+                z: vertices[index0 + 2]
+            };
+            var p1 = {
+                x: vertices[index1],
+                y: vertices[index1 + 1],
+                z: vertices[index1 + 2]
+            };
+            var p2 = {
+                x: vertices[index2],
+                y: vertices[index2 + 1],
+                z: vertices[index2 + 2]
+            };
+            res.push({
+                p0: p0,
+                p1: p1,
+                p2: p2
+            });
+        }
+        return res;
+    };
+    return MeshCollider;
+}();
+
 exports.maxSpriteMeshItemCount = 8;
 function setSpriteMeshMaxItemCountByGPU(gpuCapability) {
     if (gpuCapability.maxVertexUniforms >= 256) {
@@ -16680,21 +20187,6 @@ function setSpriteMeshMaxItemCountByGPU(gpuCapability) {
     } else if (gpuCapability.maxVertexUniforms >= 128) {
         return exports.maxSpriteMeshItemCount = 16;
     }
-}
-function getImageItemRenderInfo(item) {
-    var renderer = item.renderer;
-    var blending = renderer.blending, side = renderer.side, occlusion = renderer.occlusion, mask = renderer.mask, maskMode = renderer.maskMode, order = renderer.order;
-    var blendingCache = +blending;
-    var cachePrefix = item.cachePrefix || "-";
-    return {
-        side: side,
-        occlusion: occlusion,
-        blending: blending,
-        mask: mask,
-        maskMode: maskMode,
-        cachePrefix: cachePrefix,
-        cacheId: cachePrefix + "." + +side + "+" + +occlusion + "+" + blendingCache + "+" + order + "+" + maskMode + "." + mask
-    };
 }
 function spriteMeshShaderFromFilter(level, options) {
     var _ref = options != null ? options : {}, _ref_env = _ref.env, env = _ref_env === void 0 ? "" : _ref_env, wireframe = _ref.wireframe;
@@ -16724,9 +20216,9 @@ function spriteMeshShaderFromRenderInfo(renderInfo, count, level, env) {
         env: env
     });
     shader.shared = true;
-    if (!wireframe) {
-        shader.cacheId = spriteMeshShaderIdFromRenderInfo(renderInfo, count);
-    }
+    // if (!wireframe) {
+    //   shader.cacheId = spriteMeshShaderIdFromRenderInfo(renderInfo, count);
+    // }
     return shader;
 }
 // TODO: 只有单测用
@@ -16767,11 +20259,6 @@ var SpriteLoader = /*#__PURE__*/ function(AbstractPlugin) {
     return SpriteLoader;
 }(AbstractPlugin);
 
-function _assert_this_initialized(self) {
-    if (self === void 0) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    return self;
-}
-
 /**
  * 动画图，负责更新所有的动画节点
  * @since 2.0.0
@@ -16799,7 +20286,7 @@ function _assert_this_initialized(self) {
         // 更新节点时间
         for(var _iterator3 = _create_for_of_iterator_helper_loose(this.playables), _step3; !(_step3 = _iterator3()).done;){
             var playable = _step3.value;
-            this.updatePlayableTime(playable, dt);
+            this.updatePlayableTime(playable, dt / 1000);
         }
     };
     _proto.connect = function connect(source, sourceOutputPort, destination, destinationInputPort) {
@@ -16835,6 +20322,7 @@ function _assert_this_initialized(self) {
         if (inputCount === void 0) inputCount = 0;
         this.onPlayablePlayFlag = true;
         this.onPlayablePauseFlag = false;
+        this.duration = 0;
         this.destroyed = false;
         this.inputs = [];
         this.inputOuputPorts = [];
@@ -16842,6 +20330,9 @@ function _assert_this_initialized(self) {
         this.outputs = [];
         this.playState = 0;
         this.traversalMode = 0;
+        /**
+   * 当前本地播放的时间
+   */ this.time = 0;
         graph.addPlayable(this);
         this.inputs = new Array(inputCount);
         this.inputOuputPorts = new Array(inputCount);
@@ -16923,6 +20414,12 @@ function _assert_this_initialized(self) {
     };
     _proto.getTime = function getTime() {
         return this.time;
+    };
+    _proto.setDuration = function setDuration(duration) {
+        this.duration = duration;
+    };
+    _proto.getDuration = function getDuration() {
+        return this.duration;
     };
     _proto.getPlayState = function getPlayState() {
         return this.playState;
@@ -17034,7 +20531,7 @@ function _assert_this_initialized(self) {
         };
     }
     var _proto = PlayableOutput.prototype;
-    _proto.setSourcePlayeble = function setSourcePlayeble(playable, port) {
+    _proto.setSourcePlayable = function setSourcePlayable(playable, port) {
         if (port === void 0) port = 0;
         this.sourcePlayable = playable;
         this.sourceOutputPort = port;
@@ -17072,630 +20569,12 @@ var PlayableTraversalMode;
     PlayableTraversalMode[PlayableTraversalMode["Passthrough"] = 1] = "Passthrough";
 })(PlayableTraversalMode || (PlayableTraversalMode = {}));
 
-var singleSplits = [
-    [
-        0,
-        0,
-        1,
-        1,
-        undefined
-    ]
-];
-var tempColor = [
-    1,
-    1,
-    1,
-    1
-];
-var seed$6 = 0;
-var SpriteColorPlayable = /*#__PURE__*/ function(Playable) {
-    _inherits(SpriteColorPlayable, Playable);
-    function SpriteColorPlayable() {
-        var _this;
-        _this = Playable.apply(this, arguments) || this;
-        _this.renderColor = [
-            1,
-            1,
-            1,
-            1
-        ];
-        return _this;
-    }
-    var _proto = SpriteColorPlayable.prototype;
-    _proto.processFrame = function processFrame(context) {
-        var boundObject = context.output.getUserData();
-        if (!_instanceof1(boundObject, exports.VFXItem)) {
-            return;
-        }
-        if (!this.spriteComponent) {
-            this.spriteComponent = boundObject.getComponent(exports.SpriteComponent);
-        }
-        if (!this.spriteMaterial) {
-            this.spriteMaterial = this.spriteComponent.material;
-            var startColor = this.spriteMaterial.getVector4("_Color");
-            if (startColor) {
-                this.startColor = startColor.toArray();
-            }
-        }
-        this.spriteComponent.setAnimationTime(this.time);
-        var colorInc = vecFill(tempColor, 1);
-        var colorChanged;
-        var life = this.time / boundObject.duration;
-        var opacityOverLifetime = this.opacityOverLifetime;
-        var colorOverLifetime = this.colorOverLifetime;
-        if (colorOverLifetime) {
-            colorInc = getColorFromGradientStops(colorOverLifetime, life, true);
-            colorChanged = true;
-        }
-        if (opacityOverLifetime) {
-            colorInc[3] *= opacityOverLifetime.getValue(life);
-            colorChanged = true;
-        }
-        if (colorChanged) {
-            var _this_spriteMaterial_getVector4;
-            vecMulCombine(this.renderColor, colorInc, this.startColor);
-            (_this_spriteMaterial_getVector4 = this.spriteMaterial.getVector4("_Color")) == null ? void 0 : _this_spriteMaterial_getVector4.setFromArray(this.renderColor);
-        }
-    };
-    _proto.create = function create(clipData) {
-        this.clipData = clipData;
-        var colorOverLifetime = clipData.colorOverLifetime;
-        if (colorOverLifetime) {
-            var _colorOverLifetime_opacity;
-            this.opacityOverLifetime = createValueGetter((_colorOverLifetime_opacity = colorOverLifetime.opacity) != null ? _colorOverLifetime_opacity : 1);
-            if (colorOverLifetime.color && colorOverLifetime.color[0] === ValueType.GRADIENT_COLOR) {
-                this.colorOverLifetime = colorStopsFromGradient(colorOverLifetime.color[1]);
-            }
-        }
-        return this;
-    };
-    return SpriteColorPlayable;
-}(Playable);
-exports.SpriteColorPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
-    _inherits(SpriteColorPlayableAsset, PlayableAsset);
-    function SpriteColorPlayableAsset() {
-        return PlayableAsset.apply(this, arguments);
-    }
-    var _proto = SpriteColorPlayableAsset.prototype;
-    _proto.createPlayable = function createPlayable(graph) {
-        var spriteColorPlayable = new SpriteColorPlayable(graph);
-        spriteColorPlayable.create(this.data);
-        return spriteColorPlayable;
-    };
-    _proto.fromData = function fromData(data) {
-        this.data = data;
-    };
-    return SpriteColorPlayableAsset;
-}(PlayableAsset);
-exports.SpriteColorPlayableAsset = __decorate([
-    effectsClass("SpriteColorPlayableAsset")
-], exports.SpriteColorPlayableAsset);
-exports.SpriteComponent = /*#__PURE__*/ function(RendererComponent) {
-    _inherits(SpriteComponent, RendererComponent);
-    function SpriteComponent(engine, props) {
-        var _this;
-        _this = RendererComponent.call(this, engine) || this;
-        _this.cachePrefix = "-";
-        _this.frameAnimationLoop = false;
-        _this.color = [
-            1,
-            1,
-            1,
-            1
-        ];
-        _this.visible = true;
-        _this.isManualTimeSet = false;
-        _this.frameAnimationTime = 0;
-        _this.getHitTestParams = function(force) {
-            var ui = _this.interaction;
-            if (force || ui) {
-                var area = _this.getBoundingBox();
-                if (area) {
-                    var _this_interaction;
-                    return {
-                        behavior: ((_this_interaction = _this.interaction) == null ? void 0 : _this_interaction.behavior) || 0,
-                        type: area.type,
-                        triangles: area.area,
-                        backfaceCulling: _this.renderer.side === SideMode.FRONT
-                    };
-                }
-            }
-        };
-        _this.name = "MSprite" + seed$6++;
-        _this.renderer = {
-            renderMode: RenderMode.BILLBOARD,
-            blending: BlendingMode.ALPHA,
-            texture: _this.engine.emptyTexture,
-            occlusion: false,
-            transparentOcclusion: false,
-            side: SideMode.DOUBLE,
-            mask: 0,
-            maskMode: MaskMode.NONE,
-            order: 0
-        };
-        _this.emptyTexture = _this.engine.emptyTexture;
-        _this.splits = singleSplits;
-        _this.renderInfo = getImageItemRenderInfo(_assert_this_initialized(_this));
-        var geometry = _this.createGeometry(glContext.TRIANGLES);
-        var material = _this.createMaterial(_this.renderInfo, 2);
-        _this.worldMatrix = Matrix4$1.fromIdentity();
-        _this.material = material;
-        _this.geometry = geometry;
-        _this.material.setVector4("_Color", new Vector4$1().setFromArray([
-            1,
-            1,
-            1,
-            1
-        ]));
-        _this.material.setVector4("_TexOffset", new Vector4$1().setFromArray([
-            0,
-            0,
-            1,
-            1
-        ]));
-        _this.setItem();
-        if (props) {
-            _this.fromData(props);
-        }
-        return _this;
-    }
-    var _proto = SpriteComponent.prototype;
-    /**
-   * 设置当前 Mesh 的可见性。
-   * @param visible - true：可见，false：不可见
-   */ _proto.setVisible = function setVisible(visible) {
-        this.visible = visible;
-    };
-    /**
-   * 获取当前 Mesh 的可见性。
-   */ _proto.getVisible = function getVisible() {
-        return this.visible;
-    };
-    /**
-   * 设置当前图层的颜色
-   * > Tips: 透明度也属于颜色的一部分，当有透明度/颜色 K 帧变化时，该 API 会失效
-   * @since 2.0.0
-   * @param color - 颜色值
-   */ _proto.setColor = function setColor(color) {
-        this.color = color;
-        this.material.setVector4("_Color", new Vector4$1().setFromArray(color));
-    };
-    /**
-   * 设置当前 Mesh 的纹理
-   * @since 2.0.0
-   * @param texture - 纹理对象
-   */ _proto.setTexture = function setTexture(texture) {
-        this.renderer.texture = texture;
-        this.material.setTexture("uSampler0", texture);
-    };
-    /**
-   * @internal
-   */ _proto.setAnimationTime = function setAnimationTime(time) {
-        this.frameAnimationTime = time;
-        this.isManualTimeSet = true;
-    };
-    _proto.render = function render(renderer) {
-        if (!this.getVisible()) {
-            return;
-        }
-        var material = this.material;
-        var geo = this.geometry;
-        if (renderer.renderingData.currentFrame.globalUniforms) {
-            renderer.setGlobalMatrix("effects_ObjectToWorld", this.transform.getWorldMatrix());
-        }
-        this.material.setVector2("_Size", this.transform.size);
-        renderer.drawGeometry(geo, material);
-    };
-    _proto.start = function start() {
-        this.item.getHitTestParams = this.getHitTestParams;
-    };
-    _proto.update = function update(dt) {
-        if (!this.isManualTimeSet) {
-            this.frameAnimationTime += dt / 1000;
-            this.isManualTimeSet = false;
-        }
-        var time = this.frameAnimationTime;
-        var duration = this.item.duration;
-        if (time > duration && this.frameAnimationLoop) {
-            time = time % duration;
-        }
-        var life = Math.min(Math.max(time / duration, 0.0), 1.0);
-        var ta = this.textureSheetAnimation;
-        if (ta) {
-            var _this_material_getVector4;
-            var total = ta.total || ta.row * ta.col;
-            var texRectX = 0;
-            var texRectY = 0;
-            var texRectW = 1;
-            var texRectH = 1;
-            var flip;
-            if (this.splits) {
-                var sp = this.splits[0];
-                flip = sp[4];
-                texRectX = sp[0];
-                texRectY = sp[1];
-                if (flip) {
-                    texRectW = sp[3];
-                    texRectH = sp[2];
-                } else {
-                    texRectW = sp[2];
-                    texRectH = sp[3];
-                }
-            }
-            var dx, dy;
-            if (flip) {
-                dx = 1 / ta.row * texRectW;
-                dy = 1 / ta.col * texRectH;
-            } else {
-                dx = 1 / ta.col * texRectW;
-                dy = 1 / ta.row * texRectH;
-            }
-            var texOffset;
-            if (ta.animate) {
-                var frameIndex = Math.round(life * (total - 1));
-                var yIndex = Math.floor(frameIndex / ta.col);
-                var xIndex = frameIndex - yIndex * ta.col;
-                texOffset = flip ? [
-                    dx * yIndex,
-                    dy * (ta.col - xIndex)
-                ] : [
-                    dx * xIndex,
-                    dy * (1 + yIndex)
-                ];
-            } else {
-                texOffset = [
-                    0,
-                    dy
-                ];
-            }
-            (_this_material_getVector4 = this.material.getVector4("_TexOffset")) == null ? void 0 : _this_material_getVector4.setFromArray([
-                texRectX + texOffset[0],
-                texRectH + texRectY - texOffset[1],
-                dx,
-                dy
-            ]);
-        }
-    };
-    _proto.onDestroy = function onDestroy() {
-        if (this.item && this.item.composition) {
-            this.item.composition.destroyTextures(this.getTextures());
-        }
-    };
-    _proto.getItemInitData = function getItemInitData() {
-        this.geoData = this.getItemGeometryData();
-        var _this_geoData = this.geoData, index = _this_geoData.index, atlasOffset = _this_geoData.atlasOffset;
-        var idxCount = index.length;
-        // @ts-expect-error
-        var indexData = this.wireframe ? new Uint8Array([
-            0,
-            1,
-            1,
-            3,
-            2,
-            3,
-            2,
-            0
-        ]) : new index.constructor(idxCount);
-        if (!this.wireframe) {
-            for(var i = 0; i < idxCount; i++){
-                indexData[i] = 0 + index[i];
-            }
-        }
-        return {
-            atlasOffset: atlasOffset,
-            index: indexData
-        };
-    };
-    _proto.setItem = function setItem() {
-        var textures = [];
-        var texture = this.renderer.texture;
-        if (texture) {
-            addItem(textures, texture);
-        }
-        texture = this.renderer.texture;
-        var data = this.getItemInitData();
-        var renderer = this.renderer;
-        var texParams = this.material.getVector4("_TexParams");
-        if (texParams) {
-            texParams.x = renderer.occlusion ? +renderer.transparentOcclusion : 1;
-            texParams.y = +this.preMultiAlpha;
-            texParams.z = renderer.renderMode;
-        }
-        var attributes = {
-            atlasOffset: new Float32Array(data.atlasOffset.length),
-            index: new Uint16Array(data.index.length)
-        };
-        attributes.atlasOffset.set(data.atlasOffset);
-        attributes.index.set(data.index);
-        var _this = this, material = _this.material, geometry = _this.geometry;
-        var indexData = attributes.index;
-        geometry.setIndexData(indexData);
-        geometry.setAttributeData("atlasOffset", attributes.atlasOffset);
-        geometry.setDrawCount(data.index.length);
-        for(var i = 0; i < textures.length; i++){
-            var texture1 = textures[i];
-            material.setTexture("uSampler" + i, texture1);
-        }
-        // FIXME: 内存泄漏的临时方案，后面再调整
-        var emptyTexture = this.emptyTexture;
-        for(var k = textures.length; k < exports.maxSpriteMeshItemCount; k++){
-            material.setTexture("uSampler" + k, emptyTexture);
-        }
-    };
-    _proto.createGeometry = function createGeometry(mode) {
-        var maxVertex = 12 * this.splits.length;
-        return Geometry.create(this.engine, {
-            attributes: {
-                aPos: {
-                    type: glContext.FLOAT,
-                    size: 3,
-                    data: new Float32Array([
-                        -0.5,
-                        0.5,
-                        0,
-                        -0.5,
-                        -0.5,
-                        0,
-                        0.5,
-                        0.5,
-                        0,
-                        0.5,
-                        -0.5,
-                        0
-                    ])
-                },
-                atlasOffset: {
-                    size: 2,
-                    offset: 0,
-                    releasable: true,
-                    type: glContext.FLOAT,
-                    data: new Float32Array(0)
-                }
-            },
-            indices: {
-                data: new Uint16Array(0),
-                releasable: true
-            },
-            mode: mode,
-            maxVertex: maxVertex
-        });
-    };
-    _proto.createMaterial = function createMaterial(renderInfo, count) {
-        var side = renderInfo.side, occlusion = renderInfo.occlusion, blending = renderInfo.blending, maskMode = renderInfo.maskMode, mask = renderInfo.mask;
-        var materialProps = {
-            shader: spriteMeshShaderFromRenderInfo(renderInfo, count, 1)
-        };
-        this.preMultiAlpha = getPreMultiAlpha(blending);
-        var material = Material.create(this.engine, materialProps);
-        var states = {
-            side: side,
-            blending: true,
-            blendMode: blending,
-            mask: mask,
-            maskMode: maskMode,
-            depthTest: true,
-            depthMask: occlusion
-        };
-        material.blending = states.blending;
-        material.stencilRef = states.mask !== undefined ? [
-            states.mask,
-            states.mask
-        ] : undefined;
-        material.depthTest = states.depthTest;
-        material.depthMask = states.depthMask;
-        setBlendMode(material, states.blendMode);
-        setMaskMode(material, states.maskMode);
-        setSideMode(material, states.side);
-        material.shader.shaderData.properties = 'uSampler0("uSampler0",2D) = "white" {}';
-        if (!material.hasUniform("_Color")) {
-            material.setVector4("_Color", new Vector4$1(0, 0, 0, 1));
-        }
-        if (!material.hasUniform("_TexOffset")) {
-            material.setVector4("_TexOffset", new Vector4$1());
-        }
-        if (!material.hasUniform("_TexParams")) {
-            material.setVector4("_TexParams", new Vector4$1());
-        }
-        return material;
-    };
-    _proto.getItemGeometryData = function getItemGeometryData() {
-        var _this = this, splits = _this.splits, renderer = _this.renderer, textureSheetAnimation = _this.textureSheetAnimation;
-        var sx = 1, sy = 1;
-        if (renderer.shape) {
-            var _renderer_shape = renderer.shape, _renderer_shape_index = _renderer_shape.index, index = _renderer_shape_index === void 0 ? [] : _renderer_shape_index, _renderer_shape_aPoint = _renderer_shape.aPoint, aPoint = _renderer_shape_aPoint === void 0 ? [] : _renderer_shape_aPoint;
-            var point = new Float32Array(aPoint);
-            var position = [];
-            var atlasOffset = [];
-            for(var i = 0; i < point.length; i += 6){
-                point[i] *= sx;
-                point[i + 1] *= sy;
-                atlasOffset.push(aPoint[i + 2], aPoint[i + 3]);
-                position.push(point[i], point[i + 1], 0.0);
-            }
-            this.geometry.setAttributeData("aPos", new Float32Array(position));
-            return {
-                index: index,
-                atlasOffset: atlasOffset
-            };
-        }
-        var originData = [
-            -.5,
-            .5,
-            -.5,
-            -.5,
-            .5,
-            .5,
-            .5,
-            -.5
-        ];
-        var atlasOffset1 = [];
-        var index1 = [];
-        var col = 2;
-        var row = 2;
-        if (splits.length === 1) {
-            col = 1;
-            row = 1;
-        }
-        var position1 = [];
-        for(var x = 0; x < col; x++){
-            for(var y = 0; y < row; y++){
-                var base = (y * 2 + x) * 4;
-                // @ts-expect-error
-                var split = textureSheetAnimation ? [
-                    0,
-                    0,
-                    1,
-                    1,
-                    splits[0][4]
-                ] : splits[y * 2 + x];
-                var texOffset = split[4] ? [
-                    0,
-                    0,
-                    1,
-                    0,
-                    0,
-                    1,
-                    1,
-                    1
-                ] : [
-                    0,
-                    1,
-                    0,
-                    0,
-                    1,
-                    1,
-                    1,
-                    0
-                ];
-                var dw = ((x + x + 1) / col - 1) / 2;
-                var dh = ((y + y + 1) / row - 1) / 2;
-                var tox = split[0];
-                var toy = split[1];
-                var tsx = split[4] ? split[3] : split[2];
-                var tsy = split[4] ? split[2] : split[3];
-                var origin = [
-                    originData[0] / col + dw,
-                    originData[1] / row + dh,
-                    originData[2] / col + dw,
-                    originData[3] / row + dh,
-                    originData[4] / col + dw,
-                    originData[5] / row + dh,
-                    originData[6] / col + dw,
-                    originData[7] / row + dh
-                ];
-                atlasOffset1.push(texOffset[0] * tsx + tox, texOffset[1] * tsy + toy, texOffset[2] * tsx + tox, texOffset[3] * tsy + toy, texOffset[4] * tsx + tox, texOffset[5] * tsy + toy, texOffset[6] * tsx + tox, texOffset[7] * tsy + toy);
-                position1.push(origin[0] * sx, origin[1] * sy, 0.0, origin[2] * sx, origin[3] * sy, 0.0, origin[4] * sx, origin[5] * sy, 0.0, origin[6] * sx, origin[7] * sy, 0.0);
-                index1.push(base, 1 + base, 2 + base, 2 + base, 1 + base, 3 + base);
-            }
-        }
-        this.geometry.setAttributeData("aPos", new Float32Array(position1));
-        return {
-            index: index1,
-            atlasOffset: atlasOffset1
-        };
-    };
-    _proto.getTextures = function getTextures() {
-        var ret = [];
-        var tex = this.renderer.texture;
-        if (tex) {
-            ret.push(tex);
-        }
-        return ret;
-    };
-    /**
-   * 获取图层包围盒的类型和世界坐标
-   * @returns
-   */ _proto.getBoundingBox = function getBoundingBox() {
-        if (!this.item) {
-            return;
-        }
-        var worldMatrix = this.transform.getWorldMatrix();
-        var triangles = trianglesFromRect(Vector3.ZERO, 0.5 * this.transform.size.x, 0.5 * this.transform.size.y);
-        triangles.forEach(function(triangle) {
-            worldMatrix.transformPoint(triangle.p0);
-            worldMatrix.transformPoint(triangle.p1);
-            worldMatrix.transformPoint(triangle.p2);
-        });
-        return {
-            type: exports.HitTestType.triangle,
-            area: triangles
-        };
-    };
-    // TODO: [1.31] @十弦 https://github.com/galacean/effects-runtime/commit/fe8736540b9a461d8e96658f4d755ff8089a263b#diff-a3618f4527c5fe6e842f20d67d5c82984568502c6bf6fdfcbd24f69e2894ca90
-    _proto.fromData = function fromData(data) {
-        RendererComponent.prototype.fromData.call(this, data);
-        var interaction = data.interaction, options = data.options, _data_listIndex = data.listIndex, listIndex = _data_listIndex === void 0 ? 0 : _data_listIndex;
-        var renderer = data.renderer;
-        if (!renderer) {
-            //@ts-expect-error
-            renderer = {};
-        }
-        this.interaction = interaction;
-        var _renderer_renderMode, _renderer_blending, _renderer_texture, _renderer_side, _renderer_mask, _renderer_maskMode;
-        this.renderer = {
-            renderMode: (_renderer_renderMode = renderer.renderMode) != null ? _renderer_renderMode : RenderMode.BILLBOARD,
-            blending: (_renderer_blending = renderer.blending) != null ? _renderer_blending : BlendingMode.ALPHA,
-            texture: (_renderer_texture = renderer.texture) != null ? _renderer_texture : this.engine.emptyTexture,
-            occlusion: !!renderer.occlusion,
-            transparentOcclusion: !!renderer.transparentOcclusion || renderer.maskMode === MaskMode.MASK,
-            side: (_renderer_side = renderer.side) != null ? _renderer_side : SideMode.DOUBLE,
-            shape: renderer.shape,
-            mask: (_renderer_mask = renderer.mask) != null ? _renderer_mask : 0,
-            maskMode: (_renderer_maskMode = renderer.maskMode) != null ? _renderer_maskMode : MaskMode.NONE,
-            order: listIndex
-        };
-        this.emptyTexture = this.engine.emptyTexture;
-        this.splits = data.splits || singleSplits;
-        this.textureSheetAnimation = data.textureSheetAnimation;
-        this.cachePrefix = "-";
-        this.renderInfo = getImageItemRenderInfo(this);
-        var geometry = this.createGeometry(glContext.TRIANGLES);
-        var material = this.createMaterial(this.renderInfo, 2);
-        this.worldMatrix = Matrix4$1.fromIdentity();
-        this.material = material;
-        this.geometry = geometry;
-        var startColor = options.startColor || [
-            1,
-            1,
-            1,
-            1
-        ];
-        this.material.setVector4("_Color", new Vector4$1().setFromArray(startColor));
-        this.material.setVector4("_TexOffset", new Vector4$1().setFromArray([
-            0,
-            0,
-            1,
-            1
-        ]));
-        this.setItem();
-    };
-    _proto.toData = function toData() {
-        RendererComponent.prototype.toData.call(this);
-    };
-    return SpriteComponent;
-}(RendererComponent);
-exports.SpriteComponent = __decorate([
-    effectsClass(DataType.SpriteComponent)
-], exports.SpriteComponent);
-
-var RUNTIME_ENV = "runtime_env";
-var RENDER_PREFER_LOOKUP_TEXTURE = "lookup_texture";
-// 文本元素使用 offscreen canvas 绘制
-var TEMPLATE_USE_OFFSCREEN_CANVAS = "offscreen_canvas";
-// 后处理配置相关
-var POST_PROCESS_SETTINGS = "post_process_settings";
-var config = {};
-function getConfig(name) {
-    return config[name];
-}
-function setConfig(name, value) {
-    return config[name] = value;
-}
-
 var tempQuat$1 = new Quaternion();
-var seed$5 = 1;
+var seed$7 = 1;
 // TODO 继承 Component
-var Transform = /*#__PURE__*/ function() {
+/**
+ *
+ */ var Transform = /*#__PURE__*/ function() {
     function Transform(props, parent) {
         if (props === void 0) props = {};
         this.taggedProperties = {};
@@ -17744,7 +20623,7 @@ var Transform = /*#__PURE__*/ function() {
             quat: new Quaternion(0, 0, 0, 1),
             scale: new Vector3(1, 1, 1)
         };
-        this.name = "transform_" + seed$5++;
+        this.name = "transform_" + seed$7++;
         if (props) {
             this.setTransform(props);
         }
@@ -18160,6 +21039,1115 @@ var Transform = /*#__PURE__*/ function() {
     return Transform;
 }();
 
+/**
+ *
+ */ /**
+ * 事件监听器
+ */ var EventEmitter = function EventEmitter() {
+    var _this = this;
+    var _this1 = this;
+    this.listeners = {};
+    /**
+   * 移除事件监听器
+   * @param eventName - 事件名称
+   * @param listener - 事件监听器
+   * @returns
+   */ this.off = function(eventName, listener) {
+        if (!_this.listeners[eventName]) {
+            return;
+        }
+        _this.listeners[eventName] = _this.listeners[eventName].filter(function(param) {
+            var l = param.listener;
+            return l !== listener;
+        });
+    };
+    /**
+   * 监听事件
+   * @param eventName - 事件名称
+   * @param listener - 事件监听器
+   * @param options - 事件监听器选项
+   * @returns
+   */ this.on = function(eventName, listener, options) {
+        _this.listeners[eventName] = _this.listeners[eventName] || [];
+        _this.listeners[eventName].push({
+            listener: listener,
+            options: options
+        });
+        return function() {
+            return _this.off(eventName, listener);
+        };
+    };
+    /**
+   * 一次性监听事件
+   * @param eventName - 事件名称
+   * @param listener - 事件监听器
+   */ this.once = function(eventName, listener) {
+        _this.on(eventName, listener, {
+            once: true
+        });
+    };
+    /**
+   * 触发事件
+   * @param eventName - 事件名称
+   * @param args - 事件参数
+   */ this.emit = function(eventName) {
+        for(var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++){
+            args[_key - 1] = arguments[_key];
+        }
+        var _this_listeners_eventName;
+        (_this_listeners_eventName = _this1.listeners[eventName]) == null ? void 0 : _this_listeners_eventName.forEach(function(param) {
+            var listener = param.listener, options = param.options;
+            listener.apply(void 0, [].concat(args));
+            if (options == null ? void 0 : options.once) {
+                _this1.off(eventName, listener);
+            }
+        });
+    };
+    /**
+   * 获取事件名称对应的所有监听器
+   * @param eventName - 事件名称
+   * @returns - 返回事件名称对应的所有监听器
+   */ this.getListeners = function(eventName) {
+        var _this_listeners_eventName;
+        return ((_this_listeners_eventName = _this.listeners[eventName]) == null ? void 0 : _this_listeners_eventName.map(function(param) {
+            var listener = param.listener;
+            return listener;
+        })) || [];
+    };
+};
+
+exports.VFXItem = /*#__PURE__*/ function(EffectsObject) {
+    _inherits(VFXItem, EffectsObject);
+    function VFXItem(engine, props) {
+        var _this;
+        _this = EffectsObject.call(this, engine) || this;
+        _this.children = [];
+        /**
+   * 元素的变换包含位置、旋转、缩放。
+   */ _this.transform = new Transform();
+        /**
+   * 元素动画的当前时间
+   */ _this.time = 0;
+        /**
+   * 元素动画的持续时间
+   */ _this.duration = 0;
+        /**
+   * 元素动画的开始时间
+   */ _this.start = 0;
+        /**
+   * 元素动画结束时行为（如何处理元素）
+   */ _this.endBehavior = EndBehavior.forward;
+        _this.type = ItemType.base;
+        _this.isDuringPlay = false;
+        _this.components = [];
+        _this.rendererComponents = [];
+        /**
+   * 元素是否激活
+   */ _this.active = true;
+        /**
+   * 元素组件是否显示，用于批量开关元素组件
+   */ _this.visible = true;
+        /**
+   * 元素动画的速度
+   */ _this.speed = 1;
+        _this.listIndex = 0;
+        _this.isEnabled = false;
+        _this.eventProcessor = new EventEmitter();
+        _this.name = "VFXItem";
+        _this.transform.name = _this.name;
+        _this.transform.engine = engine;
+        if (props) {
+            _this.fromData(props);
+        }
+        return _this;
+    }
+    var _proto = VFXItem.prototype;
+    /**
+   * 元素监听事件
+   * @param eventName - 事件名称
+   * @param listener - 事件监听器
+   * @param options - 事件监听器选项
+   * @returns
+   */ _proto.on = function on(eventName, listener, options) {
+        this.eventProcessor.on(eventName, listener, options);
+    };
+    /**
+   * 移除事件监听器
+   * @param eventName - 事件名称
+   * @param listener - 事件监听器
+   * @returns
+   */ _proto.off = function off(eventName, listener) {
+        this.eventProcessor.off(eventName, listener);
+    };
+    /**
+   * 一次性监听事件
+   * @param eventName - 事件名称
+   * @param listener - 事件监听器
+   */ _proto.once = function once(eventName, listener) {
+        this.eventProcessor.once(eventName, listener);
+    };
+    /**
+   * 触发事件
+   * @param eventName - 事件名称
+   * @param args - 事件参数
+   */ _proto.emit = function emit(eventName) {
+        for(var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++){
+            args[_key - 1] = arguments[_key];
+        }
+        var _this_eventProcessor;
+        (_this_eventProcessor = this.eventProcessor).emit.apply(_this_eventProcessor, [].concat([
+            eventName
+        ], args));
+    };
+    /**
+   * 获取事件名称对应的所有监听器
+   * @param eventName - 事件名称
+   * @returns - 返回事件名称对应的所有监听器
+   */ _proto.getListeners = function getListeners(eventName) {
+        return this.eventProcessor.getListeners(eventName);
+    };
+    /**
+   * 设置元素的动画速度
+   * @param speed - 速度
+   */ _proto.setSpeed = function setSpeed(speed) {
+        this.speed = speed;
+    };
+    /**
+   * 获取元素的动画速度
+   * @returns
+   */ _proto.getSpeed = function getSpeed() {
+        return this.speed;
+    };
+    /**
+   * 添加组件
+   * @param classConstructor - 要添加的组件类型
+   */ _proto.addComponent = function addComponent(classConstructor) {
+        var newComponent = new classConstructor(this.engine);
+        this.components.push(newComponent);
+        newComponent.setVFXItem(this);
+        return newComponent;
+    };
+    /**
+   * 获取某一类型的组件。如果当前元素绑定了多个同类型的组件只返回第一个
+   * @param classConstructor - 要获取的组件类型
+   * @returns 查询结果中符合类型的第一个组件
+   */ _proto.getComponent = function getComponent(classConstructor) {
+        var res;
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.components), _step; !(_step = _iterator()).done;){
+            var com = _step.value;
+            if (_instanceof1(com, classConstructor)) {
+                res = com;
+                break;
+            }
+        }
+        return res;
+    };
+    /**
+   * 获取某一类型的所有组件
+   * @param classConstructor - 要获取的组件
+   * @returns 一个组件列表，包含所有符合类型的组件
+   */ _proto.getComponents = function getComponents(classConstructor) {
+        var res = [];
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.components), _step; !(_step = _iterator()).done;){
+            var com = _step.value;
+            if (_instanceof1(com, classConstructor)) {
+                res.push(com);
+            }
+        }
+        return res;
+    };
+    _proto.setParent = function setParent(vfxItem) {
+        if (vfxItem === this && !vfxItem) {
+            return;
+        }
+        if (this.parent) {
+            removeItem(this.parent.children, this);
+        }
+        this.parent = vfxItem;
+        if (!VFXItem.isCamera(this)) {
+            this.transform.parentTransform = vfxItem.transform;
+        }
+        vfxItem.children.push(this);
+        if (!this.composition) {
+            this.composition = vfxItem.composition;
+        }
+        if (!this.isDuringPlay && vfxItem.isDuringPlay) {
+            this.beginPlay();
+        }
+    };
+    /**
+   * 通过指定 r、g、b、a 值设置元素的颜色
+   * @param {number} r
+   * @param {number} g
+   * @param {number} b
+   * @param {number} a
+   * @internal
+   */ _proto.setColor = function setColor(r, g, b, a) {};
+    /**
+   * 设置元素的透明度
+   * @param opacity - 透明度值，范围 [0,1]
+   */ _proto.setOpacity = function setOpacity(opacity) {};
+    /**
+   * 激活或停用 VFXItem
+   */ _proto.setActive = function setActive(value) {
+        if (this.active !== value) {
+            this.active = !!value;
+            this.onActiveChanged();
+        }
+    };
+    /**
+   * 设置元素的显隐，该设置会批量开关元素组件
+   */ _proto.setVisible = function setVisible(visible) {
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.components), _step; !(_step = _iterator()).done;){
+            var component = _step.value;
+            component.enabled = visible;
+        }
+        this.visible = visible;
+    };
+    /**
+   * 元素组件显隐状态
+   * @deprecated use isVisible instead
+   */ _proto.getVisible = function getVisible() {
+        return this.visible;
+    };
+    /**
+   * 获取元素变换包括位置、旋转、缩放
+   * @param transform 将元素变换拷贝到该对象，并将其作为返回值
+   * @returns 元素变换的拷贝
+   */ _proto.getWorldTransform = function getWorldTransform(transform) {
+        var tf = transform != null ? transform : new Transform({
+            valid: true
+        });
+        tf.cloneFromMatrix(this.transform.getWorldMatrix());
+        return tf;
+    };
+    /**
+   * 设置元素在 3D 坐标轴上相对移动
+   */ _proto.translate = function translate(x, y, z) {
+        this.transform.translate(x, y, z);
+    };
+    /**
+   * 设置元素在 3D 坐标轴上相对旋转（角度）
+   */ _proto.rotate = function rotate(x, y, z) {
+        var euler = new Euler(x, y, z);
+        var q = Quaternion.fromEuler(euler);
+        q.conjugate();
+        this.transform.rotateByQuat(q);
+    };
+    /**
+   * 设置元素在 3D 坐标轴上相对缩放
+   */ _proto.scale = function scale(x, y, z) {
+        this.transform.scaleBy(x, y, z);
+    };
+    /**
+   * 设置元素在画布上的像素位置
+   * Tips:
+   *  - 坐标原点在 canvas 左上角，x 正方向水平向右， y 正方向垂直向下
+   *  - 设置后会覆盖原有的位置信息
+   * @param x - x 坐标
+   * @param y - y 坐标
+   */ _proto.setPositionByPixel = function setPositionByPixel(x, y) {
+        if (this.composition) {
+            var z = this.transform.getWorldPosition().z;
+            var _this_composition_camera_getInverseVPRatio = this.composition.camera.getInverseVPRatio(z), rx = _this_composition_camera_getInverseVPRatio.x, ry = _this_composition_camera_getInverseVPRatio.y;
+            var width = this.composition.renderer.getWidth() / 2;
+            var height = this.composition.renderer.getHeight() / 2;
+            this.transform.setPosition((2 * x / width - 1) * rx, (1 - 2 * y / height) * ry, z);
+        }
+    };
+    /**
+   * 设置元素在 3D 坐标轴的位置
+   */ _proto.setPosition = function setPosition(x, y, z) {
+        this.transform.setPosition(x, y, z);
+    };
+    /**
+   * 设置元素在 3D 坐标轴的角度
+   */ _proto.setRotation = function setRotation(x, y, z) {
+        this.transform.setRotation(x, y, z);
+    };
+    /**
+   * 设置元素在 3D 坐标轴的缩放
+   */ _proto.setScale = function setScale(x, y, z) {
+        this.transform.setScale(x, y, z);
+    };
+    /**
+   * 获取元素包围盒
+   * @override
+   */ _proto.getBoundingBox = function getBoundingBox() {
+    // OVERRIDE
+    };
+    /**
+   * 获取元素用于计算光线投射的面片类型和参数
+   * @override
+   * @param force - 元素没有开启交互也返回参数
+   */ _proto.getHitTestParams = function getHitTestParams(force) {
+    // OVERRIDE
+    };
+    /**
+   * 获取元素当前世界坐标
+   */ _proto.getCurrentPosition = function getCurrentPosition() {
+        var pos = new Vector3();
+        this.transform.assignWorldTRS(pos);
+        return pos;
+    };
+    _proto.find = function find(name) {
+        var _queue;
+        if (this.name === name) {
+            return this;
+        }
+        var queue = [];
+        (_queue = queue).push.apply(_queue, [].concat(this.children));
+        var index = 0;
+        while(index < queue.length){
+            var _queue1;
+            var item = queue[index];
+            index++;
+            if (item.name === name) {
+                return item;
+            }
+            (_queue1 = queue).push.apply(_queue1, [].concat(item.children));
+        }
+        return undefined;
+    };
+    /**
+   * @internal
+   */ _proto.beginPlay = function beginPlay() {
+        this.isDuringPlay = true;
+        if (this.composition && this.active && !this.isEnabled) {
+            this.onEnable();
+        }
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.children), _step; !(_step = _iterator()).done;){
+            var child = _step.value;
+            if (!child.isDuringPlay) {
+                child.beginPlay();
+            }
+        }
+    };
+    /**
+   * @internal
+   */ _proto.onActiveChanged = function onActiveChanged() {
+        if (!this.isEnabled) {
+            this.onEnable();
+        } else {
+            this.onDisable();
+        }
+    };
+    /**
+   * @internal
+   */ _proto.onEnable = function onEnable() {
+        this.isEnabled = true;
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.components), _step; !(_step = _iterator()).done;){
+            var component = _step.value;
+            if (component.enabled && !component.isStartCalled) {
+                component.onStart();
+                component.isStartCalled = true;
+            }
+        }
+        for(var _iterator1 = _create_for_of_iterator_helper_loose(this.components), _step1; !(_step1 = _iterator1()).done;){
+            var component1 = _step1.value;
+            if (component1.enabled && !component1.isEnableCalled) {
+                component1.enable();
+            }
+        }
+    };
+    /**
+   * @internal
+   */ _proto.onDisable = function onDisable() {
+        this.isEnabled = false;
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.components), _step; !(_step = _iterator()).done;){
+            var component = _step.value;
+            if (component.enabled && component.isEnableCalled) {
+                component.disable();
+            }
+        }
+    };
+    _proto.fromData = function fromData(data) {
+        EffectsObject.prototype.fromData.call(this, data);
+        var id = data.id, name = data.name, delay = data.delay, parentId = data.parentId, endBehavior = data.endBehavior, transform = data.transform, _data_listIndex = data.listIndex, listIndex = _data_listIndex === void 0 ? 0 : _data_listIndex, _data_duration = data.duration, duration = _data_duration === void 0 ? 0 : _data_duration;
+        this.props = data;
+        //@ts-expect-error
+        this.type = data.type;
+        this.id = id.toString(); // TODO 老数据 id 是 number，需要转换
+        this.name = name;
+        this.start = delay ? delay : this.start;
+        if (transform) {
+            //@ts-expect-error TODO 数据改造后移除 expect-error
+            transform.position = new Vector3().copyFrom(transform.position);
+            // FIXME: transform.rotation待删除
+            if (transform.quat) {
+                //@ts-expect-error
+                transform.quat = new Quaternion(transform.quat.x, transform.quat.y, transform.quat.z, transform.quat.w);
+            } else {
+                var _transform_eulerHint;
+                //@ts-expect-error
+                transform.rotation = new Euler().copyFrom((_transform_eulerHint = transform.eulerHint) != null ? _transform_eulerHint : transform.rotation);
+            }
+            //@ts-expect-error
+            transform.scale = new Vector3().copyFrom(transform.scale);
+            //@ts-expect-error
+            if (transform.size) {
+                //@ts-expect-error
+                transform.size = new Vector2().copyFrom(transform.size);
+            }
+            //@ts-expect-error
+            if (transform.anchor) {
+                //@ts-expect-error
+                transform.anchor = new Vector2().copyFrom(transform.anchor);
+            }
+            this.transform.setTransform(transform);
+        }
+        this.transform.name = this.name;
+        this.transform.engine = this.engine;
+        this.parentId = parentId;
+        this.duration = duration;
+        // TODO spec endbehavior 类型修正
+        this.endBehavior = endBehavior;
+        if (!data.content) {
+            data.content = {
+                options: {}
+            };
+        }
+        if (duration < 0) {
+            throw new Error("Item duration can't be less than 0, see " + HELP_LINK$1["Item duration can't be less than 0"] + ".");
+        }
+        this.rendererComponents.length = 0;
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.components), _step; !(_step = _iterator()).done;){
+            var component = _step.value;
+            component.item = this;
+            if (_instanceof1(component, RendererComponent)) {
+                this.rendererComponents.push(component);
+            }
+            // TODO ParticleSystemRenderer 现在是动态生成的，后面需要在 json 中单独表示为一个组件
+            if (_instanceof1(component, exports.ParticleSystem)) {
+                if (!this.components.includes(component.renderer)) {
+                    this.components.push(component.renderer);
+                }
+                this.rendererComponents.push(component.renderer);
+            }
+        }
+        // renderOrder 在 component 初始化后设置。确保能拿到 rendererComponent。
+        this.renderOrder = listIndex;
+    };
+    _proto.toData = function toData() {
+        var _this_parent;
+        this.taggedProperties.id = this.guid;
+        this.taggedProperties.transform = this.transform.toData();
+        this.taggedProperties.dataType = DataType.VFXItemData;
+        if (((_this_parent = this.parent) == null ? void 0 : _this_parent.name) !== "rootItem") {
+            var _this_parent1;
+            this.taggedProperties.parentId = (_this_parent1 = this.parent) == null ? void 0 : _this_parent1.guid;
+        }
+        // TODO 统一 sprite 等其他组件的序列化逻辑
+        if (!this.taggedProperties.components) {
+            this.taggedProperties.components = [];
+            for(var _iterator = _create_for_of_iterator_helper_loose(this.components), _step; !(_step = _iterator()).done;){
+                var component = _step.value;
+                if (_instanceof1(component, exports.EffectComponent)) {
+                    this.taggedProperties.components.push(component);
+                }
+            }
+        }
+        this.taggedProperties.content = {};
+    };
+    _proto.translateByPixel = function translateByPixel(x, y) {
+        if (this.composition) {
+            // @ts-expect-error
+            var _this_composition_renderer_canvas_getBoundingClientRect = this.composition.renderer.canvas.getBoundingClientRect(), width = _this_composition_renderer_canvas_getBoundingClientRect.width, height = _this_composition_renderer_canvas_getBoundingClientRect.height;
+            var z = this.transform.getWorldPosition().z;
+            var _this_composition_camera_getInverseVPRatio = this.composition.camera.getInverseVPRatio(z), rx = _this_composition_camera_getInverseVPRatio.x, ry = _this_composition_camera_getInverseVPRatio.y;
+            this.transform.translate(2 * x * rx / width, -2 * y * ry / height, 0);
+        }
+    };
+    /**
+   * 销毁元素
+   */ _proto.dispose = function dispose() {
+        this.resetChildrenParent();
+        if (this.composition) {
+            this.composition.destroyItem(this);
+            // component 调用 dispose() 会将自身从 this.components 数组删除，slice() 避免迭代错误
+            for(var _iterator = _create_for_of_iterator_helper_loose(this.components.slice()), _step; !(_step = _iterator()).done;){
+                var component = _step.value;
+                component.dispose();
+            }
+            this.components = [];
+            this._content = undefined;
+            this.composition = null;
+            this.transform.setValid(false);
+        }
+    };
+    _proto.resetChildrenParent = function resetChildrenParent() {
+        // GE 父元素销毁子元素继承逻辑
+        // 如果有父对象，销毁时子对象继承父对象。
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.children), _step; !(_step = _iterator()).done;){
+            var child = _step.value;
+            if (this.parent) {
+                child.setParent(this.parent);
+            }
+        }
+        if (this.parent) {
+            var _this_parent;
+            removeItem((_this_parent = this.parent) == null ? void 0 : _this_parent.children, this);
+        }
+    // const contentItems = compositonVFXItem.getComponent(CompositionComponent)!.items;
+    // contentItems.splice(contentItems.indexOf(this), 1);
+    // else {
+    //   // 普通元素正常销毁逻辑, 子元素不继承
+    // if (this.parent) {
+    //   removeItem(this.parent?.children, this);
+    // }
+    // }
+    };
+    /**
+   *
+   * @param item
+   * @returns
+   */ VFXItem.isComposition = function isComposition(item) {
+        return item.type === ItemType.composition;
+    };
+    /**
+   *
+   * @param item
+   * @returns
+   */ VFXItem.isSprite = function isSprite(item) {
+        return item.type === ItemType.sprite;
+    };
+    /**
+   *
+   * @param item
+   * @returns
+   */ VFXItem.isParticle = function isParticle(item) {
+        return item.type === ItemType.particle;
+    };
+    /**
+   *
+   * @param item
+   * @returns
+   */ VFXItem.isNull = function isNull(item) {
+        return item.type === ItemType.null;
+    };
+    /**
+   *
+   * @param item
+   * @returns
+   */ VFXItem.isTree = function isTree(item) {
+        return item.type === ItemType.tree;
+    };
+    /**
+   *
+   * @param item
+   * @returns
+   */ VFXItem.isCamera = function isCamera(item) {
+        return item.type === ItemType.camera;
+    };
+    /**
+   *
+   * @param ancestorCandidate
+   * @param descendantCandidate
+   * @returns
+   */ VFXItem.isAncestor = function isAncestor(ancestorCandidate, descendantCandidate) {
+        var current = descendantCandidate.parent;
+        while(current){
+            if (current === ancestorCandidate) {
+                return true;
+            }
+            current = current.parent;
+        }
+        return false;
+    };
+    _create_class(VFXItem, [
+        {
+            key: "content",
+            get: /**
+   * 返回元素创建的数据
+   */ function get() {
+                return this._content;
+            }
+        },
+        {
+            key: "compositionReusable",
+            get: /**
+   * 播放完成后是否需要再使用，是的话生命周期结束后不会 dispose
+   */ function get() {
+                var _this_composition;
+                var _this_composition_reusable;
+                return (_this_composition_reusable = (_this_composition = this.composition) == null ? void 0 : _this_composition.reusable) != null ? _this_composition_reusable : false;
+            }
+        },
+        {
+            key: "renderOrder",
+            get: /**
+   * 元素在合成中的索引
+   */ function get() {
+                return this.listIndex;
+            },
+            set: function set(value) {
+                if (this.listIndex !== value) {
+                    this.listIndex = value;
+                    for(var _iterator = _create_for_of_iterator_helper_loose(this.rendererComponents), _step; !(_step = _iterator()).done;){
+                        var rendererComponent = _step.value;
+                        rendererComponent.priority = value;
+                    }
+                }
+            }
+        },
+        {
+            key: "isActive",
+            get: /**
+   * 当前 VFXItem 是否激活
+   */ function get() {
+                return this.active;
+            }
+        },
+        {
+            key: "isVisible",
+            get: /**
+   * 元素组件显隐状态
+   */ function get() {
+                return this.visible;
+            }
+        }
+    ]);
+    return VFXItem;
+}(EffectsObject);
+__decorate([
+    serialize()
+], exports.VFXItem.prototype, "components", void 0);
+exports.VFXItem = __decorate([
+    effectsClass(DataType.VFXItemData)
+], exports.VFXItem);
+exports.Item = void 0;
+(function(Item) {
+    function is(item, type) {
+        return item.type === type;
+    }
+    Item.is = is;
+    function isComposition(item) {
+        return item.type === ItemType.composition;
+    }
+    Item.isComposition = isComposition;
+    function isParticle(item) {
+        return item.type === ItemType.particle;
+    }
+    Item.isParticle = isParticle;
+    function isNull(item) {
+        return item.type === ItemType.null;
+    }
+    Item.isNull = isNull;
+})(exports.Item || (exports.Item = {}));
+
+var tempColor = [
+    1,
+    1,
+    1,
+    1
+];
+var ColorPlayable = /*#__PURE__*/ function(Playable) {
+    _inherits(ColorPlayable, Playable);
+    function ColorPlayable() {
+        var _this;
+        _this = Playable.apply(this, arguments) || this;
+        _this.renderColor = [
+            1,
+            1,
+            1,
+            1
+        ];
+        return _this;
+    }
+    var _proto = ColorPlayable.prototype;
+    _proto.processFrame = function processFrame(context) {
+        var _this_activeComponent;
+        var boundObject = context.output.getUserData();
+        if (!_instanceof1(boundObject, exports.VFXItem)) {
+            return;
+        }
+        if (!this.activeComponent) {
+            this.activeComponent = this.getActiveComponent(boundObject);
+        }
+        if (!this.activeMaterial) {
+            var _this_activeComponent1, _this_activeMaterial;
+            this.activeMaterial = (_this_activeComponent1 = this.activeComponent) == null ? void 0 : _this_activeComponent1.material;
+            var startColor = (_this_activeMaterial = this.activeMaterial) == null ? void 0 : _this_activeMaterial.getVector4("_Color");
+            if (startColor) {
+                this.startColor = startColor.toArray();
+            }
+        }
+        (_this_activeComponent = this.activeComponent) == null ? void 0 : _this_activeComponent.setAnimationTime(this.time);
+        var colorInc = vecFill(tempColor, 1);
+        var colorChanged;
+        var life = this.time / boundObject.duration;
+        var opacityOverLifetime = this.opacityOverLifetime;
+        var colorOverLifetime = this.colorOverLifetime;
+        if (colorOverLifetime) {
+            colorInc = getColorFromGradientStops(colorOverLifetime, life, true);
+            colorChanged = true;
+        }
+        if (opacityOverLifetime) {
+            colorInc[3] *= opacityOverLifetime.getValue(life);
+            colorChanged = true;
+        }
+        if (colorChanged) {
+            var _this_activeMaterial_getVector4, _this_activeMaterial1;
+            vecMulCombine(this.renderColor, colorInc, this.startColor);
+            (_this_activeMaterial1 = this.activeMaterial) == null ? void 0 : (_this_activeMaterial_getVector4 = _this_activeMaterial1.getVector4("_Color")) == null ? void 0 : _this_activeMaterial_getVector4.setFromArray(this.renderColor);
+        }
+    };
+    _proto.create = function create(clipData) {
+        this.clipData = clipData;
+        var colorOverLifetime = clipData.colorOverLifetime;
+        if (colorOverLifetime) {
+            var _colorOverLifetime_opacity;
+            this.opacityOverLifetime = createValueGetter((_colorOverLifetime_opacity = colorOverLifetime.opacity) != null ? _colorOverLifetime_opacity : 1);
+            if (colorOverLifetime.color && colorOverLifetime.color[0] === ValueType.GRADIENT_COLOR) {
+                this.colorOverLifetime = colorStopsFromGradient(colorOverLifetime.color[1]);
+            }
+        }
+        return this;
+    };
+    _proto.getActiveComponent = function getActiveComponent(boundObject) {
+        return boundObject.getComponent(BaseRenderComponent);
+    };
+    return ColorPlayable;
+}(Playable);
+
+var singleSplits = [
+    [
+        0,
+        0,
+        1,
+        1,
+        undefined
+    ]
+];
+var seed$6 = 0;
+exports.SpriteColorPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
+    _inherits(SpriteColorPlayableAsset, PlayableAsset);
+    function SpriteColorPlayableAsset() {
+        return PlayableAsset.apply(this, arguments);
+    }
+    var _proto = SpriteColorPlayableAsset.prototype;
+    _proto.createPlayable = function createPlayable(graph) {
+        var spriteColorPlayable = new ColorPlayable(graph);
+        spriteColorPlayable.create(this.data);
+        return spriteColorPlayable;
+    };
+    _proto.fromData = function fromData(data) {
+        this.data = data;
+    };
+    return SpriteColorPlayableAsset;
+}(PlayableAsset);
+exports.SpriteColorPlayableAsset = __decorate([
+    effectsClass(DataType.SpriteColorPlayableAsset)
+], exports.SpriteColorPlayableAsset);
+exports.SpriteComponent = /*#__PURE__*/ function(BaseRenderComponent) {
+    _inherits(SpriteComponent, BaseRenderComponent);
+    function SpriteComponent(engine, props) {
+        var _this;
+        _this = BaseRenderComponent.call(this, engine) || this;
+        _this.splits = singleSplits;
+        _this.frameAnimationLoop = false;
+        _this.name = "MSprite" + seed$6++;
+        _this.geometry = _this.createGeometry(glContext.TRIANGLES);
+        _this.setItem();
+        if (props) {
+            _this.fromData(props);
+        }
+        return _this;
+    }
+    var _proto = SpriteComponent.prototype;
+    _proto.onUpdate = function onUpdate(dt) {
+        var _this = this;
+        if (!this.isManualTimeSet) {
+            this.frameAnimationTime += dt / 1000;
+            this.isManualTimeSet = false;
+        }
+        var time = this.frameAnimationTime;
+        var duration = this.item.duration;
+        if (time > duration && this.frameAnimationLoop) {
+            time = time % duration;
+        }
+        var life = Math.min(Math.max(time / duration, 0.0), 1.0);
+        var ta = this.textureSheetAnimation;
+        var video = this.renderer.texture.source.video;
+        if (video) {
+            if (time === 0) {
+                video.pause();
+            } else {
+                video.play().catch(function(e) {
+                    _this.engine.renderErrors.add(e);
+                });
+            }
+        }
+        if (ta) {
+            var _this_material_getVector4;
+            var total = ta.total || ta.row * ta.col;
+            var texRectX = 0;
+            var texRectY = 0;
+            var texRectW = 1;
+            var texRectH = 1;
+            var flip;
+            if (this.splits) {
+                var sp = this.splits[0];
+                flip = sp[4];
+                texRectX = sp[0];
+                texRectY = sp[1];
+                if (flip) {
+                    texRectW = sp[3];
+                    texRectH = sp[2];
+                } else {
+                    texRectW = sp[2];
+                    texRectH = sp[3];
+                }
+            }
+            var dx, dy;
+            if (flip) {
+                dx = 1 / ta.row * texRectW;
+                dy = 1 / ta.col * texRectH;
+            } else {
+                dx = 1 / ta.col * texRectW;
+                dy = 1 / ta.row * texRectH;
+            }
+            var texOffset;
+            if (ta.animate) {
+                var frameIndex = Math.round(life * (total - 1));
+                var yIndex = Math.floor(frameIndex / ta.col);
+                var xIndex = frameIndex - yIndex * ta.col;
+                texOffset = flip ? [
+                    dx * yIndex,
+                    dy * (ta.col - xIndex)
+                ] : [
+                    dx * xIndex,
+                    dy * (1 + yIndex)
+                ];
+            } else {
+                texOffset = [
+                    0,
+                    dy
+                ];
+            }
+            (_this_material_getVector4 = this.material.getVector4("_TexOffset")) == null ? void 0 : _this_material_getVector4.setFromArray([
+                texRectX + texOffset[0],
+                texRectH + texRectY - texOffset[1],
+                dx,
+                dy
+            ]);
+        }
+    };
+    _proto.onDestroy = function onDestroy() {
+        var textures = this.getTextures();
+        if (this.item && this.item.composition) {
+            this.item.composition.destroyTextures(textures);
+        }
+        textures.forEach(function(texture) {
+            var source = texture.source;
+            if (source.sourceType === exports.TextureSourceType.video && (source == null ? void 0 : source.video)) {
+                source.video.pause();
+                source.video.src = "";
+                source.video.load();
+            }
+        });
+    };
+    _proto.createGeometry = function createGeometry(mode) {
+        var maxVertex = 12 * this.splits.length;
+        return Geometry.create(this.engine, {
+            attributes: {
+                aPos: {
+                    type: glContext.FLOAT,
+                    size: 3,
+                    data: new Float32Array([
+                        -0.5,
+                        0.5,
+                        0,
+                        -0.5,
+                        -0.5,
+                        0,
+                        0.5,
+                        0.5,
+                        0,
+                        0.5,
+                        -0.5,
+                        0
+                    ])
+                },
+                atlasOffset: {
+                    size: 2,
+                    offset: 0,
+                    releasable: true,
+                    type: glContext.FLOAT,
+                    data: new Float32Array(0)
+                }
+            },
+            indices: {
+                data: new Uint16Array(0),
+                releasable: true
+            },
+            mode: mode,
+            maxVertex: maxVertex
+        });
+    };
+    _proto.getItemGeometryData = function getItemGeometryData() {
+        var _this = this, splits = _this.splits, textureSheetAnimation = _this.textureSheetAnimation;
+        var sx = 1, sy = 1;
+        var renderer = this.renderer;
+        if (renderer.shape) {
+            var _renderer_shape = renderer.shape, _renderer_shape_index = _renderer_shape.index, index = _renderer_shape_index === void 0 ? [] : _renderer_shape_index, _renderer_shape_aPoint = _renderer_shape.aPoint, aPoint = _renderer_shape_aPoint === void 0 ? [] : _renderer_shape_aPoint;
+            var point = new Float32Array(aPoint);
+            var position = [];
+            var atlasOffset = [];
+            for(var i = 0; i < point.length; i += 6){
+                point[i] *= sx;
+                point[i + 1] *= sy;
+                atlasOffset.push(aPoint[i + 2], aPoint[i + 3]);
+                position.push(point[i], point[i + 1], 0.0);
+            }
+            this.geometry.setAttributeData("aPos", new Float32Array(position));
+            return {
+                index: index,
+                atlasOffset: atlasOffset
+            };
+        }
+        var originData = [
+            -.5,
+            .5,
+            -.5,
+            -.5,
+            .5,
+            .5,
+            .5,
+            -.5
+        ];
+        var atlasOffset1 = [];
+        var index1 = [];
+        var col = 2;
+        var row = 2;
+        if (splits.length === 1) {
+            col = 1;
+            row = 1;
+        }
+        var position1 = [];
+        for(var x = 0; x < col; x++){
+            for(var y = 0; y < row; y++){
+                var base = (y * 2 + x) * 4;
+                // @ts-expect-error
+                var split = textureSheetAnimation ? [
+                    0,
+                    0,
+                    1,
+                    1,
+                    splits[0][4]
+                ] : splits[y * 2 + x];
+                var texOffset = split[4] ? [
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1
+                ] : [
+                    0,
+                    1,
+                    0,
+                    0,
+                    1,
+                    1,
+                    1,
+                    0
+                ];
+                var dw = ((x + x + 1) / col - 1) / 2;
+                var dh = ((y + y + 1) / row - 1) / 2;
+                var tox = split[0];
+                var toy = split[1];
+                var tsx = split[4] ? split[3] : split[2];
+                var tsy = split[4] ? split[2] : split[3];
+                var origin = [
+                    originData[0] / col + dw,
+                    originData[1] / row + dh,
+                    originData[2] / col + dw,
+                    originData[3] / row + dh,
+                    originData[4] / col + dw,
+                    originData[5] / row + dh,
+                    originData[6] / col + dw,
+                    originData[7] / row + dh
+                ];
+                atlasOffset1.push(texOffset[0] * tsx + tox, texOffset[1] * tsy + toy, texOffset[2] * tsx + tox, texOffset[3] * tsy + toy, texOffset[4] * tsx + tox, texOffset[5] * tsy + toy, texOffset[6] * tsx + tox, texOffset[7] * tsy + toy);
+                position1.push(origin[0] * sx, origin[1] * sy, 0.0, origin[2] * sx, origin[3] * sy, 0.0, origin[4] * sx, origin[5] * sy, 0.0, origin[6] * sx, origin[7] * sy, 0.0);
+                index1.push(base, 1 + base, 2 + base, 2 + base, 1 + base, 3 + base);
+            }
+        }
+        this.geometry.setAttributeData("aPos", new Float32Array(position1));
+        return {
+            index: index1,
+            atlasOffset: atlasOffset1
+        };
+    };
+    _proto.fromData = function fromData(data) {
+        BaseRenderComponent.prototype.fromData.call(this, data);
+        var interaction = data.interaction, options = data.options, _data_listIndex = data.listIndex, listIndex = _data_listIndex === void 0 ? 0 : _data_listIndex;
+        var renderer = data.renderer;
+        if (!renderer) {
+            renderer = {};
+        }
+        this.interaction = interaction;
+        var _renderer_renderMode, _renderer_blending, _renderer_texture, _renderer_side, _renderer_mask, _renderer_maskMode;
+        this.renderer = {
+            renderMode: (_renderer_renderMode = renderer.renderMode) != null ? _renderer_renderMode : RenderMode.MESH,
+            blending: (_renderer_blending = renderer.blending) != null ? _renderer_blending : BlendingMode.ALPHA,
+            texture: (_renderer_texture = renderer.texture) != null ? _renderer_texture : this.engine.emptyTexture,
+            occlusion: !!renderer.occlusion,
+            transparentOcclusion: !!renderer.transparentOcclusion || renderer.maskMode === MaskMode.MASK,
+            side: (_renderer_side = renderer.side) != null ? _renderer_side : SideMode.DOUBLE,
+            shape: renderer.shape,
+            mask: (_renderer_mask = renderer.mask) != null ? _renderer_mask : 0,
+            maskMode: (_renderer_maskMode = renderer.maskMode) != null ? _renderer_maskMode : MaskMode.NONE,
+            order: listIndex
+        };
+        this.emptyTexture = this.engine.emptyTexture;
+        this.splits = data.splits || singleSplits;
+        this.textureSheetAnimation = data.textureSheetAnimation;
+        this.cachePrefix = "-";
+        this.renderInfo = getImageItemRenderInfo(this);
+        var geometry = this.createGeometry(glContext.TRIANGLES);
+        var material = this.createMaterial(this.renderInfo, 2);
+        this.worldMatrix = Matrix4$1.fromIdentity();
+        this.material = material;
+        this.geometry = geometry;
+        var startColor = options.startColor || [
+            1,
+            1,
+            1,
+            1
+        ];
+        this.material.setVector4("_Color", new Vector4$1().setFromArray(startColor));
+        this.material.setVector4("_TexOffset", new Vector4$1().setFromArray([
+            0,
+            0,
+            1,
+            1
+        ]));
+        this.setItem();
+    };
+    return SpriteComponent;
+}(BaseRenderComponent);
+exports.SpriteComponent = __decorate([
+    effectsClass(DataType.SpriteComponent)
+], exports.SpriteComponent);
+
+var RUNTIME_ENV = "runtime_env";
+var RENDER_PREFER_LOOKUP_TEXTURE = "lookup_texture";
+// 文本元素使用 offscreen canvas 绘制
+var TEMPLATE_USE_OFFSCREEN_CANVAS = "offscreen_canvas";
+// 后处理配置相关
+var POST_PROCESS_SETTINGS = "post_process_settings";
+var config = {};
+function getConfig(name) {
+    return config[name];
+}
+function setConfig(name, value) {
+    return config[name] = value;
+}
+
 var Cone = /*#__PURE__*/ function() {
     function Cone(props) {
         var _this = this;
@@ -18396,7 +22384,7 @@ var ShapeNone = /*#__PURE__*/ function() {
     return ShapeNone;
 }();
 var _obj$6;
-var map$1 = (_obj$6 = {}, _obj$6[ShapeType.NONE] = ShapeNone, _obj$6[ShapeType.CONE] = Cone, _obj$6[ShapeType.SPHERE] = Sphere, _obj$6[ShapeType.HEMISPHERE] = Hemisphere, _obj$6[ShapeType.CIRCLE] = Circle, _obj$6[ShapeType.DONUT] = Donut, _obj$6[ShapeType.RECTANGLE] = Rectangle, _obj$6[ShapeType.EDGE] = Edge, _obj$6[ShapeType.RECTANGLE_EDGE] = RectangleEdge, _obj$6[ShapeType.TEXTURE] = TextureShape, _obj$6);
+var map$1 = (_obj$6 = {}, _obj$6[ParticleEmitterShapeType.NONE] = ShapeNone, _obj$6[ParticleEmitterShapeType.CONE] = Cone, _obj$6[ParticleEmitterShapeType.SPHERE] = Sphere, _obj$6[ParticleEmitterShapeType.HEMISPHERE] = Hemisphere, _obj$6[ParticleEmitterShapeType.CIRCLE] = Circle, _obj$6[ParticleEmitterShapeType.DONUT] = Donut, _obj$6[ParticleEmitterShapeType.RECTANGLE] = Rectangle, _obj$6[ParticleEmitterShapeType.EDGE] = Edge, _obj$6[ParticleEmitterShapeType.RECTANGLE_EDGE] = RectangleEdge, _obj$6[ParticleEmitterShapeType.TEXTURE] = TextureShape, _obj$6);
 function createShape(shapeOptions) {
     if (!shapeOptions) {
         return new ShapeNone();
@@ -18413,7 +22401,7 @@ function createShape(shapeOptions) {
         throw new Error("Invalid shape: " + type + ".");
     }
     var ctrl = new Ctrl(options);
-    if (type !== ShapeType.NONE) {
+    if (type !== ParticleEmitterShapeType.NONE) {
         var alignSpeedDirection = shapeOptions.alignSpeedDirection, _shapeOptions_upDirection = shapeOptions.upDirection, upDirection = _shapeOptions_upDirection === void 0 ? [
             0,
             0,
@@ -18963,7 +22951,7 @@ function getGeometryTriangles(geometry, options) {
  */ function getGeometriesByShapeData(shape) {
     var geometries = [];
     // 该版本的单个形状数据可以包含多个形状，可以加个埋点，五福之后没有就可以下掉
-    if (shape.gs) {
+    if ("gs" in shape) {
         shape.gs.forEach(function(gs) {
             geometries.push({
                 p: [
@@ -18976,7 +22964,7 @@ function getGeometryTriangles(geometry, options) {
                 ]
             });
         });
-    } else if (shape.g) {
+    } else if ("g" in shape) {
         geometries.push({
             p: [
                 ValueType.SHAPE_POINTS,
@@ -19712,17 +23700,19 @@ function getTrailMeshShader(trails, particleMaxCount, name, gpuCapability, env) 
         return _this;
     }
     var _proto = ParticleSystemRenderer.prototype;
-    _proto.start = function start() {
+    _proto.onStart = function onStart() {
         this._priority = this.item.renderOrder;
         this.particleMesh.gravityModifier.scaleXCoord(this.item.duration);
         for(var _iterator = _create_for_of_iterator_helper_loose(this.meshes), _step; !(_step = _iterator()).done;){
             var mesh = _step.value;
-            mesh.start();
+            mesh.onStart();
         }
     };
-    _proto.update = function update(dt) {
+    _proto.onUpdate = function onUpdate(dt) {
         var time = this.particleMesh.time;
-        this.particleMesh.mesh.material.setVector4("uParams", new Vector4$1(time, this.item.duration, 0, 0));
+        var _this_particleMesh_mesh_material_getVector4;
+        var uParams = (_this_particleMesh_mesh_material_getVector4 = this.particleMesh.mesh.material.getVector4("uParams")) != null ? _this_particleMesh_mesh_material_getVector4 : new Vector4$1();
+        this.particleMesh.mesh.material.setVector4("uParams", uParams.set(time, this.item.duration, 0, 0));
     };
     _proto.render = function render(renderer) {
         for(var _iterator = _create_for_of_iterator_helper_loose(this.meshes), _step; !(_step = _iterator()).done;){
@@ -19737,6 +23727,7 @@ function getTrailMeshShader(trails, particleMaxCount, name, gpuCapability, env) 
     };
     _proto.updateTime = function updateTime(now, delta) {
         this.particleMesh.time = now;
+        this.particleMesh.onUpdate(delta);
         if (this.trailMesh) {
             this.trailMesh.time = now;
             this.trailMesh.onUpdate(delta);
@@ -19947,7 +23938,7 @@ exports.ParticleSystem = /*#__PURE__*/ function(Component) {
     _proto.getTextures = function getTextures() {
         return this.renderer.getTextures();
     };
-    _proto.start = function start() {
+    _proto.startEmit = function startEmit() {
         if (!this.started || this.ended) {
             this.reset();
             this.started = true;
@@ -19972,8 +23963,9 @@ exports.ParticleSystem = /*#__PURE__*/ function(Component) {
         });
         this.frozen = false;
         this.ended = false;
+        this.destroyed = false;
     };
-    _proto.onUpdate = function onUpdate(delta) {
+    _proto.update = function update(delta) {
         var _this = this;
         if (this.started && !this.frozen) {
             var now = this.lastUpdate + delta / 1000;
@@ -20444,9 +24436,10 @@ exports.ParticleSystem = /*#__PURE__*/ function(Component) {
         };
         this.textureSheetAnimation = textureSheetAnimation;
         var renderer = props.renderer || {};
-        var rotationOverLifetime = {};
+        var rotationOverLifetime;
         var rotOverLt = props.rotationOverLifetime;
         if (rotOverLt) {
+            rotationOverLifetime = {};
             rotationOverLifetime.asRotation = !!rotOverLt.asRotation;
             rotationOverLifetime.z = rotOverLt.z ? createValueGetter(rotOverLt.z) : createValueGetter(0);
             if (rotOverLt.separateAxes) {
@@ -20776,7 +24769,7 @@ function randomArrItem(arr, keepArr) {
         this.particleSystem = boundObject.getComponent(exports.ParticleSystem);
         if (this.particleSystem) {
             this.particleSystem.name = boundObject.name;
-            this.particleSystem.start();
+            this.particleSystem.startEmit();
             this.particleSystem.initEmitterTransform();
         }
     };
@@ -20793,7 +24786,7 @@ function randomArrItem(arr, keepArr) {
             if (Math.abs(this.time - this.lastTime) < 0.001) {
                 deltaTime = 0;
             }
-            particleSystem.onUpdate(deltaTime);
+            particleSystem.update(deltaTime);
         }
         this.lastTime = this.time;
     };
@@ -20846,6 +24839,11 @@ var particleUniformTypeMap = {
 var ParticleMesh = /*#__PURE__*/ function() {
     function ParticleMesh(engine, props) {
         this.particleCount = 0;
+        this.cachedRotationVector3 = new Vector3();
+        this.cachedRotationMatrix = new Matrix3();
+        this.cachedLinearMove = new Vector3();
+        this.tempMatrix3 = new Matrix3();
+        this.VERT_MAX_KEY_FRAME_COUNT = 0;
         var _engine_renderer;
         var env = ((_engine_renderer = engine.renderer) != null ? _engine_renderer : {}).env;
         var speedOverLifetime = props.speedOverLifetime, colorOverLifetime = props.colorOverLifetime, linearVelOverLifetime = props.linearVelOverLifetime, orbitalVelOverLifetime = props.orbitalVelOverLifetime, sizeOverLifetime = props.sizeOverLifetime, rotationOverLifetime = props.rotationOverLifetime, sprite = props.sprite, gravityModifier = props.gravityModifier, maxCount = props.maxCount, textureFlip = props.textureFlip, useSprite = props.useSprite, name = props.name, gravity = props.gravity, forceTarget = props.forceTarget, side = props.side, occlusion = props.occlusion, anchor = props.anchor, blending = props.blending, maskMode = props.maskMode, mask = props.mask, transparentOcclusion = props.transparentOcclusion, meshSlots = props.meshSlots, _props_renderMode = props.renderMode, renderMode = _props_renderMode === void 0 ? 0 : _props_renderMode, _props_diffuse = props.diffuse, diffuse = _props_diffuse === void 0 ? Texture.createWithData(engine) : _props_diffuse;
@@ -21064,6 +25062,7 @@ var ParticleMesh = /*#__PURE__*/ function() {
             "FRAG_MAX_KEY_FRAME_COUNT",
             fragmentKeyFrameMeta.max
         ]);
+        this.VERT_MAX_KEY_FRAME_COUNT = vertexKeyFrameMeta.max;
         var fragment = particleFrag;
         var originalVertex = "#define LOOKUP_TEXTURE_CURVE " + vertex_lookup_texture + "\n" + particleVert;
         var vertex = originalVertex;
@@ -21172,6 +25171,7 @@ var ParticleMesh = /*#__PURE__*/ function() {
         this.orbitalVelOverLifetime = orbitalVelOverLifetime;
         this.orbitalVelOverLifetime = orbitalVelOverLifetime;
         this.gravityModifier = gravityModifier;
+        this.rotationOverLifetime = rotationOverLifetime;
         this.maxCount = maxCount;
         // this.duration = duration;
         this.textureOffsets = textureFlip ? [
@@ -21236,13 +25236,19 @@ var ParticleMesh = /*#__PURE__*/ function() {
         // @ts-expect-error
         geometry.setIndexData(new index.constructor(0));
     };
+    _proto.onUpdate = function onUpdate(dt) {
+        var aPosArray = this.geometry.getAttributeData("aPos"); // vector3
+        var vertexCount = Math.ceil(aPosArray.length / 12);
+        this.applyTranslation(vertexCount, dt);
+        this.applyRotation(vertexCount, dt);
+        this.applyLinearMove(vertexCount, dt);
+    };
     _proto.minusTime = function minusTime(time) {
-        var data = this.geometry.getAttributeData("aOffset");
-        assertExist(data);
-        for(var i = 0; i < data.length; i += 4){
-            data[i + 2] -= time;
+        var aOffset = this.geometry.getAttributeData("aOffset");
+        for(var i = 0; i < aOffset.length; i += 4){
+            aOffset[i + 2] -= time;
         }
-        this.geometry.setAttributeData("aOffset", data);
+        this.geometry.setAttributeData("aOffset", aOffset);
         this.time -= time;
     };
     _proto.removePoint = function removePoint(index) {
@@ -21268,7 +25274,10 @@ var ParticleMesh = /*#__PURE__*/ function() {
             var pointData = {
                 aPos: new Float32Array(48),
                 aRot: new Float32Array(32),
-                aOffset: new Float32Array(16)
+                aOffset: new Float32Array(16),
+                aTranslation: new Float32Array(12),
+                aLinearMove: new Float32Array(12),
+                aRotation0: new Float32Array(36)
             };
             var useSprite = this.useSprite;
             if (useSprite) {
@@ -21377,6 +25386,253 @@ var ParticleMesh = /*#__PURE__*/ function() {
             geometry.setDrawCount(this.particleCount * 6);
         }
     };
+    _proto.applyTranslation = function applyTranslation(vertexCount, deltaTime) {
+        var localTime = this.time;
+        var aTranslationArray = this.geometry.getAttributeData("aTranslation");
+        var aVelArray = this.geometry.getAttributeData("aVel"); // vector3
+        var aOffsetArray = this.geometry.getAttributeData("aOffset");
+        if (aTranslationArray.length < vertexCount * 3) {
+            aTranslationArray = this.expandArray(aTranslationArray, vertexCount * 3);
+        }
+        // const velocity = this.cachedVelocity;
+        var velocityX = 0;
+        var velocityY = 0;
+        var velocityZ = 0;
+        var uAcceleration = this.mesh.material.getVector4("uAcceleration");
+        var uGravityModifierValue = this.mesh.material.getVector4("uGravityModifierValue");
+        for(var i = 0; i < vertexCount; i += 4){
+            var velOffset = i * 12 + 3;
+            velocityX = aVelArray[velOffset];
+            velocityY = aVelArray[velOffset + 1];
+            velocityZ = aVelArray[velOffset + 2];
+            // velocity.set(aVelArray[velOffset], aVelArray[velOffset + 1], aVelArray[velOffset + 2]);
+            var dt = localTime - aOffsetArray[i * 4 + 2]; // 相对delay的时间
+            var duration = aOffsetArray[i * 4 + 3];
+            if (uAcceleration && uGravityModifierValue) {
+                var d = this.gravityModifier.getIntegrateValue(0, dt, duration);
+                // const acc = this.tempVector3.set(uAcceleration.x * d, uAcceleration.y * d, uAcceleration.z * d);
+                var accX = uAcceleration.x * d;
+                var accY = uAcceleration.y * d;
+                var accZ = uAcceleration.z * d;
+                // speedIntegrate = speedOverLifetime.getIntegrateValue(0, time, duration);
+                if (this.speedOverLifetime) {
+                    // dt / dur 归一化
+                    var speed = this.speedOverLifetime.getValue(dt / duration);
+                    velocityX = velocityX * speed + accX;
+                    velocityY = velocityY * speed + accY;
+                    velocityZ = velocityZ * speed + accZ;
+                // velocity.multiply(speed).add(acc);
+                } else {
+                    velocityX = velocityX + accX;
+                    velocityY = velocityY + accY;
+                    velocityZ = velocityZ + accZ;
+                // velocity.add(acc);
+                }
+            }
+            var aTranslationOffset = i * 3;
+            if (aOffsetArray[i * 4 + 2] < localTime) {
+                // const translation = velocity.multiply(deltaTime / 1000);
+                var aTranslationX = velocityX * (deltaTime / 1000);
+                var aTranslationY = velocityY * (deltaTime / 1000);
+                var aTranslationZ = velocityZ * (deltaTime / 1000);
+                aTranslationArray[aTranslationOffset] += aTranslationX;
+                aTranslationArray[aTranslationOffset + 1] += aTranslationY;
+                aTranslationArray[aTranslationOffset + 2] += aTranslationZ;
+                aTranslationArray[aTranslationOffset + 3] += aTranslationX;
+                aTranslationArray[aTranslationOffset + 4] += aTranslationY;
+                aTranslationArray[aTranslationOffset + 5] += aTranslationZ;
+                aTranslationArray[aTranslationOffset + 6] += aTranslationX;
+                aTranslationArray[aTranslationOffset + 7] += aTranslationY;
+                aTranslationArray[aTranslationOffset + 8] += aTranslationZ;
+                aTranslationArray[aTranslationOffset + 9] += aTranslationX;
+                aTranslationArray[aTranslationOffset + 10] += aTranslationY;
+                aTranslationArray[aTranslationOffset + 11] += aTranslationZ;
+            }
+        }
+        this.geometry.setAttributeData("aTranslation", aTranslationArray);
+    };
+    _proto.applyRotation = function applyRotation(vertexCount, deltaTime) {
+        var aRotationArray = this.geometry.getAttributeData("aRotation0");
+        var aOffsetArray = this.geometry.getAttributeData("aOffset");
+        var aRotArray = this.geometry.getAttributeData("aRot"); // vector3
+        var aSeedArray = this.geometry.getAttributeData("aSeed"); // float
+        var localTime = this.time;
+        var aRotationMatrix = this.cachedRotationMatrix;
+        if (aRotationArray.length < vertexCount * 9) {
+            aRotationArray = this.expandArray(aRotationArray, vertexCount * 9);
+        }
+        for(var i = 0; i < vertexCount; i += 4){
+            var time = localTime - aOffsetArray[i * 4 + 2];
+            var duration = aOffsetArray[i * 4 + 3];
+            var life = clamp$1(time / duration, 0.0, 1.0);
+            var aRotOffset = i * 8;
+            var aRot = this.cachedRotationVector3.set(aRotArray[aRotOffset], aRotArray[aRotOffset + 1], aRotArray[aRotOffset + 2]);
+            var aSeed = aSeedArray[i * 8 + 3];
+            var rotation = aRot;
+            if (!this.rotationOverLifetime) {
+                aRotationMatrix.setZero();
+            } else {
+                // Adjust rotation based on the specified lifetime components
+                if (this.rotationOverLifetime.x) {
+                    if (_instanceof1(this.rotationOverLifetime.x, RandomValue)) {
+                        rotation.x += this.rotationOverLifetime.x.getValue(life, aSeed);
+                    } else {
+                        rotation.x += this.rotationOverLifetime.x.getValue(life);
+                    }
+                }
+                if (this.rotationOverLifetime.y) {
+                    if (_instanceof1(this.rotationOverLifetime.y, RandomValue)) {
+                        rotation.y += this.rotationOverLifetime.y.getValue(life, aSeed);
+                    } else {
+                        rotation.y += this.rotationOverLifetime.y.getValue(life);
+                    }
+                }
+                if (this.rotationOverLifetime.z) {
+                    if (_instanceof1(this.rotationOverLifetime.z, RandomValue)) {
+                        rotation.z += this.rotationOverLifetime.z.getValue(life, aSeed);
+                    } else {
+                        rotation.z += this.rotationOverLifetime.z.getValue(life);
+                    }
+                }
+            }
+            // else {
+            // // Adjust rotation based on the specified lifetime components
+            //   if (this.rotationOverLifetime.x) {
+            //     if (this.rotationOverLifetime.x instanceof RandomValue) {
+            //       rotation.x += this.rotationOverLifetime.x.getIntegrateValue(0.0, life, aSeed) * duration;
+            //     } else {
+            //       rotation.x += this.rotationOverLifetime.x.getIntegrateValue(0.0, life, duration) * duration;
+            //     }
+            //   }
+            //   if (this.rotationOverLifetime.y) {
+            //     if (this.rotationOverLifetime.y instanceof RandomValue) {
+            //       rotation.y += this.rotationOverLifetime.y.getIntegrateValue(0.0, life, aSeed) * duration;
+            //     } else {
+            //       rotation.y += this.rotationOverLifetime.y.getIntegrateValue(0.0, life, duration) * duration;
+            //     }
+            //   }
+            //   if (this.rotationOverLifetime.z) {
+            //     if (this.rotationOverLifetime.z instanceof RandomValue) {
+            //       rotation.z += this.rotationOverLifetime.z.getIntegrateValue(0.0, life, aSeed) * duration;
+            //     } else {
+            //       rotation.z += this.rotationOverLifetime.z.getIntegrateValue(0.0, life, duration) * duration;
+            //     }
+            //   }
+            // }
+            // If the rotation vector is zero, return the identity matrix
+            if (rotation.dot(rotation) === 0.0) {
+                aRotationMatrix.identity();
+            }
+            var d2r = Math.PI / 180;
+            var rotationXD2r = rotation.x * d2r;
+            var rotationYD2r = rotation.y * d2r;
+            var rotationZD2r = rotation.z * d2r;
+            var sinRX = Math.sin(rotationXD2r);
+            var sinRY = Math.sin(rotationYD2r);
+            var sinRZ = Math.sin(rotationZD2r);
+            var cosRX = Math.cos(rotationXD2r);
+            var cosRY = Math.cos(rotationYD2r);
+            var cosRZ = Math.cos(rotationZD2r);
+            // rotZ * rotY * rotX
+            aRotationMatrix.set(cosRZ, -sinRZ, 0., sinRZ, cosRZ, 0., 0., 0., 1.); //rotZ
+            aRotationMatrix.multiply(this.tempMatrix3.set(cosRY, 0., sinRY, 0., 1., 0., -sinRY, 0, cosRY)); //rotY
+            aRotationMatrix.multiply(this.tempMatrix3.set(1., 0., 0., 0, cosRX, -sinRX, 0., sinRX, cosRX)); //rotX
+            var aRotationOffset = i * 9;
+            var matrixArray = aRotationMatrix.elements;
+            aRotationArray.set(matrixArray, aRotationOffset);
+            if (i + 4 <= vertexCount) {
+                aRotationArray.set(matrixArray, aRotationOffset + 9);
+                aRotationArray.set(matrixArray, aRotationOffset + 18);
+                aRotationArray.set(matrixArray, aRotationOffset + 27);
+            }
+        }
+        this.geometry.setAttributeData("aRotation0", aRotationArray);
+    };
+    _proto.applyLinearMove = function applyLinearMove(vertexCount, deltaTime) {
+        var aLinearMoveArray = this.geometry.getAttributeData("aLinearMove");
+        var aOffsetArray = this.geometry.getAttributeData("aOffset");
+        var aSeedArray = this.geometry.getAttributeData("aSeed"); // float
+        var localTime = this.time;
+        if (aLinearMoveArray.length < vertexCount * 3) {
+            aLinearMoveArray = this.expandArray(aLinearMoveArray, vertexCount * 3);
+        }
+        var linearMove = this.cachedLinearMove;
+        if (this.linearVelOverLifetime && this.linearVelOverLifetime.enabled) {
+            for(var i = 0; i < vertexCount; i += 4){
+                var time = localTime - aOffsetArray[i * 4 + 2];
+                var duration = aOffsetArray[i * 4 + 3];
+                // const life = math.clamp(time / duration, 0.0, 1.0);
+                var lifetime = time / duration;
+                var aSeed = aSeedArray[i * 8 + 3];
+                linearMove.setZero();
+                if (this.linearVelOverLifetime.asMovement) {
+                    if (this.linearVelOverLifetime.x) {
+                        if (_instanceof1(this.linearVelOverLifetime.x, RandomValue)) {
+                            linearMove.x = this.linearVelOverLifetime.x.getValue(lifetime, aSeed);
+                        } else {
+                            linearMove.x = this.linearVelOverLifetime.x.getValue(lifetime);
+                        }
+                    }
+                    if (this.linearVelOverLifetime.y) {
+                        if (_instanceof1(this.linearVelOverLifetime.y, RandomValue)) {
+                            linearMove.y = this.linearVelOverLifetime.y.getValue(lifetime, aSeed);
+                        } else {
+                            linearMove.y = this.linearVelOverLifetime.y.getValue(lifetime);
+                        }
+                    }
+                    if (this.linearVelOverLifetime.z) {
+                        if (_instanceof1(this.linearVelOverLifetime.z, RandomValue)) {
+                            linearMove.z = this.linearVelOverLifetime.z.getValue(lifetime, aSeed);
+                        } else {
+                            linearMove.z = this.linearVelOverLifetime.z.getValue(lifetime);
+                        }
+                    }
+                } else {
+                    // Adjust rotation based on the specified lifetime components
+                    if (this.linearVelOverLifetime.x) {
+                        if (_instanceof1(this.linearVelOverLifetime.x, RandomValue)) {
+                            linearMove.x = this.linearVelOverLifetime.x.getIntegrateValue(0.0, time, aSeed);
+                        } else {
+                            linearMove.x = this.linearVelOverLifetime.x.getIntegrateValue(0.0, time, duration);
+                        }
+                    }
+                    if (this.linearVelOverLifetime.y) {
+                        if (_instanceof1(this.linearVelOverLifetime.y, RandomValue)) {
+                            linearMove.y = this.linearVelOverLifetime.y.getIntegrateValue(0.0, time, aSeed);
+                        } else {
+                            linearMove.y = this.linearVelOverLifetime.y.getIntegrateValue(0.0, time, duration);
+                        }
+                    }
+                    if (this.linearVelOverLifetime.z) {
+                        if (_instanceof1(this.linearVelOverLifetime.z, RandomValue)) {
+                            linearMove.z = this.linearVelOverLifetime.z.getIntegrateValue(0.0, time, aSeed);
+                        } else {
+                            linearMove.z = this.linearVelOverLifetime.z.getIntegrateValue(0.0, time, duration);
+                        }
+                    }
+                }
+                var aLinearMoveOffset = i * 3;
+                aLinearMoveArray[aLinearMoveOffset] = linearMove.x;
+                aLinearMoveArray[aLinearMoveOffset + 1] = linearMove.y;
+                aLinearMoveArray[aLinearMoveOffset + 2] = linearMove.z;
+                aLinearMoveArray[aLinearMoveOffset + 3] = linearMove.x;
+                aLinearMoveArray[aLinearMoveOffset + 4] = linearMove.y;
+                aLinearMoveArray[aLinearMoveOffset + 5] = linearMove.z;
+                aLinearMoveArray[aLinearMoveOffset + 6] = linearMove.x;
+                aLinearMoveArray[aLinearMoveOffset + 7] = linearMove.y;
+                aLinearMoveArray[aLinearMoveOffset + 8] = linearMove.z;
+                aLinearMoveArray[aLinearMoveOffset + 9] = linearMove.x;
+                aLinearMoveArray[aLinearMoveOffset + 10] = linearMove.y;
+                aLinearMoveArray[aLinearMoveOffset + 11] = linearMove.z;
+            }
+        }
+        this.geometry.setAttributeData("aLinearMove", aLinearMoveArray);
+    };
+    _proto.expandArray = function expandArray(array, newSize) {
+        var newArr = new Float32Array(newSize);
+        newArr.set(array);
+        return newArr;
+    };
     return ParticleMesh;
 }();
 var gl2UniformSlots = [
@@ -21446,6 +25702,32 @@ function generateGeometryProps(maxVertex, useSprite, name) {
             size: 4,
             stride: 4 * bpe,
             data: new Float32Array(0)
+        },
+        aTranslation: {
+            size: 3,
+            data: new Float32Array(0)
+        },
+        aLinearMove: {
+            size: 3,
+            data: new Float32Array(0)
+        },
+        aRotation0: {
+            size: 3,
+            offset: 0,
+            stride: 9 * bpe,
+            data: new Float32Array(0)
+        },
+        aRotation1: {
+            size: 3,
+            offset: 3 * bpe,
+            stride: 9 * bpe,
+            dataSource: "aRotation0"
+        },
+        aRotation2: {
+            size: 3,
+            offset: 6 * bpe,
+            stride: 9 * bpe,
+            dataSource: "aRotation0"
         }
     };
     if (useSprite) {
@@ -21822,7 +26104,7 @@ var tempPos = new Vector3();
     }
     var _proto = TransformAnimationPlayable.prototype;
     _proto.start = function start() {
-        var boundItem = this.binding;
+        var boundItem = this.boundObject;
         var scale = boundItem.transform.scale;
         this.originalTransform = {
             position: boundItem.transform.position.clone(),
@@ -21893,14 +26175,14 @@ var tempPos = new Vector3();
         this.velocity.multiply(this.startSpeed);
     };
     _proto.processFrame = function processFrame(context) {
-        if (!this.binding) {
+        if (!this.boundObject) {
             var boundObject = context.output.getUserData();
             if (_instanceof1(boundObject, exports.VFXItem)) {
-                this.binding = boundObject;
+                this.boundObject = boundObject;
                 this.start();
             }
         }
-        if (this.binding && this.binding.composition) {
+        if (this.boundObject && this.boundObject.composition) {
             this.sampleAnimation();
         }
     };
@@ -21908,7 +26190,7 @@ var tempPos = new Vector3();
    * 应用时间轴K帧数据到对象
    */ _proto.sampleAnimation = function sampleAnimation() {
         var _this = this;
-        var boundItem = this.binding;
+        var boundItem = this.boundObject;
         var duration = boundItem.duration;
         var life = this.time / duration;
         life = life < 0 ? 0 : life > 1 ? 1 : life;
@@ -21972,7 +26254,7 @@ exports.TransformPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     return TransformPlayableAsset;
 }(PlayableAsset);
 exports.TransformPlayableAsset = __decorate([
-    effectsClass("TransformPlayableAsset")
+    effectsClass(DataType.TransformPlayableAsset)
 ], exports.TransformPlayableAsset);
 /**
  * @since 2.0.0
@@ -21982,7 +26264,13 @@ exports.TransformPlayableAsset = __decorate([
         return Playable.apply(this, arguments);
     }
     var _proto = ActivationPlayable.prototype;
-    _proto.processFrame = function processFrame(context) {};
+    _proto.processFrame = function processFrame(context) {
+        var vfxItem = context.output.getUserData();
+        if (!_instanceof1(vfxItem, exports.VFXItem)) {
+            return;
+        }
+        vfxItem.time = this.time;
+    };
     return ActivationPlayable;
 }(Playable);
 exports.ActivationPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
@@ -21997,7 +26285,7 @@ exports.ActivationPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     return ActivationPlayableAsset;
 }(PlayableAsset);
 exports.ActivationPlayableAsset = __decorate([
-    effectsClass("ActivationPlayableAsset")
+    effectsClass(DataType.ActivationPlayableAsset)
 ], exports.ActivationPlayableAsset);
 exports.AnimationClip = /*#__PURE__*/ function(EffectsObject) {
     _inherits(AnimationClip, EffectsObject);
@@ -22160,8 +26448,10 @@ exports.TrackAsset = /*#__PURE__*/ function(PlayableAsset) {
     var _proto = TrackAsset.prototype;
     /**
    * 重写该方法以获取自定义对象绑定
-   */ _proto.resolveBinding = function resolveBinding(parentBinding) {
-        return parentBinding;
+   */ _proto.updateAnimatedObject = function updateAnimatedObject() {
+        if (this.parent) {
+            this.boundObject = this.parent.boundObject;
+        }
     };
     /**
    * 重写该方法以创建自定义混合器
@@ -22190,6 +26480,7 @@ exports.TrackAsset = /*#__PURE__*/ function(PlayableAsset) {
         for(var _iterator = _create_for_of_iterator_helper_loose(timelineClips), _step; !(_step = _iterator()).done;){
             var timelineClip = _step.value;
             var clipPlayable = this.createClipPlayable(graph, timelineClip);
+            clipPlayable.setDuration(timelineClip.duration);
             var clip = new RuntimeClip(timelineClip, clipPlayable, mixer, this);
             runtimeClips.push(clip);
             mixer.addInput(clipPlayable, 0);
@@ -22205,6 +26496,7 @@ exports.TrackAsset = /*#__PURE__*/ function(PlayableAsset) {
     };
     _proto.addChild = function addChild(child) {
         this.children.push(child);
+        child.parent = this;
     };
     _proto.createClip = function createClip(classConstructor, name) {
         var newClip = new TimelineClip();
@@ -22231,6 +26523,13 @@ exports.TrackAsset = /*#__PURE__*/ function(PlayableAsset) {
     _proto.createClipPlayable = function createClipPlayable(graph, clip) {
         return clip.asset.createPlayable(graph);
     };
+    _proto.fromData = function fromData(data) {
+        PlayableAsset.prototype.fromData.call(this, data);
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.children), _step; !(_step = _iterator()).done;){
+            var child = _step.value;
+            child.parent = this;
+        }
+    };
     return TrackAsset;
 }(PlayableAsset);
 __decorate([
@@ -22240,7 +26539,7 @@ __decorate([
     serialize()
 ], exports.TrackAsset.prototype, "children", void 0);
 exports.TrackAsset = __decorate([
-    effectsClass("TrackAsset")
+    effectsClass(DataType.TrackAsset)
 ], exports.TrackAsset);
 exports.TrackType = void 0;
 (function(TrackType) {
@@ -22253,8 +26552,8 @@ var RuntimeClip = /*#__PURE__*/ function() {
         this.playable = clipPlayable;
         this.parentMixer = parentMixer;
         this.track = track;
-        if (_instanceof1(this.track.binding, exports.VFXItem)) {
-            this.particleSystem = this.track.binding.getComponent(exports.ParticleSystem);
+        if (_instanceof1(this.track.boundObject, exports.VFXItem)) {
+            this.particleSystem = this.track.boundObject.getComponent(exports.ParticleSystem);
         }
     }
     var _proto = RuntimeClip.prototype;
@@ -22263,7 +26562,7 @@ var RuntimeClip = /*#__PURE__*/ function() {
         var weight = 1.0;
         var ended = false;
         var started = false;
-        var boundObject = this.track.binding;
+        var boundObject = this.track.boundObject;
         if (localTime >= clip.start + clip.duration && clip.endBehavior === EndBehavior.destroy) {
             if (_instanceof1(boundObject, exports.VFXItem) && exports.VFXItem.isParticle(boundObject) && this.particleSystem && !this.particleSystem.destroyed) {
                 weight = 1.0;
@@ -22281,22 +26580,14 @@ var RuntimeClip = /*#__PURE__*/ function() {
             this.playable.play();
         }
         this.parentMixer.setInputWeight(this.playable, weight);
+        var clipTime = clip.toLocalTime(localTime);
+        this.playable.setTime(clipTime);
         // 判断动画是否结束
         if (ended) {
-            if (_instanceof1(boundObject, exports.VFXItem) && !boundObject.ended) {
-                boundObject.ended = true;
-                boundObject.onEnd();
-                if (!boundObject.compositionReusable && !boundObject.reusable) {
-                    boundObject.dispose();
-                    this.playable.dispose();
-                }
-            }
             if (this.playable.getPlayState() === PlayState.Playing) {
                 this.playable.pause();
             }
         }
-        var clipTime = clip.toLocalTime(localTime);
-        this.playable.setTime(clipTime);
     };
     _create_class(RuntimeClip, [
         {
@@ -22313,41 +26604,6 @@ var RuntimeClip = /*#__PURE__*/ function() {
     ]);
     return RuntimeClip;
 }();
-
-exports.ObjectBindingTrack = /*#__PURE__*/ function(TrackAsset1) {
-    _inherits(ObjectBindingTrack, TrackAsset1);
-    function ObjectBindingTrack() {
-        return TrackAsset1.apply(this, arguments);
-    }
-    var _proto = ObjectBindingTrack.prototype;
-    _proto.create = function create(timelineAsset) {
-        var boundItem = this.binding;
-        // 添加粒子动画 clip
-        if (boundItem.getComponent(exports.ParticleSystem)) {
-            var particleTrack = timelineAsset.createTrack(exports.TrackAsset, this, "ParticleTrack");
-            particleTrack.binding = this.binding;
-            var particleClip = particleTrack.createClip(ParticleBehaviourPlayableAsset);
-            particleClip.start = boundItem.start;
-            particleClip.duration = boundItem.duration;
-            particleClip.endBehavior = boundItem.endBehavior;
-        }
-    };
-    return ObjectBindingTrack;
-}(exports.TrackAsset);
-exports.ObjectBindingTrack = __decorate([
-    effectsClass("ObjectBindingTrack")
-], exports.ObjectBindingTrack);
-
-exports.TransformTrack = /*#__PURE__*/ function(TrackAsset) {
-    _inherits(TransformTrack, TrackAsset);
-    function TransformTrack() {
-        return TrackAsset.apply(this, arguments);
-    }
-    return TransformTrack;
-}(exports.TrackAsset);
-exports.TransformTrack = __decorate([
-    effectsClass("TransformTrack")
-], exports.TransformTrack);
 
 var ActivationMixerPlayable = /*#__PURE__*/ function(Playable) {
     _inherits(ActivationMixerPlayable, Playable);
@@ -22370,26 +26626,10 @@ var ActivationMixerPlayable = /*#__PURE__*/ function(Playable) {
         }
         if (hasInput) {
             boundItem.transform.setValid(true);
-            this.showRendererComponents(boundItem);
+            boundItem.setActive(true);
         } else {
             boundItem.transform.setValid(false);
-            this.hideRendererComponents(boundItem);
-        }
-    };
-    _proto.hideRendererComponents = function hideRendererComponents(item) {
-        for(var _iterator = _create_for_of_iterator_helper_loose(item.rendererComponents), _step; !(_step = _iterator()).done;){
-            var rendererComponent = _step.value;
-            if (rendererComponent.enabled) {
-                rendererComponent.enabled = false;
-            }
-        }
-    };
-    _proto.showRendererComponents = function showRendererComponents(item) {
-        for(var _iterator = _create_for_of_iterator_helper_loose(item.rendererComponents), _step; !(_step = _iterator()).done;){
-            var rendererComponent = _step.value;
-            if (!rendererComponent.enabled) {
-                rendererComponent.enabled = true;
-            }
+            boundItem.setActive(false);
         }
     };
     return ActivationMixerPlayable;
@@ -22407,146 +26647,500 @@ exports.ActivationTrack = /*#__PURE__*/ function(TrackAsset) {
     return ActivationTrack;
 }(exports.TrackAsset);
 exports.ActivationTrack = __decorate([
-    effectsClass("ActivationTrack")
+    effectsClass(DataType.ActivationTrack)
 ], exports.ActivationTrack);
 
-exports.SpriteColorTrack = /*#__PURE__*/ function(TrackAsset) {
-    _inherits(SpriteColorTrack, TrackAsset);
-    function SpriteColorTrack() {
-        return TrackAsset.apply(this, arguments);
+var PropertyClipPlayable = /*#__PURE__*/ function(Playable) {
+    _inherits(PropertyClipPlayable, Playable);
+    function PropertyClipPlayable() {
+        return Playable.apply(this, arguments);
     }
-    return SpriteColorTrack;
-}(exports.TrackAsset);
-exports.SpriteColorTrack = __decorate([
-    effectsClass("SpriteColorTrack")
-], exports.SpriteColorTrack);
+    var _proto = PropertyClipPlayable.prototype;
+    _proto.processFrame = function processFrame(context) {
+        this.value = this.curve.getValue(this.time / this.getDuration());
+    };
+    return PropertyClipPlayable;
+}(Playable);
 
-exports.TimelineAsset = /*#__PURE__*/ function(PlayableAsset) {
-    _inherits(TimelineAsset, PlayableAsset);
-    function TimelineAsset() {
-        var _this;
-        _this = PlayableAsset.apply(this, arguments) || this;
-        _this.tracks = [];
-        return _this;
-    }
-    var _proto = TimelineAsset.prototype;
-    _proto.createPlayable = function createPlayable(graph) {
-        var timelinePlayable = new TimelinePlayable(graph);
-        timelinePlayable.setTraversalMode(PlayableTraversalMode.Passthrough);
-        for(var _iterator = _create_for_of_iterator_helper_loose(this.tracks), _step; !(_step = _iterator()).done;){
-            var track = _step.value;
-            if (_instanceof1(track, exports.ObjectBindingTrack)) {
-                track.create(this);
-            }
-        }
-        timelinePlayable.compileTracks(graph, this.tracks);
-        return timelinePlayable;
-    };
-    _proto.createTrack = function createTrack(classConstructor, parent, name) {
-        var newTrack = new classConstructor(this.engine);
-        newTrack.name = name ? name : classConstructor.name;
-        parent.addChild(newTrack);
-        return newTrack;
-    };
-    _proto.fromData = function fromData(data) {};
-    return TimelineAsset;
-}(PlayableAsset);
-__decorate([
-    serialize()
-], exports.TimelineAsset.prototype, "tracks", void 0);
-exports.TimelineAsset = __decorate([
-    effectsClass("TimelineAsset")
-], exports.TimelineAsset);
-var TimelinePlayable = /*#__PURE__*/ function(Playable) {
-    _inherits(TimelinePlayable, Playable);
-    function TimelinePlayable() {
+var FloatPropertyMixerPlayable = /*#__PURE__*/ function(Playable) {
+    _inherits(FloatPropertyMixerPlayable, Playable);
+    function FloatPropertyMixerPlayable() {
         var _this;
         _this = Playable.apply(this, arguments) || this;
-        _this.clips = [];
+        _this.propertyName = "";
         return _this;
     }
-    var _proto = TimelinePlayable.prototype;
-    _proto.prepareFrame = function prepareFrame(context) {
-        this.evaluate();
-    };
-    _proto.evaluate = function evaluate() {
-        var time = this.getTime();
-        // TODO search active clips
-        for(var _iterator = _create_for_of_iterator_helper_loose(this.clips), _step; !(_step = _iterator()).done;){
-            var clip = _step.value;
-            clip.evaluateAt(time);
+    var _proto = FloatPropertyMixerPlayable.prototype;
+    _proto.processFrame = function processFrame(context) {
+        var boundObject = context.output.getUserData();
+        if (!boundObject) {
+            return;
+        }
+        var hasInput = false;
+        var value = 0;
+        // evaluate the curve
+        for(var i = 0; i < this.getInputCount(); i++){
+            var weight = this.getInputWeight(i);
+            if (weight > 0) {
+                var propertyClipPlayable = this.getInput(i);
+                if (!_instanceof1(propertyClipPlayable, PropertyClipPlayable)) {
+                    console.error("FloatPropertyTrack added non-FloatPropertyPlayableAsset");
+                    continue;
+                }
+                var curveValue = propertyClipPlayable.value;
+                value += curveValue * weight;
+                hasInput = true;
+            }
+        }
+        // set value
+        if (hasInput) {
+            boundObject[this.propertyName] = value;
         }
     };
-    _proto.compileTracks = function compileTracks(graph, tracks) {
-        this.sortTracks(tracks);
-        var outputTrack = [];
-        for(var _iterator = _create_for_of_iterator_helper_loose(tracks), _step; !(_step = _iterator()).done;){
-            var masterTrack = _step.value;
-            outputTrack.push(masterTrack);
-            this.addSubTracksRecursive(masterTrack, outputTrack);
-        }
-        for(var _iterator1 = _create_for_of_iterator_helper_loose(outputTrack), _step1; !(_step1 = _iterator1()).done;){
-            var track = _step1.value;
-            var trackMixPlayable = track.createPlayableGraph(graph, this.clips);
-            this.addInput(trackMixPlayable, 0);
-            var trackOutput = track.createOutput();
-            trackOutput.setUserData(track.binding);
-            graph.addOutput(trackOutput);
-            trackOutput.setSourcePlayeble(this, this.getInputCount() - 1);
-        }
-    };
-    _proto.sortTracks = function sortTracks(tracks) {
-        var sortedTracks = [];
-        for(var i = 0; i < tracks.length; i++){
-            sortedTracks.push(new TrackSortWrapper(tracks[i], i));
-        }
-        sortedTracks.sort(compareTracks);
-        tracks.length = 0;
-        for(var _iterator = _create_for_of_iterator_helper_loose(sortedTracks), _step; !(_step = _iterator()).done;){
-            var trackWrapper = _step.value;
-            tracks.push(trackWrapper.track);
-        }
-    };
-    _proto.addSubTracksRecursive = function addSubTracksRecursive(track, allTracks) {
-        for(var _iterator = _create_for_of_iterator_helper_loose(track.getChildTracks()), _step; !(_step = _iterator()).done;){
-            var subTrack = _step.value;
-            allTracks.push(subTrack);
-        }
-        for(var _iterator1 = _create_for_of_iterator_helper_loose(track.getChildTracks()), _step1; !(_step1 = _iterator1()).done;){
-            var subTrack1 = _step1.value;
-            this.addSubTracksRecursive(subTrack1, allTracks);
-        }
-    };
-    return TimelinePlayable;
+    return FloatPropertyMixerPlayable;
 }(Playable);
-var TrackSortWrapper = function TrackSortWrapper(track, originalIndex) {
-    this.track = track;
-    this.originalIndex = originalIndex;
-};
-function isAncestor(ancestorCandidate, descendantCandidate) {
-    var current = descendantCandidate.parent;
-    while(current){
-        if (current === ancestorCandidate) {
-            return true;
+
+var SerializationHelper = /*#__PURE__*/ function() {
+    function SerializationHelper() {}
+    SerializationHelper.collectSerializableObject = function collectSerializableObject(effectsObject, res) {
+        if (res[effectsObject.getInstanceId()]) {
+            return;
         }
-        current = current.parent;
-    }
-    return false;
-}
-function compareTracks(a, b) {
-    var bindingA = a.track.binding;
-    var bindingB = b.track.binding;
-    if (!_instanceof1(bindingA, exports.VFXItem) || !_instanceof1(bindingB, exports.VFXItem)) {
-        return a.originalIndex - b.originalIndex;
-    }
-    if (isAncestor(bindingA, bindingB)) {
-        return -1;
-    } else if (isAncestor(bindingB, bindingA)) {
-        return 1;
-    } else {
-        return a.originalIndex - b.originalIndex; // 非父子关系的元素保持原始顺序
-    }
-}
+        effectsObject.toData();
+        res[effectsObject.getInstanceId()] = effectsObject;
+        var serializedProperties = getMergedStore(effectsObject);
+        if (serializedProperties) {
+            for(var _iterator = _create_for_of_iterator_helper_loose(Object.keys(serializedProperties)), _step; !(_step = _iterator()).done;){
+                var key = _step.value;
+                // TODO 待移除，序列化属性通过 effectsObject 对象直接获取
+                var value = effectsObject.taggedProperties[key];
+                if (value === undefined) {
+                    value = effectsObject[key];
+                }
+                if (EffectsObject.is(value)) {
+                    SerializationHelper.collectSerializableObject(value, res);
+                } else if (isArray(value)) {
+                    for(var _iterator1 = _create_for_of_iterator_helper_loose(value), _step1; !(_step1 = _iterator1()).done;){
+                        var arrayValue = _step1.value;
+                        if (EffectsObject.is(arrayValue)) {
+                            SerializationHelper.collectSerializableObject(arrayValue, res);
+                        }
+                    }
+                } else if (isObject(value)) {
+                    // 非 EffectsObject 对象只递归一层
+                    for(var _iterator2 = _create_for_of_iterator_helper_loose(Object.keys(value)), _step2; !(_step2 = _iterator2()).done;){
+                        var objectKey = _step2.value;
+                        var objectValue = value[objectKey];
+                        if (EffectsObject.is(objectValue)) {
+                            SerializationHelper.collectSerializableObject(objectValue, res);
+                        }
+                    }
+                }
+            }
+        }
+    };
+    SerializationHelper.serializeEffectObject = function serializeEffectObject(effectsObject) {
+        // 持有所有需要序列化的引擎对象
+        var serializableMap = {};
+        var engine = effectsObject.engine;
+        // 加入内存中已加载的资产数据，避免重复创建资产数据
+        var serializedDatas = _extends({}, engine.jsonSceneData);
+        // 递归收集所有需要序列化的对象
+        SerializationHelper.collectSerializableObject(effectsObject, serializableMap);
+        // 依次序列化
+        for(var _iterator = _create_for_of_iterator_helper_loose(Object.keys(serializableMap)), _step; !(_step = _iterator()).done;){
+            var guid = _step.value;
+            var serializeObject = serializableMap[guid];
+            if (!serializedDatas[serializeObject.getInstanceId()]) {
+                serializedDatas[serializeObject.getInstanceId()] = {};
+            }
+            SerializationHelper.serialize(serializeObject, serializedDatas[serializeObject.getInstanceId()]);
+        }
+        return serializedDatas;
+    };
+    SerializationHelper.serialize = function serialize(effectsObject, serializedData) {
+        effectsObject.toData();
+        if (!serializedData) {
+            serializedData = {};
+        }
+        var serializedProperties = getMergedStore(effectsObject);
+        if (serializedProperties) {
+            for(var _iterator = _create_for_of_iterator_helper_loose(Object.keys(serializedProperties)), _step; !(_step = _iterator()).done;){
+                var key = _step.value;
+                var value = effectsObject[key];
+                if (typeof value === "number" || typeof value === "string" || typeof value === "boolean" || SerializationHelper.checkTypedArray(value)) {
+                    // TODO json 数据避免传 typedArray
+                    serializedData[key] = value;
+                } else if (isArray(value)) {
+                    if (!serializedData[key]) {
+                        serializedData[key] = [];
+                    }
+                    SerializationHelper.serializeArrayProperty(value, serializedData[key], 0);
+                } else if (EffectsObject.is(value)) {
+                    // TODO 处理 EffectsObject 递归序列化
+                    serializedData[key] = {
+                        id: value.getInstanceId()
+                    };
+                } else if (isObject(value)) {
+                    if (!serializedData[key]) {
+                        serializedData[key] = {};
+                    }
+                    SerializationHelper.serializeObjectProperty(value, serializedData[key], 0);
+                }
+            }
+        }
+        // TODO 待移除 tagggedProperties 为没有装饰器的临时方案
+        for(var _iterator1 = _create_for_of_iterator_helper_loose(Object.keys(effectsObject.taggedProperties)), _step1; !(_step1 = _iterator1()).done;){
+            var key1 = _step1.value;
+            var value1 = effectsObject.taggedProperties[key1];
+            if (typeof value1 === "number" || typeof value1 === "string" || typeof value1 === "boolean" || SerializationHelper.checkTypedArray(value1)) {
+                // TODO json 数据避免传 typedArray
+                serializedData[key1] = value1;
+            } else if (isArray(value1)) {
+                if (!serializedData[key1]) {
+                    serializedData[key1] = [];
+                }
+                SerializationHelper.serializeArrayProperty(value1, serializedData[key1], 0);
+            } else if (EffectsObject.is(value1)) {
+                // TODO 处理 EffectsObject 递归序列化
+                serializedData[key1] = {
+                    id: value1.getInstanceId()
+                };
+            } else if (isObject(value1)) {
+                if (!serializedData[key1]) {
+                    serializedData[key1] = {};
+                }
+                SerializationHelper.serializeObjectProperty(value1, serializedData[key1], 0);
+            }
+        }
+        return serializedData;
+    };
+    SerializationHelper.deserialize = function deserialize(serializedData, effectsObject) {
+        var taggedProperties = effectsObject.taggedProperties;
+        var serializedProperties = getMergedStore(effectsObject);
+        var engine = effectsObject.engine;
+        for(var _iterator = _create_for_of_iterator_helper_loose(Object.keys(serializedData)), _step; !(_step = _iterator()).done;){
+            var key = _step.value;
+            if (serializedProperties && serializedProperties[key]) {
+                continue;
+            }
+            var value = serializedData[key];
+            taggedProperties[key] = SerializationHelper.deserializeProperty(value, engine, 0);
+        }
+        if (serializedProperties) {
+            for(var _iterator1 = _create_for_of_iterator_helper_loose(Object.keys(serializedProperties)), _step1; !(_step1 = _iterator1()).done;){
+                var key1 = _step1.value;
+                var value1 = serializedData[key1];
+                if (value1 === undefined) {
+                    continue;
+                }
+                var propertyType = serializedProperties[key1].type;
+                // FIXME: taggedProperties 为 readonly，这里存在强制赋值
+                // @ts-expect-error
+                effectsObject[key1] = SerializationHelper.deserializeProperty(value1, engine, 0, propertyType);
+            }
+        }
+        effectsObject.fromData(taggedProperties);
+    };
+    SerializationHelper.deserializeAsync = function deserializeAsync(serializedData, effectsObject) {
+        return _async_to_generator(function() {
+            var taggedProperties, serializedProperties, engine, _iterator, _step, key, value, _iterator1, _step1, key1, value1, propertyType;
+            return __generator(this, function(_state) {
+                switch(_state.label){
+                    case 0:
+                        taggedProperties = effectsObject.taggedProperties;
+                        serializedProperties = getMergedStore(effectsObject);
+                        engine = effectsObject.engine;
+                        _iterator = _create_for_of_iterator_helper_loose(Object.keys(serializedData));
+                        _state.label = 1;
+                    case 1:
+                        if (!!(_step = _iterator()).done) return [
+                            3,
+                            4
+                        ];
+                        key = _step.value;
+                        if (serializedProperties && serializedProperties[key]) {
+                            return [
+                                3,
+                                3
+                            ];
+                        }
+                        value = serializedData[key];
+                        return [
+                            4,
+                            SerializationHelper.deserializePropertyAsync(value, engine, 0)
+                        ];
+                    case 2:
+                        taggedProperties[key] = _state.sent();
+                        _state.label = 3;
+                    case 3:
+                        return [
+                            3,
+                            1
+                        ];
+                    case 4:
+                        if (!serializedProperties) return [
+                            3,
+                            8
+                        ];
+                        _iterator1 = _create_for_of_iterator_helper_loose(Object.keys(serializedProperties));
+                        _state.label = 5;
+                    case 5:
+                        if (!!(_step1 = _iterator1()).done) return [
+                            3,
+                            8
+                        ];
+                        key1 = _step1.value;
+                        value1 = serializedData[key1];
+                        if (value1 === undefined) {
+                            return [
+                                3,
+                                7
+                            ];
+                        }
+                        propertyType = serializedProperties[key1].type;
+                        return [
+                            4,
+                            SerializationHelper.deserializePropertyAsync(value1, engine, 0, propertyType)
+                        ];
+                    case 6:
+                        // FIXME: taggedProperties 为 readonly，这里存在强制赋值
+                        // @ts-expect-error
+                        effectsObject[key1] = _state.sent();
+                        _state.label = 7;
+                    case 7:
+                        return [
+                            3,
+                            5
+                        ];
+                    case 8:
+                        effectsObject.fromData(taggedProperties);
+                        return [
+                            2
+                        ];
+                }
+            });
+        })();
+    };
+    SerializationHelper.checkTypedArray = function checkTypedArray(obj) {
+        return _instanceof1(obj, Int8Array) || _instanceof1(obj, Uint8Array) || _instanceof1(obj, Uint8ClampedArray) || _instanceof1(obj, Int16Array) || _instanceof1(obj, Uint16Array) || _instanceof1(obj, Int32Array) || _instanceof1(obj, Uint32Array) || _instanceof1(obj, Float32Array) || _instanceof1(obj, Float64Array) || _instanceof1(obj, ArrayBuffer);
+    };
+    // check value is { id: 7e69662e964e4892ae8933f24562395b }
+    SerializationHelper.checkDataPath = function checkDataPath(value) {
+        return !!(isObject(value) && Object.keys(value).length === 1 && "id" in value && isString(value.id) && value.id.length === 32);
+    };
+    // TODO 测试函数，2.0 上线后移除
+    SerializationHelper.checkGLTFNode = function checkGLTFNode(value) {
+        return isObject(value) && value.nodeIndex !== undefined && value.isJoint !== undefined;
+    };
+    SerializationHelper.checkImageSource = function checkImageSource(value) {
+        return isCanvas(value) || _instanceof1(value, alipay.HTMLImageElement);
+    };
+    SerializationHelper.deserializeProperty = function deserializeProperty(property, engine, level, type) {
+        if (level > 14) {
+            console.error("The nested object layers of the serialized data exceed the maximum limit.");
+            return;
+        }
+        // 加载并链接 DataPath 字段表示的 EffectsObject 引用。Class 对象 copy [key, value] 会丢失对象信息，因此只递归数组对象和普通 js Object 结构对象。
+        if (isArray(property)) {
+            var res = [];
+            for(var _iterator = _create_for_of_iterator_helper_loose(property), _step; !(_step = _iterator()).done;){
+                var value = _step.value;
+                res.push(SerializationHelper.deserializeProperty(value, engine, level + 1, type));
+            }
+            return res;
+        // TODO json 数据避免传 typedArray
+        } else if (SerializationHelper.checkDataPath(property)) {
+            return engine.assetLoader.loadGUID(property.id);
+        } else if (isObject(property) && property.constructor === Object) {
+            var res1;
+            if (type) {
+                res1 = new type();
+            } else {
+                res1 = {};
+            }
+            for(var _iterator1 = _create_for_of_iterator_helper_loose(Object.keys(property)), _step1; !(_step1 = _iterator1()).done;){
+                var key = _step1.value;
+                res1[key] = SerializationHelper.deserializeProperty(property[key], engine, level + 1);
+            }
+            return res1;
+        } else {
+            return property;
+        }
+    };
+    SerializationHelper.deserializePropertyAsync = function deserializePropertyAsync(property, engine, level, type) {
+        return _async_to_generator(function() {
+            var res, _iterator, _step, value, _, res1, res2, _iterator1, _step1, key;
+            return __generator(this, function(_state) {
+                switch(_state.label){
+                    case 0:
+                        if (level > 14) {
+                            console.error("The nested object layers of the serialized data exceed the maximum limit.");
+                            return [
+                                2
+                            ];
+                        }
+                        if (!isArray(property)) return [
+                            3,
+                            5
+                        ];
+                        res = [];
+                        _iterator = _create_for_of_iterator_helper_loose(property);
+                        _state.label = 1;
+                    case 1:
+                        if (!!(_step = _iterator()).done) return [
+                            3,
+                            4
+                        ];
+                        value = _step.value;
+                        _ = res.push;
+                        return [
+                            4,
+                            SerializationHelper.deserializePropertyAsync(value, engine, level + 1, type)
+                        ];
+                    case 2:
+                        _.apply(res, [
+                            _state.sent()
+                        ]);
+                        _state.label = 3;
+                    case 3:
+                        return [
+                            3,
+                            1
+                        ];
+                    case 4:
+                        return [
+                            2,
+                            res
+                        ];
+                    case 5:
+                        if (!SerializationHelper.checkDataPath(property)) return [
+                            3,
+                            7
+                        ];
+                        return [
+                            4,
+                            engine.assetLoader.loadGUIDAsync(property.id)
+                        ];
+                    case 6:
+                        res1 = _state.sent();
+                        return [
+                            2,
+                            res1
+                        ];
+                    case 7:
+                        if (!(isObject(property) && property.constructor === Object)) return [
+                            3,
+                            12
+                        ];
+                        if (type) {
+                            res2 = new type();
+                        } else {
+                            res2 = {};
+                        }
+                        _iterator1 = _create_for_of_iterator_helper_loose(Object.keys(property));
+                        _state.label = 8;
+                    case 8:
+                        if (!!(_step1 = _iterator1()).done) return [
+                            3,
+                            11
+                        ];
+                        key = _step1.value;
+                        return [
+                            4,
+                            SerializationHelper.deserializePropertyAsync(property[key], engine, level + 1)
+                        ];
+                    case 9:
+                        res2[key] = _state.sent();
+                        _state.label = 10;
+                    case 10:
+                        return [
+                            3,
+                            8
+                        ];
+                    case 11:
+                        return [
+                            2,
+                            res2
+                        ];
+                    case 12:
+                        return [
+                            2,
+                            property
+                        ];
+                    case 13:
+                        return [
+                            2
+                        ];
+                }
+            });
+        })();
+    };
+    SerializationHelper.serializeObjectProperty = function serializeObjectProperty(objectProperty, serializedData, level) {
+        if (level > 14) {
+            console.error("The nested object layers of the serialized data exceed the maximum limit.");
+            return;
+        }
+        if (!serializedData) {
+            serializedData = {};
+        }
+        for(var _iterator = _create_for_of_iterator_helper_loose(Object.keys(objectProperty)), _step; !(_step = _iterator()).done;){
+            var key = _step.value;
+            var value = objectProperty[key];
+            if (typeof value === "number" || typeof value === "string" || typeof value === "boolean" || SerializationHelper.checkTypedArray(objectProperty)) {
+                // TODO json 数据避免传 typedArray
+                serializedData[key] = value;
+            } else if (isArray(value)) {
+                if (!serializedData[key]) {
+                    serializedData[key] = [];
+                }
+                SerializationHelper.serializeArrayProperty(value, serializedData[key], level + 1);
+            } else if (EffectsObject.is(value)) {
+                // TODO 处理 EffectsObject 递归序列化
+                serializedData[key] = {
+                    id: value.getInstanceId()
+                };
+            } else if (isObject(value)) {
+                if (!serializedData[key]) {
+                    serializedData[key] = {};
+                }
+                SerializationHelper.serializeObjectProperty(value, serializedData[key], level + 1);
+            }
+        }
+    };
+    SerializationHelper.serializeArrayProperty = function serializeArrayProperty(arrayProperty, serializedData, level) {
+        if (level > 14) {
+            console.error("The nested object layers of the serialized data exceed the maximum limit.");
+            return;
+        }
+        if (!serializedData) {
+            serializedData = [];
+        }
+        for(var i = 0; i < arrayProperty.length; i++){
+            var value = arrayProperty[i];
+            if (typeof value === "number" || typeof value === "string" || typeof value === "boolean" || SerializationHelper.checkTypedArray(arrayProperty)) {
+                // TODO json 数据避免传 typedArray
+                serializedData[i] = value;
+            } else if (isArray(value)) {
+                if (!serializedData[i]) {
+                    serializedData[i] = [];
+                }
+                SerializationHelper.serializeArrayProperty(value, serializedData[i], level + 1);
+            } else if (EffectsObject.is(value)) {
+                // TODO 处理 EffectsObject 递归序列化
+                serializedData[i] = {
+                    id: value.getInstanceId()
+                };
+            } else if (isObject(value)) {
+                if (!serializedData[i]) {
+                    serializedData[i] = {};
+                }
+                SerializationHelper.serializeObjectProperty(value, serializedData[i], level + 1);
+            }
+        }
+    };
+    return SerializationHelper;
+}();
 
 /**
  * @since 2.0.0
@@ -22565,9 +27159,10 @@ function compareTracks(a, b) {
         return _this;
     }
     var _proto = CompositionComponent.prototype;
-    _proto.start = function start() {
-        var _this_item_props = this.item.props, _this_item_props_startTime = _this_item_props.startTime, startTime = _this_item_props_startTime === void 0 ? 0 : _this_item_props_startTime;
-        this.startTime = startTime;
+    _proto.onStart = function onStart() {
+        if (!this.timelineAsset) {
+            this.timelineAsset = new exports.TimelineAsset(this.engine);
+        }
         this.resolveBindings();
         this.timelinePlayable = this.timelineAsset.createPlayable(this.graph);
         // 重播不销毁元素
@@ -22578,12 +27173,9 @@ function compareTracks(a, b) {
     _proto.setReusable = function setReusable(value) {
         for(var _iterator = _create_for_of_iterator_helper_loose(this.timelineAsset.tracks), _step; !(_step = _iterator()).done;){
             var track = _step.value;
-            var binding = track.binding;
-            if (_instanceof1(binding, exports.VFXItem)) {
-                if (_instanceof1(track, exports.ObjectBindingTrack)) {
-                    binding.reusable = value;
-                }
-                var subCompositionComponent = binding.getComponent(CompositionComponent);
+            var boundObject = track.boundObject;
+            if (_instanceof1(boundObject, exports.VFXItem)) {
+                var subCompositionComponent = boundObject.getComponent(CompositionComponent);
                 if (subCompositionComponent) {
                     subCompositionComponent.setReusable(value);
                 }
@@ -22593,50 +27185,30 @@ function compareTracks(a, b) {
     _proto.getReusable = function getReusable() {
         return this.reusable;
     };
-    _proto.update = function update(dt) {
+    _proto.onUpdate = function onUpdate(dt) {
         var time = this.time;
         this.timelinePlayable.setTime(time);
+        // The properties of the object may change dynamically,
+        // so reset the track binding to avoid invalidation of the previously obtained binding object.
+        this.resolveBindings();
         this.graph.evaluate(dt);
     };
     _proto.createContent = function createContent() {
-        var sceneBindings = [];
-        for(var _iterator = _create_for_of_iterator_helper_loose(this.data.sceneBindings), _step; !(_step = _iterator()).done;){
-            var sceneBindingData = _step.value;
-            sceneBindings.push({
-                key: this.engine.assetLoader.loadGUID(sceneBindingData.key.id),
-                value: this.engine.assetLoader.loadGUID(sceneBindingData.value.id)
-            });
-        }
-        this.sceneBindings = sceneBindings;
-        var timelineAsset = this.data.timelineAsset ? this.engine.assetLoader.loadGUID(this.data.timelineAsset.id) : new exports.TimelineAsset(this.engine);
-        this.timelineAsset = timelineAsset;
-        var items = this.items;
-        this.items.length = 0;
         if (this.item.composition) {
-            var assetLoader = this.item.engine.assetLoader;
-            var itemProps = this.data.items ? this.data.items : [];
-            for(var i = 0; i < itemProps.length; i++){
-                var item = void 0;
-                var itemData = itemProps[i];
+            for(var _iterator = _create_for_of_iterator_helper_loose(this.items), _step; !(_step = _iterator()).done;){
+                var item = _step.value;
+                item.composition = this.item.composition;
                 // 设置预合成作为元素时的时长、结束行为和渲染延时
-                if (exports.Item.isComposition(itemData)) {
-                    var refId = itemData.content.options.refId;
+                if (exports.VFXItem.isComposition(item)) {
+                    this.item.composition.refContent.push(item);
+                    var compositionContent = item.props.content;
+                    var refId = compositionContent.options.refId;
                     var props = this.item.composition.refCompositionProps.get(refId);
                     if (!props) {
                         throw new Error("Referenced precomposition with Id: " + refId + " does not exist.");
                     }
-                    // endBehavior 类型需优化
-                    props.content = itemData.content;
-                    item = assetLoader.loadGUID(itemData.id);
-                    item.composition = this.item.composition;
                     var compositionComponent = item.addComponent(CompositionComponent);
-                    compositionComponent.data = props;
-                    compositionComponent.refId = refId;
-                    item.transform.parentTransform = this.transform;
-                    this.item.composition.refContent.push(item);
-                    if (item.endBehavior === EndBehavior.restart) {
-                        this.item.composition.autoRefTex = false;
-                    }
+                    SerializationHelper.deserialize(props, compositionComponent);
                     compositionComponent.createContent();
                     for(var _iterator1 = _create_for_of_iterator_helper_loose(compositionComponent.items), _step1; !(_step1 = _iterator1()).done;){
                         var vfxItem = _step1.value;
@@ -22646,30 +27218,20 @@ function compareTracks(a, b) {
                             component.setInstanceId(generateGUID());
                         }
                     }
-                } else {
-                    item = assetLoader.loadGUID(itemData.id);
-                    item.composition = this.item.composition;
                 }
-                item.parent = this.item;
-                // 相机不跟随合成移动
-                item.transform.parentTransform = itemData.type === ItemType.camera ? new Transform() : this.transform;
-                if (exports.VFXItem.isExtraCamera(item)) {
-                    this.item.composition.extraCamera = item;
-                }
-                items.push(item);
             }
         }
     };
-    _proto.showItems = function showItems() {
+    _proto.onEnable = function onEnable() {
         for(var _iterator = _create_for_of_iterator_helper_loose(this.items), _step; !(_step = _iterator()).done;){
             var item = _step.value;
-            item.setVisible(true);
+            item.setActive(true);
         }
     };
-    _proto.hideItems = function hideItems() {
+    _proto.onDisable = function onDisable() {
         for(var _iterator = _create_for_of_iterator_helper_loose(this.items), _step; !(_step = _iterator()).done;){
             var item = _step.value;
-            item.setVisible(false);
+            item.setActive(false);
         }
     };
     _proto.onDestroy = function onDestroy() {
@@ -22685,7 +27247,7 @@ function compareTracks(a, b) {
     _proto.hitTest = function hitTest(ray, x, y, regions, force, options) {
         var _this, _loop = function(i) {
             var item = _this.items[i];
-            if (item.getVisible() && item.transform.getValid() && !item.ended && !exports.VFXItem.isComposition(item) && !skip(item)) {
+            if (item.isActive && item.transform.getValid() && !exports.VFXItem.isComposition(item) && !skip(item)) {
                 var hitParams = item.getHitTestParams(force);
                 if (hitParams) {
                     var success = false;
@@ -22761,26 +27323,51 @@ function compareTracks(a, b) {
         }
         return regions;
     };
-    _proto.fromData = function fromData(data) {};
+    _proto.fromData = function fromData(data) {
+        Behaviour.prototype.fromData.call(this, data);
+        this.items = data.items;
+        var _data_startTime;
+        this.startTime = (_data_startTime = data.startTime) != null ? _data_startTime : 0;
+        this.sceneBindings = data.sceneBindings;
+        this.timelineAsset = data.timelineAsset;
+    };
     _proto.resolveBindings = function resolveBindings() {
         for(var _iterator = _create_for_of_iterator_helper_loose(this.sceneBindings), _step; !(_step = _iterator()).done;){
             var sceneBinding = _step.value;
-            sceneBinding.key.binding = sceneBinding.value;
+            sceneBinding.key.boundObject = sceneBinding.value;
         }
+        // 为了通过帧对比，需要保证和原有的 update 时机一致。
+        // 因此这边更新一次对象绑定，后续 timeline playable 中 sort tracks 的排序才能和原先的版本对上。
+        // 如果不需要严格保证和之前的 updata 时机一致，这边的更新和 timeline asset 中的 sortTracks 都能去掉。
         for(var _iterator1 = _create_for_of_iterator_helper_loose(this.timelineAsset.tracks), _step1; !(_step1 = _iterator1()).done;){
             var masterTrack = _step1.value;
-            this.resolveTrackBindingsWithRoot(masterTrack);
+            this.updateTrackAnimatedObject(masterTrack);
         }
     };
-    _proto.resolveTrackBindingsWithRoot = function resolveTrackBindingsWithRoot(track) {
+    _proto.updateTrackAnimatedObject = function updateTrackAnimatedObject(track) {
         for(var _iterator = _create_for_of_iterator_helper_loose(track.getChildTracks()), _step; !(_step = _iterator()).done;){
             var subTrack = _step.value;
-            subTrack.binding = subTrack.resolveBinding(track.binding);
-            this.resolveTrackBindingsWithRoot(subTrack);
+            subTrack.updateAnimatedObject();
+            this.updateTrackAnimatedObject(subTrack);
         }
     };
     return CompositionComponent;
 }(Behaviour);
+
+var SubCompositionClipPlayable = /*#__PURE__*/ function(Playable) {
+    _inherits(SubCompositionClipPlayable, Playable);
+    function SubCompositionClipPlayable() {
+        return Playable.apply(this, arguments);
+    }
+    var _proto = SubCompositionClipPlayable.prototype;
+    _proto.processFrame = function processFrame(context) {
+        var boundObject = context.output.getUserData();
+        if (_instanceof1(boundObject, CompositionComponent)) {
+            boundObject.time = this.getTime();
+        }
+    };
+    return SubCompositionClipPlayable;
+}(Playable);
 
 var SubCompositionMixerPlayable = /*#__PURE__*/ function(Playable) {
     _inherits(SubCompositionMixerPlayable, Playable);
@@ -22802,13 +27389,180 @@ var SubCompositionMixerPlayable = /*#__PURE__*/ function(Playable) {
             }
         }
         if (hasInput) {
-            compositionComponent.showItems();
+            compositionComponent.item.setActive(true);
         } else {
-            compositionComponent.hideItems();
+            compositionComponent.item.setActive(false);
         }
     };
     return SubCompositionMixerPlayable;
 }(Playable);
+
+var Vector4PropertyMixerPlayable = /*#__PURE__*/ function(Playable) {
+    _inherits(Vector4PropertyMixerPlayable, Playable);
+    function Vector4PropertyMixerPlayable() {
+        var _this;
+        _this = Playable.apply(this, arguments) || this;
+        _this.propertyName = "";
+        return _this;
+    }
+    var _proto = Vector4PropertyMixerPlayable.prototype;
+    _proto.processFrame = function processFrame(context) {
+        var boundObject = context.output.getUserData();
+        if (!boundObject) {
+            return;
+        }
+        var hasInput = false;
+        var value = boundObject[this.propertyName];
+        if (!_instanceof1(value, Vector4$1)) {
+            return;
+        }
+        value.setZero();
+        // evaluate the curve
+        for(var i = 0; i < this.getInputCount(); i++){
+            var weight = this.getInputWeight(i);
+            if (weight > 0) {
+                var propertyClipPlayable = this.getInput(i);
+                if (!_instanceof1(propertyClipPlayable, PropertyClipPlayable)) {
+                    console.error("Vector4PropertyTrack added non-Vector4PropertyPlayableAsset");
+                    continue;
+                }
+                var curveValue = propertyClipPlayable.value;
+                value.x += curveValue.x * weight;
+                value.y += curveValue.y * weight;
+                value.z += curveValue.z * weight;
+                value.w += curveValue.w * weight;
+                hasInput = true;
+            }
+        }
+        // set value
+        if (hasInput) {
+            boundObject[this.propertyName] = value;
+        }
+    };
+    return Vector4PropertyMixerPlayable;
+}(Playable);
+
+var ColorPropertyMixerPlayable = /*#__PURE__*/ function(Playable) {
+    _inherits(ColorPropertyMixerPlayable, Playable);
+    function ColorPropertyMixerPlayable() {
+        var _this;
+        _this = Playable.apply(this, arguments) || this;
+        _this.propertyName = "";
+        return _this;
+    }
+    var _proto = ColorPropertyMixerPlayable.prototype;
+    _proto.processFrame = function processFrame(context) {
+        var boundObject = context.output.getUserData();
+        if (!boundObject) {
+            return;
+        }
+        var hasInput = false;
+        var value = boundObject[this.propertyName];
+        if (!_instanceof1(value, Color)) {
+            return;
+        }
+        value.setZero();
+        // evaluate the curve
+        for(var i = 0; i < this.getInputCount(); i++){
+            var weight = this.getInputWeight(i);
+            if (weight > 0) {
+                var propertyClipPlayable = this.getInput(i);
+                if (!_instanceof1(propertyClipPlayable, PropertyClipPlayable)) {
+                    console.error("ColorPropertyMixerPlayable received incompatible input");
+                    continue;
+                }
+                var curveValue = propertyClipPlayable.value;
+                value.r += curveValue.r * weight;
+                value.g += curveValue.g * weight;
+                value.b += curveValue.b * weight;
+                value.a += curveValue.a * weight;
+                hasInput = true;
+            }
+        }
+        // set value
+        if (hasInput) {
+            boundObject[this.propertyName] = value;
+        }
+    };
+    return ColorPropertyMixerPlayable;
+}(Playable);
+
+var PropertyTrack = /*#__PURE__*/ function(TrackAsset) {
+    _inherits(PropertyTrack, TrackAsset);
+    function PropertyTrack() {
+        var _this;
+        _this = TrackAsset.apply(this, arguments) || this;
+        _this.propertyNames = [];
+        _this.path = "";
+        return _this;
+    }
+    var _proto = PropertyTrack.prototype;
+    _proto.updateAnimatedObject = function updateAnimatedObject() {
+        var propertyNames = this.propertyNames;
+        var target = this.parent.boundObject;
+        for(var i = 0; i < propertyNames.length - 1; i++){
+            var property = target[propertyNames[i]];
+            if (property === undefined) {
+                console.error("The " + propertyNames[i] + " property of " + target + " was not found");
+            }
+            target = property;
+        }
+        this.boundObject = target;
+    };
+    _proto.fromData = function fromData(data) {
+        TrackAsset.prototype.fromData.call(this, data);
+        var propertyNames = this.path.split(".");
+        this.propertyNames = propertyNames;
+    };
+    return PropertyTrack;
+}(exports.TrackAsset);
+__decorate([
+    serialize()
+], PropertyTrack.prototype, "path", void 0);
+
+exports.FloatPropertyTrack = /*#__PURE__*/ function(PropertyTrack) {
+    _inherits(FloatPropertyTrack, PropertyTrack);
+    function FloatPropertyTrack() {
+        return PropertyTrack.apply(this, arguments);
+    }
+    var _proto = FloatPropertyTrack.prototype;
+    _proto.createTrackMixer = function createTrackMixer(graph) {
+        var mixer = new FloatPropertyMixerPlayable(graph);
+        var propertyNames = this.propertyNames;
+        if (propertyNames.length > 0) {
+            var propertyName = propertyNames[propertyNames.length - 1];
+            mixer.propertyName = propertyName;
+        }
+        return mixer;
+    };
+    _proto.updateAnimatedObject = function updateAnimatedObject() {
+        var propertyNames = this.propertyNames;
+        var target = this.parent.boundObject;
+        for(var i = 0; i < propertyNames.length - 1; i++){
+            var property = target[propertyNames[i]];
+            if (property === undefined) {
+                console.error("The " + propertyNames[i] + " property of " + target + " was not found");
+            }
+            target = property;
+        }
+        this.boundObject = target;
+    };
+    return FloatPropertyTrack;
+}(PropertyTrack);
+exports.FloatPropertyTrack = __decorate([
+    effectsClass(DataType.FloatPropertyTrack)
+], exports.FloatPropertyTrack);
+
+exports.SpriteColorTrack = /*#__PURE__*/ function(TrackAsset) {
+    _inherits(SpriteColorTrack, TrackAsset);
+    function SpriteColorTrack() {
+        return TrackAsset.apply(this, arguments);
+    }
+    return SpriteColorTrack;
+}(exports.TrackAsset);
+exports.SpriteColorTrack = __decorate([
+    effectsClass(DataType.SpriteColorTrack)
+], exports.SpriteColorTrack);
 
 exports.SubCompositionTrack = /*#__PURE__*/ function(TrackAsset) {
     _inherits(SubCompositionTrack, TrackAsset);
@@ -22816,11 +27570,11 @@ exports.SubCompositionTrack = /*#__PURE__*/ function(TrackAsset) {
         return TrackAsset.apply(this, arguments);
     }
     var _proto = SubCompositionTrack.prototype;
-    _proto.resolveBinding = function resolveBinding(parentBinding) {
-        if (!_instanceof1(parentBinding, exports.VFXItem)) {
+    _proto.updateAnimatedObject = function updateAnimatedObject() {
+        if (!this.parent || !_instanceof1(this.parent.boundObject, exports.VFXItem)) {
             throw new Error("SubCompositionTrack needs to be set under the VFXItem track.");
         }
-        return parentBinding.getComponent(CompositionComponent);
+        this.boundObject = this.parent.boundObject.getComponent(CompositionComponent);
     };
     _proto.createTrackMixer = function createTrackMixer(graph) {
         return new SubCompositionMixerPlayable(graph);
@@ -22828,23 +27582,125 @@ exports.SubCompositionTrack = /*#__PURE__*/ function(TrackAsset) {
     return SubCompositionTrack;
 }(exports.TrackAsset);
 exports.SubCompositionTrack = __decorate([
-    effectsClass("SubCompositionTrack")
+    effectsClass(DataType.SubCompositionTrack)
 ], exports.SubCompositionTrack);
 
-var SubCompositionClipPlayable = /*#__PURE__*/ function(Playable) {
-    _inherits(SubCompositionClipPlayable, Playable);
-    function SubCompositionClipPlayable() {
-        return Playable.apply(this, arguments);
+exports.TransformTrack = /*#__PURE__*/ function(TrackAsset) {
+    _inherits(TransformTrack, TrackAsset);
+    function TransformTrack() {
+        return TrackAsset.apply(this, arguments);
     }
-    var _proto = SubCompositionClipPlayable.prototype;
-    _proto.processFrame = function processFrame(context) {
-        var boundObject = context.output.getUserData();
-        if (_instanceof1(boundObject, CompositionComponent)) {
-            boundObject.time = this.getTime();
+    return TransformTrack;
+}(exports.TrackAsset);
+exports.TransformTrack = __decorate([
+    effectsClass(DataType.TransformTrack)
+], exports.TransformTrack);
+
+exports.MaterialTrack = /*#__PURE__*/ function(TrackAsset) {
+    _inherits(MaterialTrack, TrackAsset);
+    function MaterialTrack() {
+        return TrackAsset.apply(this, arguments);
+    }
+    var _proto = MaterialTrack.prototype;
+    _proto.updateAnimatedObject = function updateAnimatedObject() {
+        if (!_instanceof1(this.parent.boundObject, RendererComponent)) {
+            return;
         }
+        this.parent.boundObject;
+        this.boundObject = this.parent.boundObject.materials[this.index];
     };
-    return SubCompositionClipPlayable;
-}(Playable);
+    return MaterialTrack;
+}(exports.TrackAsset);
+__decorate([
+    serialize()
+], exports.MaterialTrack.prototype, "index", void 0);
+exports.MaterialTrack = __decorate([
+    effectsClass("MaterialTrack")
+], exports.MaterialTrack);
+
+exports.Vector4PropertyTrack = /*#__PURE__*/ function(PropertyTrack) {
+    _inherits(Vector4PropertyTrack, PropertyTrack);
+    function Vector4PropertyTrack() {
+        return PropertyTrack.apply(this, arguments);
+    }
+    var _proto = Vector4PropertyTrack.prototype;
+    _proto.createTrackMixer = function createTrackMixer(graph) {
+        var mixer = new Vector4PropertyMixerPlayable(graph);
+        var propertyNames = this.propertyNames;
+        if (propertyNames.length > 0) {
+            var propertyName = propertyNames[propertyNames.length - 1];
+            mixer.propertyName = propertyName;
+        }
+        return mixer;
+    };
+    return Vector4PropertyTrack;
+}(PropertyTrack);
+exports.Vector4PropertyTrack = __decorate([
+    effectsClass(DataType.Vector4PropertyTrack)
+], exports.Vector4PropertyTrack);
+
+exports.ColorPropertyTrack = /*#__PURE__*/ function(PropertyTrack) {
+    _inherits(ColorPropertyTrack, PropertyTrack);
+    function ColorPropertyTrack() {
+        return PropertyTrack.apply(this, arguments);
+    }
+    var _proto = ColorPropertyTrack.prototype;
+    _proto.createTrackMixer = function createTrackMixer(graph) {
+        var mixer = new ColorPropertyMixerPlayable(graph);
+        var propertyNames = this.propertyNames;
+        if (propertyNames.length > 0) {
+            var propertyName = propertyNames[propertyNames.length - 1];
+            mixer.propertyName = propertyName;
+        }
+        return mixer;
+    };
+    return ColorPropertyTrack;
+}(PropertyTrack);
+exports.ColorPropertyTrack = __decorate([
+    effectsClass(DataType.ColorPropertyTrack)
+], exports.ColorPropertyTrack);
+
+exports.ColorPropertyPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
+    _inherits(ColorPropertyPlayableAsset, PlayableAsset);
+    function ColorPropertyPlayableAsset() {
+        return PlayableAsset.apply(this, arguments);
+    }
+    var _proto = ColorPropertyPlayableAsset.prototype;
+    _proto.createPlayable = function createPlayable(graph) {
+        var clipPlayable = new PropertyClipPlayable(graph);
+        clipPlayable.curve = createValueGetter(this.curveData);
+        clipPlayable.value = clipPlayable.curve.getValue(0);
+        return clipPlayable;
+    };
+    return ColorPropertyPlayableAsset;
+}(PlayableAsset);
+__decorate([
+    serialize()
+], exports.ColorPropertyPlayableAsset.prototype, "curveData", void 0);
+exports.ColorPropertyPlayableAsset = __decorate([
+    effectsClass(DataType.ColorPropertyPlayableAsset)
+], exports.ColorPropertyPlayableAsset);
+
+exports.FloatPropertyPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
+    _inherits(FloatPropertyPlayableAsset, PlayableAsset);
+    function FloatPropertyPlayableAsset() {
+        return PlayableAsset.apply(this, arguments);
+    }
+    var _proto = FloatPropertyPlayableAsset.prototype;
+    _proto.createPlayable = function createPlayable(graph) {
+        var clipPlayable = new PropertyClipPlayable(graph);
+        clipPlayable.curve = createValueGetter(this.curveData);
+        clipPlayable.value = clipPlayable.curve.getValue(0);
+        return clipPlayable;
+    };
+    return FloatPropertyPlayableAsset;
+}(PlayableAsset);
+__decorate([
+    serialize()
+], exports.FloatPropertyPlayableAsset.prototype, "curveData", void 0);
+exports.FloatPropertyPlayableAsset = __decorate([
+    effectsClass(DataType.FloatPropertyPlayableAsset)
+], exports.FloatPropertyPlayableAsset);
 
 exports.SubCompositionPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     _inherits(SubCompositionPlayableAsset, PlayableAsset);
@@ -22858,8 +27714,230 @@ exports.SubCompositionPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     return SubCompositionPlayableAsset;
 }(PlayableAsset);
 exports.SubCompositionPlayableAsset = __decorate([
-    effectsClass("SubCompositionPlayableAsset")
+    effectsClass(DataType.SubCompositionPlayableAsset)
 ], exports.SubCompositionPlayableAsset);
+
+/**
+ * A class that stores track assets and the generated mixer playables and playable outputs.
+ * It is used to query the corresponding playable object based on the track asset.
+ */ var TrackInstance = /*#__PURE__*/ function() {
+    function TrackInstance(trackAsset, mixer, output) {
+        this.children = [];
+        this.trackAsset = trackAsset;
+        this.mixer = mixer;
+        this.output = output;
+    }
+    var _proto = TrackInstance.prototype;
+    _proto.addChild = function addChild(trackInstance) {
+        this.children.push(trackInstance);
+    };
+    return TrackInstance;
+}();
+
+exports.TimelineAsset = /*#__PURE__*/ function(PlayableAsset) {
+    _inherits(TimelineAsset, PlayableAsset);
+    function TimelineAsset() {
+        var _this;
+        _this = PlayableAsset.apply(this, arguments) || this;
+        _this.tracks = [];
+        _this.cacheFlattenedTracks = null;
+        return _this;
+    }
+    var _proto = TimelineAsset.prototype;
+    _proto.createPlayable = function createPlayable(graph) {
+        var timelinePlayable = new TimelinePlayable(graph);
+        timelinePlayable.setTraversalMode(PlayableTraversalMode.Passthrough);
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.tracks), _step; !(_step = _iterator()).done;){
+            var track = _step.value;
+            if (_instanceof1(track, exports.ObjectBindingTrack)) {
+                track.create(this);
+            }
+        }
+        this.sortTracks(this.tracks);
+        timelinePlayable.compileTracks(graph, this.flattenedTracks);
+        return timelinePlayable;
+    };
+    _proto.createTrack = function createTrack(classConstructor, parent, name) {
+        var newTrack = new classConstructor(this.engine);
+        newTrack.name = name ? name : classConstructor.name;
+        parent.addChild(newTrack);
+        this.invalidate();
+        return newTrack;
+    };
+    /**
+   * Invalidates the asset, called when tracks data changed
+   */ _proto.invalidate = function invalidate() {
+        this.cacheFlattenedTracks = null;
+    };
+    _proto.addSubTracksRecursive = function addSubTracksRecursive(track, allTracks) {
+        for(var _iterator = _create_for_of_iterator_helper_loose(track.getChildTracks()), _step; !(_step = _iterator()).done;){
+            var subTrack = _step.value;
+            allTracks.push(subTrack);
+        }
+        for(var _iterator1 = _create_for_of_iterator_helper_loose(track.getChildTracks()), _step1; !(_step1 = _iterator1()).done;){
+            var subTrack1 = _step1.value;
+            this.addSubTracksRecursive(subTrack1, allTracks);
+        }
+    };
+    _proto.sortTracks = function sortTracks(tracks) {
+        var sortedTracks = [];
+        for(var i = 0; i < tracks.length; i++){
+            sortedTracks.push(new TrackSortWrapper(tracks[i], i));
+        }
+        sortedTracks.sort(compareTracks);
+        tracks.length = 0;
+        for(var _iterator = _create_for_of_iterator_helper_loose(sortedTracks), _step; !(_step = _iterator()).done;){
+            var trackWrapper = _step.value;
+            tracks.push(trackWrapper.track);
+        }
+    };
+    _proto.fromData = function fromData(data) {};
+    _create_class(TimelineAsset, [
+        {
+            key: "flattenedTracks",
+            get: function get() {
+                if (!this.cacheFlattenedTracks) {
+                    this.cacheFlattenedTracks = [];
+                    // flatten track tree
+                    for(var _iterator = _create_for_of_iterator_helper_loose(this.tracks), _step; !(_step = _iterator()).done;){
+                        var masterTrack = _step.value;
+                        this.cacheFlattenedTracks.push(masterTrack);
+                        this.addSubTracksRecursive(masterTrack, this.cacheFlattenedTracks);
+                    }
+                }
+                return this.cacheFlattenedTracks;
+            }
+        }
+    ]);
+    return TimelineAsset;
+}(PlayableAsset);
+__decorate([
+    serialize()
+], exports.TimelineAsset.prototype, "tracks", void 0);
+exports.TimelineAsset = __decorate([
+    effectsClass(DataType.TimelineAsset)
+], exports.TimelineAsset);
+var TimelinePlayable = /*#__PURE__*/ function(Playable) {
+    _inherits(TimelinePlayable, Playable);
+    function TimelinePlayable() {
+        var _this;
+        _this = Playable.apply(this, arguments) || this;
+        _this.clips = [];
+        _this.masterTrackInstances = [];
+        return _this;
+    }
+    var _proto = TimelinePlayable.prototype;
+    _proto.prepareFrame = function prepareFrame(context) {
+        this.evaluate();
+    };
+    _proto.evaluate = function evaluate() {
+        var time = this.getTime();
+        // TODO search active clips
+        for(var _iterator = _create_for_of_iterator_helper_loose(this.clips), _step; !(_step = _iterator()).done;){
+            var clip = _step.value;
+            clip.evaluateAt(time);
+        }
+    };
+    _proto.compileTracks = function compileTracks(graph, tracks) {
+        var outputTrack = tracks;
+        // map for searching track instance with track asset guid
+        var trackInstanceMap = {};
+        for(var _iterator = _create_for_of_iterator_helper_loose(outputTrack), _step; !(_step = _iterator()).done;){
+            var track = _step.value;
+            // create track mixer and track output
+            var trackMixPlayable = track.createPlayableGraph(graph, this.clips);
+            this.addInput(trackMixPlayable, 0);
+            var trackOutput = track.createOutput();
+            trackOutput.setUserData(track.boundObject);
+            graph.addOutput(trackOutput);
+            trackOutput.setSourcePlayable(this, this.getInputCount() - 1);
+            // create track instance
+            var trackInstance = new TrackInstance(track, trackMixPlayable, trackOutput);
+            trackInstanceMap[track.getInstanceId()] = trackInstance;
+            if (!track.parent) {
+                this.masterTrackInstances.push(trackInstance);
+            }
+        }
+        // build trackInstance tree
+        for(var _iterator1 = _create_for_of_iterator_helper_loose(outputTrack), _step1; !(_step1 = _iterator1()).done;){
+            var track1 = _step1.value;
+            var trackInstance1 = trackInstanceMap[track1.getInstanceId()];
+            for(var _iterator2 = _create_for_of_iterator_helper_loose(track1.getChildTracks()), _step2; !(_step2 = _iterator2()).done;){
+                var child = _step2.value;
+                var childTrackInstance = trackInstanceMap[child.getInstanceId()];
+                trackInstance1.addChild(childTrackInstance);
+            }
+        }
+    };
+    return TimelinePlayable;
+}(Playable);
+var TrackSortWrapper = function TrackSortWrapper(track, originalIndex) {
+    this.track = track;
+    this.originalIndex = originalIndex;
+};
+function compareTracks(a, b) {
+    var bindingA = a.track.boundObject;
+    var bindingB = b.track.boundObject;
+    if (!_instanceof1(bindingA, exports.VFXItem) || !_instanceof1(bindingB, exports.VFXItem)) {
+        return a.originalIndex - b.originalIndex;
+    }
+    if (exports.VFXItem.isAncestor(bindingA, bindingB)) {
+        return -1;
+    } else if (exports.VFXItem.isAncestor(bindingB, bindingA)) {
+        return 1;
+    } else {
+        return a.originalIndex - b.originalIndex; // 非父子关系的元素保持原始顺序
+    }
+}
+
+exports.Vector4PropertyPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
+    _inherits(Vector4PropertyPlayableAsset, PlayableAsset);
+    function Vector4PropertyPlayableAsset() {
+        return PlayableAsset.apply(this, arguments);
+    }
+    var _proto = Vector4PropertyPlayableAsset.prototype;
+    _proto.createPlayable = function createPlayable(graph) {
+        var clipPlayable = new PropertyClipPlayable(graph);
+        clipPlayable.curve = createValueGetter(this.curveData);
+        clipPlayable.value = clipPlayable.curve.getValue(0);
+        return clipPlayable;
+    };
+    return Vector4PropertyPlayableAsset;
+}(PlayableAsset);
+__decorate([
+    serialize()
+], exports.Vector4PropertyPlayableAsset.prototype, "curveData", void 0);
+exports.Vector4PropertyPlayableAsset = __decorate([
+    effectsClass("Vector4PropertyPlayableAsset")
+], exports.Vector4PropertyPlayableAsset);
+
+exports.ObjectBindingTrack = /*#__PURE__*/ function(TrackAsset1) {
+    _inherits(ObjectBindingTrack, TrackAsset1);
+    function ObjectBindingTrack() {
+        return TrackAsset1.apply(this, arguments);
+    }
+    var _proto = ObjectBindingTrack.prototype;
+    _proto.updateAnimatedObject = function updateAnimatedObject() {};
+    _proto.create = function create(timelineAsset) {
+        if (!_instanceof1(this.boundObject, exports.VFXItem)) {
+            return;
+        }
+        var boundItem = this.boundObject;
+        // 添加粒子动画 clip // TODO 待移除
+        if (boundItem.getComponent(exports.ParticleSystem)) {
+            var particleTrack = timelineAsset.createTrack(exports.TrackAsset, this, "ParticleTrack");
+            particleTrack.boundObject = this.boundObject;
+            var particleClip = particleTrack.createClip(ParticleBehaviourPlayableAsset);
+            particleClip.start = boundItem.start;
+            particleClip.duration = boundItem.duration;
+            particleClip.endBehavior = boundItem.endBehavior;
+        }
+    };
+    return ObjectBindingTrack;
+}(exports.TrackAsset);
+exports.ObjectBindingTrack = __decorate([
+    effectsClass(DataType.ObjectBindingTrack)
+], exports.ObjectBindingTrack);
 
 function _possible_constructor_return(self, call) {
     if (call && (_type_of(call) === "object" || typeof call === "function")) return call;
@@ -22870,7 +27948,7 @@ var TextLayout = /*#__PURE__*/ function() {
     function TextLayout(options) {
         this.width = 0;
         this.height = 0;
-        var _options_textHeight = options.textHeight, textHeight = _options_textHeight === void 0 ? 100 : _options_textHeight, _options_textWidth = options.textWidth, textWidth = _options_textWidth === void 0 ? 100 : _options_textWidth, _options_textOverflow = options.textOverflow, textOverflow = _options_textOverflow === void 0 ? TextOverflow.display : _options_textOverflow, _options_textBaseline = options.textBaseline, textBaseline = _options_textBaseline === void 0 ? TextBaseline.top : _options_textBaseline, _options_textAlign = options.textAlign, textAlign = _options_textAlign === void 0 ? TextAlignment.left : _options_textAlign, text = options.text, _options_letterSpace = options.letterSpace, letterSpace = _options_letterSpace === void 0 ? 0 : _options_letterSpace, _options_autoWidth = options.autoWidth, autoWidth = _options_autoWidth === void 0 ? false : _options_autoWidth, fontSize = options.fontSize, _options_lineHeight = options.lineHeight, lineHeight = _options_lineHeight === void 0 ? fontSize : _options_lineHeight;
+        var _options_textHeight = options.textHeight, textHeight = _options_textHeight === void 0 ? 100 : _options_textHeight, _options_textWidth = options.textWidth, textWidth = _options_textWidth === void 0 ? 100 : _options_textWidth, _options_textOverflow = options.textOverflow, textOverflow = _options_textOverflow === void 0 ? TextOverflow.display : _options_textOverflow, _options_textBaseline = options.textBaseline, textBaseline = _options_textBaseline === void 0 ? TextBaseline.top : _options_textBaseline, _options_textAlign = options.textAlign, textAlign = _options_textAlign === void 0 ? TextAlignment.left : _options_textAlign, _options_text = options.text, text = _options_text === void 0 ? " " : _options_text, _options_letterSpace = options.letterSpace, letterSpace = _options_letterSpace === void 0 ? 0 : _options_letterSpace, _options_autoWidth = options.autoWidth, autoWidth = _options_autoWidth === void 0 ? false : _options_autoWidth, fontSize = options.fontSize, _options_lineHeight = options.lineHeight, lineHeight = _options_lineHeight === void 0 ? fontSize : _options_lineHeight;
         var tempWidth = fontSize + letterSpace;
         this.autoWidth = autoWidth;
         this.maxTextWidth = text.length * tempWidth;
@@ -23060,20 +28138,29 @@ var DEFAULT_FONTS = [
     "monospace",
     "courier"
 ];
-exports.TextComponent = /*#__PURE__*/ function(SpriteComponent) {
-    _inherits(TextComponent, SpriteComponent);
+var seed$5 = 0;
+exports.TextComponent = /*#__PURE__*/ function(BaseRenderComponent) {
+    _inherits(TextComponent, BaseRenderComponent);
     function TextComponent(engine, props) {
         var _this;
-        _this = SpriteComponent.call(this, engine, props) || this;
+        _this = BaseRenderComponent.call(this, engine) || this;
         _this.isDirty = true;
         /**
    * 文本行数
    */ _this.lineCount = 0;
+        _this.SCALE_FACTOR = 0.1;
+        _this.ALPHA_FIX_VALUE = 1 / 255;
+        _this.name = "MText" + seed$5++;
+        _this.geometry = _this.createGeometry(glContext.TRIANGLES);
+        if (props) {
+            _this.fromData(props);
+        }
         _this.canvas = canvasPool.getCanvas();
         canvasPool.saveCanvas(_this.canvas);
         _this.context = _this.canvas.getContext("2d", {
             willReadFrequently: true
         });
+        _this.setItem();
         if (!props) {
             return _possible_constructor_return(_this);
         }
@@ -23083,13 +28170,31 @@ exports.TextComponent = /*#__PURE__*/ function(SpriteComponent) {
         return _this;
     }
     var _proto = TextComponent.prototype;
-    _proto.update = function update(dt) {
-        SpriteComponent.prototype.update.call(this, dt);
+    _proto.onUpdate = function onUpdate(dt) {
+        BaseRenderComponent.prototype.onUpdate.call(this, dt);
         this.updateTexture();
     };
     _proto.fromData = function fromData(data) {
-        SpriteComponent.prototype.fromData.call(this, data);
-        var options = data.options;
+        BaseRenderComponent.prototype.fromData.call(this, data);
+        var interaction = data.interaction, options = data.options, _data_listIndex = data.listIndex, listIndex = _data_listIndex === void 0 ? 0 : _data_listIndex;
+        var renderer = data.renderer;
+        if (!renderer) {
+            renderer = {};
+        }
+        this.interaction = interaction;
+        var _renderer_renderMode, _renderer_blending, _renderer_texture, _renderer_side, _renderer_mask, _renderer_maskMode;
+        this.renderer = {
+            renderMode: (_renderer_renderMode = renderer.renderMode) != null ? _renderer_renderMode : RenderMode.MESH,
+            blending: (_renderer_blending = renderer.blending) != null ? _renderer_blending : BlendingMode.ALPHA,
+            texture: (_renderer_texture = renderer.texture) != null ? _renderer_texture : this.engine.emptyTexture,
+            occlusion: !!renderer.occlusion,
+            transparentOcclusion: !!renderer.transparentOcclusion || renderer.maskMode === MaskMode.MASK,
+            side: (_renderer_side = renderer.side) != null ? _renderer_side : SideMode.DOUBLE,
+            mask: (_renderer_mask = renderer.mask) != null ? _renderer_mask : 0,
+            maskMode: (_renderer_maskMode = renderer.maskMode) != null ? _renderer_maskMode : MaskMode.NONE,
+            order: listIndex
+        };
+        this.interaction = interaction;
         this.updateWithOptions(options);
         // Text
         this.updateTexture();
@@ -23101,7 +28206,7 @@ exports.TextComponent = /*#__PURE__*/ function(SpriteComponent) {
     // OVERRIDE by mixins
     };
     return TextComponent;
-}(exports.SpriteComponent);
+}(BaseRenderComponent);
 exports.TextComponent = __decorate([
     effectsClass(DataType.TextComponent)
 ], exports.TextComponent);
@@ -23410,7 +28515,7 @@ var TextComponentBase = /*#__PURE__*/ function() {
         }
         //与 toDataURL() 两种方式都需要像素读取操作
         var imageData = context.getImageData(0, 0, this.canvas.width, this.canvas.height);
-        this.material.setTexture("uSampler0", Texture.createWithData(this.engine, {
+        this.material.setTexture("_MainTex", Texture.createWithData(this.engine, {
             data: new Uint8Array(imageData.data),
             width: imageData.width,
             height: imageData.height
@@ -23474,1410 +28579,29 @@ var TextLoader = /*#__PURE__*/ function(AbstractPlugin) {
     return TextLoader;
 }(AbstractPlugin);
 
-exports.EffectComponent = /*#__PURE__*/ function(RendererComponent) {
-    _inherits(EffectComponent, RendererComponent);
-    function EffectComponent(engine) {
-        var _this;
-        _this = RendererComponent.call(this, engine) || this;
-        /**
-   * Mesh 的世界矩阵
-   */ _this.worldMatrix = Matrix4$1.fromIdentity();
-        _this.triangles = [];
-        _this.destroyed = false;
-        // TODO 点击测试后续抽象一个 Collider 组件
-        _this.getHitTestParams = function(force) {
-            var area = _this.getBoundingBox();
-            if (area) {
-                return {
-                    type: area.type,
-                    triangles: area.area
-                };
-            }
-        };
-        _this.name = "EffectComponent";
-        _this._priority = 0;
-        return _this;
+var Asset = /*#__PURE__*/ function(EffectsObject) {
+    _inherits(Asset, EffectsObject);
+    function Asset() {
+        return EffectsObject.apply(this, arguments);
     }
-    var _proto = EffectComponent.prototype;
-    _proto.start = function start() {
-        this.item.getHitTestParams = this.getHitTestParams;
-    };
-    _proto.render = function render(renderer) {
-        if (renderer.renderingData.currentFrame.globalUniforms) {
-            renderer.setGlobalMatrix("effects_ObjectToWorld", this.transform.getWorldMatrix());
-        }
-        renderer.drawGeometry(this.geometry, this.material);
-    };
-    /**
-   * 设置当前 Mesh 的材质
-   * @param material - 要设置的材质
-   * @param destroy - 可选的材质销毁选项
-   */ _proto.setMaterial = function setMaterial(material, destroy) {
-        if (destroy !== exports.DestroyOptions.keep) {
-            this.material.dispose(destroy);
-        }
-        this.material = material;
-    };
-    _proto.getBoundingBox = function getBoundingBox() {
-        var worldMatrix = this.transform.getWorldMatrix();
-        if (this.hitTestGeometry !== this.geometry) {
-            this.triangles = geometryToTriangles(this.geometry);
-            this.hitTestGeometry = this.geometry;
-        }
-        var area = [];
-        for(var _iterator = _create_for_of_iterator_helper_loose(this.triangles), _step; !(_step = _iterator()).done;){
-            var triangle = _step.value;
-            area.push({
-                p0: triangle.p0,
-                p1: triangle.p1,
-                p2: triangle.p2
-            });
-        }
-        area.forEach(function(triangle) {
-            triangle.p0 = worldMatrix.transformPoint(triangle.p0, new Vector3());
-            triangle.p1 = worldMatrix.transformPoint(triangle.p1, new Vector3());
-            triangle.p2 = worldMatrix.transformPoint(triangle.p2, new Vector3());
-        });
-        return {
-            type: exports.HitTestType.triangle,
-            area: area
-        };
-    };
-    _proto.fromData = function fromData(data) {
-        RendererComponent.prototype.fromData.call(this, data);
-        this.material = this.materials[0];
-    };
-    _proto.toData = function toData() {
-        this.taggedProperties.id = this.guid;
-    };
-    /**
-   * 销毁当前资源
-   * @param options - 可选的销毁选项
-   */ _proto.dispose = function dispose(options) {
-        if (this.destroyed) {
-            return;
-        }
-        this.destroyed = true;
-        RendererComponent.prototype.dispose.call(this);
-    };
-    return EffectComponent;
-}(RendererComponent);
-__decorate([
-    serialize()
-], exports.EffectComponent.prototype, "geometry", void 0);
-exports.EffectComponent = __decorate([
-    effectsClass(DataType.EffectComponent)
-], exports.EffectComponent);
-function geometryToTriangles(geometry) {
-    var _geometry_getIndexData;
-    var indices = (_geometry_getIndexData = geometry.getIndexData()) != null ? _geometry_getIndexData : [];
-    var _geometry_getAttributeData;
-    var vertices = (_geometry_getAttributeData = geometry.getAttributeData("aPos")) != null ? _geometry_getAttributeData : [];
-    var res = [];
-    for(var i = 0; i < indices.length; i += 3){
-        var index0 = indices[i] * 3;
-        var index1 = indices[i + 1] * 3;
-        var index2 = indices[i + 2] * 3;
-        var p0 = {
-            x: vertices[index0],
-            y: vertices[index0 + 1],
-            z: vertices[index0 + 2]
-        };
-        var p1 = {
-            x: vertices[index1],
-            y: vertices[index1 + 1],
-            z: vertices[index1 + 2]
-        };
-        var p2 = {
-            x: vertices[index2],
-            y: vertices[index2 + 1],
-            z: vertices[index2 + 2]
-        };
-        res.push({
-            p0: p0,
-            p1: p1,
-            p2: p2
-        });
-    }
-    return res;
-}
+    return Asset;
+}(EffectsObject);
 
-exports.PostProcessVolume = /*#__PURE__*/ function(Behaviour) {
-    _inherits(PostProcessVolume, Behaviour);
-    function PostProcessVolume() {
-        var _this;
-        _this = Behaviour.apply(this, arguments) || this;
-        _this.useHDR = true;
-        // Bloom
-        _this.useBloom = true;
-        _this.threshold = 1.0;
-        _this.bloomIntensity = 1.0;
-        // ColorAdjustments
-        _this.brightness = 1.0;
-        _this.saturation = 1.0;
-        _this.contrast = 1.0;
-        // Vignette
-        _this.vignetteIntensity = 0.2;
-        _this.vignetteSmoothness = 0.4;
-        _this.vignetteRoundness = 1.0;
-        // ToneMapping
-        _this.useToneMapping = true // 1: true, 0: false
-        ;
-        return _this;
+exports.BinaryAsset = /*#__PURE__*/ function(EffectsObject) {
+    _inherits(BinaryAsset, EffectsObject);
+    function BinaryAsset() {
+        return EffectsObject.apply(this, arguments);
     }
-    var _proto = PostProcessVolume.prototype;
-    _proto.start = function start() {
-        var composition = this.item.composition;
-        if (composition) {
-            composition.globalVolume = this;
-            composition.createRenderFrame();
-        }
-    };
-    return PostProcessVolume;
-}(Behaviour);
-__decorate([
-    serialize()
-], exports.PostProcessVolume.prototype, "useHDR", void 0);
-__decorate([
-    serialize()
-], exports.PostProcessVolume.prototype, "useBloom", void 0);
-__decorate([
-    serialize()
-], exports.PostProcessVolume.prototype, "threshold", void 0);
-__decorate([
-    serialize()
-], exports.PostProcessVolume.prototype, "bloomIntensity", void 0);
-__decorate([
-    serialize()
-], exports.PostProcessVolume.prototype, "brightness", void 0);
-__decorate([
-    serialize()
-], exports.PostProcessVolume.prototype, "saturation", void 0);
-__decorate([
-    serialize()
-], exports.PostProcessVolume.prototype, "contrast", void 0);
-__decorate([
-    serialize()
-], exports.PostProcessVolume.prototype, "vignetteIntensity", void 0);
-__decorate([
-    serialize()
-], exports.PostProcessVolume.prototype, "vignetteSmoothness", void 0);
-__decorate([
-    serialize()
-], exports.PostProcessVolume.prototype, "vignetteRoundness", void 0);
-__decorate([
-    serialize()
-], exports.PostProcessVolume.prototype, "useToneMapping", void 0);
-exports.PostProcessVolume = __decorate([
-    effectsClass("PostProcessVolume")
-], exports.PostProcessVolume);
-
-var EventEmitter = function EventEmitter() {
-    var _this = this;
-    var _this1 = this;
-    this.listeners = {};
-    /**
-   * 移除事件监听器
-   * @param eventName - 事件名称
-   * @param listener - 事件监听器
-   * @returns
-   */ this.off = function(eventName, listener) {
-        if (!_this.listeners[eventName]) {
-            return;
-        }
-        _this.listeners[eventName] = _this.listeners[eventName].filter(function(param) {
-            var l = param.listener;
-            return l !== listener;
-        });
-    };
-    /**
-   * 监听事件
-   * @param eventName - 事件名称
-   * @param listener - 事件监听器
-   * @param options - 事件监听器选项
-   * @returns
-   */ this.on = function(eventName, listener, options) {
-        _this.listeners[eventName] = _this.listeners[eventName] || [];
-        _this.listeners[eventName].push({
-            listener: listener,
-            options: options
-        });
-        return function() {
-            return _this.off(eventName, listener);
-        };
-    };
-    /**
-   * 一次性监听事件
-   * @param eventName - 事件名称
-   * @param listener - 事件监听器
-   */ this.once = function(eventName, listener) {
-        _this.on(eventName, listener, {
-            once: true
-        });
-    };
-    /**
-   * 触发事件
-   * @param eventName - 事件名称
-   * @param args - 事件参数
-   */ this.emit = function(eventName) {
-        for(var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++){
-            args[_key - 1] = arguments[_key];
-        }
-        var _this_listeners_eventName;
-        (_this_listeners_eventName = _this1.listeners[eventName]) == null ? void 0 : _this_listeners_eventName.forEach(function(param) {
-            var listener = param.listener, options = param.options;
-            listener.apply(void 0, [].concat(args));
-            if (options == null ? void 0 : options.once) {
-                _this1.off(eventName, listener);
-            }
-        });
-    };
-    /**
-   * 获取事件名称对应的所有监听器
-   * @param eventName - 事件名称
-   * @returns - 返回事件名称对应的所有监听器
-   */ this.getListeners = function(eventName) {
-        var _this_listeners_eventName;
-        return ((_this_listeners_eventName = _this.listeners[eventName]) == null ? void 0 : _this_listeners_eventName.map(function(param) {
-            var listener = param.listener;
-            return listener;
-        })) || [];
-    };
-};
-
-exports.VFXItem = /*#__PURE__*/ function(EffectsObject) {
-    _inherits(VFXItem, EffectsObject);
-    function VFXItem(engine, props) {
-        var _this;
-        _this = EffectsObject.call(this, engine) || this;
-        _this.children = [];
-        /**
-   * 元素的变换包含位置、旋转、缩放。
-   */ _this.transform = new Transform();
-        /**
-   * 元素动画的持续时间
-   */ _this.duration = 0;
-        /**
-   * 元素动画的开始时间
-   */ _this.start = 0;
-        /**
-   * 元素动画结束时行为（如何处理元素）
-   */ _this.endBehavior = EndBehavior.forward;
-        /**
-   * 元素是否可用
-   */ _this.ended = false;
-        _this.reusable = false;
-        _this.type = ItemType.base;
-        _this.components = [];
-        _this.itemBehaviours = [];
-        _this.rendererComponents = [];
-        /**
-   * 元素可见性，该值的改变会触发 `handleVisibleChanged` 回调
-   * @protected
-   */ _this.visible = true;
-        /**
-   * 元素动画的速度
-   */ _this.speed = 1;
-        _this.listIndex = 0;
-        _this.eventProcessor = new EventEmitter();
-        _this.name = "VFXItem";
-        _this.transform.name = _this.name;
-        _this.transform.engine = engine;
-        if (props) {
-            _this.fromData(props);
-        }
-        return _this;
-    }
-    var _proto = VFXItem.prototype;
-    /**
-   * 元素监听事件
-   * @param eventName - 事件名称
-   * @param listener - 事件监听器
-   * @param options - 事件监听器选项
-   * @returns
-   */ _proto.on = function on(eventName, listener, options) {
-        this.eventProcessor.on(eventName, listener, options);
-    };
-    /**
-   * 移除事件监听器
-   * @param eventName - 事件名称
-   * @param listener - 事件监听器
-   * @returns
-   */ _proto.off = function off(eventName, listener) {
-        this.eventProcessor.off(eventName, listener);
-    };
-    /**
-   * 一次性监听事件
-   * @param eventName - 事件名称
-   * @param listener - 事件监听器
-   */ _proto.once = function once(eventName, listener) {
-        this.eventProcessor.once(eventName, listener);
-    };
-    /**
-   * 触发事件
-   * @param eventName - 事件名称
-   * @param args - 事件参数
-   */ _proto.emit = function emit(eventName) {
-        for(var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++){
-            args[_key - 1] = arguments[_key];
-        }
-        var _this_eventProcessor;
-        (_this_eventProcessor = this.eventProcessor).emit.apply(_this_eventProcessor, [].concat([
-            eventName
-        ], args));
-    };
-    /**
-   * 获取事件名称对应的所有监听器
-   * @param eventName - 事件名称
-   * @returns - 返回事件名称对应的所有监听器
-   */ _proto.getListeners = function getListeners(eventName) {
-        return this.eventProcessor.getListeners(eventName);
-    };
-    /**
-   * 设置元素的动画速度
-   * @param speed - 速度
-   */ _proto.setSpeed = function setSpeed(speed) {
-        this.speed = speed;
-    };
-    /**
-   * 获取元素的动画速度
-   * @returns
-   */ _proto.getSpeed = function getSpeed() {
-        return this.speed;
-    };
-    /**
-   * 添加组件
-   * @param classConstructor - 要添加的组件类型
-   */ _proto.addComponent = function addComponent(classConstructor) {
-        var newComponent = new classConstructor(this.engine);
-        this.components.push(newComponent);
-        newComponent.item = this;
-        newComponent.onAttached();
-        return newComponent;
-    };
-    /**
-   * 获取某一类型的组件。如果当前元素绑定了多个同类型的组件只返回第一个
-   * @param classConstructor - 要获取的组件类型
-   * @returns 查询结果中符合类型的第一个组件
-   */ _proto.getComponent = function getComponent(classConstructor) {
-        var res;
-        for(var _iterator = _create_for_of_iterator_helper_loose(this.components), _step; !(_step = _iterator()).done;){
-            var com = _step.value;
-            if (_instanceof1(com, classConstructor)) {
-                res = com;
-                break;
-            }
-        }
-        return res;
-    };
-    /**
-   * 获取某一类型的所有组件
-   * @param classConstructor - 要获取的组件
-   * @returns 一个组件列表，包含所有符合类型的组件
-   */ _proto.getComponents = function getComponents(classConstructor) {
-        var res = [];
-        for(var _iterator = _create_for_of_iterator_helper_loose(this.components), _step; !(_step = _iterator()).done;){
-            var com = _step.value;
-            if (_instanceof1(com, classConstructor)) {
-                res.push(com);
-            }
-        }
-        return res;
-    };
-    _proto.setParent = function setParent(vfxItem) {
-        if (vfxItem === this) {
-            return;
-        }
-        if (this.parent) {
-            removeItem(this.parent.children, this);
-        }
-        this.parent = vfxItem;
-        if (vfxItem) {
-            if (!VFXItem.isCamera(this)) {
-                this.transform.parentTransform = vfxItem.transform;
-            }
-            vfxItem.children.push(this);
-            if (!this.composition) {
-                this.composition = vfxItem.composition;
-            }
-        }
-    };
-    /**
-   * 元素动画结束播放时回调函数
-   * @override
-   */ _proto.onEnd = function onEnd() {
-    // OVERRIDE
-    };
-    /**
-   * 通过指定 r、g、b、a 值设置元素的颜色
-   * @param {number} r
-   * @param {number} g
-   * @param {number} b
-   * @param {number} a
-   * @internal
-   */ _proto.setColor = function setColor(r, g, b, a) {};
-    /**
-   * 设置元素的透明度
-   * @param opacity - 透明度值，范围 [0,1]
-   */ _proto.setOpacity = function setOpacity(opacity) {};
-    /**
-   * 获取元素显隐属性
-   */ _proto.getVisible = function getVisible() {
-        return this.visible;
-    };
-    /**
-   * 设置元素显隐属性 会触发 `handleVisibleChanged` 回调
-   */ _proto.setVisible = function setVisible(visible) {
-        if (this.visible !== visible) {
-            this.visible = !!visible;
-        }
-    };
-    /**
-   * 获取元素变换包括位置、旋转、缩放
-   * @param transform 将元素变换拷贝到该对象，并将其作为返回值
-   * @returns 元素变换的拷贝
-   */ _proto.getWorldTransform = function getWorldTransform(transform) {
-        var tf = transform != null ? transform : new Transform({
-            valid: true
-        });
-        tf.cloneFromMatrix(this.transform.getWorldMatrix());
-        return tf;
-    };
-    /**
-   * 获取元素内部节点的变换，目前只有场景树元素在使用
-   * @param itemId 元素id信息，如果带^就返回内部节点变换，否则返回自己的变换
-   * @returns 元素变换或内部节点变换
-   */ _proto.getNodeTransform = function getNodeTransform(itemId) {
-        for(var i = 0; i < this.components.length; i++){
-            var comp = this.components[1];
-            // @ts-expect-error
-            if (comp.getNodeTransform) {
-                // @ts-expect-error
-                return comp.getNodeTransform(itemId);
-            }
-        }
-        return this.transform;
-    };
-    /**
-   * 设置元素在 3D 坐标轴上相对移动
-   */ _proto.translate = function translate(x, y, z) {
-        this.transform.translate(x, y, z);
-    };
-    /**
-   * 设置元素在 3D 坐标轴上相对旋转（角度）
-   */ _proto.rotate = function rotate(x, y, z) {
-        var euler = new Euler(x, y, z);
-        var q = Quaternion.fromEuler(euler);
-        q.conjugate();
-        this.transform.rotateByQuat(q);
-    };
-    /**
-   * 设置元素在 3D 坐标轴上相对缩放
-   */ _proto.scale = function scale(x, y, z) {
-        this.transform.scaleBy(x, y, z);
-    };
-    /**
-   * 设置元素在画布上的像素位置
-   * Tips:
-   *  - 坐标原点在 canvas 左上角，x 正方向水平向右， y 正方向垂直向下
-   *  - 设置后会覆盖原有的位置信息
-   * @param x - x 坐标
-   * @param y - y 坐标
-   */ _proto.setPositionByPixel = function setPositionByPixel(x, y) {
-        if (this.composition) {
-            var z = this.transform.getWorldPosition().z;
-            var _this_composition_camera_getInverseVPRatio = this.composition.camera.getInverseVPRatio(z), rx = _this_composition_camera_getInverseVPRatio.x, ry = _this_composition_camera_getInverseVPRatio.y;
-            var width = this.composition.renderer.getWidth() / 2;
-            var height = this.composition.renderer.getHeight() / 2;
-            this.transform.setPosition((2 * x / width - 1) * rx, (1 - 2 * y / height) * ry, z);
-        }
-    };
-    /**
-   * 设置元素在 3D 坐标轴的位置
-   */ _proto.setPosition = function setPosition(x, y, z) {
-        this.transform.setPosition(x, y, z);
-    };
-    /**
-   * 设置元素在 3D 坐标轴的角度
-   */ _proto.setRotation = function setRotation(x, y, z) {
-        this.transform.setRotation(x, y, z);
-    };
-    /**
-   * 设置元素在 3D 坐标轴的缩放
-   */ _proto.setScale = function setScale(x, y, z) {
-        this.transform.setScale(x, y, z);
-    };
-    /**
-   * 获取元素包围盒
-   * @override
-   */ _proto.getBoundingBox = function getBoundingBox() {
-    // OVERRIDE
-    };
-    /**
-   * 获取元素用于计算光线投射的面片类型和参数
-   * @override
-   * @param force - 元素没有开启交互也返回参数
-   */ _proto.getHitTestParams = function getHitTestParams(force) {
-    // OVERRIDE
-    };
-    /**
-   * 获取元素当前世界坐标
-   */ _proto.getCurrentPosition = function getCurrentPosition() {
-        var pos = new Vector3();
-        this.transform.assignWorldTRS(pos);
-        return pos;
-    };
-    /**
-   * 是否到达元素的结束时间
-   * @param now
-   * @returns
-   */ _proto.isEnded = function isEnded(now) {
-        // at least 1 ms
-        return now - this.duration > 0.001;
-    };
-    _proto.find = function find(name) {
-        if (this.name === name) {
-            return this;
-        }
-        for(var _iterator = _create_for_of_iterator_helper_loose(this.children), _step; !(_step = _iterator()).done;){
-            var child = _step.value;
-            if (child.name === name) {
-                return child;
-            }
-        }
-        for(var _iterator1 = _create_for_of_iterator_helper_loose(this.children), _step1; !(_step1 = _iterator1()).done;){
-            var child1 = _step1.value;
-            var res = child1.find(name);
-            if (res) {
-                return res;
-            }
-        }
-        return undefined;
-    };
-    _proto.fromData = function fromData(data) {
-        EffectsObject.prototype.fromData.call(this, data);
-        var id = data.id, name = data.name, delay = data.delay, parentId = data.parentId, endBehavior = data.endBehavior, transform = data.transform, _data_listIndex = data.listIndex, listIndex = _data_listIndex === void 0 ? 0 : _data_listIndex, _data_duration = data.duration, duration = _data_duration === void 0 ? 0 : _data_duration;
-        this.props = data;
-        //@ts-expect-error
-        this.type = data.type;
-        this.id = id.toString(); // TODO 老数据 id 是 number，需要转换
-        this.name = name;
-        this.start = delay ? delay : this.start;
-        if (transform) {
-            //@ts-expect-error TODO 数据改造后移除 expect-error
-            transform.position = new Vector3().copyFrom(transform.position);
-            // FIXME: transform.rotation待删除
-            if (transform.quat) {
-                //@ts-expect-error
-                transform.quat = new Quaternion(transform.quat.x, transform.quat.y, transform.quat.z, transform.quat.w);
-            } else {
-                var _transform_eulerHint;
-                //@ts-expect-error
-                transform.rotation = new Euler().copyFrom((_transform_eulerHint = transform.eulerHint) != null ? _transform_eulerHint : transform.rotation);
-            }
-            //@ts-expect-error
-            transform.scale = new Vector3().copyFrom(transform.scale);
-            //@ts-expect-error
-            if (transform.size) {
-                //@ts-expect-error
-                transform.size = new Vector2().copyFrom(transform.size);
-            }
-            //@ts-expect-error
-            if (transform.anchor) {
-                //@ts-expect-error
-                transform.anchor = new Vector2().copyFrom(transform.anchor);
-            }
-            this.transform.setTransform(transform);
-        }
-        this.transform.name = this.name;
-        this.transform.engine = this.engine;
-        this.parentId = parentId;
-        this.duration = duration;
-        // TODO spec endbehavior 类型修正
-        this.endBehavior = endBehavior;
-        if (!data.content) {
-            data.content = {
-                options: {}
-            };
-        }
-        if (duration <= 0) {
-            throw new Error("Item duration can't be less than 0, see " + HELP_LINK$1["Item duration can't be less than 0"] + ".");
-        }
-        this.itemBehaviours.length = 0;
-        this.rendererComponents.length = 0;
-        for(var _iterator = _create_for_of_iterator_helper_loose(this.components), _step; !(_step = _iterator()).done;){
-            var component = _step.value;
-            component.item = this;
-            if (_instanceof1(component, Behaviour)) {
-                this.itemBehaviours.push(component);
-            }
-            if (_instanceof1(component, RendererComponent)) {
-                this.rendererComponents.push(component);
-            }
-            // TODO ParticleSystemRenderer 现在是动态生成的，后面需要在 json 中单独表示为一个组件
-            if (_instanceof1(component, exports.ParticleSystem)) {
-                if (!this.components.includes(component.renderer)) {
-                    this.components.push(component.renderer);
-                }
-                this.rendererComponents.push(component.renderer);
-            }
-        }
-        // renderOrder 在 component 初始化后设置。确保能拿到 rendererComponent。
-        this.renderOrder = listIndex;
-    };
-    _proto.toData = function toData() {
-        var _this_parent;
-        this.taggedProperties.id = this.guid;
-        this.taggedProperties.transform = this.transform.toData();
-        this.taggedProperties.dataType = DataType.VFXItemData;
-        if (((_this_parent = this.parent) == null ? void 0 : _this_parent.name) !== "rootItem") {
-            var _this_parent1;
-            this.taggedProperties.parentId = (_this_parent1 = this.parent) == null ? void 0 : _this_parent1.guid;
-        }
-        // TODO 统一 sprite 等其他组件的序列化逻辑
-        if (!this.taggedProperties.components) {
-            this.taggedProperties.components = [];
-            for(var _iterator = _create_for_of_iterator_helper_loose(this.components), _step; !(_step = _iterator()).done;){
-                var component = _step.value;
-                if (_instanceof1(component, exports.EffectComponent)) {
-                    this.taggedProperties.components.push(component);
-                }
-            }
-        }
-        this.taggedProperties.content = {};
-    };
-    _proto.translateByPixel = function translateByPixel(x, y) {
-        if (this.composition) {
-            // @ts-expect-error
-            var _this_composition_renderer_canvas_getBoundingClientRect = this.composition.renderer.canvas.getBoundingClientRect(), width = _this_composition_renderer_canvas_getBoundingClientRect.width, height = _this_composition_renderer_canvas_getBoundingClientRect.height;
-            var z = this.transform.getWorldPosition().z;
-            var _this_composition_camera_getInverseVPRatio = this.composition.camera.getInverseVPRatio(z), rx = _this_composition_camera_getInverseVPRatio.x, ry = _this_composition_camera_getInverseVPRatio.y;
-            this.transform.translate(2 * x * rx / width, -2 * y * ry / height, 0);
-        }
-    };
-    /**
-   * 销毁元素
-   */ _proto.dispose = function dispose() {
-        this.resetChildrenParent();
-        if (this.composition) {
-            this.composition.destroyItem(this);
-            // component 调用 dispose() 会将自身从 this.components 数组删除，slice() 避免迭代错误
-            for(var _iterator = _create_for_of_iterator_helper_loose(this.components.slice()), _step; !(_step = _iterator()).done;){
-                var component = _step.value;
-                component.dispose();
-            }
-            this.components = [];
-            this._content = undefined;
-            this.composition = null;
-            this.transform.setValid(false);
-        }
-    };
-    _proto.resetChildrenParent = function resetChildrenParent() {
-        // GE 父元素销毁子元素继承逻辑
-        // 如果有父对象，销毁时子对象继承父对象。
-        for(var _iterator = _create_for_of_iterator_helper_loose(this.children), _step; !(_step = _iterator()).done;){
-            var child = _step.value;
-            if (this.parent) {
-                child.setParent(this.parent);
-            }
-        }
-        if (this.parent) {
-            var _this_parent;
-            removeItem((_this_parent = this.parent) == null ? void 0 : _this_parent.children, this);
-        }
-    // const contentItems = compositonVFXItem.getComponent(CompositionComponent)!.items;
-    // contentItems.splice(contentItems.indexOf(this), 1);
-    // else {
-    //   // 普通元素正常销毁逻辑, 子元素不继承
-    // if (this.parent) {
-    //   removeItem(this.parent?.children, this);
-    // }
-    // }
-    };
-    VFXItem.isComposition = function isComposition(item) {
-        return item.type === ItemType.composition;
-    };
-    VFXItem.isSprite = function isSprite(item) {
-        return item.type === ItemType.sprite;
-    };
-    VFXItem.isParticle = function isParticle(item) {
-        return item.type === ItemType.particle;
-    };
-    VFXItem.isNull = function isNull(item) {
-        return item.type === ItemType.null;
-    };
-    VFXItem.isTree = function isTree(item) {
-        return item.type === ItemType.tree;
-    };
-    VFXItem.isCamera = function isCamera(item) {
-        return item.type === ItemType.camera;
-    };
-    VFXItem.isExtraCamera = function isExtraCamera(item) {
-        return item.id === "extra-camera" && item.name === "extra-camera";
-    };
-    _create_class(VFXItem, [
-        {
-            key: "content",
-            get: /**
-   * 返回元素创建的数据
-   */ function get() {
-                return this._content;
-            }
-        },
-        {
-            key: "compositionReusable",
-            get: /**
-   * 播放完成后是否需要再使用，是的话生命周期结束后不会 dispose
-   */ function get() {
-                var _this_composition;
-                var _this_composition_reusable;
-                return (_this_composition_reusable = (_this_composition = this.composition) == null ? void 0 : _this_composition.reusable) != null ? _this_composition_reusable : false;
-            }
-        },
-        {
-            key: "renderOrder",
-            get: /**
-   * 元素在合成中的索引
-   */ function get() {
-                return this.listIndex;
-            },
-            set: function set(value) {
-                if (this.listIndex !== value) {
-                    this.listIndex = value;
-                    for(var _iterator = _create_for_of_iterator_helper_loose(this.rendererComponents), _step; !(_step = _iterator()).done;){
-                        var rendererComponent = _step.value;
-                        rendererComponent.priority = value;
-                    }
-                }
-            }
-        }
-    ]);
-    return VFXItem;
+    var _proto = BinaryAsset.prototype;
+    _proto.fromData = function fromData(data) {};
+    return BinaryAsset;
 }(EffectsObject);
 __decorate([
     serialize()
-], exports.VFXItem.prototype, "components", void 0);
-exports.VFXItem = __decorate([
-    effectsClass(DataType.VFXItemData)
-], exports.VFXItem);
-exports.Item = void 0;
-(function(Item) {
-    function is(item, type) {
-        return item.type === type;
-    }
-    Item.is = is;
-    function isComposition(item) {
-        return item.type === ItemType.composition;
-    }
-    Item.isComposition = isComposition;
-    function isParticle(item) {
-        return item.type === ItemType.particle;
-    }
-    Item.isParticle = isParticle;
-    function isNull(item) {
-        return item.type === ItemType.null;
-    }
-    Item.isNull = isNull;
-})(exports.Item || (exports.Item = {}));
-
-var pluginLoaderMap = {};
-var defaultPlugins = [];
-var pluginCtrlMap = {};
-/**
- * 注册 plugin
- * @param name
- * @param pluginClass class of plugin
- * @param itemClass class of item
- * @param isDefault load
- */ // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function registerPlugin(name, pluginClass, itemClass, isDefault) {
-    if (pluginCtrlMap[name]) {
-        logger.error("Duplicate registration for plugin " + name + ".");
-    }
-    pluginCtrlMap[name] = itemClass;
-    pluginLoaderMap[name] = pluginClass;
-    if (isDefault) {
-        addItem(defaultPlugins, name);
-    }
-}
-function unregisterPlugin(name) {
-    delete pluginCtrlMap[name];
-    delete pluginLoaderMap[name];
-    removeItem(defaultPlugins, name);
-}
-var PluginSystem = /*#__PURE__*/ function() {
-    function PluginSystem(pluginNames) {
-        var loaders = {};
-        var loaded = [];
-        var addLoader = function(name) {
-            var loader = pluginLoaderMap[name];
-            if (!loaded.includes(loader)) {
-                loaded.push(loader);
-                loaders[name] = loader;
-            }
-        };
-        defaultPlugins.forEach(addLoader);
-        pluginNames.forEach(addLoader);
-        this.plugins = Object.keys(loaders).map(function(name) {
-            var CTRL = pluginLoaderMap[name];
-            if (!CTRL) {
-                throw new Error("The plugin '" + name + "' not found." + getPluginUsageInfo(name));
-            }
-            var loader = new CTRL();
-            loader.name = name;
-            return loader;
-        }).sort(function(a, b) {
-            return a.order - b.order;
-        });
-    }
-    var _proto = PluginSystem.prototype;
-    _proto.initializeComposition = function initializeComposition(composition, scene) {
-        this.plugins.forEach(function(loader) {
-            return loader.onCompositionConstructed(composition, scene);
-        });
-    };
-    _proto.destroyComposition = function destroyComposition(comp) {
-        this.plugins.forEach(function(loader) {
-            return loader.onCompositionDestroyed(comp);
-        });
-    };
-    _proto.resetComposition = function resetComposition(comp, renderFrame) {
-        this.plugins.forEach(function(loader) {
-            return loader.onCompositionReset(comp, renderFrame);
-        });
-    };
-    _proto.createPluginItem = function createPluginItem(name, props, composition) {
-        var CTRL = pluginCtrlMap[name];
-        if (!CTRL) {
-            throw new Error("The plugin '" + name + "' does not have a registered constructor.");
-        }
-        var engine = composition.getEngine();
-        var item = new CTRL(engine, props, composition);
-        item.composition = composition;
-        if (!_instanceof1(item, exports.VFXItem)) {
-            throw new Error("The plugin '" + name + "' invalid constructor type.");
-        }
-        return item;
-    };
-    _proto.processRawJSON = function processRawJSON(json, options) {
-        var _this = this;
-        return _async_to_generator(function() {
-            return __generator(this, function(_state) {
-                return [
-                    2,
-                    _this.callStatic("processRawJSON", json, options)
-                ];
-            });
-        })();
-    };
-    _proto.callStatic = function callStatic(name) {
-        for(var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++){
-            args[_key - 1] = arguments[_key];
-        }
-        var _this = this;
-        return _async_to_generator(function() {
-            var pendings, plugins, i, plugin, ctrl, _ctrl_name, _ctrl_name1;
-            return __generator(this, function(_state) {
-                pendings = [];
-                plugins = _this.plugins;
-                for(i = 0; i < plugins.length; i++){
-                    plugin = plugins[i];
-                    ctrl = pluginLoaderMap[plugin.name];
-                    if (name in ctrl) {
-                        pendings.push(Promise.resolve((_ctrl_name1 = ctrl[name]) == null ? void 0 : (_ctrl_name = _ctrl_name1).call.apply(_ctrl_name, [].concat([
-                            ctrl
-                        ], args))));
-                    }
-                }
-                return [
-                    2,
-                    Promise.all(pendings)
-                ];
-            });
-        })();
-    };
-    _proto.precompile = function precompile(compositions, renderer, options) {
-        var _this = this;
-        return _async_to_generator(function() {
-            return __generator(this, function(_state) {
-                return [
-                    2,
-                    _this.callStatic("precompile", compositions, renderer, options)
-                ];
-            });
-        })();
-    };
-    _proto.loadResources = function loadResources(scene, options) {
-        var _this = this;
-        return _async_to_generator(function() {
-            return __generator(this, function(_state) {
-                return [
-                    2,
-                    _this.callStatic("prepareResource", scene, options)
-                ];
-            });
-        })();
-    };
-    return PluginSystem;
-}();
-var pluginInfoMap = {
-    "alipay-downgrade": "@galacean/effects-plugin-alipay-downgrade",
-    "editor-gizmo": "@galacean/effects-plugin-editor-gizmo",
-    "tree": "@galacean/effects-plugin-model",
-    "model": "@galacean/effects-plugin-model",
-    "orientation-transformer": "@galacean/effects-plugin-orientation-transformer",
-    "spine": "@galacean/effects-plugin-spine"
-};
-function getPluginUsageInfo(name) {
-    var info = pluginInfoMap[name];
-    if (info) {
-        return "\n请按如下命令进行操作（Please follow the commands below to proceed）：\n1、使用 npm 安装插件（Install Plugin）：npm i " + info + "@latest --save\n2、导入插件（Import Plugin）：import '" + info + "'";
-    } else {
-        return "";
-    }
-}
-
-var SerializationHelper = /*#__PURE__*/ function() {
-    function SerializationHelper() {}
-    SerializationHelper.collectSerializableObject = function collectSerializableObject(effectsObject, res) {
-        if (res[effectsObject.getInstanceId()]) {
-            return;
-        }
-        effectsObject.toData();
-        res[effectsObject.getInstanceId()] = effectsObject;
-        var serializedProperties = getMergedStore(effectsObject);
-        if (serializedProperties) {
-            for(var _iterator = _create_for_of_iterator_helper_loose(Object.keys(serializedProperties)), _step; !(_step = _iterator()).done;){
-                var key = _step.value;
-                // TODO 待移除，序列化属性通过 effectsObject 对象直接获取
-                var value = effectsObject.taggedProperties[key];
-                if (value === undefined) {
-                    value = effectsObject[key];
-                }
-                if (EffectsObject.is(value)) {
-                    SerializationHelper.collectSerializableObject(value, res);
-                } else if (isArray(value)) {
-                    for(var _iterator1 = _create_for_of_iterator_helper_loose(value), _step1; !(_step1 = _iterator1()).done;){
-                        var arrayValue = _step1.value;
-                        if (EffectsObject.is(arrayValue)) {
-                            SerializationHelper.collectSerializableObject(arrayValue, res);
-                        }
-                    }
-                } else if (isObject(value)) {
-                    // 非 EffectsObject 对象只递归一层
-                    for(var _iterator2 = _create_for_of_iterator_helper_loose(Object.keys(value)), _step2; !(_step2 = _iterator2()).done;){
-                        var objectKey = _step2.value;
-                        var objectValue = value[objectKey];
-                        if (EffectsObject.is(objectValue)) {
-                            SerializationHelper.collectSerializableObject(objectValue, res);
-                        }
-                    }
-                }
-            }
-        }
-    };
-    SerializationHelper.serializeEffectObject = function serializeEffectObject(effectsObject) {
-        // 持有所有需要序列化的引擎对象
-        var serializableMap = {};
-        var engine = effectsObject.engine;
-        // 加入内存中已加载的资产数据，避免重复创建资产数据
-        var serializedDatas = _extends({}, engine.jsonSceneData);
-        // 递归收集所有需要序列化的对象
-        SerializationHelper.collectSerializableObject(effectsObject, serializableMap);
-        // 依次序列化
-        for(var _iterator = _create_for_of_iterator_helper_loose(Object.keys(serializableMap)), _step; !(_step = _iterator()).done;){
-            var guid = _step.value;
-            var serializeObject = serializableMap[guid];
-            if (!serializedDatas[serializeObject.getInstanceId()]) {
-                serializedDatas[serializeObject.getInstanceId()] = {};
-            }
-            SerializationHelper.serializeTaggedProperties(serializeObject, serializedDatas[serializeObject.getInstanceId()]);
-        }
-        return serializedDatas;
-    };
-    SerializationHelper.serializeTaggedProperties = function serializeTaggedProperties(effectsObject, serializedData) {
-        effectsObject.toData();
-        if (!serializedData) {
-            serializedData = {};
-        }
-        var serializedProperties = getMergedStore(effectsObject);
-        if (serializedProperties) {
-            for(var _iterator = _create_for_of_iterator_helper_loose(Object.keys(serializedProperties)), _step; !(_step = _iterator()).done;){
-                var key = _step.value;
-                var value = effectsObject[key];
-                if (typeof value === "number" || typeof value === "string" || typeof value === "boolean" || SerializationHelper.checkTypedArray(value)) {
-                    // TODO json 数据避免传 typedArray
-                    serializedData[key] = value;
-                } else if (isArray(value)) {
-                    if (!serializedData[key]) {
-                        serializedData[key] = [];
-                    }
-                    SerializationHelper.serializeArrayProperty(value, serializedData[key], 0);
-                } else if (EffectsObject.is(value)) {
-                    // TODO 处理 EffectsObject 递归序列化
-                    serializedData[key] = {
-                        id: value.getInstanceId()
-                    };
-                } else if (isObject(value)) {
-                    if (!serializedData[key]) {
-                        serializedData[key] = {};
-                    }
-                    SerializationHelper.serializeObjectProperty(value, serializedData[key], 0);
-                }
-            }
-        }
-        // TODO 待移除 tagggedProperties 为没有装饰器的临时方案
-        for(var _iterator1 = _create_for_of_iterator_helper_loose(Object.keys(effectsObject.taggedProperties)), _step1; !(_step1 = _iterator1()).done;){
-            var key1 = _step1.value;
-            var value1 = effectsObject.taggedProperties[key1];
-            if (typeof value1 === "number" || typeof value1 === "string" || typeof value1 === "boolean" || SerializationHelper.checkTypedArray(value1)) {
-                // TODO json 数据避免传 typedArray
-                serializedData[key1] = value1;
-            } else if (isArray(value1)) {
-                if (!serializedData[key1]) {
-                    serializedData[key1] = [];
-                }
-                SerializationHelper.serializeArrayProperty(value1, serializedData[key1], 0);
-            } else if (EffectsObject.is(value1)) {
-                // TODO 处理 EffectsObject 递归序列化
-                serializedData[key1] = {
-                    id: value1.getInstanceId()
-                };
-            } else if (isObject(value1)) {
-                if (!serializedData[key1]) {
-                    serializedData[key1] = {};
-                }
-                SerializationHelper.serializeObjectProperty(value1, serializedData[key1], 0);
-            }
-        }
-        return serializedData;
-    };
-    SerializationHelper.deserializeTaggedProperties = function deserializeTaggedProperties(serializedData, effectsObject) {
-        var taggedProperties = effectsObject.taggedProperties;
-        var serializedProperties = getMergedStore(effectsObject);
-        var engine = effectsObject.engine;
-        for(var _iterator = _create_for_of_iterator_helper_loose(Object.keys(serializedData)), _step; !(_step = _iterator()).done;){
-            var key = _step.value;
-            if (serializedProperties && serializedProperties[key]) {
-                continue;
-            }
-            var value = serializedData[key];
-            taggedProperties[key] = SerializationHelper.deserializeProperty(value, engine, 0);
-        }
-        if (serializedProperties) {
-            for(var _iterator1 = _create_for_of_iterator_helper_loose(Object.keys(serializedProperties)), _step1; !(_step1 = _iterator1()).done;){
-                var key1 = _step1.value;
-                var value1 = serializedData[key1];
-                if (value1 === undefined) {
-                    continue;
-                }
-                var propertyType = serializedProperties[key1].type;
-                // FIXME: taggedProperties 为 readonly，这里存在强制赋值
-                // @ts-expect-error
-                effectsObject[key1] = SerializationHelper.deserializeProperty(value1, engine, 0, propertyType);
-            }
-        }
-        effectsObject.fromData(taggedProperties);
-    };
-    SerializationHelper.deserializeTaggedPropertiesAsync = function deserializeTaggedPropertiesAsync(serializedData, effectsObject) {
-        return _async_to_generator(function() {
-            var taggedProperties, serializedProperties, engine, _iterator, _step, key, value, _iterator1, _step1, key1, value1, propertyType;
-            return __generator(this, function(_state) {
-                switch(_state.label){
-                    case 0:
-                        taggedProperties = effectsObject.taggedProperties;
-                        serializedProperties = getMergedStore(effectsObject);
-                        engine = effectsObject.engine;
-                        _iterator = _create_for_of_iterator_helper_loose(Object.keys(serializedData));
-                        _state.label = 1;
-                    case 1:
-                        if (!!(_step = _iterator()).done) return [
-                            3,
-                            4
-                        ];
-                        key = _step.value;
-                        if (serializedProperties && serializedProperties[key]) {
-                            return [
-                                3,
-                                3
-                            ];
-                        }
-                        value = serializedData[key];
-                        return [
-                            4,
-                            SerializationHelper.deserializePropertyAsync(value, engine, 0)
-                        ];
-                    case 2:
-                        taggedProperties[key] = _state.sent();
-                        _state.label = 3;
-                    case 3:
-                        return [
-                            3,
-                            1
-                        ];
-                    case 4:
-                        if (!serializedProperties) return [
-                            3,
-                            8
-                        ];
-                        _iterator1 = _create_for_of_iterator_helper_loose(Object.keys(serializedProperties));
-                        _state.label = 5;
-                    case 5:
-                        if (!!(_step1 = _iterator1()).done) return [
-                            3,
-                            8
-                        ];
-                        key1 = _step1.value;
-                        value1 = serializedData[key1];
-                        if (value1 === undefined) {
-                            return [
-                                3,
-                                7
-                            ];
-                        }
-                        propertyType = serializedProperties[key1].type;
-                        return [
-                            4,
-                            SerializationHelper.deserializePropertyAsync(value1, engine, 0, propertyType)
-                        ];
-                    case 6:
-                        // FIXME: taggedProperties 为 readonly，这里存在强制赋值
-                        // @ts-expect-error
-                        effectsObject[key1] = _state.sent();
-                        _state.label = 7;
-                    case 7:
-                        return [
-                            3,
-                            5
-                        ];
-                    case 8:
-                        effectsObject.fromData(taggedProperties);
-                        return [
-                            2
-                        ];
-                }
-            });
-        })();
-    };
-    SerializationHelper.checkTypedArray = function checkTypedArray(obj) {
-        return _instanceof1(obj, Int8Array) || _instanceof1(obj, Uint8Array) || _instanceof1(obj, Uint8ClampedArray) || _instanceof1(obj, Int16Array) || _instanceof1(obj, Uint16Array) || _instanceof1(obj, Int32Array) || _instanceof1(obj, Uint32Array) || _instanceof1(obj, Float32Array) || _instanceof1(obj, Float64Array) || _instanceof1(obj, ArrayBuffer);
-    };
-    // check value is { id: 7e69662e964e4892ae8933f24562395b }
-    SerializationHelper.checkDataPath = function checkDataPath(value) {
-        return !!(isObject(value) && Object.keys(value).length === 1 && "id" in value && isString(value.id) && value.id.length === 32);
-    };
-    // TODO 测试函数，2.0 上线后移除
-    SerializationHelper.checkGLTFNode = function checkGLTFNode(value) {
-        return isObject(value) && value.nodeIndex !== undefined && value.isJoint !== undefined;
-    };
-    SerializationHelper.checkImageSource = function checkImageSource(value) {
-        return isCanvas(value) || _instanceof1(value, alipay.HTMLImageElement);
-    };
-    SerializationHelper.deserializeProperty = function deserializeProperty(property, engine, level, type) {
-        if (level > 14) {
-            console.error("The nested object layers of the serialized data exceed the maximum limit.");
-            return;
-        }
-        // 加载并链接 DataPath 字段表示的 EffectsObject 引用。Class 对象 copy [key, value] 会丢失对象信息，因此只递归数组对象和普通 js Object 结构对象。
-        if (isArray(property)) {
-            var res = [];
-            for(var _iterator = _create_for_of_iterator_helper_loose(property), _step; !(_step = _iterator()).done;){
-                var value = _step.value;
-                res.push(SerializationHelper.deserializeProperty(value, engine, level + 1, type));
-            }
-            return res;
-        // TODO json 数据避免传 typedArray
-        } else if (SerializationHelper.checkDataPath(property)) {
-            return engine.assetLoader.loadGUID(property.id);
-        } else if (isObject(property) && property.constructor === Object) {
-            var res1;
-            if (type) {
-                res1 = new type();
-            } else {
-                res1 = {};
-            }
-            for(var _iterator1 = _create_for_of_iterator_helper_loose(Object.keys(property)), _step1; !(_step1 = _iterator1()).done;){
-                var key = _step1.value;
-                res1[key] = SerializationHelper.deserializeProperty(property[key], engine, level + 1);
-            }
-            return res1;
-        } else {
-            return property;
-        }
-    };
-    SerializationHelper.deserializePropertyAsync = function deserializePropertyAsync(property, engine, level, type) {
-        return _async_to_generator(function() {
-            var res, _iterator, _step, value, _, res1, res2, _iterator1, _step1, key;
-            return __generator(this, function(_state) {
-                switch(_state.label){
-                    case 0:
-                        if (level > 14) {
-                            console.error("The nested object layers of the serialized data exceed the maximum limit.");
-                            return [
-                                2
-                            ];
-                        }
-                        if (!isArray(property)) return [
-                            3,
-                            5
-                        ];
-                        res = [];
-                        _iterator = _create_for_of_iterator_helper_loose(property);
-                        _state.label = 1;
-                    case 1:
-                        if (!!(_step = _iterator()).done) return [
-                            3,
-                            4
-                        ];
-                        value = _step.value;
-                        _ = res.push;
-                        return [
-                            4,
-                            SerializationHelper.deserializePropertyAsync(value, engine, level + 1, type)
-                        ];
-                    case 2:
-                        _.apply(res, [
-                            _state.sent()
-                        ]);
-                        _state.label = 3;
-                    case 3:
-                        return [
-                            3,
-                            1
-                        ];
-                    case 4:
-                        return [
-                            2,
-                            res
-                        ];
-                    case 5:
-                        if (!SerializationHelper.checkDataPath(property)) return [
-                            3,
-                            7
-                        ];
-                        return [
-                            4,
-                            engine.assetLoader.loadGUIDAsync(property.id)
-                        ];
-                    case 6:
-                        res1 = _state.sent();
-                        return [
-                            2,
-                            res1
-                        ];
-                    case 7:
-                        if (!(isObject(property) && property.constructor === Object)) return [
-                            3,
-                            12
-                        ];
-                        if (type) {
-                            res2 = new type();
-                        } else {
-                            res2 = {};
-                        }
-                        _iterator1 = _create_for_of_iterator_helper_loose(Object.keys(property));
-                        _state.label = 8;
-                    case 8:
-                        if (!!(_step1 = _iterator1()).done) return [
-                            3,
-                            11
-                        ];
-                        key = _step1.value;
-                        return [
-                            4,
-                            SerializationHelper.deserializePropertyAsync(property[key], engine, level + 1)
-                        ];
-                    case 9:
-                        res2[key] = _state.sent();
-                        _state.label = 10;
-                    case 10:
-                        return [
-                            3,
-                            8
-                        ];
-                    case 11:
-                        return [
-                            2,
-                            res2
-                        ];
-                    case 12:
-                        return [
-                            2,
-                            property
-                        ];
-                    case 13:
-                        return [
-                            2
-                        ];
-                }
-            });
-        })();
-    };
-    SerializationHelper.serializeObjectProperty = function serializeObjectProperty(objectProperty, serializedData, level) {
-        if (level > 14) {
-            console.error("The nested object layers of the serialized data exceed the maximum limit.");
-            return;
-        }
-        if (!serializedData) {
-            serializedData = {};
-        }
-        for(var _iterator = _create_for_of_iterator_helper_loose(Object.keys(objectProperty)), _step; !(_step = _iterator()).done;){
-            var key = _step.value;
-            var value = objectProperty[key];
-            if (typeof value === "number" || typeof value === "string" || typeof value === "boolean" || SerializationHelper.checkTypedArray(objectProperty)) {
-                // TODO json 数据避免传 typedArray
-                serializedData[key] = value;
-            } else if (isArray(value)) {
-                if (!serializedData[key]) {
-                    serializedData[key] = [];
-                }
-                SerializationHelper.serializeArrayProperty(value, serializedData[key], level + 1);
-            } else if (EffectsObject.is(value)) {
-                // TODO 处理 EffectsObject 递归序列化
-                serializedData[key] = {
-                    id: value.getInstanceId()
-                };
-            } else if (isObject(value)) {
-                if (!serializedData[key]) {
-                    serializedData[key] = {};
-                }
-                SerializationHelper.serializeObjectProperty(value, serializedData[key], level + 1);
-            }
-        }
-    };
-    SerializationHelper.serializeArrayProperty = function serializeArrayProperty(arrayProperty, serializedData, level) {
-        if (level > 14) {
-            console.error("The nested object layers of the serialized data exceed the maximum limit.");
-            return;
-        }
-        if (!serializedData) {
-            serializedData = [];
-        }
-        for(var i = 0; i < arrayProperty.length; i++){
-            var value = arrayProperty[i];
-            if (typeof value === "number" || typeof value === "string" || typeof value === "boolean" || SerializationHelper.checkTypedArray(arrayProperty)) {
-                // TODO json 数据避免传 typedArray
-                serializedData[i] = value;
-            } else if (isArray(value)) {
-                if (!serializedData[i]) {
-                    serializedData[i] = [];
-                }
-                SerializationHelper.serializeArrayProperty(value, serializedData[i], level + 1);
-            } else if (EffectsObject.is(value)) {
-                // TODO 处理 EffectsObject 递归序列化
-                serializedData[i] = {
-                    id: value.getInstanceId()
-                };
-            } else if (isObject(value)) {
-                if (!serializedData[i]) {
-                    serializedData[i] = {};
-                }
-                SerializationHelper.serializeObjectProperty(value, serializedData[i], level + 1);
-            }
-        }
-    };
-    return SerializationHelper;
-}();
+], exports.BinaryAsset.prototype, "buffer", void 0);
+exports.BinaryAsset = __decorate([
+    effectsClass(DataType.BinaryAsset)
+], exports.BinaryAsset);
 
 /**
  * @since 2.0.0
@@ -24920,7 +28644,7 @@ var SerializationHelper = /*#__PURE__*/ function() {
         }
         effectsObject.setInstanceId(effectsObjectData.id);
         this.engine.addInstance(effectsObject);
-        SerializationHelper.deserializeTaggedProperties(effectsObjectData, effectsObject);
+        SerializationHelper.deserialize(effectsObjectData, effectsObject);
         return effectsObject;
     };
     // 加载本地文件资产
@@ -24997,7 +28721,7 @@ var SerializationHelper = /*#__PURE__*/ function() {
                         _this.engine.addInstance(effectsObject);
                         return [
                             4,
-                            SerializationHelper.deserializeTaggedPropertiesAsync(effectsObjectData, effectsObject)
+                            SerializationHelper.deserializeAsync(effectsObjectData, effectsObject)
                         ];
                     case 3:
                         _state.sent();
@@ -25583,7 +29307,7 @@ function getStandardInteractContent(ui) {
         composition.endBehavior === END_BEHAVIOR_PAUSE_AND_DESTROY || // @ts-expect-error
         // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
         composition.endBehavior === END_BEHAVIOR_PAUSE) {
-            composition.endBehavior = END_BEHAVIOR_FREEZE;
+            composition.endBehavior = EndBehavior.freeze;
         }
         // 过滤掉滤镜元素
         composition.items = composition.items.filter(function(item) {
@@ -25875,7 +29599,7 @@ function getStandardInteractContent(ui) {
                 item.content.dataType = DataType.TextComponent;
                 break;
             case ItemType.spine:
-                item.content.dataType = "SpineComponent";
+                item.content.dataType = DataType.SpineComponent;
                 break;
         }
     }
@@ -26119,13 +29843,13 @@ function getStandardParticleContent(particle) {
     var options = particle.options;
     var transform = particle.transform;
     var shape = {
-        type: ShapeType.NONE
+        type: ParticleEmitterShapeType.NONE
     };
     if (particle.shape) {
         var _particle_shape_shape;
         var shapeType = (_particle_shape_shape = particle.shape.shape) == null ? void 0 : _particle_shape_shape.replace(/([A-Z])/g, "_$1").toUpperCase().replace(/^_/, "");
         shape = _extends({}, particle.shape, {
-            type: ShapeType[shapeType]
+            type: ParticleEmitterShapeType[shapeType]
         });
         if (particle.shape.upDirection) {
             var _particle_shape_upDirection = particle.shape.upDirection, x = _particle_shape_upDirection[0], y = _particle_shape_upDirection[1], z = _particle_shape_upDirection[2];
@@ -26736,15 +30460,22 @@ function passRenderLevel(l, renderLevel) {
     return false;
 }
 
-function isSceneJSON(scene) {
-    return isObject(scene) && "jsonScene" in scene;
-}
-function isSceneURL(scene) {
-    return isObject(scene) && "url" in scene;
-}
-function isSceneWithOptions(scene) {
-    return isObject(scene) && "options" in scene;
-}
+exports.Scene = void 0;
+(function(Scene) {
+    function isJSONObject(scene) {
+        return isObject(scene) && "jsonScene" in scene;
+    }
+    // JSON 对象
+    Scene.isJSONObject = isJSONObject;
+    function isURL(scene) {
+        return isObject(scene) && "url" in scene;
+    }
+    Scene.isURL = isURL;
+    function isWithOptions(scene) {
+        return isObject(scene) && "options" in scene;
+    }
+    Scene.isWithOptions = isWithOptions;
+})(exports.Scene || (exports.Scene = {}));
 
 function getBackgroundImage(template, variables) {
     var templateBackground;
@@ -26827,14 +30558,6 @@ function _combineImageTemplate() {
     return _combineImageTemplate.apply(this, arguments);
 }
 
-var ImageAsset = /*#__PURE__*/ function(EffectsObject) {
-    _inherits(ImageAsset, EffectsObject);
-    function ImageAsset() {
-        return EffectsObject.apply(this, arguments);
-    }
-    return ImageAsset;
-}(EffectsObject);
-
 var seed$4 = 1;
 /**
  * 资源管理器
@@ -26846,6 +30569,7 @@ var seed$4 = 1;
         this.options = options;
         this.downloader = downloader;
         this.assets = {};
+        this.sourceFrom = {};
         this.id = seed$4++;
         this.timers = [];
         this.updateOptions(options);
@@ -26869,13 +30593,12 @@ var seed$4 = 1;
    */ _proto.loadScene = function loadScene(url, renderer, options) {
         var _this = this;
         return _async_to_generator(function() {
-            var _gpuInstance_detail, rawJSON, assetUrl, startTime, timeInfoMessages, gpuInstance, _gpuInstance_detail_asyncShaderCompile, asyncShaderCompile, _gpuInstance_detail_compressedTexture, compressedTexture, timeInfos, loadTimer, cancelLoading, waitPromise, hookTimeInfo, loadResourcePromise;
+            var rawJSON, assetUrl, startTime, timeInfoMessages, gpuInstance, _gpuInstance_detail_compressedTexture, compressedTexture, timeInfos, loadTimer, cancelLoading, waitPromise, hookTimeInfo, loadResourcePromise;
             return __generator(this, function(_state) {
                 assetUrl = isString(url) ? url : _this.id;
                 startTime = alipay.performance.now();
                 timeInfoMessages = [];
                 gpuInstance = renderer == null ? void 0 : renderer.engine.gpuCapability;
-                asyncShaderCompile = (_gpuInstance_detail_asyncShaderCompile = gpuInstance == null ? void 0 : (_gpuInstance_detail = gpuInstance.detail) == null ? void 0 : _gpuInstance_detail.asyncShaderCompile) != null ? _gpuInstance_detail_asyncShaderCompile : false;
                 compressedTexture = (_gpuInstance_detail_compressedTexture = gpuInstance == null ? void 0 : gpuInstance.detail.compressedTexture) != null ? _gpuInstance_detail_compressedTexture : exports.COMPRESSED_TEXTURE.NONE;
                 timeInfos = {};
                 cancelLoading = false;
@@ -26928,81 +30651,71 @@ var seed$4 = 1;
                     });
                 });
                 loadResourcePromise = /*#__PURE__*/ _async_to_generator(function() {
-                    var scene, _rawJSON_jsonScene, rawImages, images, i, i1, _ref, usedImages, jsonScene, pluginSystem, _jsonScene_bins, bins, images1, compositions, fonts, _ref1, loadedBins, loadedImages, i2, imageAsset, loadedTextures, totalTime;
+                    var scene, link, jsonScene, pluginSystem, loadedImages, compositions, images, _ref, jsonScene1, pluginSystem1, _jsonScene_bins, bins, images1, compositions1, fonts, _ref1, loadedBins, loadedImages1, loadedTextures, totalTime;
                     return __generator(this, function(_state) {
                         switch(_state.label){
                             case 0:
-                                if (!isObject(url)) return [
+                                if (!isString(url)) return [
                                     3,
-                                    1
+                                    2
                                 ];
-                                // TODO: 原 JSONLoader contructor 判断是否兼容
-                                rawJSON = url;
-                                _this.baseUrl = alipay.location.href;
+                                // 兼容相对路径
+                                link = new alipay.URL(url, alipay.location.href).href;
+                                _this.baseUrl = link;
+                                return [
+                                    4,
+                                    hookTimeInfo("loadJSON", function() {
+                                        return _this.loadJSON(link);
+                                    })
+                                ];
+                            case 1:
+                                rawJSON = _state.sent();
                                 return [
                                     3,
                                     3
                                 ];
-                            case 1:
-                                // 兼容相对路径
-                                url = new alipay.URL(url, alipay.location.href).href;
-                                _this.baseUrl = url;
-                                return [
-                                    4,
-                                    hookTimeInfo("loadJSON", function() {
-                                        return _this.loadJSON(url);
-                                    })
-                                ];
                             case 2:
-                                rawJSON = _state.sent();
+                                // url 为 spec.JSONScene 或 Scene 对象
+                                rawJSON = url;
+                                _this.baseUrl = alipay.location.href;
                                 _state.label = 3;
                             case 3:
-                                if (!isSceneJSON(rawJSON)) return [
-                                    3,
-                                    6
-                                ];
-                                // 已经加载过的 可能需要更新数据模板
-                                scene = _extends({}, rawJSON);
-                                if (!(_this.options && _this.options.variables && Object.keys(_this.options.variables).length !== 0)) return [
+                                if (!exports.Scene.isJSONObject(rawJSON)) return [
                                     3,
                                     5
                                 ];
-                                _rawJSON_jsonScene = rawJSON.jsonScene, rawImages = _rawJSON_jsonScene.images;
-                                images = scene.images;
-                                for(i = 0; i < rawImages.length; i++){
-                                    // 仅重新加载数据模板对应的图片
-                                    if (_instanceof1(images[i], alipay.HTMLCanvasElement)) {
-                                        images[i] = rawImages[i];
-                                    }
-                                }
+                                // 已经加载过的 可能需要更新数据模板
+                                scene = _extends({}, rawJSON);
+                                jsonScene = scene.jsonScene, pluginSystem = scene.pluginSystem, loadedImages = scene.images;
+                                compositions = jsonScene.compositions, images = jsonScene.images;
+                                _this.assignImagesToAssets(images, loadedImages);
                                 return [
                                     4,
-                                    hookTimeInfo("processImages", function() {
-                                        return _this.processImages(images, compressedTexture);
-                                    })
+                                    Promise.all([
+                                        hookTimeInfo("plugin:processAssets", function() {
+                                            return _this.processPluginAssets(jsonScene, pluginSystem, options);
+                                        }),
+                                        hookTimeInfo("plugin:precompile", function() {
+                                            return _this.precompile(compositions, pluginSystem, renderer, options);
+                                        })
+                                    ])
                                 ];
                             case 4:
-                                scene.images = _state.sent();
-                                // 更新 TextureOptions 中的 image 指向
-                                for(i1 = 0; i1 < scene.images.length; i1++){
-                                    scene.textureOptions[i1].image = scene.images[i1];
-                                }
-                                _state.label = 5;
-                            case 5:
+                                _state.sent();
                                 return [
                                     3,
-                                    12
+                                    10
                                 ];
-                            case 6:
+                            case 5:
                                 return [
                                     4,
                                     hookTimeInfo("processJSON", function() {
                                         return _this.processJSON(rawJSON);
                                     })
                                 ];
-                            case 7:
-                                _ref = _state.sent(), usedImages = _ref.usedImages, jsonScene = _ref.jsonScene, pluginSystem = _ref.pluginSystem;
-                                _jsonScene_bins = jsonScene.bins, bins = _jsonScene_bins === void 0 ? [] : _jsonScene_bins, images1 = jsonScene.images, compositions = jsonScene.compositions, fonts = jsonScene.fonts;
+                            case 6:
+                                _ref = _state.sent(), jsonScene1 = _ref.jsonScene, pluginSystem1 = _ref.pluginSystem;
+                                _jsonScene_bins = jsonScene1.bins, bins = _jsonScene_bins === void 0 ? [] : _jsonScene_bins, images1 = jsonScene1.images, compositions1 = jsonScene1.compositions, fonts = jsonScene1.fonts;
                                 return [
                                     4,
                                     Promise.all([
@@ -27012,60 +30725,57 @@ var seed$4 = 1;
                                         hookTimeInfo("processImages", function() {
                                             return _this.processImages(images1, compressedTexture);
                                         }),
-                                        hookTimeInfo("" + (asyncShaderCompile ? "async" : "sync") + "Compile", function() {
-                                            return _this.precompile(compositions, pluginSystem, renderer, options);
+                                        hookTimeInfo("plugin:processAssets", function() {
+                                            return _this.processPluginAssets(jsonScene1, pluginSystem1, options);
+                                        }),
+                                        hookTimeInfo("plugin:precompile", function() {
+                                            return _this.precompile(compositions1, pluginSystem1, renderer, options);
+                                        }),
+                                        hookTimeInfo("processFontURL", function() {
+                                            return _this.processFontURL(fonts);
                                         })
                                     ])
                                 ];
-                            case 8:
-                                _ref1 = _state.sent(), loadedBins = _ref1[0], loadedImages = _ref1[1];
-                                if (renderer) {
-                                    for(i2 = 0; i2 < images1.length; i2++){
-                                        imageAsset = new ImageAsset(renderer.engine);
-                                        imageAsset.data = loadedImages[i2];
-                                        imageAsset.setInstanceId(images1[i2].id);
-                                        renderer.engine.addInstance(imageAsset);
-                                    }
-                                }
-                                return [
-                                    4,
-                                    hookTimeInfo("processFontURL", function() {
-                                        return _this.processFontURL(fonts);
-                                    })
-                                ];
-                            case 9:
-                                _state.sent();
+                            case 7:
+                                _ref1 = _state.sent(), loadedBins = _ref1[0], loadedImages1 = _ref1[1];
                                 return [
                                     4,
                                     hookTimeInfo("processTextures", function() {
-                                        return _this.processTextures(loadedImages, loadedBins, jsonScene, renderer.engine);
+                                        return _this.processTextures(loadedImages1, loadedBins, jsonScene1);
                                     })
                                 ];
-                            case 10:
+                            case 8:
                                 loadedTextures = _state.sent();
                                 scene = {
                                     timeInfos: timeInfos,
                                     url: url,
                                     renderLevel: _this.options.renderLevel,
                                     storage: {},
-                                    pluginSystem: pluginSystem,
-                                    jsonScene: jsonScene,
-                                    usedImages: usedImages,
-                                    images: loadedImages,
-                                    textureOptions: loadedTextures,
-                                    bins: loadedBins
+                                    pluginSystem: pluginSystem1,
+                                    jsonScene: jsonScene1,
+                                    bins: loadedBins,
+                                    images: loadedImages1,
+                                    textureOptions: loadedTextures
                                 };
                                 // 触发插件系统 pluginSystem 的回调 prepareResource
                                 return [
                                     4,
-                                    hookTimeInfo("processPlugins", function() {
-                                        return pluginSystem.loadResources(scene, _this.options);
+                                    hookTimeInfo("plugin:prepareResource", function() {
+                                        return pluginSystem1.loadResources(scene, _this.options);
+                                    })
+                                ];
+                            case 9:
+                                _state.sent();
+                                _state.label = 10;
+                            case 10:
+                                return [
+                                    4,
+                                    hookTimeInfo("prepareAssets", function() {
+                                        return _this.prepareAssets(renderer == null ? void 0 : renderer.engine);
                                     })
                                 ];
                             case 11:
                                 _state.sent();
-                                _state.label = 12;
-                            case 12:
                                 totalTime = alipay.performance.now() - startTime;
                                 logger.info("Load asset: totalTime: " + totalTime.toFixed(4) + "ms " + timeInfoMessages.join(" ") + ", url: " + assetUrl + ".");
                                 alipay.window.clearTimeout(loadTimer);
@@ -27093,7 +30803,6 @@ var seed$4 = 1;
     };
     _proto.precompile = function precompile(compositions, pluginSystem, renderer, options) {
         return _async_to_generator(function() {
-            var shaderLibrary;
             return __generator(this, function(_state) {
                 switch(_state.label){
                     case 0:
@@ -27102,22 +30811,11 @@ var seed$4 = 1;
                                 2
                             ];
                         }
-                        shaderLibrary = renderer == null ? void 0 : renderer.getShaderLibrary();
                         return [
                             4,
-                            pluginSystem == null ? void 0 : pluginSystem.precompile(compositions, renderer, options)
+                            pluginSystem.precompile(compositions, renderer, options)
                         ];
                     case 1:
-                        _state.sent();
-                        return [
-                            4,
-                            new Promise(function(resolve) {
-                                shaderLibrary == null ? void 0 : shaderLibrary.compileAllShaders(function() {
-                                    resolve(null);
-                                });
-                            })
-                        ];
-                    case 2:
                         _state.sent();
                         return [
                             2
@@ -27129,12 +30827,12 @@ var seed$4 = 1;
     _proto.processJSON = function processJSON(json) {
         var _this = this;
         return _async_to_generator(function() {
-            var jsonScene, _jsonScene_plugins, plugins, sceneCompositions, imgUsage, images, pluginSystem, renderLevel, usedImages;
+            var jsonScene, _jsonScene_plugins, plugins, pluginSystem;
             return __generator(this, function(_state) {
                 switch(_state.label){
                     case 0:
                         jsonScene = getStandardJSON(json);
-                        _jsonScene_plugins = jsonScene.plugins, plugins = _jsonScene_plugins === void 0 ? [] : _jsonScene_plugins, sceneCompositions = jsonScene.compositions, imgUsage = jsonScene.imgUsage, images = jsonScene.images;
+                        _jsonScene_plugins = jsonScene.plugins, plugins = _jsonScene_plugins === void 0 ? [] : _jsonScene_plugins;
                         pluginSystem = new PluginSystem(plugins);
                         return [
                             4,
@@ -27142,20 +30840,9 @@ var seed$4 = 1;
                         ];
                     case 1:
                         _state.sent();
-                        renderLevel = _this.options.renderLevel;
-                        usedImages = {};
-                        if (imgUsage) {
-                            // TODO: 考虑放到独立的 fix 文件
-                            fixOldImageUsage(usedImages, sceneCompositions, imgUsage, images, renderLevel);
-                        } else {
-                            images == null ? void 0 : images.forEach(function(_, i) {
-                                usedImages[i] = true;
-                            });
-                        }
                         return [
                             2,
                             {
-                                usedImages: usedImages,
                                 jsonScene: jsonScene,
                                 pluginSystem: pluginSystem
                             }
@@ -27203,7 +30890,7 @@ var seed$4 = 1;
                     return __generator(this, function(_state) {
                         switch(_state.label){
                             case 0:
-                                if (!(font.fontURL && !AssetManager.fonts.has(font.fontFamily))) return [
+                                if (!(font.fontURL && !AssetManager.fontCache.has(font.fontFamily))) return [
                                     3,
                                     4
                                 ];
@@ -27227,9 +30914,8 @@ var seed$4 = 1;
                                 ];
                             case 2:
                                 _state.sent();
-                                //@ts-expect-error
                                 alipay.document.fonts.add(fontFace);
-                                AssetManager.fonts.add(font.fontFamily);
+                                AssetManager.fontCache.add(font.fontFamily);
                                 return [
                                     3,
                                     4
@@ -27259,164 +30945,232 @@ var seed$4 = 1;
         if (compressedTexture === void 0) compressedTexture = 0;
         var _this = this;
         return _async_to_generator(function() {
-            var _this_options, useCompressedTexture, variables, baseUrl, jobs;
+            var _this_options, useCompressedTexture, variables, baseUrl, jobs, loadedImages;
             return __generator(this, function(_state) {
-                _this_options = _this.options, useCompressedTexture = _this_options.useCompressedTexture, variables = _this_options.variables;
-                baseUrl = _this.baseUrl;
-                jobs = images.map(/*#__PURE__*/ _async_to_generator(function(img, idx) {
-                    var png, webp, avif, imageURL, webpURL, avifURL, template, background, url, isVideo, loadFn, resultImage, e, compressed, src, bufferURL, _ref, url1, image, _tmp;
-                    return __generator(this, function(_state) {
-                        switch(_state.label){
-                            case 0:
-                                png = img.url, webp = img.webp, avif = img.avif;
-                                // eslint-disable-next-line compat/compat
-                                imageURL = new alipay.URL(png, baseUrl).href;
-                                // eslint-disable-next-line compat/compat
-                                webpURL = webp && new alipay.URL(webp, baseUrl).href;
-                                // eslint-disable-next-line compat/compat
-                                avifURL = avif && new alipay.URL(avif, baseUrl).href;
-                                if (!("template" in img)) return [
-                                    3,
-                                    8
-                                ];
-                                // 1. 数据模板
-                                template = img.template;
-                                // 获取数据模板 background 参数
-                                background = template.background;
-                                if (!background) return [
-                                    3,
-                                    7
-                                ];
-                                url = getBackgroundImage(template, variables);
-                                isVideo = background.type === BackgroundType.video;
-                                // 根据背景类型确定加载函数
-                                loadFn = background && isVideo ? loadVideo : loadImage;
-                                _state.label = 1;
-                            case 1:
-                                _state.trys.push([
-                                    1,
-                                    6,
-                                    ,
-                                    7
-                                ]);
-                                return [
-                                    4,
-                                    loadMedia(url, loadFn)
-                                ];
-                            case 2:
-                                resultImage = _state.sent();
-                                if (!_instanceof1(resultImage, alipay.HTMLVideoElement)) return [
-                                    3,
-                                    3
-                                ];
-                                return [
-                                    2,
-                                    resultImage
-                                ];
-                            case 3:
-                                // 如果是加载图片且是数组，设置变量，视频情况下不需要
-                                if (background && Array.isArray(url) && variables) {
-                                    variables[background.name] = resultImage.src;
-                                }
-                                return [
-                                    4,
-                                    combineImageTemplate(resultImage, template, variables)
-                                ];
-                            case 4:
-                                return [
-                                    2,
-                                    _state.sent()
-                                ];
-                            case 5:
-                                return [
-                                    3,
-                                    7
-                                ];
-                            case 6:
-                                e = _state.sent();
-                                throw new Error("Failed to load. Check the template or if the URL is " + (isVideo ? "video" : "image") + " type, URL: " + url + ", Error: " + (e.message || e) + ".");
-                            case 7:
-                                return [
-                                    3,
-                                    9
-                                ];
-                            case 8:
-                                if ("compressed" in img && useCompressedTexture && compressedTexture) {
-                                    // 2. 压缩纹理
-                                    compressed = img.compressed;
-                                    if (compressedTexture === exports.COMPRESSED_TEXTURE.ASTC) {
-                                        src = compressed.astc;
-                                    } else if (compressedTexture === exports.COMPRESSED_TEXTURE.PVRTC) {
-                                        src = compressed.pvrtc;
-                                    }
-                                    if (src) {
-                                        bufferURL = new alipay.URL(src, baseUrl).href;
-                                        _this.assets[idx] = {
-                                            url: bufferURL,
-                                            type: exports.TextureSourceType.compressed
+                switch(_state.label){
+                    case 0:
+                        _this_options = _this.options, useCompressedTexture = _this_options.useCompressedTexture, variables = _this_options.variables;
+                        baseUrl = _this.baseUrl;
+                        jobs = images.map(/*#__PURE__*/ _async_to_generator(function(img, idx) {
+                            var png, webp, avif, imageURL, webpURL, avifURL, id, template, background, url, isVideo, loadFn, resultImage, e, compressed, src, bufferURL, _ref, url1, image, _tmp;
+                            return __generator(this, function(_state) {
+                                switch(_state.label){
+                                    case 0:
+                                        png = img.url, webp = img.webp, avif = img.avif;
+                                        // eslint-disable-next-line compat/compat
+                                        imageURL = new alipay.URL(png, baseUrl).href;
+                                        // eslint-disable-next-line compat/compat
+                                        webpURL = webp && new alipay.URL(webp, baseUrl).href;
+                                        // eslint-disable-next-line compat/compat
+                                        avifURL = avif && new alipay.URL(avif, baseUrl).href;
+                                        id = img.id;
+                                        if (!("template" in img)) return [
+                                            3,
+                                            8
+                                        ];
+                                        // 1. 数据模板
+                                        template = img.template;
+                                        // 获取数据模板 background 参数
+                                        background = template.background;
+                                        if (!background) return [
+                                            3,
+                                            7
+                                        ];
+                                        url = getBackgroundImage(template, variables);
+                                        isVideo = background.type === BackgroundType.video;
+                                        // 根据背景类型确定加载函数
+                                        loadFn = background && isVideo ? loadVideo : loadImage;
+                                        _state.label = 1;
+                                    case 1:
+                                        _state.trys.push([
+                                            1,
+                                            6,
+                                            ,
+                                            7
+                                        ]);
+                                        return [
+                                            4,
+                                            loadMedia(url, loadFn)
+                                        ];
+                                    case 2:
+                                        resultImage = _state.sent();
+                                        if (!_instanceof1(resultImage, alipay.HTMLVideoElement)) return [
+                                            3,
+                                            3
+                                        ];
+                                        _this.sourceFrom[id] = {
+                                            url: resultImage.src,
+                                            type: exports.TextureSourceType.video
                                         };
                                         return [
                                             2,
-                                            _this.loadBins(bufferURL)
+                                            resultImage
                                         ];
-                                    }
-                                } else if ("sourceType" in img) {
-                                    // TODO: 确定是否有用
-                                    return [
-                                        2,
-                                        img
-                                    ];
-                                } else if (_instanceof1(img, alipay.HTMLImageElement) || _instanceof1(img, alipay.HTMLCanvasElement) || _instanceof1(img, alipay.HTMLVideoElement) || _instanceof1(img, Texture)) {
-                                    return [
-                                        2,
-                                        img
-                                    ];
+                                    case 3:
+                                        // 如果是加载图片且是数组，设置变量，视频情况下不需要
+                                        if (background && Array.isArray(url) && variables) {
+                                            variables[background.name] = resultImage.src;
+                                        }
+                                        _this.sourceFrom[id] = {
+                                            url: resultImage.src,
+                                            type: exports.TextureSourceType.image
+                                        };
+                                        return [
+                                            4,
+                                            combineImageTemplate(resultImage, template, variables)
+                                        ];
+                                    case 4:
+                                        return [
+                                            2,
+                                            _state.sent()
+                                        ];
+                                    case 5:
+                                        return [
+                                            3,
+                                            7
+                                        ];
+                                    case 6:
+                                        e = _state.sent();
+                                        throw new Error("Failed to load. Check the template or if the URL is " + (isVideo ? "video" : "image") + " type, URL: " + url + ", Error: " + (e.message || e) + ".");
+                                    case 7:
+                                        return [
+                                            3,
+                                            9
+                                        ];
+                                    case 8:
+                                        if ("compressed" in img && useCompressedTexture && compressedTexture) {
+                                            // 2. 压缩纹理
+                                            compressed = img.compressed;
+                                            if (compressedTexture === exports.COMPRESSED_TEXTURE.ASTC) {
+                                                src = compressed.astc;
+                                            } else if (compressedTexture === exports.COMPRESSED_TEXTURE.PVRTC) {
+                                                src = compressed.pvrtc;
+                                            }
+                                            if (src) {
+                                                bufferURL = new alipay.URL(src, baseUrl).href;
+                                                _this.sourceFrom[id] = {
+                                                    url: bufferURL,
+                                                    type: exports.TextureSourceType.compressed
+                                                };
+                                                return [
+                                                    2,
+                                                    _this.loadBins(bufferURL)
+                                                ];
+                                            }
+                                        } else if (_instanceof1(img, alipay.HTMLImageElement) || _instanceof1(img, alipay.HTMLCanvasElement) || _instanceof1(img, alipay.HTMLVideoElement) || _instanceof1(img, Texture)) {
+                                            return [
+                                                2,
+                                                img
+                                            ];
+                                        }
+                                        _state.label = 9;
+                                    case 9:
+                                        if (!avifURL) return [
+                                            3,
+                                            11
+                                        ];
+                                        return [
+                                            4,
+                                            loadAVIFOptional(imageURL, avifURL)
+                                        ];
+                                    case 10:
+                                        _tmp = _state.sent();
+                                        return [
+                                            3,
+                                            13
+                                        ];
+                                    case 11:
+                                        return [
+                                            4,
+                                            loadWebPOptional(imageURL, webpURL)
+                                        ];
+                                    case 12:
+                                        _tmp = _state.sent();
+                                        _state.label = 13;
+                                    case 13:
+                                        _ref = _tmp, url1 = _ref.url, image = _ref.image;
+                                        _this.sourceFrom[id] = {
+                                            url: url1,
+                                            type: exports.TextureSourceType.image
+                                        };
+                                        return [
+                                            2,
+                                            image
+                                        ];
                                 }
-                                _state.label = 9;
-                            case 9:
-                                if (!avifURL) return [
-                                    3,
-                                    11
-                                ];
-                                return [
-                                    4,
-                                    loadAVIFOptional(imageURL, avifURL)
-                                ];
-                            case 10:
-                                _tmp = _state.sent();
-                                return [
-                                    3,
-                                    13
-                                ];
-                            case 11:
-                                return [
-                                    4,
-                                    loadWebPOptional(imageURL, webpURL)
-                                ];
-                            case 12:
-                                _tmp = _state.sent();
-                                _state.label = 13;
-                            case 13:
-                                _ref = _tmp, url1 = _ref.url, image = _ref.image;
-                                _this.assets[idx] = {
-                                    url: url1,
-                                    type: exports.TextureSourceType.image
-                                };
-                                return [
-                                    2,
-                                    image
-                                ];
+                            });
+                        }));
+                        return [
+                            4,
+                            Promise.all(jobs)
+                        ];
+                    case 1:
+                        loadedImages = _state.sent();
+                        _this.assignImagesToAssets(images, loadedImages);
+                        return [
+                            2,
+                            loadedImages
+                        ];
+                }
+            });
+        })();
+    };
+    _proto.processPluginAssets = function processPluginAssets(jsonScene, pluginSystem, options) {
+        var _this = this;
+        return _async_to_generator(function() {
+            var pluginResult, _pluginResult_reduce, assets, loadedAssets, i;
+            return __generator(this, function(_state) {
+                switch(_state.label){
+                    case 0:
+                        return [
+                            4,
+                            pluginSystem.processAssets(jsonScene, options)
+                        ];
+                    case 1:
+                        pluginResult = _state.sent();
+                        _pluginResult_reduce = pluginResult.reduce(function(acc, cur) {
+                            acc.assets = acc.assets.concat(cur.assets);
+                            acc.loadedAssets = acc.loadedAssets.concat(cur.loadedAssets);
+                            return acc;
+                        }, {
+                            assets: [],
+                            loadedAssets: []
+                        }), assets = _pluginResult_reduce.assets, loadedAssets = _pluginResult_reduce.loadedAssets;
+                        for(i = 0; i < assets.length; i++){
+                            _this.assets[assets[i].id] = loadedAssets[i];
                         }
-                    });
-                }));
+                        return [
+                            2
+                        ];
+                }
+            });
+        })();
+    };
+    _proto.prepareAssets = function prepareAssets(engine) {
+        var _this = this;
+        return _async_to_generator(function() {
+            var _iterator, _step, assetId, asset, engineAsset;
+            return __generator(this, function(_state) {
+                if (!engine) {
+                    return [
+                        2
+                    ];
+                }
+                for(_iterator = _create_for_of_iterator_helper_loose(Object.keys(_this.assets)); !(_step = _iterator()).done;){
+                    assetId = _step.value;
+                    asset = _this.assets[assetId];
+                    engineAsset = new Asset(engine);
+                    engineAsset.data = asset;
+                    engineAsset.setInstanceId(assetId);
+                    engine.addInstance(engineAsset);
+                }
                 return [
-                    2,
-                    Promise.all(jobs)
+                    2
                 ];
             });
         })();
     };
-    _proto.processTextures = function processTextures(images, bins, jsonScene, engine) {
+    _proto.processTextures = function processTextures(images, bins, jsonScene) {
         var _this = this;
         return _async_to_generator(function() {
             var _jsonScene_textures, textures, jobs;
@@ -27427,7 +31181,7 @@ var seed$4 = 1;
                     };
                 });
                 jobs = textures.map(/*#__PURE__*/ _async_to_generator(function(textureOptions, idx) {
-                    var e, source, image, texture;
+                    var e, source, id, image, imageId, texture;
                     return __generator(this, function(_state) {
                         switch(_state.label){
                             case 0:
@@ -27451,7 +31205,7 @@ var seed$4 = 1;
                                 ]);
                                 return [
                                     4,
-                                    deserializeMipmapTexture(textureOptions, bins, engine, jsonScene.bins)
+                                    deserializeMipmapTexture(textureOptions, bins, _this.assets, jsonScene.bins)
                                 ];
                             case 2:
                                 return [
@@ -27462,12 +31216,14 @@ var seed$4 = 1;
                                 e = _state.sent();
                                 throw new Error("Load texture " + idx + " fails, error message: " + e + ".");
                             case 4:
-                                source = textureOptions.source;
+                                source = textureOptions.source, id = textureOptions.id;
+                                imageId = "";
                                 if (!isObject(source)) return [
                                     3,
                                     5
                                 ];
-                                image = engine.assetLoader.loadGUID(source.id).data;
+                                image = _this.assets[source.id];
+                                imageId = source.id;
                                 return [
                                     3,
                                     7
@@ -27486,9 +31242,7 @@ var seed$4 = 1;
                                 _state.label = 7;
                             case 7:
                                 if (image) {
-                                    texture = createTextureOptionsBySource(image, _this.assets[idx]);
-                                    texture.id = textureOptions.id;
-                                    texture.dataType = DataType.Texture;
+                                    texture = createTextureOptionsBySource(image, _this.sourceFrom[imageId], id);
                                     return [
                                         2,
                                         texture.sourceType === exports.TextureSourceType.compressed ? texture : _extends({}, texture, textureOptions)
@@ -27535,6 +31289,11 @@ var seed$4 = 1;
             });
         })();
     };
+    _proto.assignImagesToAssets = function assignImagesToAssets(images, loadedImages) {
+        for(var i = 0; i < images.length; i++){
+            this.assets[images[i].id] = loadedImages[i];
+        }
+    };
     _proto.removeTimer = function removeTimer(id) {
         var index = this.timers.indexOf(id);
         if (index !== -1) {
@@ -27549,68 +31308,53 @@ var seed$4 = 1;
                 return alipay.window.clearTimeout(id);
             });
         }
-        for(var key in this.assets){
-            var _asset_dispose;
-            var asset = this.assets[key];
-            asset == null ? void 0 : (_asset_dispose = asset.dispose) == null ? void 0 : _asset_dispose.call(asset);
-        }
         this.assets = {};
+        this.sourceFrom = {};
         this.timers = [];
     };
     return AssetManager;
 }();
 /**
    * 自定义文本缓存，随页面销毁而销毁
-   */ AssetManager.fonts = new Set();
-function fixOldImageUsage(usedImages, compositions, imgUsage, images, renderLevel) {
-    for(var i = 0; i < compositions.length; i++){
-        var id = compositions[i].id;
-        var ids = imgUsage[id];
-        if (ids) {
-            for(var j = 0; j < ids.length; j++){
-                var id1 = ids[j];
-                var tag = images[id1].renderLevel;
-                if (passRenderLevel(tag, renderLevel)) {
-                    usedImages[id1] = true;
-                }
-            }
-        }
-    }
-}
-function createTextureOptionsBySource(image, sourceFrom) {
+   */ AssetManager.fontCache = new Set();
+function createTextureOptionsBySource(image, sourceFrom, id) {
+    var options = {
+        id: id,
+        dataType: DataType.Texture
+    };
     if (_instanceof1(image, Texture)) {
-        return image.source;
+        return _extends({}, image.source, options);
     } else if (_instanceof1(image, alipay.HTMLImageElement) || isCanvas(image)) {
-        return {
+        return _extends({
             image: image,
             sourceType: exports.TextureSourceType.image,
             sourceFrom: sourceFrom,
             keepImageSource: true,
             minFilter: glContext.LINEAR,
             magFilter: glContext.LINEAR
-        };
+        }, options);
     } else if (_instanceof1(image, alipay.HTMLVideoElement)) {
         // 视频
-        return {
+        return _extends({
             sourceType: exports.TextureSourceType.video,
             video: image,
             minFilter: glContext.LINEAR,
             magFilter: glContext.LINEAR
-        };
+        }, options);
     } else if (_instanceof1(image, ArrayBuffer)) {
         // 压缩纹理
         return _extends({}, getKTXTextureOptions(image), {
             sourceFrom: sourceFrom
-        });
+        }, options);
     } else if ("width" in image && "height" in image && "data" in image) {
-        return {
+        return _extends({
             sourceType: exports.TextureSourceType.data,
             data: image,
             wrapS: glContext.CLAMP_TO_EDGE,
             wrapT: glContext.CLAMP_TO_EDGE,
             minFilter: glContext.NEAREST,
             magFilter: glContext.NEAREST
-        };
+        }, options);
     }
     throw new Error("Invalid texture options.");
 }
@@ -27912,13 +31656,14 @@ var listOrder = 0;
  * 合成资源管理
  */ var CompositionSourceManager = /*#__PURE__*/ function() {
     function CompositionSourceManager(scene, engine) {
-        this.refCompositions = new Map();
         this.refCompositionProps = new Map();
+        this.imgUsage = {};
         this.mask = 0;
+        this.refCompositions = new Map();
         this.engine = engine;
         // 资源
         var jsonScene = scene.jsonScene, renderLevel = scene.renderLevel, textureOptions = scene.textureOptions, pluginSystem = scene.pluginSystem, totalTime = scene.totalTime;
-        var compositions = jsonScene.compositions, imgUsage = jsonScene.imgUsage, compositionId = jsonScene.compositionId;
+        var compositions = jsonScene.compositions, compositionId = jsonScene.compositionId;
         if (!textureOptions) {
             throw new Error("scene.textures expected.");
         }
@@ -27938,43 +31683,41 @@ var listOrder = 0;
         this.renderLevel = renderLevel;
         this.pluginSystem = pluginSystem;
         this.totalTime = totalTime != null ? totalTime : 0;
-        this.imgUsage = imgUsage != null ? imgUsage : {};
         this.textures = cachedTextures;
         listOrder = 0;
         this.sourceContent = this.getContent(this.composition);
     }
     var _proto = CompositionSourceManager.prototype;
     _proto.getContent = function getContent(composition) {
-        var id = composition.id, duration = composition.duration, name = composition.name, endBehavior = composition.endBehavior, camera = composition.camera, _composition_startTime = composition.startTime, startTime = _composition_startTime === void 0 ? 0 : _composition_startTime;
-        var items = this.assembleItems(composition);
-        return _extends({}, composition, {
-            id: id,
-            duration: duration,
-            name: name,
-            endBehavior: isNaN(endBehavior) ? EndBehavior.freeze : endBehavior,
-            // looping,
-            items: items,
-            camera: camera,
-            startTime: startTime
-        });
+        var compositionData = _extends({}, composition);
+        this.assembleItems(compositionData);
+        if (isNaN(compositionData.endBehavior)) {
+            compositionData.endBehavior = EndBehavior.freeze;
+        }
+        if (!compositionData.startTime) {
+            compositionData.startTime = 0;
+        }
+        return compositionData;
     };
     _proto.assembleItems = function assembleItems(composition) {
-        var items = [];
         this.mask++;
         var componentMap = {};
-        //@ts-expect-error
+        var items = [];
+        if (!this.jsonScene) {
+            return;
+        }
         for(var _iterator = _create_for_of_iterator_helper_loose(this.jsonScene.components), _step; !(_step = _iterator()).done;){
             var component = _step.value;
             componentMap[component.id] = component;
         }
         for(var _iterator1 = _create_for_of_iterator_helper_loose(composition.items), _step1; !(_step1 = _iterator1()).done;){
             var itemDataPath = _step1.value;
-            //@ts-expect-error
             var sourceItemData = this.engine.jsonSceneData[itemDataPath.id];
             var itemProps = sourceItemData;
             if (passRenderLevel(sourceItemData.renderLevel, this.renderLevel)) {
                 itemProps.listIndex = listOrder++;
-                if (itemProps.type === ItemType.sprite || itemProps.type === ItemType.particle) {
+                if (itemProps.type === ItemType.sprite || itemProps.type === ItemType.particle || itemProps.type === ItemType.spine || //@ts-expect-error
+                itemProps.type === ItemType.shape) {
                     for(var _iterator2 = _create_for_of_iterator_helper_loose(itemProps.components), _step2; !(_step2 = _iterator2()).done;){
                         var componentPath = _step2.value;
                         var componentData = componentMap[componentPath.id];
@@ -27984,35 +31727,41 @@ var listOrder = 0;
                 // 处理预合成的渲染顺序
                 if (itemProps.type === ItemType.composition) {
                     var refId = sourceItemData.content.options.refId;
-                    if (!this.refCompositions.get(refId)) {
+                    var _$composition = this.refCompositions.get(refId);
+                    if (!_$composition) {
                         throw new Error("Invalid ref composition id: " + refId + ".");
                     }
-                    var ref = this.getContent(this.refCompositions.get(refId));
+                    var ref = this.getContent(_$composition);
                     if (!this.refCompositionProps.has(refId)) {
                         this.refCompositionProps.set(refId, ref);
                     }
                 }
-                items.push(itemProps);
+                items.push(itemDataPath);
             }
         }
-        return items;
+        composition.items = items;
     };
     _proto.preProcessItemContent = function preProcessItemContent(renderContent) {
         if (renderContent.renderer) {
             renderContent.renderer = this.changeTex(renderContent.renderer);
-            if (!renderContent.renderer.mask) {
+            if (!("mask" in renderContent.renderer)) {
                 this.processMask(renderContent.renderer);
             }
-            var split = renderContent.splits && !renderContent.textureSheetAnimation && renderContent.splits[0];
-            if (Number.isInteger(renderContent.renderer.shape)) {
+            var split = renderContent.splits && !renderContent.textureSheetAnimation ? renderContent.splits[0] : undefined;
+            var shape = renderContent.renderer.shape;
+            var shapeData;
+            if (Number.isInteger(shape)) {
                 var _this_jsonScene;
-                // TODO: scene.shapes 类型问题？
-                renderContent.renderer.shape = getGeometryByShape((_this_jsonScene = this.jsonScene) == null ? void 0 : _this_jsonScene.shapes[renderContent.renderer.shape], split);
-            } else if (renderContent.renderer.shape && isObject(renderContent.renderer.shape)) {
-                renderContent.renderer.shape = getGeometryByShape(renderContent.renderer.shape, split);
+                shapeData = (_this_jsonScene = this.jsonScene) == null ? void 0 : _this_jsonScene.shapes[shape];
+            } else if (shape) {
+                shapeData = shape;
+            }
+            if (shapeData !== undefined && !("aPoint" in shapeData && "index" in shapeData)) {
+                // @ts-expect-error 类型转换问题
+                renderContent.renderer.shape = getGeometryByShape(shapeData, split);
             }
         }
-        if (renderContent.trails) {
+        if ("trails" in renderContent && renderContent.trails !== undefined) {
             renderContent.trails = this.changeTex(renderContent.trails);
         }
     };
@@ -28020,22 +31769,17 @@ var listOrder = 0;
         if (!renderer.texture) {
             return renderer;
         }
-        //@ts-expect-error
         var texIdx = renderer.texture.id;
         if (texIdx !== undefined) {
-            //@ts-expect-error
-            this.addTextureUsage(texIdx) || texIdx;
+            this.addTextureUsage(texIdx);
         }
         return renderer;
     };
-    _proto.addTextureUsage = function addTextureUsage(texIdx) {
-        var texId = texIdx;
+    _proto.addTextureUsage = function addTextureUsage(texId) {
         var _this_imgUsage;
-        // FIXME: imageUsage 取自 scene.imgUsage，类型为 Record<string, number[]>，这里给的 number，类型对不上
         var imageUsage = (_this_imgUsage = this.imgUsage) != null ? _this_imgUsage : {};
         if (texId && imageUsage) {
-            // eslint-disable-next-line no-prototype-builtins
-            if (!imageUsage.hasOwnProperty(texId)) {
+            if (!Object.prototype.hasOwnProperty.call(imageUsage, texId)) {
                 imageUsage[texId] = 0;
             }
             imageUsage[texId]++;
@@ -28070,6 +31814,119 @@ var listOrder = 0;
 }();
 
 /**
+ *
+ */ var SceneTicking = /*#__PURE__*/ function() {
+    function SceneTicking() {
+        this.update = new UpdateTickData();
+        this.lateUpdate = new LateUpdateTickData();
+    }
+    var _proto = SceneTicking.prototype;
+    /**
+   *
+   * @param obj
+   */ _proto.addComponent = function addComponent(obj) {
+        if (obj.onUpdate !== Component.prototype.onUpdate) {
+            this.update.addComponent(obj);
+        }
+        if (obj.onLateUpdate !== Component.prototype.onLateUpdate) {
+            this.lateUpdate.addComponent(obj);
+        }
+    };
+    /**
+   *
+   * @param obj
+   */ _proto.removeComponent = function removeComponent(obj) {
+        if (obj.onUpdate !== Component.prototype.onUpdate) {
+            this.update.removeComponent(obj);
+        }
+        if (obj.onLateUpdate !== Component.prototype.onLateUpdate) {
+            this.lateUpdate.removeComponent(obj);
+        }
+    };
+    /**
+   *
+   */ _proto.clear = function clear() {
+        this.update.clear();
+        this.lateUpdate.clear();
+    };
+    return SceneTicking;
+}();
+var TickData = /*#__PURE__*/ function() {
+    function TickData() {
+        this.components = [];
+        this.ticks = [];
+    }
+    var _proto = TickData.prototype;
+    _proto.tick = function tick(dt) {
+        this.tickComponents(this.components, dt);
+        for(var i = 0; i < this.ticks.length; i++){
+            this.ticks[i](dt);
+        }
+    };
+    _proto.tickComponents = function tickComponents(components, dt) {
+    // To be implemented in derived classes
+    };
+    _proto.addComponent = function addComponent(component) {
+        if (!this.components.includes(component)) {
+            this.components.push(component);
+        }
+    };
+    _proto.removeComponent = function removeComponent(component) {
+        var index = this.components.indexOf(component);
+        if (index > -1) {
+            this.components.splice(index, 1);
+        }
+    };
+    _proto.addTick = function addTick(method, callee) {
+        var tick = method.bind(callee);
+        if (!this.ticks.includes(tick)) {
+            this.ticks.push(tick);
+        }
+    };
+    _proto.clear = function clear() {
+        this.components = [];
+    };
+    return TickData;
+}();
+var UpdateTickData = /*#__PURE__*/ function(TickData) {
+    _inherits(UpdateTickData, TickData);
+    function UpdateTickData() {
+        return TickData.apply(this, arguments);
+    }
+    var _proto = UpdateTickData.prototype;
+    _proto.tickComponents = function tickComponents(components, dt) {
+        for(var _iterator = _create_for_of_iterator_helper_loose(components), _step; !(_step = _iterator()).done;){
+            var component = _step.value;
+            component.onUpdate(dt);
+        }
+    };
+    return UpdateTickData;
+}(TickData);
+var LateUpdateTickData = /*#__PURE__*/ function(TickData) {
+    _inherits(LateUpdateTickData, TickData);
+    function LateUpdateTickData() {
+        return TickData.apply(this, arguments);
+    }
+    var _proto = LateUpdateTickData.prototype;
+    _proto.tickComponents = function tickComponents(components, dt) {
+        for(var _iterator = _create_for_of_iterator_helper_loose(components), _step; !(_step = _iterator()).done;){
+            var component = _step.value;
+            component.onLateUpdate(dt);
+        }
+    };
+    return LateUpdateTickData;
+} // function compareComponents (a: Component, b: Component): number {
+ //   const itemA = a.item;
+ //   const itemB = b.item;
+ //   if (VFXItem.isAncestor(itemA, itemB)) {
+ //     return -1;
+ //   } else {
+ //     return 1;
+ //   }
+ // }
+(TickData);
+
+/**
  * 合成抽象类：核心对象，通常一个场景只包含一个合成，可能会有多个合成。
  * 合成中包含了相关的 Item 元素，支持对 Item 元素的创建、更新和销毁。
  * 也负责 Item 相关的动画播放控制，和持有渲染帧数据。
@@ -28077,10 +31934,17 @@ var listOrder = 0;
     _inherits(Composition, EventEmitter);
     function Composition(props, scene) {
         var _this;
+        var _scene_jsonScene_renderSettings;
         _this = EventEmitter.call(this) || this;
+        /**
+   *
+   */ _this.sceneTicking = new SceneTicking();
         /**
    * 动画播放速度
    */ _this.speed = 1;
+        /**
+   * 合成是否结束
+   */ _this.isEnded = false;
         /**
    * 用于保存与当前合成相关的插件数据
    */ _this.loaderData = {};
@@ -28090,6 +31954,9 @@ var listOrder = 0;
         /**
    * 预合成的合成属性，在 content 中会被其元素属性覆盖
    */ _this.refCompositionProps = new Map();
+        /**
+   * 是否开启后处理
+   */ _this.postProcessingEnabled = false;
         // TODO: 待优化
         _this.assigned = false;
         /**
@@ -28100,42 +31967,42 @@ var listOrder = 0;
    * 合成暂停/播放 标识
    */ _this.paused = false;
         _this.lastVideoUpdateTime = 0;
+        _this.isEndCalled = false;
         var _props_reusable = props.reusable, reusable = _props_reusable === void 0 ? false : _props_reusable, _props_speed = props.speed, speed = _props_speed === void 0 ? 1 : _props_speed, _props_baseRenderOrder = props.baseRenderOrder, baseRenderOrder = _props_baseRenderOrder === void 0 ? 0 : _props_baseRenderOrder, renderer = props.renderer, event = props.event, width = props.width, height = props.height, handleItemMessage = props.handleItemMessage;
         _this.compositionSourceManager = new CompositionSourceManager(scene, renderer.engine);
-        scene.jsonScene.imgUsage = undefined;
         if (reusable) {
             _this.keepResource = true;
             scene.textures = undefined;
             scene.consumed = true;
         }
         var _this_compositionSourceManager = _this.compositionSourceManager, sourceContent = _this_compositionSourceManager.sourceContent, pluginSystem = _this_compositionSourceManager.pluginSystem, imgUsage = _this_compositionSourceManager.imgUsage, totalTime = _this_compositionSourceManager.totalTime, refCompositionProps = _this_compositionSourceManager.refCompositionProps;
+        var _scene_jsonScene_renderSettings_postProcessingEnabled;
+        _this.postProcessingEnabled = (_scene_jsonScene_renderSettings_postProcessingEnabled = (_scene_jsonScene_renderSettings = scene.jsonScene.renderSettings) == null ? void 0 : _scene_jsonScene_renderSettings.postProcessingEnabled) != null ? _scene_jsonScene_renderSettings_postProcessingEnabled : false;
         assertExist(sourceContent);
         _this.renderer = renderer;
         _this.refCompositionProps = refCompositionProps;
         _this.rootItem = new exports.VFXItem(_this.getEngine(), sourceContent);
         _this.rootItem.name = "rootItem";
         _this.rootItem.composition = _assert_this_initialized(_this);
+        // Spawn rootCompositionComponent
         _this.rootComposition = _this.rootItem.addComponent(CompositionComponent);
-        _this.rootComposition.startTime = sourceContent.startTime;
-        _this.rootComposition.data = sourceContent;
-        var imageUsage = !reusable && imgUsage;
         _this.width = width;
         _this.height = height;
         _this.renderOrder = baseRenderOrder;
         _this.id = sourceContent.id;
         _this.renderer = renderer;
-        _this.texInfo = imageUsage != null ? imageUsage : {};
+        _this.texInfo = !reusable ? imgUsage : {};
         _this.event = event;
-        var _scene_startTime, _scene_timeInfos_asyncCompile;
+        var _scene_startTime;
         _this.statistic = {
-            loadTime: totalTime != null ? totalTime : 0,
             loadStart: (_scene_startTime = scene.startTime) != null ? _scene_startTime : 0,
-            firstFrameTime: 0,
-            precompileTime: (_scene_timeInfos_asyncCompile = scene.timeInfos["asyncCompile"]) != null ? _scene_timeInfos_asyncCompile : scene.timeInfos["syncCompile"]
+            loadTime: totalTime != null ? totalTime : 0,
+            compileTime: 0,
+            firstFrameTime: 0
         };
         _this.reusable = reusable;
         _this.speed = speed;
-        _this.autoRefTex = !_this.keepResource && imageUsage && _this.rootItem.endBehavior !== EndBehavior.restart;
+        _this.autoRefTex = !_this.keepResource && _this.texInfo && _this.rootItem.endBehavior !== EndBehavior.restart;
         _this.name = sourceContent.name;
         _this.pluginSystem = pluginSystem;
         _this.pluginSystem.initializeComposition(_assert_this_initialized(_this), scene);
@@ -28144,21 +32011,13 @@ var listOrder = 0;
         }));
         _this.url = scene.url;
         _this.assigned = true;
-        _this.globalTime = 0;
         _this.interactive = true;
         _this.handleItemMessage = handleItemMessage;
         _this.createRenderFrame();
         _this.rendererOptions = null;
+        SerializationHelper.deserialize(sourceContent, _this.rootComposition);
         _this.rootComposition.createContent();
         _this.buildItemTree(_this.rootItem);
-        _this.callAwake(_this.rootItem);
-        _this.rootItem.onEnd = function() {
-            alipay.window.setTimeout(function() {
-                _this.emit("end", {
-                    composition: _assert_this_initialized(_this)
-                });
-            }, 0);
-        };
         _this.pluginSystem.resetComposition(_assert_this_initialized(_this), _this.renderFrame);
         return _this;
     }
@@ -28197,9 +32056,7 @@ var listOrder = 0;
    * @since 2.0.0
    * @param visible - 是否可见
    */ _proto.setVisible = function setVisible(visible) {
-        this.items.forEach(function(item) {
-            item.setVisible(visible);
-        });
+        this.rootItem.setVisible(visible);
     };
     /**
    * 获取合成的动画速度
@@ -28208,7 +32065,7 @@ var listOrder = 0;
         return this.speed;
     };
     _proto.play = function play() {
-        if (this.rootItem.ended && this.reusable) {
+        if (this.isEnded && this.reusable) {
             this.restart();
         }
         if (this.rootComposition.isStartCalled) {
@@ -28251,7 +32108,8 @@ var listOrder = 0;
             camera: this.camera,
             renderer: this.renderer,
             keepColorBuffer: this.keepColorBuffer,
-            globalVolume: this.globalVolume
+            globalVolume: this.globalVolume,
+            postProcessingEnabled: this.postProcessingEnabled
         });
         // TODO 考虑放到构造函数
         this.renderFrame.cachedTextures = this.textures;
@@ -28265,16 +32123,15 @@ var listOrder = 0;
         if (pause) {
             this.resume();
         }
-        if (!this.rootComposition.isStartCalled) {
-            this.rootComposition.start();
-            this.rootComposition.isStartCalled = true;
-        }
         this.setSpeed(1);
         this.forwardTime(time + this.startTime);
         this.setSpeed(speed);
         if (pause) {
             this.pause();
         }
+        this.emit("goto", {
+            time: time
+        });
     };
     _proto.addItem = function addItem(item) {
         this.items.push(item);
@@ -28298,36 +32155,23 @@ var listOrder = 0;
    * 重置状态函数
    */ _proto.reset = function reset() {
         this.rendererOptions = null;
-        this.globalTime = 0;
-        this.rootItem.ended = false;
+        this.isEnded = false;
+        this.isEndCalled = false;
+        this.rootComposition.time = 0;
         this.pluginSystem.resetComposition(this, this.renderFrame);
     };
     _proto.prepareRender = function prepareRender() {
         var _this = this;
         var frame = this.renderFrame;
-        frame._renderPasses[0].meshes.length = 0;
         this.postLoaders.length = 0;
         this.pluginSystem.plugins.forEach(function(loader) {
             if (loader.prepareRenderFrame(_this, frame)) {
                 _this.postLoaders.push(loader);
             }
         });
-        this.gatherRendererComponent(this.rootItem, frame);
         this.postLoaders.forEach(function(loader) {
             return loader.postProcessFrame(_this, frame);
         });
-    };
-    _proto.gatherRendererComponent = function gatherRendererComponent(vfxItem, renderFrame) {
-        for(var _iterator = _create_for_of_iterator_helper_loose(vfxItem.rendererComponents), _step; !(_step = _iterator()).done;){
-            var rendererComponent = _step.value;
-            if (rendererComponent.isActiveAndEnabled) {
-                renderFrame.addMeshToDefaultRenderPass(rendererComponent);
-            }
-        }
-        for(var _iterator1 = _create_for_of_iterator_helper_loose(vfxItem.children), _step1; !(_step1 = _iterator1()).done;){
-            var item = _step1.value;
-            this.gatherRendererComponent(item, renderFrame);
-        }
     };
     /**
    * 合成更新，针对所有 item 的更新
@@ -28336,58 +32180,32 @@ var listOrder = 0;
         if (!this.assigned || this.paused) {
             return;
         }
-        var time = this.getUpdateTime(deltaTime * this.speed);
-        this.globalTime += time;
-        this.updateRootComposition();
+        var dt = this.getUpdateTime(deltaTime * this.speed);
+        this.updateRootComposition(dt / 1000);
         this.updateVideo();
         // 更新 model-tree-plugin
         this.updatePluginLoaders(deltaTime);
         // scene VFXItem components lifetime function.
-        this.callStart(this.rootItem);
-        this.callUpdate(this.rootItem, time);
-        this.callLateUpdate(this.rootItem, time);
+        if (!this.rootItem.isDuringPlay) {
+            this.callAwake(this.rootItem);
+            this.rootItem.beginPlay();
+        }
+        this.sceneTicking.update.tick(dt);
+        this.sceneTicking.lateUpdate.tick(dt);
         this.updateCamera();
         this.prepareRender();
+        if (this.isEnded && !this.isEndCalled) {
+            this.isEndCalled = true;
+            this.emit("end", {
+                composition: this
+            });
+        }
         if (this.shouldDispose()) {
             this.dispose();
         }
     };
-    _proto.toLocalTime = function toLocalTime(time) {
-        var localTime = time - this.rootItem.start;
-        var duration = this.rootItem.duration;
-        if (localTime - duration > 0.001) {
-            if (!this.rootItem.ended) {
-                this.rootItem.ended = true;
-                this.emit("end", {
-                    composition: this
-                });
-            }
-            switch(this.rootItem.endBehavior){
-                case EndBehavior.restart:
-                    {
-                        localTime = localTime % duration;
-                        this.restart();
-                        break;
-                    }
-                case EndBehavior.freeze:
-                    {
-                        localTime = Math.min(duration, localTime);
-                        break;
-                    }
-                case EndBehavior.forward:
-                    {
-                        break;
-                    }
-                case EndBehavior.destroy:
-                    {
-                        break;
-                    }
-            }
-        }
-        return localTime;
-    };
     _proto.shouldDispose = function shouldDispose() {
-        return this.rootItem.ended && this.rootItem.endBehavior === EndBehavior.destroy && !this.reusable;
+        return this.isEnded && this.rootItem.endBehavior === EndBehavior.destroy && !this.reusable;
     };
     _proto.getUpdateTime = function getUpdateTime(t) {
         var startTimeInMs = this.startTime * 1000;
@@ -28398,82 +32216,16 @@ var listOrder = 0;
         return t;
     };
     _proto.callAwake = function callAwake(item) {
-        for(var _iterator = _create_for_of_iterator_helper_loose(item.itemBehaviours), _step; !(_step = _iterator()).done;){
-            var itemBehaviour = _step.value;
-            if (!itemBehaviour.isAwakeCalled) {
-                itemBehaviour.awake();
-                itemBehaviour.isAwakeCalled = true;
+        for(var _iterator = _create_for_of_iterator_helper_loose(item.components), _step; !(_step = _iterator()).done;){
+            var component = _step.value;
+            if (!component.isAwakeCalled) {
+                component.onAwake();
+                component.isAwakeCalled = true;
             }
         }
         for(var _iterator1 = _create_for_of_iterator_helper_loose(item.children), _step1; !(_step1 = _iterator1()).done;){
             var child = _step1.value;
             this.callAwake(child);
-        }
-    };
-    _proto.callStart = function callStart(item) {
-        for(var _iterator = _create_for_of_iterator_helper_loose(item.itemBehaviours), _step; !(_step = _iterator()).done;){
-            var itemBehaviour = _step.value;
-            if (itemBehaviour.isActiveAndEnabled && !itemBehaviour.isStartCalled) {
-                itemBehaviour.start();
-                itemBehaviour.isStartCalled = true;
-            }
-        }
-        for(var _iterator1 = _create_for_of_iterator_helper_loose(item.rendererComponents), _step1; !(_step1 = _iterator1()).done;){
-            var rendererComponent = _step1.value;
-            if (rendererComponent.isActiveAndEnabled && !rendererComponent.isStartCalled) {
-                rendererComponent.start();
-                rendererComponent.isStartCalled = true;
-            }
-        }
-        for(var _iterator2 = _create_for_of_iterator_helper_loose(item.children), _step2; !(_step2 = _iterator2()).done;){
-            var child = _step2.value;
-            this.callStart(child);
-        }
-    };
-    _proto.callUpdate = function callUpdate(item, dt) {
-        for(var _iterator = _create_for_of_iterator_helper_loose(item.itemBehaviours), _step; !(_step = _iterator()).done;){
-            var itemBehaviour = _step.value;
-            if (itemBehaviour.isActiveAndEnabled && itemBehaviour.isStartCalled) {
-                itemBehaviour.update(dt);
-            }
-        }
-        for(var _iterator1 = _create_for_of_iterator_helper_loose(item.rendererComponents), _step1; !(_step1 = _iterator1()).done;){
-            var rendererComponent = _step1.value;
-            if (rendererComponent.isActiveAndEnabled && rendererComponent.isStartCalled) {
-                rendererComponent.update(dt);
-            }
-        }
-        for(var _iterator2 = _create_for_of_iterator_helper_loose(item.children), _step2; !(_step2 = _iterator2()).done;){
-            var child = _step2.value;
-            if (exports.VFXItem.isComposition(child)) {
-                if (child.ended && child.endBehavior === EndBehavior.restart) {
-                    child.ended = false;
-                    // TODO K帧动画在元素重建后需要 tick ，否则会导致元素位置和 k 帧第一帧位置不一致
-                    this.callUpdate(child, 0);
-                } else {
-                    this.callUpdate(child, dt);
-                }
-            } else {
-                this.callUpdate(child, dt);
-            }
-        }
-    };
-    _proto.callLateUpdate = function callLateUpdate(item, dt) {
-        for(var _iterator = _create_for_of_iterator_helper_loose(item.itemBehaviours), _step; !(_step = _iterator()).done;){
-            var itemBehaviour = _step.value;
-            if (itemBehaviour.isActiveAndEnabled && itemBehaviour.isStartCalled) {
-                itemBehaviour.lateUpdate(dt);
-            }
-        }
-        for(var _iterator1 = _create_for_of_iterator_helper_loose(item.rendererComponents), _step1; !(_step1 = _iterator1()).done;){
-            var rendererComponent = _step1.value;
-            if (rendererComponent.isActiveAndEnabled && rendererComponent.isStartCalled) {
-                rendererComponent.lateUpdate(dt);
-            }
-        }
-        for(var _iterator2 = _create_for_of_iterator_helper_loose(item.children), _step2; !(_step2 = _iterator2()).done;){
-            var child = _step2.value;
-            this.callLateUpdate(child, dt);
         }
     };
     /**
@@ -28493,17 +32245,10 @@ var listOrder = 0;
             if (item1.parentId === undefined) {
                 item1.setParent(compVFXItem);
             } else {
-                // 兼容 treeItem 子元素的 parentId 带 '^'
-                var parentId = this.getParentIdWithoutSuffix(item1.parentId);
-                var parent = itemMap.get(parentId);
+                var parent = itemMap.get(item1.parentId);
                 if (parent) {
-                    if (exports.VFXItem.isTree(parent) && item1.parentId.includes("^")) {
-                        item1.parent = parent;
-                        item1.transform.parentTransform = parent.getNodeTransform(item1.parentId);
-                    } else {
-                        item1.parent = parent;
-                        item1.transform.parentTransform = parent.transform;
-                    }
+                    item1.parent = parent;
+                    item1.transform.parentTransform = parent.transform;
                     parent.children.push(item1);
                 } else {
                     throw new Error("The element references a non-existent element, please check the data.");
@@ -28516,10 +32261,6 @@ var listOrder = 0;
                 this.buildItemTree(item2);
             }
         }
-    };
-    _proto.getParentIdWithoutSuffix = function getParentIdWithoutSuffix(id) {
-        var idx = id.lastIndexOf("^");
-        return idx > -1 ? id.substring(0, idx) : id;
     };
     /**
    * 更新视频数据到纹理
@@ -28552,10 +32293,46 @@ var listOrder = 0;
     };
     /**
    * 更新主合成组件
-   */ _proto.updateRootComposition = function updateRootComposition() {
+   */ _proto.updateRootComposition = function updateRootComposition(deltaTime) {
         if (this.rootComposition.isActiveAndEnabled) {
-            var localTime = this.toLocalTime(this.globalTime / 1000);
+            var localTime = parseFloat((this.time + deltaTime - this.rootItem.start).toFixed(3));
+            var isEnded = false;
+            var duration = this.rootItem.duration;
+            var endBehavior = this.rootItem.endBehavior;
+            if (localTime - duration > 0.001) {
+                isEnded = true;
+                switch(endBehavior){
+                    case EndBehavior.restart:
+                        {
+                            localTime = localTime % duration;
+                            this.restart();
+                            break;
+                        }
+                    case EndBehavior.freeze:
+                        {
+                            localTime = Math.min(duration, localTime);
+                            break;
+                        }
+                    case EndBehavior.forward:
+                        {
+                            break;
+                        }
+                    case EndBehavior.destroy:
+                        {
+                            break;
+                        }
+                }
+            }
             this.rootComposition.time = localTime;
+            // end state changed, handle onEnd flags
+            if (this.isEnded !== isEnded) {
+                if (isEnded) {
+                    this.isEnded = true;
+                } else {
+                    this.isEnded = false;
+                    this.isEndCalled = false;
+                }
+            }
         }
     };
     /**
@@ -28902,8 +32679,7 @@ var listOrder = 0;
             get: /**
    * 获取合成开始渲染的时间
    */ function get() {
-                var _this_rootComposition_startTime;
-                return (_this_rootComposition_startTime = this.rootComposition.startTime) != null ? _this_rootComposition_startTime : 0;
+                return this.rootComposition.startTime;
             }
         },
         {
@@ -30875,29 +34651,13 @@ var DEFAULT_FPS = 60;
     return Ticker;
 }();
 
-exports.BinaryAsset = /*#__PURE__*/ function(EffectsObject) {
-    _inherits(BinaryAsset, EffectsObject);
-    function BinaryAsset() {
-        return EffectsObject.apply(this, arguments);
-    }
-    var _proto = BinaryAsset.prototype;
-    _proto.fromData = function fromData(data) {};
-    return BinaryAsset;
-}(EffectsObject);
-__decorate([
-    serialize()
-], exports.BinaryAsset.prototype, "buffer", void 0);
-exports.BinaryAsset = __decorate([
-    effectsClass("BinaryAsset")
-], exports.BinaryAsset);
-
 registerPlugin("camera", CameraVFXItemLoader, exports.VFXItem, true);
 registerPlugin("text", TextLoader, exports.VFXItem, true);
 registerPlugin("sprite", SpriteLoader, exports.VFXItem, true);
 registerPlugin("particle", ParticleLoader, exports.VFXItem, true);
 registerPlugin("cal", CalculateLoader, exports.VFXItem, true);
 registerPlugin("interact", InteractLoader, exports.VFXItem, true);
-var version$1 = "2.0.6";
+var version$1 = "2.1.4";
 logger.info("Core version: " + version$1 + ".");
 
 var _obj$3;
@@ -31267,40 +35027,20 @@ var GLTexture = /*#__PURE__*/ function(Texture) {
     _proto.uploadCurrentVideoFrame = function uploadCurrentVideoFrame() {
         var _this = this;
         return _async_to_generator(function() {
-            var video;
             return __generator(this, function(_state) {
-                switch(_state.label){
-                    case 0:
-                        if (!(_this.source.sourceType === exports.TextureSourceType.video && _this.source.video && _this.initialized)) return [
-                            3,
-                            3
-                        ];
-                        video = _this.source.video;
-                        if (!video.paused) return [
-                            3,
-                            2
-                        ];
-                        return [
-                            4,
-                            video.play()
-                        ];
-                    case 1:
-                        _state.sent();
-                        _state.label = 2;
-                    case 2:
-                        _this.update({
-                            video: _this.source.video
-                        });
-                        return [
-                            2,
-                            true
-                        ];
-                    case 3:
-                        return [
-                            2,
-                            false
-                        ];
+                if (_this.source.sourceType === exports.TextureSourceType.video && _this.source.video && _this.initialized) {
+                    _this.update({
+                        video: _this.source.video
+                    });
+                    return [
+                        2,
+                        true
+                    ];
                 }
+                return [
+                    2,
+                    false
+                ];
             });
         })();
     };
@@ -31320,11 +35060,6 @@ var GLTexture = /*#__PURE__*/ function(Texture) {
      * dispose之后assignRenderer会报错
      */ if (this.pipelineContext && this.textureBuffer) {
             this.pipelineContext.gl.deleteTexture(this.textureBuffer);
-        }
-        if (this.source.sourceType === exports.TextureSourceType.video && this.source.video && this.initialized) {
-            this.source.video.pause();
-            this.source.video.src = "";
-            this.source.video.load();
         }
         this.width = 0;
         this.height = 0;
@@ -32585,8 +36320,8 @@ var GLMaterial = /*#__PURE__*/ function(Material) {
         ;
         _this.uniforms = [] // material存放的uniform名称（不包括sampler）。
         ;
-        _this.uniformDirtyFlag = true;
-        _this.macrosDirtyFlag = true;
+        _this.uniformDirty = true;
+        _this.macrosDirty = true;
         _this.glMaterialState = new GLMaterialState();
         if (props) {
             _this.shader = new exports.Shader(engine);
@@ -32601,13 +36336,13 @@ var GLMaterial = /*#__PURE__*/ function(Material) {
     _proto.enableMacro = function enableMacro(keyword, value) {
         if (!this.isMacroEnabled(keyword) || this.enabledMacros[keyword] !== value) {
             this.enabledMacros[keyword] = value != null ? value : true;
-            this.macrosDirtyFlag = true;
+            this.macrosDirty = true;
         }
     };
     _proto.disableMacro = function disableMacro(keyword) {
         if (this.isMacroEnabled(keyword)) {
             delete this.enabledMacros[keyword];
-            this.macrosDirtyFlag = true;
+            this.macrosDirty = true;
         }
     };
     _proto.isMacroEnabled = function isMacroEnabled(keyword) {
@@ -32647,10 +36382,11 @@ var GLMaterial = /*#__PURE__*/ function(Material) {
         this.initialized = true;
     };
     _proto.createShaderVariant = function createShaderVariant() {
-        if (!this.shaderVariant || this.shaderVariant.shader !== this.shader || this.macrosDirtyFlag) {
+        if (this.shaderDirty || this.macrosDirty) {
             this.shaderVariant = this.shader.createVariant(this.enabledMacros);
-            this.macrosDirtyFlag = false;
-            this.uniformDirtyFlag = true;
+            this.macrosDirty = false;
+            this.shaderDirty = false;
+            this.uniformDirty = true;
         }
     };
     _proto.setupStates = function setupStates(pipelineContext) {
@@ -32678,14 +36414,14 @@ var GLMaterial = /*#__PURE__*/ function(Material) {
                 name = _step1.value;
                 if (!this.samplers.includes(name)) {
                     this.samplers.push(name);
-                    this.uniformDirtyFlag = true;
+                    this.uniformDirty = true;
                 }
             }
         }
         // 更新 cached uniform location
-        if (this.uniformDirtyFlag) {
+        if (this.uniformDirty) {
             shaderVariant.fillShaderInformation(this.uniforms, this.samplers);
-            this.uniformDirtyFlag = false;
+            this.uniformDirty = false;
         }
         if (globalUniforms) {
             // 设置全局 uniform
@@ -32697,6 +36433,9 @@ var GLMaterial = /*#__PURE__*/ function(Material) {
             }
             for(name in globalUniforms.vector4s){
                 shaderVariant.setVector4(name, globalUniforms.vector4s[name]);
+            }
+            for(name in globalUniforms.vector3s){
+                shaderVariant.setVector3(name, globalUniforms.vector3s[name]);
             }
             for(name in globalUniforms.matrices){
                 shaderVariant.setMatrix(name, globalUniforms.matrices[name]);
@@ -32849,7 +36588,7 @@ var GLMaterial = /*#__PURE__*/ function(Material) {
     _proto.setTexture = function setTexture(name, texture) {
         if (!this.samplers.includes(name)) {
             this.samplers.push(name);
-            this.uniformDirtyFlag = true;
+            this.uniformDirty = true;
         }
         this.textures[name] = texture;
     };
@@ -32877,7 +36616,7 @@ var GLMaterial = /*#__PURE__*/ function(Material) {
         clonedMaterial.matrixArrays = this.matrixArrays;
         clonedMaterial.samplers = this.samplers;
         clonedMaterial.uniforms = this.uniforms;
-        clonedMaterial.uniformDirtyFlag = true;
+        clonedMaterial.uniformDirty = true;
         return clonedMaterial;
     };
     _proto.fromData = function fromData(data) {
@@ -32956,6 +36695,7 @@ var GLMaterial = /*#__PURE__*/ function(Material) {
         materialData.floats = {};
         materialData.ints = {};
         materialData.vector4s = {};
+        materialData.colors = {};
         materialData.textures = {};
         materialData.dataType = DataType.Material;
         materialData.stringTags = this.stringTags;
@@ -33048,7 +36788,7 @@ var GLMaterial = /*#__PURE__*/ function(Material) {
     _proto.checkUniform = function checkUniform(uniformName) {
         if (!this.uniforms.includes(uniformName)) {
             this.uniforms.push(uniformName);
-            this.uniformDirtyFlag = true;
+            this.uniformDirty = true;
         }
     };
     _proto.dispose = function dispose(options) {
@@ -34380,6 +38120,7 @@ var GLShaderLibrary = /*#__PURE__*/ function() {
                 console.warn("Find duplicated shader id: " + shader.id + ".");
             }
             _this.programMap[shader.id] = glProgram;
+        // console.log('compileShader ' + result.cacheId + ' ' + result.compileTime + ' ', shader.source);
         };
         var checkComplete = function() {
             if (_this.engine.isDestroyed) {
@@ -35132,8 +38873,14 @@ var GLRenderer = /*#__PURE__*/ function(Renderer) {
         (_frame_renderer_getShaderLibrary = frame.renderer.getShaderLibrary()) == null ? void 0 : _frame_renderer_getShaderLibrary.compileAllShaders();
         this.setFramebuffer(null);
         this.clear(frame.clearAction);
+        var currentCamera = frame.camera;
         this.renderingData.currentFrame = frame;
-        this.renderingData.currentCamera = frame.camera;
+        this.renderingData.currentCamera = currentCamera;
+        this.setGlobalMatrix("effects_MatrixInvV", currentCamera.getInverseViewMatrix());
+        this.setGlobalMatrix("effects_MatrixV", currentCamera.getViewMatrix());
+        this.setGlobalMatrix("effects_MatrixVP", currentCamera.getViewProjectionMatrix());
+        this.setGlobalMatrix("_MatrixP", currentCamera.getProjectionMatrix());
+        this.setGlobalVector3("effects_WorldSpaceCameraPos", currentCamera.position);
         // 根据 priority 排序 pass
         sortByOrder(passes);
         for(var _iterator = _create_for_of_iterator_helper_loose(passes), _step; !(_step = _iterator()).done;){
@@ -35185,6 +38932,10 @@ var GLRenderer = /*#__PURE__*/ function(Renderer) {
         this.checkGlobalUniform(name);
         this.renderingData.currentFrame.globalUniforms.matrices[name] = value;
     };
+    _proto.setGlobalVector3 = function setGlobalVector3(name, value) {
+        this.checkGlobalUniform(name);
+        this.renderingData.currentFrame.globalUniforms.vector3s[name] = value;
+    };
     _proto.drawGeometry = function drawGeometry(geometry, material, subMeshIndex) {
         if (subMeshIndex === void 0) subMeshIndex = 0;
         if (!geometry || !material) {
@@ -35194,24 +38945,6 @@ var GLRenderer = /*#__PURE__*/ function(Renderer) {
         geometry.initialize();
         geometry.flush();
         var renderingData = this.renderingData;
-        // TODO 后面移到管线相机渲染开始位置
-        if (renderingData.currentFrame.globalUniforms) {
-            if (renderingData.currentCamera) {
-                this.setGlobalMatrix("effects_MatrixInvV", renderingData.currentCamera.getInverseViewMatrix());
-                this.setGlobalMatrix("effects_MatrixV", renderingData.currentCamera.getViewMatrix());
-                this.setGlobalMatrix("effects_MatrixVP", renderingData.currentCamera.getViewProjectionMatrix());
-                this.setGlobalMatrix("_MatrixP", renderingData.currentCamera.getProjectionMatrix());
-            }
-            // TODO 自定义材质测试代码
-            var time = Date.now() % 100000000 * 0.001 * 1;
-            var _Time = this.getGlobalVector4("_Time");
-            // TODO 待移除
-            this.setGlobalFloat("_GlobalTime", time);
-            if (!_Time) {
-                _Time = new Vector4$1(time / 20, time, time * 2, time * 3);
-            }
-            this.setGlobalVector4("_Time", _Time.set(time / 20, time, time * 2, time * 3));
-        }
         if (renderingData.currentFrame.editorTransform) {
             material.setVector4("uEditorTransform", renderingData.currentFrame.editorTransform);
         }
@@ -35405,13 +39138,13 @@ var GLRenderer = /*#__PURE__*/ function(Renderer) {
 }(Renderer);
 
 var HELP_LINK = {
-    "Container size overflowed": "https://galacean.antgroup.com/effects/user/gasrv4ka5sacrwpg#MvjnY",
-    "DPI overflowed": "https://galacean.antgroup.com/effects/user/gasrv4ka5sacrwpg#ulfNT",
-    "Invalid container size": "https://galacean.antgroup.com/effects/user/gasrv4ka5sacrwpg#lLlSW",
-    "Container is not an HTMLElement": "https://galacean.antgroup.com/effects/user/gasrv4ka5sacrwpg#WZaWg",
-    "Never use destroyed player again": "https://galacean.antgroup.com/effects/user/gasrv4ka5sacrwpg#YSWQr",
-    "Current running player count": "https://galacean.antgroup.com/effects/user/gasrv4ka5sacrwpg#IzodZ",
-    "Create player with different WebGL version": "https://galacean.antgroup.com/effects/user/gasrv4ka5sacrwpg#X0ulg"
+    "Container size overflowed": "https://www.galacean.com/effects/user/gasrv4ka5sacrwpg#MvjnY",
+    "DPI overflowed": "https://www.galacean.com/effects/user/gasrv4ka5sacrwpg#ulfNT",
+    "Invalid container size": "https://www.galacean.com/effects/user/gasrv4ka5sacrwpg#lLlSW",
+    "Container is not an HTMLElement": "https://www.galacean.com/effects/user/gasrv4ka5sacrwpg#WZaWg",
+    "Never use destroyed player again": "https://www.galacean.com/effects/user/gasrv4ka5sacrwpg#YSWQr",
+    "Current running player count": "https://www.galacean.com/effects/user/gasrv4ka5sacrwpg#IzodZ",
+    "Create player with different WebGL version": "https://www.galacean.com/effects/user/gasrv4ka5sacrwpg#X0ulg"
 };
 
 function isDowngradeIOS() {
@@ -35520,7 +39253,7 @@ var seed = 1;
                                                 2
                                             ];
                                         case 5:
-                                            newComposition.rootItem.ended = false;
+                                            newComposition.isEnded = false;
                                             newComposition.gotoAndPlay(currentTime);
                                             return [
                                                 2,
@@ -35672,6 +39405,12 @@ var seed = 1;
    */ _proto.getCompositions = function getCompositions() {
         return this.compositions;
     };
+    /**
+   * Gets the array of asset managers.
+   * @returns
+   */ _proto.getAssetManager = function getAssetManager() {
+        return this.assetManagers;
+    };
     _proto.loadScene = function loadScene(scene, options) {
         var _this = this;
         return _async_to_generator(function() {
@@ -35737,23 +39476,26 @@ var seed = 1;
         if (options === void 0) options = {};
         var _this = this;
         return _async_to_generator(function() {
-            var renderer, engine, last, opts, source, assetManager, scene, _iterator, _step, effectsObject, i, composition, _iterator1, _step1, guid, effectsObject1, firstFrameTime;
+            var _engine_gpuCapability_detail, _engine_gpuCapability, renderer, engine, asyncShaderCompile, last, opts, source, assetManager, scene, _iterator, _step, effectsObject, i, textureOptions, composition, _iterator1, _step1, guid, effectsObject1, compileStart, compileTime, firstFrameTime;
             return __generator(this, function(_state) {
                 switch(_state.label){
                     case 0:
                         renderer = _this.renderer;
                         engine = renderer.engine;
+                        asyncShaderCompile = (_engine_gpuCapability = engine.gpuCapability) == null ? void 0 : (_engine_gpuCapability_detail = _engine_gpuCapability.detail) == null ? void 0 : _engine_gpuCapability_detail.asyncShaderCompile;
                         last = alipay.performance.now();
                         opts = _extends({
                             autoplay: true
                         }, options);
-                        if (isSceneURL(url)) {
-                            source = url.url;
-                            if (isSceneWithOptions(url)) {
+                        source = url;
+                        // 加载多个合成链接并各自设置可选参数
+                        if (exports.Scene.isURL(url)) {
+                            if (!exports.Scene.isJSONObject(url)) {
+                                source = url.url;
+                            }
+                            if (exports.Scene.isWithOptions(url)) {
                                 opts = _extends({}, opts, url.options);
                             }
-                        } else {
-                            source = url;
                         }
                         assetManager = new AssetManager(opts);
                         // TODO 多 json 之间目前不共用资源，如果后续需要多 json 共用，这边缓存机制需要额外处理
@@ -35781,8 +39523,14 @@ var seed = 1;
                             throw new Error("Disposed player can not used to create Composition.");
                         }
                         for(i = 0; i < scene.textureOptions.length; i++){
-                            scene.textureOptions[i] = _instanceof1(scene.textureOptions[i], Texture) ? scene.textureOptions[i] : engine.assetLoader.loadGUID(scene.textureOptions[i].id);
-                            scene.textureOptions[i].initialize();
+                            textureOptions = scene.textureOptions[i];
+                            if (_instanceof1(textureOptions, Texture)) {
+                                engine.addInstance(textureOptions);
+                            } else {
+                                textureOptions = engine.assetLoader.loadGUID(scene.textureOptions[i].id);
+                                scene.textureOptions[i] = textureOptions;
+                            }
+                            textureOptions.initialize();
                         }
                         if (!engine.database) return [
                             3,
@@ -35805,7 +39553,6 @@ var seed = 1;
                                 _this.emit("message", message);
                             }
                         }), scene);
-                        _this.compositions.push(composition);
                         if (_this.ticker) {
                             // 中低端设备降帧到 30fps
                             if (opts.renderLevel === RenderLevel.B) {
@@ -35825,6 +39572,7 @@ var seed = 1;
                                 }
                             }
                         }
+                        compileStart = alipay.performance.now();
                         return [
                             4,
                             new Promise(function(resolve) {
@@ -35842,9 +39590,13 @@ var seed = 1;
                         } else {
                             composition.pause();
                         }
-                        firstFrameTime = alipay.performance.now() - last + composition.statistic.loadTime;
+                        compileTime = alipay.performance.now() - compileStart;
+                        firstFrameTime = alipay.performance.now() - last;
+                        composition.statistic.compileTime = compileTime;
                         composition.statistic.firstFrameTime = firstFrameTime;
-                        logger.info("First frame: [" + composition.name + "]" + firstFrameTime.toFixed(4) + "ms.");
+                        logger.info("Shader " + (asyncShaderCompile ? "async" : "sync") + " compile [" + composition.name + "]: " + compileTime.toFixed(4) + "ms.");
+                        logger.info("First frame [" + composition.name + "]: " + firstFrameTime.toFixed(4) + "ms.");
+                        _this.compositions.push(composition);
                         return [
                             2,
                             composition
@@ -35862,7 +39614,7 @@ var seed = 1;
         var renderer = this.renderer;
         var engine = renderer.engine;
         scene.jsonScene.items.forEach(function(item) {
-            if (item.type === ItemType.text) {
+            if (item.type === ItemType.text || item.type === ItemType.richtext) {
                 var textVariable = variables[item.name];
                 if (!textVariable) {
                     return;
@@ -35870,7 +39622,7 @@ var seed = 1;
                 item.components.forEach(function(param) {
                     var id = param.id;
                     var componentData = engine.findEffectsObjectData(id);
-                    if ((componentData == null ? void 0 : componentData.dataType) === DataType.TextComponent) {
+                    if ((componentData == null ? void 0 : componentData.dataType) === DataType.TextComponent || (componentData == null ? void 0 : componentData.dataType) === DataType.RichTextComponent) {
                         componentData.options.text = textVariable;
                     }
                 });
@@ -35955,6 +39707,7 @@ var seed = 1;
             return;
         }
         (_this_ticker = this.ticker) == null ? void 0 : _this_ticker.pause();
+        this.emit("pause");
         this.emit("update", {
             player: this,
             playing: false
@@ -36014,7 +39767,6 @@ var seed = 1;
     _proto.doTick = function doTick(dt, forceRender) {
         var _this = this;
         var renderErrors = this.renderer.engine.renderErrors;
-        renderErrors.values().next().value;
         if (renderErrors.size > 0) {
             var // 有渲染错误时暂停播放
             _this_ticker;
@@ -36242,20 +39994,31 @@ var seed = 1;
     _proto.getTargetSize = function getTargetSize(parentEle) {
         assertContainer(parentEle);
         var displayAspect = this.displayAspect;
+        // 小程序环境没有 getComputedStyle
+        var computedStyle = alipay.window.getComputedStyle == null ? void 0 : alipay.window.getComputedStyle.call(alipay.window, parentEle);
         var targetWidth;
         var targetHeight;
+        var finalWidth = 0;
+        var finalHeight = 0;
+        if (computedStyle) {
+            finalWidth = parseInt(computedStyle.width, 10);
+            finalHeight = parseInt(computedStyle.height, 10);
+        } else {
+            finalWidth = parentEle.clientWidth;
+            finalHeight = parentEle.clientHeight;
+        }
         if (displayAspect) {
-            var parentAspect = parentEle.clientWidth / parentEle.clientHeight;
+            var parentAspect = finalWidth / finalHeight;
             if (parentAspect > displayAspect) {
-                targetHeight = parentEle.clientHeight * this.displayScale;
+                targetHeight = finalHeight * this.displayScale;
                 targetWidth = targetHeight * displayAspect;
             } else {
-                targetWidth = parentEle.clientWidth * this.displayScale;
+                targetWidth = finalWidth * this.displayScale;
                 targetHeight = targetWidth / displayAspect;
             }
         } else {
-            targetWidth = parentEle.clientWidth;
-            targetHeight = parentEle.clientHeight;
+            targetWidth = finalWidth;
+            targetHeight = finalHeight;
         }
         var ratio = this.pixelRatio;
         var containerWidth = targetWidth;
@@ -36284,6 +40047,14 @@ var seed = 1;
         this.builtinObjects.length = 0;
     };
     _create_class(Player, [
+        {
+            key: "compositionCount",
+            get: /**
+   * 获取当前播放的合成数量
+   */ function get() {
+                return this.compositions.length;
+            }
+        },
         {
             key: "hasPlayable",
             get: /**
@@ -36422,15 +40193,19 @@ Renderer.create = function(canvas, framework, renderOptions) {
 Engine.create = function(gl) {
     return new GLEngine(gl);
 };
-var version = "2.0.6";
+/**
+ * Player 版本号
+ */ var version = "2.1.4";
 logger.info("Player version: " + version + ".");
 
 exports.AbstractPlugin = AbstractPlugin;
 exports.ActivationPlayable = ActivationPlayable;
 exports.AnimationClipPlayable = AnimationClipPlayable;
+exports.Asset = Asset;
 exports.AssetLoader = AssetLoader;
 exports.AssetManager = AssetManager;
 exports.BYTES_TYPE_MAP = BYTES_TYPE_MAP;
+exports.BaseRenderComponent = BaseRenderComponent;
 exports.Behaviour = Behaviour;
 exports.BezierCurve = BezierCurve;
 exports.BezierCurvePath = BezierCurvePath;
@@ -36441,6 +40216,7 @@ exports.COPY_VERTEX_SHADER = COPY_VERTEX_SHADER;
 exports.CalculateLoader = CalculateLoader;
 exports.Camera = Camera;
 exports.CameraVFXItemLoader = CameraVFXItemLoader;
+exports.ColorCurve = ColorCurve;
 exports.Component = Component;
 exports.Composition = Composition;
 exports.CompositionComponent = CompositionComponent;
@@ -36477,6 +40253,7 @@ exports.LinearValue = LinearValue;
 exports.Material = Material;
 exports.MaterialDataBlock = MaterialDataBlock;
 exports.Mesh = Mesh;
+exports.MeshCollider = MeshCollider;
 exports.PLAYER_OPTIONS_ENV_EDITOR = PLAYER_OPTIONS_ENV_EDITOR;
 exports.POST_PROCESS_SETTINGS = POST_PROCESS_SETTINGS;
 exports.ParticleBehaviourPlayable = ParticleBehaviourPlayable;
@@ -36488,6 +40265,7 @@ exports.PassTextureCache = PassTextureCache;
 exports.PathSegments = PathSegments;
 exports.Player = Player;
 exports.PluginSystem = PluginSystem;
+exports.PropertyTrack = PropertyTrack;
 exports.RENDER_PASS_NAME_PREFIX = RENDER_PASS_NAME_PREFIX;
 exports.RENDER_PREFER_LOOKUP_TEXTURE = RENDER_PREFER_LOOKUP_TEXTURE;
 exports.RUNTIME_ENV = RUNTIME_ENV;
@@ -36513,7 +40291,6 @@ exports.SemanticMap = SemanticMap;
 exports.SerializationHelper = SerializationHelper;
 exports.ShaderFactory = ShaderFactory;
 exports.ShaderVariant = ShaderVariant;
-exports.SpriteColorPlayable = SpriteColorPlayable;
 exports.SpriteLoader = SpriteLoader;
 exports.StaticValue = StaticValue;
 exports.TEMPLATE_USE_OFFSCREEN_CANVAS = TEMPLATE_USE_OFFSCREEN_CANVAS;
@@ -36530,6 +40307,7 @@ exports.TrackSortWrapper = TrackSortWrapper;
 exports.Transform = Transform;
 exports.TransformAnimationPlayable = TransformAnimationPlayable;
 exports.ValueGetter = ValueGetter;
+exports.Vector4Curve = Vector4Curve;
 exports.adapter = index$3;
 exports.addByOrder = addByOrder;
 exports.addItem = addItem;
@@ -36551,7 +40329,6 @@ exports.createKeyFrameMeta = createKeyFrameMeta;
 exports.createShape = createShape;
 exports.createValueGetter = createValueGetter;
 exports.decimalEqual = decimalEqual;
-exports.defaultGlobalVolume = defaultGlobalVolume;
 exports.defaultPlugins = defaultPlugins;
 exports.deserializeMipmapTexture = deserializeMipmapTexture;
 exports.disableAllPlayer = disableAllPlayer;
@@ -36610,9 +40387,6 @@ exports.isIOS = isIOS;
 exports.isIOSByUA = isIOSByUA;
 exports.isMiniProgram = isMiniProgram;
 exports.isObject = isObject;
-exports.isSceneJSON = isSceneJSON;
-exports.isSceneURL = isSceneURL;
-exports.isSceneWithOptions = isSceneWithOptions;
 exports.isSimulatorCellPhone = isSimulatorCellPhone;
 exports.isString = isString;
 exports.isUniformStruct = isUniformStruct;
@@ -36642,6 +40416,7 @@ exports.particleFrag = particleFrag;
 exports.particleOriginTranslateMap = particleOriginTranslateMap$1;
 exports.particleUniformTypeMap = particleUniformTypeMap;
 exports.particleVert = particleVert;
+exports.passRenderLevel = passRenderLevel;
 exports.pluginLoaderMap = pluginLoaderMap;
 exports.randomInRange = randomInRange;
 exports.registerPlugin = registerPlugin;
