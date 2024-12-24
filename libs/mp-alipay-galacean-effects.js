@@ -1,7 +1,3 @@
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
 function _mergeNamespaces(n, m) {
 	m.forEach(function (e) {
 		e && typeof e !== 'string' && !Array.isArray(e) && Object.keys(e).forEach(function (k) {
@@ -3784,12 +3780,12 @@ function imageDataFromGradient(gradient) {
     return image;
 }
 
-exports.OrderType = void 0;
+var OrderType;
 (function(OrderType) {
     OrderType[OrderType["none"] = 1] = "none";
     OrderType[OrderType["ascending"] = 2] = "ascending";
     OrderType[OrderType["descending"] = 3] = "descending";
-})(exports.OrderType || (exports.OrderType = {}));
+})(OrderType || (OrderType = {}));
 /**
  * 按照指定排序方式对数组排序
  * @param arr - 要排序的数组
@@ -3978,12 +3974,12 @@ var logger = {
     register: register
 };
 
-exports.DestroyOptions = void 0;
+var DestroyOptions;
 (function(DestroyOptions) {
     DestroyOptions[DestroyOptions["destroy"] = 0] = "destroy";
     DestroyOptions[DestroyOptions["keep"] = 1] = "keep";
     DestroyOptions[DestroyOptions["force"] = 0] = "force";
-})(exports.DestroyOptions || (exports.DestroyOptions = {}));
+})(DestroyOptions || (DestroyOptions = {}));
 function noop() {}
 /**
  * 判断对象是否是`String`类型
@@ -7058,7 +7054,7 @@ __decorate([
     serialize()
 ], MeshComponent.prototype, "geometry", void 0);
 
-exports.EffectComponent = /*#__PURE__*/ function(MeshComponent) {
+var EffectComponent = /*#__PURE__*/ function(MeshComponent) {
     _inherits(EffectComponent, MeshComponent);
     function EffectComponent(engine) {
         var _this;
@@ -7082,11 +7078,11 @@ exports.EffectComponent = /*#__PURE__*/ function(MeshComponent) {
     };
     return EffectComponent;
 }(MeshComponent);
-exports.EffectComponent = __decorate([
+EffectComponent = __decorate([
     effectsClass(DataType.EffectComponent)
-], exports.EffectComponent);
+], EffectComponent);
 
-exports.PostProcessVolume = /*#__PURE__*/ function(Behaviour) {
+var PostProcessVolume = /*#__PURE__*/ function(Behaviour) {
     _inherits(PostProcessVolume, Behaviour);
     function PostProcessVolume(engine) {
         var _this;
@@ -7124,19 +7120,19 @@ exports.PostProcessVolume = /*#__PURE__*/ function(Behaviour) {
 }(Behaviour);
 __decorate([
     serialize()
-], exports.PostProcessVolume.prototype, "bloom", void 0);
+], PostProcessVolume.prototype, "bloom", void 0);
 __decorate([
     serialize()
-], exports.PostProcessVolume.prototype, "vignette", void 0);
+], PostProcessVolume.prototype, "vignette", void 0);
 __decorate([
     serialize()
-], exports.PostProcessVolume.prototype, "tonemapping", void 0);
+], PostProcessVolume.prototype, "tonemapping", void 0);
 __decorate([
     serialize()
-], exports.PostProcessVolume.prototype, "colorAdjustments", void 0);
-exports.PostProcessVolume = __decorate([
+], PostProcessVolume.prototype, "colorAdjustments", void 0);
+PostProcessVolume = __decorate([
     effectsClass(DataType.PostProcessVolume)
-], exports.PostProcessVolume);
+], PostProcessVolume);
 
 function _assert_this_initialized(self) {
     if (self === void 0) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
@@ -8589,18 +8585,18 @@ function _create_for_of_iterator_helper_loose(o, allowArrayLike) {
     throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
 
-exports.ShaderCompileResultStatus = void 0;
+var ShaderCompileResultStatus;
 (function(ShaderCompileResultStatus) {
     ShaderCompileResultStatus[ShaderCompileResultStatus["noShader"] = 0] = "noShader";
     ShaderCompileResultStatus[ShaderCompileResultStatus["success"] = 1] = "success";
     ShaderCompileResultStatus[ShaderCompileResultStatus["fail"] = 2] = "fail";
     ShaderCompileResultStatus[ShaderCompileResultStatus["compiling"] = 3] = "compiling";
-})(exports.ShaderCompileResultStatus || (exports.ShaderCompileResultStatus = {}));
-exports.GLSLVersion = void 0;
+})(ShaderCompileResultStatus || (ShaderCompileResultStatus = {}));
+var GLSLVersion;
 (function(GLSLVersion) {
     GLSLVersion["GLSL1"] = "100";
     GLSLVersion["GLSL3"] = "300 es";
-})(exports.GLSLVersion || (exports.GLSLVersion = {}));
+})(GLSLVersion || (GLSLVersion = {}));
 var ShaderVariant = /*#__PURE__*/ function(EffectsObject) {
     _inherits(ShaderVariant, EffectsObject);
     function ShaderVariant(engine, source) {
@@ -8611,7 +8607,7 @@ var ShaderVariant = /*#__PURE__*/ function(EffectsObject) {
     }
     return ShaderVariant;
 }(EffectsObject);
-exports.Shader = /*#__PURE__*/ function(EffectsObject) {
+var Shader = /*#__PURE__*/ function(EffectsObject) {
     _inherits(Shader, EffectsObject);
     function Shader() {
         return EffectsObject.apply(this, arguments);
@@ -8638,9 +8634,9 @@ exports.Shader = /*#__PURE__*/ function(EffectsObject) {
     };
     return Shader;
 }(EffectsObject);
-exports.Shader = __decorate([
+Shader = __decorate([
     effectsClass(DataType.Shader)
-], exports.Shader);
+], Shader);
 
 var EFFECTS_COPY_MESH_NAME = "effects-internal-copy";
 var COPY_MESH_SHADER_ID = "effects-internal-copy-mesh";
@@ -8652,7 +8648,7 @@ function createCopyShader(level, writeDepth) {
         name: EFFECTS_COPY_MESH_NAME,
         vertex: COPY_VERTEX_SHADER,
         fragment: COPY_FRAGMENT_SHADER,
-        glslVersion: webgl2 ? exports.GLSLVersion.GLSL3 : exports.GLSLVersion.GLSL1,
+        glslVersion: webgl2 ? GLSLVersion.GLSL3 : GLSLVersion.GLSL1,
         macros: [
             [
                 "DEPTH_TEXTURE",
@@ -8802,11 +8798,11 @@ function glType2VertexFormatType(webglType) {
     }
 }
 
-exports.ShaderType = void 0;
+var ShaderType;
 (function(ShaderType) {
     ShaderType[ShaderType["vertex"] = 0] = "vertex";
     ShaderType[ShaderType["fragment"] = 1] = "fragment";
-})(exports.ShaderType || (exports.ShaderType = {}));
+})(ShaderType || (ShaderType = {}));
 
 function valIfUndefined(val, def) {
     if (val === undefined || val === null) {
@@ -8977,15 +8973,15 @@ function _extends() {
     return _extends.apply(this, arguments);
 }
 
-exports.TextureLoadAction = void 0;
+var TextureLoadAction;
 (function(TextureLoadAction) {
     TextureLoadAction[TextureLoadAction["whatever"] = 0] = "whatever";
     //preserve previous attachment
     //load = 1,
     //clear attachment
     TextureLoadAction[TextureLoadAction["clear"] = 2] = "clear";
-})(exports.TextureLoadAction || (exports.TextureLoadAction = {}));
-exports.TextureSourceType = void 0;
+})(TextureLoadAction || (TextureLoadAction = {}));
+var TextureSourceType;
 (function(TextureSourceType) {
     TextureSourceType[TextureSourceType["none"] = 0] = "none";
     TextureSourceType[TextureSourceType["data"] = 1] = "data";
@@ -8995,7 +8991,7 @@ exports.TextureSourceType = void 0;
     TextureSourceType[TextureSourceType["canvas"] = 5] = "canvas";
     TextureSourceType[TextureSourceType["framebuffer"] = 6] = "framebuffer";
     TextureSourceType[TextureSourceType["mipmaps"] = 7] = "mipmaps";
-})(exports.TextureSourceType || (exports.TextureSourceType = {}));
+})(TextureSourceType || (TextureSourceType = {}));
 
 /**
  * 负责下载各种资源，并提供了一些异步加载和缓存管理的功能
@@ -9469,7 +9465,7 @@ function _deserializeMipmapTexture() {
                             sourceFrom: {
                                 target: target,
                                 // bin,
-                                type: exports.TextureSourceType.mipmaps
+                                type: TextureSourceType.mipmaps
                             }
                         })
                     ];
@@ -9492,11 +9488,11 @@ function _deserializeMipmapTexture() {
                             keepImageSource: false
                         }, textureOptions, {
                             mipmaps: loadedMipmaps1,
-                            sourceType: exports.TextureSourceType.mipmaps,
+                            sourceType: TextureSourceType.mipmaps,
                             sourceFrom: {
                                 target: target1,
                                 bin: bin,
-                                type: exports.TextureSourceType.mipmaps,
+                                type: TextureSourceType.mipmaps,
                                 mipmaps: mipmaps1.map(function(pointer) {
                                     return [
                                         pointer[1][1],
@@ -9587,11 +9583,11 @@ var seed$d = 1;
         var _options_target = options.target, target = _options_target === void 0 ? glContext.TEXTURE_2D : _options_target, tmp = options.format, internalFormat = tmp === void 0 ? glContext.RGBA : tmp;
         if (!options.sourceType) {
             if ("image" in options) {
-                options.sourceType = exports.TextureSourceType.image;
+                options.sourceType = TextureSourceType.image;
             } else if ("data" in options) {
-                options.sourceType = exports.TextureSourceType.data;
+                options.sourceType = TextureSourceType.data;
             } else if ("video" in options) {
-                options.sourceType = exports.TextureSourceType.video;
+                options.sourceType = TextureSourceType.video;
             } else {
                 options.sourceType = 0; // TextureSourceType.none
             }
@@ -9624,7 +9620,7 @@ var seed$d = 1;
                     case 1:
                         image = _state.sent();
                         texture = Texture.create(engine, _extends({
-                            sourceType: exports.TextureSourceType.image,
+                            sourceType: TextureSourceType.image,
                             image: image,
                             target: glContext.TEXTURE_2D,
                             id: generateGUID(),
@@ -9659,7 +9655,7 @@ var seed$d = 1;
                     case 1:
                         video = _state.sent();
                         texture = Texture.create(engine, _extends({
-                            sourceType: exports.TextureSourceType.video,
+                            sourceType: TextureSourceType.video,
                             video: video,
                             id: generateGUID(),
                             flipY: true
@@ -9730,7 +9726,7 @@ function generateWhiteTexture(engine) {
                 255
             ])
         },
-        sourceType: exports.TextureSourceType.data
+        sourceType: TextureSourceType.data
     }, sourceOptions));
 }
 function generateTransparentTexture(engine) {
@@ -9746,7 +9742,7 @@ function generateTransparentTexture(engine) {
                 0
             ])
         },
-        sourceType: exports.TextureSourceType.data
+        sourceType: TextureSourceType.data
     }, sourceOptions));
 }
 
@@ -9838,7 +9834,7 @@ function getKTXTextureOptions(data) {
     var numberOfMipmapLevels = tex.numberOfMipmapLevels, pixelWidth = tex.pixelWidth, pixelHeight = tex.pixelHeight, glType = tex.glType, numberOfFaces = tex.numberOfFaces, glInternalFormat = tex.glInternalFormat, glFormat = tex.glFormat;
     var useMipmaps = numberOfMipmapLevels >= Math.floor(Math.log2(Math.max(pixelWidth, pixelHeight)) + 1);
     return {
-        sourceType: exports.TextureSourceType.compressed,
+        sourceType: TextureSourceType.compressed,
         type: glType,
         target: numberOfFaces === 6 ? glContext.TEXTURE_CUBE_MAP : glContext.TEXTURE_2D,
         internalFormat: glInternalFormat,
@@ -9895,7 +9891,7 @@ var TextureFactory = /*#__PURE__*/ function() {
     _proto.canOffloadTexture = function canOffloadTexture(sourceFrom) {
         if (sourceFrom) {
             var type = sourceFrom.type;
-            if (type === exports.TextureSourceType.compressed || type === exports.TextureSourceType.image) {
+            if (type === TextureSourceType.compressed || type === TextureSourceType.image) {
                 var target = sourceFrom.target, map = sourceFrom.map;
                 var url = sourceFrom.url;
                 if (target === glContext.TEXTURE_CUBE_MAP) {
@@ -9903,7 +9899,7 @@ var TextureFactory = /*#__PURE__*/ function() {
                 }
                 return isString(url) && url.length > 0;
             }
-            if (type === exports.TextureSourceType.mipmaps) {
+            if (type === TextureSourceType.mipmaps) {
                 var bin = sourceFrom.bin, mipmaps = sourceFrom.mipmaps;
                 var target1 = sourceFrom.target, maps = sourceFrom.maps;
                 var urls = sourceFrom.urls;
@@ -9935,7 +9931,7 @@ var TextureFactory = /*#__PURE__*/ function() {
                         bin = sourceFrom.bin, mipmaps = sourceFrom.mipmaps;
                         urls = sourceFrom.urls;
                         maps = sourceFrom.maps;
-                        if (!(target === glContext.TEXTURE_CUBE_MAP && type !== exports.TextureSourceType.mipmaps)) return [
+                        if (!(target === glContext.TEXTURE_CUBE_MAP && type !== TextureSourceType.mipmaps)) return [
                             3,
                             2
                         ];
@@ -9950,16 +9946,16 @@ var TextureFactory = /*#__PURE__*/ function() {
                             _extends({}, config, {
                                 cube: cube,
                                 target: glContext.TEXTURE_CUBE_MAP,
-                                sourceType: exports.TextureSourceType.image,
+                                sourceType: TextureSourceType.image,
                                 sourceFrom: {
-                                    type: exports.TextureSourceType.image,
+                                    type: TextureSourceType.image,
                                     map: _extends({}, map),
                                     target: glContext.TEXTURE_CUBE_MAP
                                 }
                             })
                         ];
                     case 2:
-                        if (!(type === exports.TextureSourceType.image)) return [
+                        if (!(type === TextureSourceType.image)) return [
                             3,
                             4
                         ];
@@ -9973,7 +9969,7 @@ var TextureFactory = /*#__PURE__*/ function() {
                             2,
                             _extends({}, config, {
                                 image: image,
-                                sourceType: exports.TextureSourceType.image,
+                                sourceType: TextureSourceType.image,
                                 sourceFrom: {
                                     type: type,
                                     url: url,
@@ -9982,7 +9978,7 @@ var TextureFactory = /*#__PURE__*/ function() {
                             })
                         ];
                     case 4:
-                        if (!(type === exports.TextureSourceType.video)) return [
+                        if (!(type === TextureSourceType.video)) return [
                             3,
                             6
                         ];
@@ -9996,11 +9992,11 @@ var TextureFactory = /*#__PURE__*/ function() {
                             2,
                             _extends({}, config, {
                                 video: video,
-                                sourceType: exports.TextureSourceType.video
+                                sourceType: TextureSourceType.video
                             })
                         ];
                     case 6:
-                        if (!(type === exports.TextureSourceType.compressed)) return [
+                        if (!(type === TextureSourceType.compressed)) return [
                             3,
                             8
                         ];
@@ -10015,12 +10011,12 @@ var TextureFactory = /*#__PURE__*/ function() {
                             _extends({}, getKTXTextureOptions(buffer), config, {
                                 sourceFrom: {
                                     url: url,
-                                    type: exports.TextureSourceType.compressed
+                                    type: TextureSourceType.compressed
                                 }
                             })
                         ];
                     case 8:
-                        if (!(type === exports.TextureSourceType.mipmaps)) return [
+                        if (!(type === TextureSourceType.mipmaps)) return [
                             3,
                             17
                         ];
@@ -10063,12 +10059,12 @@ var TextureFactory = /*#__PURE__*/ function() {
                             _extends({}, config, {
                                 mipmaps: loadedMipmaps,
                                 target: newTarget,
-                                sourceType: exports.TextureSourceType.mipmaps,
+                                sourceType: TextureSourceType.mipmaps,
                                 sourceFrom: {
                                     bin: bin,
                                     mipmaps: newMipmaps,
                                     target: newTarget,
-                                    type: exports.TextureSourceType.mipmaps
+                                    type: TextureSourceType.mipmaps
                                 }
                             })
                         ];
@@ -10090,7 +10086,7 @@ var TextureFactory = /*#__PURE__*/ function() {
                             _extends({}, config, {
                                 mipmaps: loadedMipmaps1,
                                 target: glContext.TEXTURE_2D,
-                                sourceType: exports.TextureSourceType.mipmaps,
+                                sourceType: TextureSourceType.mipmaps,
                                 sourceFrom: {
                                     type: type,
                                     urls: urls.slice(),
@@ -10116,7 +10112,7 @@ var TextureFactory = /*#__PURE__*/ function() {
                             _extends({}, config, {
                                 mipmaps: loadedMipmaps2,
                                 target: glContext.TEXTURE_CUBE_MAP,
-                                sourceType: exports.TextureSourceType.mipmaps,
+                                sourceType: TextureSourceType.mipmaps,
                                 sourceFrom: {
                                     type: type,
                                     maps: maps.map(function(map) {
@@ -10202,11 +10198,11 @@ function isUniformStructArray(value) {
     return value && value.length !== undefined && isUniformStruct(value[0]);
 }
 
-exports.MaterialRenderType = void 0;
+var MaterialRenderType;
 (function(MaterialRenderType) {
     MaterialRenderType[MaterialRenderType["normal"] = 0] = "normal";
     MaterialRenderType[MaterialRenderType["transformFeedback"] = 1] = "transformFeedback";
-})(exports.MaterialRenderType || (exports.MaterialRenderType = {}));
+})(MaterialRenderType || (MaterialRenderType = {}));
 /**
  * 用于设置材质默认名称的自增序号
  * @internal
@@ -10463,7 +10459,7 @@ var PassTextureCache = /*#__PURE__*/ function() {
         var _this = this;
         var width = request.width, height = request.height, name = request.name;
         var options = {
-            sourceType: exports.TextureSourceType.framebuffer,
+            sourceType: TextureSourceType.framebuffer,
             data: {
                 width: width,
                 height: height
@@ -12891,7 +12887,7 @@ var seed$b = 1;
    * @param material - 要设置的材质
    * @param destroy - 可选的材质销毁选项
    */ _proto.setMaterial = function setMaterial(material, destroy) {
-        if (destroy !== exports.DestroyOptions.keep) {
+        if (destroy !== DestroyOptions.keep) {
             this.material.dispose(destroy);
         }
         this.material = material;
@@ -12905,11 +12901,11 @@ var seed$b = 1;
             //console.error('call mesh.destroy multiple times', this);
             return;
         }
-        if ((options == null ? void 0 : options.geometries) !== exports.DestroyOptions.keep) {
+        if ((options == null ? void 0 : options.geometries) !== DestroyOptions.keep) {
             this.geometry.dispose();
         }
         var materialDestroyOption = options == null ? void 0 : options.material;
-        if (materialDestroyOption !== exports.DestroyOptions.keep) {
+        if (materialDestroyOption !== DestroyOptions.keep) {
             this.material.dispose(materialDestroyOption);
         }
         this.destroyed = true;
@@ -12933,7 +12929,7 @@ var seed$b = 1;
 var RenderPassPriorityPrepare = 0;
 var RenderPassPriorityNormal = 1000;
 var RenderPassPriorityPostprocess = 3000;
-exports.RenderPassAttachmentStorageType = void 0;
+var RenderPassAttachmentStorageType;
 (function(RenderPassAttachmentStorageType) {
     RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["none"] = 0] = "none";
     RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["color"] = 1] = "color";
@@ -12947,8 +12943,8 @@ exports.RenderPassAttachmentStorageType = void 0;
     RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["depth_16_texture"] = 5] = "depth_16_texture";
     //depth 24 texture, need gpu.capability.readableDepthStencilTextures
     RenderPassAttachmentStorageType[RenderPassAttachmentStorageType["depth_24_stencil_8_texture"] = 6] = "depth_24_stencil_8_texture";
-})(exports.RenderPassAttachmentStorageType || (exports.RenderPassAttachmentStorageType = {}));
-exports.TextureStoreAction = void 0;
+})(RenderPassAttachmentStorageType || (RenderPassAttachmentStorageType = {}));
+var TextureStoreAction;
 (function(TextureStoreAction) {
     /**
    * 不清除 Attachment
@@ -12956,7 +12952,7 @@ exports.TextureStoreAction = void 0;
     /**
    * 清除 Attachment
    */ TextureStoreAction[TextureStoreAction["clear"] = 2] = "clear";
-})(exports.TextureStoreAction || (exports.TextureStoreAction = {}));
+})(TextureStoreAction || (TextureStoreAction = {}));
 var RenderTargetHandle = /*#__PURE__*/ function() {
     function RenderTargetHandle(engine, options) {
         this.destroyed = false;
@@ -12982,7 +12978,7 @@ var RenderTargetHandle = /*#__PURE__*/ function() {
                 name: options.name
             };
             this.texture = Texture.create(engine, _extends({}, this.textureOptions, {
-                sourceType: exports.TextureSourceType.framebuffer,
+                sourceType: TextureSourceType.framebuffer,
                 data: {
                     width: size[0],
                     height: size[1]
@@ -13039,7 +13035,7 @@ var RenderTargetHandle = /*#__PURE__*/ function() {
     ]);
     return RenderTargetHandle;
 }();
-exports.RenderPassDestroyAttachmentType = void 0;
+var RenderPassDestroyAttachmentType;
 (function(RenderPassDestroyAttachmentType) {
     /**
    * 强制销毁
@@ -13053,7 +13049,7 @@ exports.RenderPassDestroyAttachmentType = void 0;
     /**
    * 强制销毁
    */ RenderPassDestroyAttachmentType[RenderPassDestroyAttachmentType["destroy"] = 0] = "destroy";
-})(exports.RenderPassDestroyAttachmentType || (exports.RenderPassDestroyAttachmentType = {}));
+})(RenderPassDestroyAttachmentType || (RenderPassDestroyAttachmentType = {}));
 var seed$a = 1;
 /**
  * RenderPass 抽象类
@@ -13064,7 +13060,7 @@ var seed$a = 1;
    */ this.attachments = [];
         this.destroyed = false;
         this.initialized = false;
-        var _options_name = options.name, name = _options_name === void 0 ? "RenderPass_" + seed$a++ : _options_name, clearAction = options.clearAction, semantics = options.semantics, depthStencilAttachment = options.depthStencilAttachment, storeAction = options.storeAction, _options_priority = options.priority, priority = _options_priority === void 0 ? 0 : _options_priority, _options_meshOrder = options.meshOrder, meshOrder = _options_meshOrder === void 0 ? exports.OrderType.ascending : _options_meshOrder, _options_meshes = options.meshes, meshes = _options_meshes === void 0 ? [] : _options_meshes, _options_delegate = options.delegate, delegate = _options_delegate === void 0 ? {} : _options_delegate;
+        var _options_name = options.name, name = _options_name === void 0 ? "RenderPass_" + seed$a++ : _options_name, clearAction = options.clearAction, semantics = options.semantics, depthStencilAttachment = options.depthStencilAttachment, storeAction = options.storeAction, _options_priority = options.priority, priority = _options_priority === void 0 ? 0 : _options_priority, _options_meshOrder = options.meshOrder, meshOrder = _options_meshOrder === void 0 ? OrderType.ascending : _options_meshOrder, _options_meshes = options.meshes, meshes = _options_meshes === void 0 ? [] : _options_meshes, _options_delegate = options.delegate, delegate = _options_delegate === void 0 ? {} : _options_delegate;
         this.name = name;
         this.renderer = renderer;
         this.priority = priority;
@@ -13150,7 +13146,7 @@ var seed$a = 1;
         } else {
             var attachments = colors.map(function(texture) {
                 texture.updateSource({
-                    sourceType: exports.TextureSourceType.framebuffer
+                    sourceType: TextureSourceType.framebuffer
                 });
                 return new RenderTargetHandle(_this.renderer.engine, {
                     texture: texture
@@ -13349,7 +13345,7 @@ var seed$a = 1;
             return;
         }
         var destroyMeshOption = (options == null ? void 0 : options.meshes) || undefined;
-        if (destroyMeshOption !== exports.DestroyOptions.keep) {
+        if (destroyMeshOption !== DestroyOptions.keep) {
             this.meshes.forEach(function(mesh) {
                 mesh.dispose(destroyMeshOption);
             });
@@ -13363,7 +13359,7 @@ var seed$a = 1;
             }
         });
         this.attachments.length = 0;
-        if ((options == null ? void 0 : options.semantics) !== exports.DestroyOptions.keep) {
+        if ((options == null ? void 0 : options.semantics) !== DestroyOptions.keep) {
             this.semantics.dispose();
         }
         this.destroyed = true;
@@ -13478,7 +13474,7 @@ var ShaderFactory = /*#__PURE__*/ function() {
         var isVersion300 = ShaderFactory.isVersion300(source);
         source = ShaderFactory.removeWebGLVersion(source);
         if (level === 2 && !isVersion300) {
-            source = ShaderFactory.convertTo300(source, shaderType === exports.ShaderType.fragment);
+            source = ShaderFactory.convertTo300(source, shaderType === ShaderType.fragment);
         }
         if (removeVersion) {
             return macroString + source;
@@ -13631,7 +13627,7 @@ var BloomThresholdPass = /*#__PURE__*/ function(RenderPass) {
             shader: {
                 vertex: screenMeshVert,
                 fragment: thresholdFrag,
-                glslVersion: exports.GLSLVersion.GLSL1
+                glslVersion: GLSLVersion.GLSL1
             }
         });
         material.blending = false;
@@ -13654,9 +13650,9 @@ var BloomThresholdPass = /*#__PURE__*/ function(RenderPass) {
     _proto.execute = function execute(renderer) {
         var _renderer_renderingData_currentFrame_globalVolume_bloom, _renderer_renderingData_currentFrame_globalVolume;
         renderer.clear({
-            colorAction: exports.TextureStoreAction.clear,
-            depthAction: exports.TextureStoreAction.clear,
-            stencilAction: exports.TextureStoreAction.clear
+            colorAction: TextureStoreAction.clear,
+            depthAction: TextureStoreAction.clear,
+            stencilAction: TextureStoreAction.clear
         });
         this.screenMesh.material.setTexture("_MainTex", this.mainTexture);
         var _renderer_renderingData_currentFrame_globalVolume_bloom_threshold;
@@ -13701,7 +13697,7 @@ var HQGaussianDownSamplePass = /*#__PURE__*/ function(RenderPass) {
         var shader = {
             vertex: screenMeshVert,
             fragment: fragment,
-            glslVersion: exports.GLSLVersion.GLSL1
+            glslVersion: GLSLVersion.GLSL1
         };
         var material = Material.create(engine, {
             name: name,
@@ -13726,9 +13722,9 @@ var HQGaussianDownSamplePass = /*#__PURE__*/ function(RenderPass) {
     };
     _proto.execute = function execute(renderer) {
         renderer.clear({
-            colorAction: exports.TextureStoreAction.clear,
-            depthAction: exports.TextureStoreAction.clear,
-            stencilAction: exports.TextureStoreAction.clear
+            colorAction: TextureStoreAction.clear,
+            depthAction: TextureStoreAction.clear,
+            stencilAction: TextureStoreAction.clear
         });
         this.screenMesh.material.setTexture("_MainTex", this.mainTexture);
         this.screenMesh.material.setVector2("_TextureSize", getTextureSize(this.mainTexture));
@@ -13796,9 +13792,9 @@ var HQGaussianUpSamplePass = /*#__PURE__*/ function(RenderPass) {
     };
     _proto.execute = function execute(renderer) {
         renderer.clear({
-            colorAction: exports.TextureStoreAction.clear,
-            depthAction: exports.TextureStoreAction.clear,
-            stencilAction: exports.TextureStoreAction.clear
+            colorAction: TextureStoreAction.clear,
+            depthAction: TextureStoreAction.clear,
+            stencilAction: TextureStoreAction.clear
         });
         this.screenMesh.material.setTexture("_MainTex", this.mainTexture);
         this.screenMesh.material.setTexture("_GaussianDownTex", this.gaussianDownSampleResult.texture);
@@ -13844,7 +13840,7 @@ var ToneMappingPass = /*#__PURE__*/ function(RenderPass) {
             shader: {
                 vertex: screenMeshVert,
                 fragment: colorGradingFrag,
-                glslVersion: exports.GLSLVersion.GLSL1
+                glslVersion: GLSLVersion.GLSL1
             }
         });
         material.blending = false;
@@ -13869,9 +13865,9 @@ var ToneMappingPass = /*#__PURE__*/ function(RenderPass) {
     };
     _proto.execute = function execute(renderer) {
         renderer.clear({
-            colorAction: exports.TextureStoreAction.clear,
-            depthAction: exports.TextureStoreAction.clear,
-            stencilAction: exports.TextureStoreAction.clear
+            colorAction: TextureStoreAction.clear,
+            depthAction: TextureStoreAction.clear,
+            stencilAction: TextureStoreAction.clear
         });
         var globalVolume = renderer.renderingData.currentFrame.globalVolume;
         var bloom = _extends({
@@ -13935,9 +13931,9 @@ var seed$9 = 1;
             0,
             0
         ] : _options_editorTransform, globalVolume = options.globalVolume, _options_postProcessingEnabled = options.postProcessingEnabled, postProcessingEnabled = _options_postProcessingEnabled === void 0 ? false : _options_postProcessingEnabled, _options_clearAction = options.clearAction, clearAction = _options_clearAction === void 0 ? {
-            colorAction: exports.TextureLoadAction.whatever,
-            stencilAction: exports.TextureLoadAction.clear,
-            depthAction: exports.TextureLoadAction.whatever
+            colorAction: TextureLoadAction.whatever,
+            stencilAction: TextureLoadAction.clear,
+            depthAction: TextureLoadAction.whatever
         } : _options_clearAction;
         var engine = renderer.engine;
         if (globalVolume) {
@@ -13966,18 +13962,18 @@ var seed$9 = 1;
                 }
             ];
             depthStencilAttachment = {
-                storageType: exports.RenderPassAttachmentStorageType.depth_stencil_opaque
+                storageType: RenderPassAttachmentStorageType.depth_stencil_opaque
             };
             drawObjectPassClearAction = {
-                colorAction: exports.TextureLoadAction.clear,
-                stencilAction: exports.TextureLoadAction.clear,
-                depthAction: exports.TextureLoadAction.clear
+                colorAction: TextureLoadAction.clear,
+                stencilAction: TextureLoadAction.clear,
+                depthAction: TextureLoadAction.clear
             };
         }
         this.drawObjectPass = new RenderPass(renderer, {
             name: RENDER_PASS_NAME_PREFIX,
             priority: RenderPassPriorityNormal,
-            meshOrder: exports.OrderType.ascending,
+            meshOrder: OrderType.ascending,
             depthStencilAttachment: depthStencilAttachment,
             attachments: attachments,
             clearAction: drawObjectPassClearAction
@@ -14118,11 +14114,11 @@ var seed$9 = 1;
    * 销毁 RenderFrame
    * @param options - 可以有选择销毁一些对象
    */ _proto.dispose = function dispose(options) {
-        if ((options == null ? void 0 : options.semantics) !== exports.DestroyOptions.keep) {
+        if ((options == null ? void 0 : options.semantics) !== DestroyOptions.keep) {
             this.semantics.dispose();
         }
         var pass = (options == null ? void 0 : options.passes) ? options.passes : undefined;
-        if (pass !== exports.DestroyOptions.keep) {
+        if (pass !== DestroyOptions.keep) {
             this._renderPasses.forEach(function(renderPass) {
                 renderPass.dispose(pass);
             });
@@ -14225,12 +14221,12 @@ var seed$9 = 1;
         return attachments;
     };
     _proto.resetClearActions = function resetClearActions() {
-        var action = this.renderPasses.length > 1 ? exports.TextureLoadAction.clear : exports.TextureLoadAction.whatever;
+        var action = this.renderPasses.length > 1 ? TextureLoadAction.clear : TextureLoadAction.whatever;
         this.clearAction.stencilAction = action;
         this.clearAction.depthAction = action;
         this.clearAction.colorAction = action;
         if (this.keepColorBuffer) {
-            this.clearAction.colorAction = exports.TextureLoadAction.whatever;
+            this.clearAction.colorAction = TextureLoadAction.whatever;
         }
     };
     /**
@@ -14265,14 +14261,14 @@ var seed$9 = 1;
             var height = this.renderer.getHeight();
             var filter = level === 2 ? glContext.LINEAR : glContext.NEAREST;
             var texA = Texture.create(engine, {
-                sourceType: exports.TextureSourceType.framebuffer,
+                sourceType: TextureSourceType.framebuffer,
                 format: glContext.RGBA,
                 name: "frame_a",
                 minFilter: filter,
                 magFilter: filter
             });
             var texB = Texture.create(engine, {
-                sourceType: exports.TextureSourceType.framebuffer,
+                sourceType: TextureSourceType.framebuffer,
                 format: glContext.RGBA,
                 data: {
                     width: width,
@@ -14282,7 +14278,7 @@ var seed$9 = 1;
                 magFilter: filter,
                 name: "frame_b"
             });
-            var depthStencilType = detail.readableDepthStencilTextures && detail.writableFragDepth ? exports.RenderPassAttachmentStorageType.depth_24_stencil_8_texture : exports.RenderPassAttachmentStorageType.depth_stencil_opaque;
+            var depthStencilType = detail.readableDepthStencilTextures && detail.writableFragDepth ? RenderPassAttachmentStorageType.depth_24_stencil_8_texture : RenderPassAttachmentStorageType.depth_stencil_opaque;
             var resRP = new RenderPass(this.renderer, {
                 depthStencilAttachment: {
                     storageType: depthStencilType
@@ -14297,11 +14293,11 @@ var seed$9 = 1;
                 name: "effects-final-copy",
                 priority: RenderPassPriorityNormal + 600,
                 clearAction: {
-                    depthAction: exports.TextureLoadAction.clear,
-                    stencilAction: exports.TextureLoadAction.clear,
-                    colorAction: exports.TextureLoadAction.clear
+                    depthAction: TextureLoadAction.clear,
+                    stencilAction: TextureLoadAction.clear,
+                    colorAction: TextureLoadAction.clear
                 },
-                meshOrder: exports.OrderType.ascending,
+                meshOrder: OrderType.ascending,
                 meshes: [
                     this.createCopyMesh({
                         blend: true,
@@ -14585,12 +14581,12 @@ function checkLinearTextureFilter(gl, type) {
     gl.deleteTexture(tex);
     return ret;
 }
-exports.COMPRESSED_TEXTURE = void 0;
+var COMPRESSED_TEXTURE;
 (function(COMPRESSED_TEXTURE) {
     COMPRESSED_TEXTURE[COMPRESSED_TEXTURE["NONE"] = 0] = "NONE";
     COMPRESSED_TEXTURE[COMPRESSED_TEXTURE["PVRTC"] = 1] = "PVRTC";
     COMPRESSED_TEXTURE[COMPRESSED_TEXTURE["ASTC"] = 2] = "ASTC";
-})(exports.COMPRESSED_TEXTURE || (exports.COMPRESSED_TEXTURE = {}));
+})(COMPRESSED_TEXTURE || (COMPRESSED_TEXTURE = {}));
 function registerCompressedTexture(gl) {
     if (gl.getExtension("WEBGL_compressed_texture_astc")) {
         return 2;
@@ -14601,16 +14597,16 @@ function registerCompressedTexture(gl) {
     return 0;
 }
 
-exports.FilterMode = void 0;
+var FilterMode;
 (function(FilterMode) {
     FilterMode[FilterMode["Nearest"] = 0] = "Nearest";
     FilterMode[FilterMode["Linear"] = 1] = "Linear";
-})(exports.FilterMode || (exports.FilterMode = {}));
-exports.RenderTextureFormat = void 0;
+})(FilterMode || (FilterMode = {}));
+var RenderTextureFormat;
 (function(RenderTextureFormat) {
     RenderTextureFormat[RenderTextureFormat["RGBA32"] = 0] = "RGBA32";
     RenderTextureFormat[RenderTextureFormat["RGBAHalf"] = 1] = "RGBAHalf";
-})(exports.RenderTextureFormat || (exports.RenderTextureFormat = {}));
+})(RenderTextureFormat || (RenderTextureFormat = {}));
 /**
  *
  */ var Framebuffer = /*#__PURE__*/ function() {
@@ -16790,7 +16786,7 @@ var ColorCurve = /*#__PURE__*/ function(ValueGetter) {
             worldMatrix.transformPoint(triangle.p2);
         });
         return {
-            type: exports.HitTestType.triangle,
+            type: HitTestType.triangle,
             area: triangles
         };
     };
@@ -19111,7 +19107,7 @@ var GraphicsPath = /*#__PURE__*/ function() {
     return GraphicsPath;
 }();
 
-exports.ShapeComponent = /*#__PURE__*/ function(MeshComponent) {
+var ShapeComponent = /*#__PURE__*/ function(MeshComponent) {
     _inherits(ShapeComponent, MeshComponent);
     function ShapeComponent(engine) {
         var _this;
@@ -19157,7 +19153,7 @@ exports.ShapeComponent = /*#__PURE__*/ function(MeshComponent) {
                 shader: {
                     vertex: _this.vert,
                     fragment: _this.frag,
-                    glslVersion: exports.GLSLVersion.GLSL1
+                    glslVersion: GLSLVersion.GLSL1
                 }
             };
             _this.material = Material.create(engine, materialProps);
@@ -19316,11 +19312,11 @@ exports.ShapeComponent = /*#__PURE__*/ function(MeshComponent) {
     };
     return ShapeComponent;
 }(MeshComponent);
-exports.ShapeComponent = __decorate([
+ShapeComponent = __decorate([
     effectsClass("ShapeComponent")
-], exports.ShapeComponent);
+], ShapeComponent);
 
-exports.Fake3DComponent = /*#__PURE__*/ function(Component) {
+var Fake3DComponent = /*#__PURE__*/ function(Component) {
     _inherits(Fake3DComponent, Component);
     function Fake3DComponent() {
         var _this;
@@ -19345,7 +19341,7 @@ exports.Fake3DComponent = /*#__PURE__*/ function(Component) {
     }
     var _proto = Fake3DComponent.prototype;
     _proto.onStart = function onStart() {
-        this.effectComponent = this.item.getComponent(exports.EffectComponent);
+        this.effectComponent = this.item.getComponent(EffectComponent);
     };
     _proto.onUpdate = function onUpdate(dt) {
         this.updateFake3D();
@@ -19391,62 +19387,62 @@ exports.Fake3DComponent = /*#__PURE__*/ function(Component) {
 }(Component);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "loop", void 0);
+], Fake3DComponent.prototype, "loop", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "amountOfMotion", void 0);
+], Fake3DComponent.prototype, "amountOfMotion", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "animationLength", void 0);
+], Fake3DComponent.prototype, "animationLength", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "mode", void 0);
+], Fake3DComponent.prototype, "mode", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "startPositionX", void 0);
+], Fake3DComponent.prototype, "startPositionX", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "startPositionY", void 0);
+], Fake3DComponent.prototype, "startPositionY", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "startPositionZ", void 0);
+], Fake3DComponent.prototype, "startPositionZ", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "endPositionX", void 0);
+], Fake3DComponent.prototype, "endPositionX", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "endPositionY", void 0);
+], Fake3DComponent.prototype, "endPositionY", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "endPositionZ", void 0);
+], Fake3DComponent.prototype, "endPositionZ", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "amplitudeX", void 0);
+], Fake3DComponent.prototype, "amplitudeX", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "amplitudeY", void 0);
+], Fake3DComponent.prototype, "amplitudeY", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "amplitudeZ", void 0);
+], Fake3DComponent.prototype, "amplitudeZ", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "phaseX", void 0);
+], Fake3DComponent.prototype, "phaseX", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "phaseY", void 0);
+], Fake3DComponent.prototype, "phaseY", void 0);
 __decorate([
     serialize()
-], exports.Fake3DComponent.prototype, "phaseZ", void 0);
-exports.Fake3DComponent = __decorate([
+], Fake3DComponent.prototype, "phaseZ", void 0);
+Fake3DComponent = __decorate([
     effectsClass("Fake3DComponent")
-], exports.Fake3DComponent);
-exports.Fake3DAnimationMode = void 0;
+], Fake3DComponent);
+var Fake3DAnimationMode;
 (function(Fake3DAnimationMode) {
     Fake3DAnimationMode[Fake3DAnimationMode["Circular"] = 0] = "Circular";
     Fake3DAnimationMode[Fake3DAnimationMode["Linear"] = 1] = "Linear";
-})(exports.Fake3DAnimationMode || (exports.Fake3DAnimationMode = {}));
+})(Fake3DAnimationMode || (Fake3DAnimationMode = {}));
 
-exports.CameraController = /*#__PURE__*/ function(Behaviour) {
+var CameraController = /*#__PURE__*/ function(Behaviour) {
     _inherits(CameraController, Behaviour);
     function CameraController(engine, props) {
         var _this;
@@ -19474,9 +19470,9 @@ exports.CameraController = /*#__PURE__*/ function(Behaviour) {
     };
     return CameraController;
 }(Behaviour);
-exports.CameraController = __decorate([
+CameraController = __decorate([
     effectsClass(DataType.CameraController)
-], exports.CameraController);
+], CameraController);
 
 var CameraVFXItemLoader = /*#__PURE__*/ function(AbstractPlugin) {
     _inherits(CameraVFXItemLoader, AbstractPlugin);
@@ -19486,13 +19482,13 @@ var CameraVFXItemLoader = /*#__PURE__*/ function(AbstractPlugin) {
     return CameraVFXItemLoader;
 }(AbstractPlugin);
 
-exports.HitTestType = void 0;
+var HitTestType;
 (function(HitTestType) {
     HitTestType[HitTestType["triangle"] = 1] = "triangle";
     HitTestType[HitTestType["box"] = 2] = "box";
     HitTestType[HitTestType["sphere"] = 3] = "sphere";
     HitTestType[HitTestType["custom"] = 4] = "custom";
-})(exports.HitTestType || (exports.HitTestType = {}));
+})(HitTestType || (HitTestType = {}));
 
 var EVENT_TYPE_CLICK = "click";
 var EVENT_TYPE_TOUCH_START = "touchstart";
@@ -19721,7 +19717,7 @@ var InteractMesh = /*#__PURE__*/ function() {
             shader: {
                 vertex: vertex,
                 fragment: fragment,
-                glslVersion: exports.GLSLVersion.GLSL1,
+                glslVersion: GLSLVersion.GLSL1,
                 cacheId: "" + rendererOptions.cachePrefix + "_effects_interact",
                 macros: macros
             },
@@ -19790,7 +19786,7 @@ var InteractMesh = /*#__PURE__*/ function() {
     return InteractMesh;
 }();
 
-exports.InteractComponent = /*#__PURE__*/ function(RendererComponent) {
+var InteractComponent = /*#__PURE__*/ function(RendererComponent) {
     _inherits(InteractComponent, RendererComponent);
     function InteractComponent() {
         var _this;
@@ -20030,7 +20026,7 @@ exports.InteractComponent = /*#__PURE__*/ function(RendererComponent) {
             worldMatrix.transformPoint(triangle.p2);
         });
         return {
-            type: exports.HitTestType.triangle,
+            type: HitTestType.triangle,
             area: triangles
         };
     };
@@ -20068,9 +20064,9 @@ exports.InteractComponent = /*#__PURE__*/ function(RendererComponent) {
     ]);
     return InteractComponent;
 }(RendererComponent);
-exports.InteractComponent = __decorate([
+InteractComponent = __decorate([
     effectsClass(DataType.InteractComponent)
-], exports.InteractComponent);
+], InteractComponent);
 function shouldIgnoreBouncing(arg, mul) {
     var threshold = 0.00001 * (mul || 1);
     return arg && Math.abs(arg.vx || 0) < threshold && Math.abs(arg.vy || 0) < threshold;
@@ -20114,7 +20110,7 @@ function shouldIgnoreBouncing(arg, mul) {
             p2: point3
         });
         return {
-            type: exports.HitTestType.triangle,
+            type: HitTestType.triangle,
             area: area
         };
     };
@@ -20140,7 +20136,7 @@ function shouldIgnoreBouncing(arg, mul) {
             });
         }
         this.boundingBoxData = {
-            type: exports.HitTestType.triangle,
+            type: HitTestType.triangle,
             area: area
         };
     };
@@ -20180,12 +20176,12 @@ function shouldIgnoreBouncing(arg, mul) {
     return MeshCollider;
 }();
 
-exports.maxSpriteMeshItemCount = 8;
+var maxSpriteMeshItemCount = 8;
 function setSpriteMeshMaxItemCountByGPU(gpuCapability) {
     if (gpuCapability.maxVertexUniforms >= 256) {
-        return exports.maxSpriteMeshItemCount = 32;
+        return maxSpriteMeshItemCount = 32;
     } else if (gpuCapability.maxVertexUniforms >= 128) {
-        return exports.maxSpriteMeshItemCount = 16;
+        return maxSpriteMeshItemCount = 16;
     }
 }
 function spriteMeshShaderFromFilter(level, options) {
@@ -20201,7 +20197,7 @@ function spriteMeshShaderFromFilter(level, options) {
     return {
         fragment: fragment,
         vertex: vertex,
-        glslVersion: level === 1 ? exports.GLSLVersion.GLSL1 : exports.GLSLVersion.GLSL3,
+        glslVersion: level === 1 ? GLSLVersion.GLSL1 : GLSLVersion.GLSL3,
         macros: macros,
         shared: true
     };
@@ -20223,7 +20219,7 @@ function spriteMeshShaderFromRenderInfo(renderInfo, count, level, env) {
 }
 // TODO: 只有单测用
 function setMaxSpriteMeshItemCount(count) {
-    exports.maxSpriteMeshItemCount = count;
+    maxSpriteMeshItemCount = count;
 }
 
 var defRenderInfo = {
@@ -20249,7 +20245,7 @@ var SpriteLoader = /*#__PURE__*/ function(AbstractPlugin) {
         var env = (options != null ? options : {}).env;
         if (!(shaderLibrary == null ? void 0 : shaderLibrary.shaderResults[spriteMeshShaderIdFromRenderInfo(defRenderInfo, 2)])) {
             shaderLibrary == null ? void 0 : shaderLibrary.addShader(spriteMeshShaderFromRenderInfo(defRenderInfo, 2, 1, env));
-            shaderLibrary == null ? void 0 : shaderLibrary.addShader(spriteMeshShaderFromRenderInfo(defRenderInfo, exports.maxSpriteMeshItemCount, 1, env));
+            shaderLibrary == null ? void 0 : shaderLibrary.addShader(spriteMeshShaderFromRenderInfo(defRenderInfo, maxSpriteMeshItemCount, 1, env));
             if (detail.writableFragDepth) {
                 shaderLibrary == null ? void 0 : shaderLibrary.addShader(createCopyShader(level, true));
             }
@@ -21116,7 +21112,7 @@ var seed$7 = 1;
     };
 };
 
-exports.VFXItem = /*#__PURE__*/ function(EffectsObject) {
+var VFXItem = /*#__PURE__*/ function(EffectsObject) {
     _inherits(VFXItem, EffectsObject);
     function VFXItem(engine, props) {
         var _this;
@@ -21518,7 +21514,7 @@ exports.VFXItem = /*#__PURE__*/ function(EffectsObject) {
                 this.rendererComponents.push(component);
             }
             // TODO ParticleSystemRenderer 现在是动态生成的，后面需要在 json 中单独表示为一个组件
-            if (_instanceof1(component, exports.ParticleSystem)) {
+            if (_instanceof1(component, ParticleSystem)) {
                 if (!this.components.includes(component.renderer)) {
                     this.components.push(component.renderer);
                 }
@@ -21542,7 +21538,7 @@ exports.VFXItem = /*#__PURE__*/ function(EffectsObject) {
             this.taggedProperties.components = [];
             for(var _iterator = _create_for_of_iterator_helper_loose(this.components), _step; !(_step = _iterator()).done;){
                 var component = _step.value;
-                if (_instanceof1(component, exports.EffectComponent)) {
+                if (_instanceof1(component, EffectComponent)) {
                     this.taggedProperties.components.push(component);
                 }
             }
@@ -21711,11 +21707,11 @@ exports.VFXItem = /*#__PURE__*/ function(EffectsObject) {
 }(EffectsObject);
 __decorate([
     serialize()
-], exports.VFXItem.prototype, "components", void 0);
-exports.VFXItem = __decorate([
+], VFXItem.prototype, "components", void 0);
+VFXItem = __decorate([
     effectsClass(DataType.VFXItemData)
-], exports.VFXItem);
-exports.Item = void 0;
+], VFXItem);
+var Item;
 (function(Item) {
     function is(item, type) {
         return item.type === type;
@@ -21733,7 +21729,7 @@ exports.Item = void 0;
         return item.type === ItemType.null;
     }
     Item.isNull = isNull;
-})(exports.Item || (exports.Item = {}));
+})(Item || (Item = {}));
 
 var tempColor = [
     1,
@@ -21758,7 +21754,7 @@ var ColorPlayable = /*#__PURE__*/ function(Playable) {
     _proto.processFrame = function processFrame(context) {
         var _this_activeComponent;
         var boundObject = context.output.getUserData();
-        if (!_instanceof1(boundObject, exports.VFXItem)) {
+        if (!_instanceof1(boundObject, VFXItem)) {
             return;
         }
         if (!this.activeComponent) {
@@ -21820,7 +21816,7 @@ var singleSplits = [
     ]
 ];
 var seed$6 = 0;
-exports.SpriteColorPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
+var SpriteColorPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     _inherits(SpriteColorPlayableAsset, PlayableAsset);
     function SpriteColorPlayableAsset() {
         return PlayableAsset.apply(this, arguments);
@@ -21836,10 +21832,10 @@ exports.SpriteColorPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     };
     return SpriteColorPlayableAsset;
 }(PlayableAsset);
-exports.SpriteColorPlayableAsset = __decorate([
+SpriteColorPlayableAsset = __decorate([
     effectsClass(DataType.SpriteColorPlayableAsset)
-], exports.SpriteColorPlayableAsset);
-exports.SpriteComponent = /*#__PURE__*/ function(BaseRenderComponent) {
+], SpriteColorPlayableAsset);
+var SpriteComponent = /*#__PURE__*/ function(BaseRenderComponent) {
     _inherits(SpriteComponent, BaseRenderComponent);
     function SpriteComponent(engine, props) {
         var _this;
@@ -21940,7 +21936,7 @@ exports.SpriteComponent = /*#__PURE__*/ function(BaseRenderComponent) {
         }
         textures.forEach(function(texture) {
             var source = texture.source;
-            if (source.sourceType === exports.TextureSourceType.video && (source == null ? void 0 : source.video)) {
+            if (source.sourceType === TextureSourceType.video && (source == null ? void 0 : source.video)) {
                 source.video.pause();
                 source.video.src = "";
                 source.video.load();
@@ -22130,9 +22126,9 @@ exports.SpriteComponent = /*#__PURE__*/ function(BaseRenderComponent) {
     };
     return SpriteComponent;
 }(BaseRenderComponent);
-exports.SpriteComponent = __decorate([
+SpriteComponent = __decorate([
     effectsClass(DataType.SpriteComponent)
-], exports.SpriteComponent);
+], SpriteComponent);
 
 var RUNTIME_ENV = "runtime_env";
 var RENDER_PREFER_LOOKUP_TEXTURE = "lookup_texture";
@@ -23309,7 +23305,7 @@ var TrailMesh = /*#__PURE__*/ function() {
                 vertex: vertex,
                 fragment: fragment,
                 macros: macros,
-                glslVersion: level === 1 ? exports.GLSLVersion.GLSL1 : exports.GLSLVersion.GLSL3,
+                glslVersion: level === 1 ? GLSLVersion.GLSL1 : GLSLVersion.GLSL3,
                 shared: true,
                 name: "trail#" + name,
                 cacheId: "-t:+" + shaderCacheId + "+" + keyFrameMeta.index + "+" + keyFrameMeta.max
@@ -23795,7 +23791,7 @@ function getTrailMeshShader(trails, particleMaxCount, name, gpuCapability, env) 
     return ParticleSystemRenderer;
 }(RendererComponent);
 
-exports.ParticleSystem = /*#__PURE__*/ function(Component) {
+var ParticleSystem = /*#__PURE__*/ function(Component) {
     _inherits(ParticleSystem, Component);
     function ParticleSystem(engine, props) {
         var _this;
@@ -23805,7 +23801,7 @@ exports.ParticleSystem = /*#__PURE__*/ function(Component) {
             var interactParams = _this.interaction;
             if (force || interactParams) {
                 return {
-                    type: exports.HitTestType.custom,
+                    type: HitTestType.custom,
                     collect: function(ray) {
                         return _this.raycast({
                             radius: (interactParams == null ? void 0 : interactParams.radius) || 0.4,
@@ -24090,7 +24086,7 @@ exports.ParticleSystem = /*#__PURE__*/ function(Component) {
             this.meshes.forEach(function(mesh) {
                 return mesh.dispose({
                     material: {
-                        textures: exports.DestroyOptions.keep
+                        textures: DestroyOptions.keep
                     }
                 });
             });
@@ -24391,7 +24387,7 @@ exports.ParticleSystem = /*#__PURE__*/ function(Component) {
     _proto.getBoundingBox = function getBoundingBox() {
         var area = this.getParticleBoxes();
         return {
-            type: exports.HitTestType.sphere,
+            type: HitTestType.sphere,
             area: area
         };
     };
@@ -24701,9 +24697,9 @@ exports.ParticleSystem = /*#__PURE__*/ function(Component) {
     ]);
     return ParticleSystem;
 }(Component);
-exports.ParticleSystem = __decorate([
+ParticleSystem = __decorate([
     effectsClass(DataType.ParticleSystem)
-], exports.ParticleSystem);
+], ParticleSystem);
 // array performance better for small memory than Float32Array
 var tempDir = new Vector3();
 var tempSize$1 = new Vector2();
@@ -24763,10 +24759,10 @@ function randomArrItem(arr, keepArr) {
     var _proto = ParticleBehaviourPlayable.prototype;
     _proto.start = function start(context) {
         var boundObject = context.output.getUserData();
-        if (this.particleSystem || !_instanceof1(boundObject, exports.VFXItem)) {
+        if (this.particleSystem || !_instanceof1(boundObject, VFXItem)) {
             return;
         }
-        this.particleSystem = boundObject.getComponent(exports.ParticleSystem);
+        this.particleSystem = boundObject.getComponent(ParticleSystem);
         if (this.particleSystem) {
             this.particleSystem.name = boundObject.name;
             this.particleSystem.startEmit();
@@ -25069,7 +25065,7 @@ var ParticleMesh = /*#__PURE__*/ function() {
         var shader = {
             fragment: fragment,
             vertex: vertex,
-            glslVersion: level === 1 ? exports.GLSLVersion.GLSL1 : exports.GLSLVersion.GLSL3,
+            glslVersion: level === 1 ? GLSLVersion.GLSL1 : GLSLVersion.GLSL3,
             shared: true,
             cacheId: shaderCache,
             macros: macros,
@@ -26004,7 +26000,7 @@ var ParticleLoader = /*#__PURE__*/ function(AbstractPlugin) {
         // 增加预合成中的粒子处理
         compositions.forEach(function(comp) {
             comp.items.forEach(function(item) {
-                if (exports.Item.isParticle(item)) {
+                if (Item.isParticle(item)) {
                     items.push(item);
                 }
             });
@@ -26017,16 +26013,16 @@ var ParticleLoader = /*#__PURE__*/ function(AbstractPlugin) {
             // TODO 此处add是否有意义？shader变量似乎没有加到this.shaders数组。
             if (item.content.trails) {
                 var shader1 = getTrailMeshShader(item.content.trails, item.content.options.maxCount, item.name, gpuCapability, env);
-                shader1.glslVersion = level === 2 ? exports.GLSLVersion.GLSL3 : exports.GLSLVersion.GLSL1;
+                shader1.glslVersion = level === 2 ? GLSLVersion.GLSL3 : GLSLVersion.GLSL1;
                 shaderLibrary == null ? void 0 : shaderLibrary.addShader(shader1);
             }
         });
         shaders.forEach(function(shader) {
             if (level === 2) {
                 modifyMaxKeyframeShader(shader, maxVertexCount, maxFragmentCount);
-                shader.glslVersion = exports.GLSLVersion.GLSL3;
+                shader.glslVersion = GLSLVersion.GLSL3;
             } else {
-                shader.glslVersion = exports.GLSLVersion.GLSL1;
+                shader.glslVersion = GLSLVersion.GLSL1;
             }
             shaderLibrary == null ? void 0 : shaderLibrary.addShader(shader);
         });
@@ -26177,7 +26173,7 @@ var tempPos = new Vector3();
     _proto.processFrame = function processFrame(context) {
         if (!this.boundObject) {
             var boundObject = context.output.getUserData();
-            if (_instanceof1(boundObject, exports.VFXItem)) {
+            if (_instanceof1(boundObject, VFXItem)) {
                 this.boundObject = boundObject;
                 this.start();
             }
@@ -26237,7 +26233,7 @@ var tempPos = new Vector3();
     };
     return TransformAnimationPlayable;
 }(AnimationPlayable);
-exports.TransformPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
+var TransformPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     _inherits(TransformPlayableAsset, PlayableAsset);
     function TransformPlayableAsset() {
         return PlayableAsset.apply(this, arguments);
@@ -26253,9 +26249,9 @@ exports.TransformPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     };
     return TransformPlayableAsset;
 }(PlayableAsset);
-exports.TransformPlayableAsset = __decorate([
+TransformPlayableAsset = __decorate([
     effectsClass(DataType.TransformPlayableAsset)
-], exports.TransformPlayableAsset);
+], TransformPlayableAsset);
 /**
  * @since 2.0.0
  */ var ActivationPlayable = /*#__PURE__*/ function(Playable) {
@@ -26266,14 +26262,14 @@ exports.TransformPlayableAsset = __decorate([
     var _proto = ActivationPlayable.prototype;
     _proto.processFrame = function processFrame(context) {
         var vfxItem = context.output.getUserData();
-        if (!_instanceof1(vfxItem, exports.VFXItem)) {
+        if (!_instanceof1(vfxItem, VFXItem)) {
             return;
         }
         vfxItem.time = this.time;
     };
     return ActivationPlayable;
 }(Playable);
-exports.ActivationPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
+var ActivationPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     _inherits(ActivationPlayableAsset, PlayableAsset);
     function ActivationPlayableAsset() {
         return PlayableAsset.apply(this, arguments);
@@ -26284,10 +26280,10 @@ exports.ActivationPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     };
     return ActivationPlayableAsset;
 }(PlayableAsset);
-exports.ActivationPlayableAsset = __decorate([
+ActivationPlayableAsset = __decorate([
     effectsClass(DataType.ActivationPlayableAsset)
-], exports.ActivationPlayableAsset);
-exports.AnimationClip = /*#__PURE__*/ function(EffectsObject) {
+], ActivationPlayableAsset);
+var AnimationClip = /*#__PURE__*/ function(EffectsObject) {
     _inherits(AnimationClip, EffectsObject);
     function AnimationClip() {
         var _this;
@@ -26391,9 +26387,9 @@ exports.AnimationClip = /*#__PURE__*/ function(EffectsObject) {
     };
     return AnimationClip;
 }(EffectsObject);
-exports.AnimationClip = __decorate([
+AnimationClip = __decorate([
     effectsClass(DataType.AnimationClip)
-], exports.AnimationClip);
+], AnimationClip);
 var AnimationClipPlayable = /*#__PURE__*/ function(Playable) {
     _inherits(AnimationClipPlayable, Playable);
     function AnimationClipPlayable() {
@@ -26402,7 +26398,7 @@ var AnimationClipPlayable = /*#__PURE__*/ function(Playable) {
     var _proto = AnimationClipPlayable.prototype;
     _proto.processFrame = function processFrame(context) {
         var boundObject = context.output.getUserData();
-        if (!_instanceof1(boundObject, exports.VFXItem)) {
+        if (!_instanceof1(boundObject, VFXItem)) {
             return;
         }
         if (boundObject.composition) {
@@ -26434,7 +26430,7 @@ var AnimationClipPlayable = /*#__PURE__*/ function(Playable) {
     };
     return TimelineClip;
 }();
-exports.TrackAsset = /*#__PURE__*/ function(PlayableAsset) {
+var TrackAsset = /*#__PURE__*/ function(PlayableAsset) {
     _inherits(TrackAsset, PlayableAsset);
     function TrackAsset() {
         var _this;
@@ -26534,26 +26530,26 @@ exports.TrackAsset = /*#__PURE__*/ function(PlayableAsset) {
 }(PlayableAsset);
 __decorate([
     serialize(TimelineClip)
-], exports.TrackAsset.prototype, "clips", void 0);
+], TrackAsset.prototype, "clips", void 0);
 __decorate([
     serialize()
-], exports.TrackAsset.prototype, "children", void 0);
-exports.TrackAsset = __decorate([
+], TrackAsset.prototype, "children", void 0);
+TrackAsset = __decorate([
     effectsClass(DataType.TrackAsset)
-], exports.TrackAsset);
-exports.TrackType = void 0;
+], TrackAsset);
+var TrackType;
 (function(TrackType) {
     TrackType[TrackType["MasterTrack"] = 0] = "MasterTrack";
     TrackType[TrackType["ObjectTrack"] = 1] = "ObjectTrack";
-})(exports.TrackType || (exports.TrackType = {}));
+})(TrackType || (TrackType = {}));
 var RuntimeClip = /*#__PURE__*/ function() {
     function RuntimeClip(clip, clipPlayable, parentMixer, track) {
         this.clip = clip;
         this.playable = clipPlayable;
         this.parentMixer = parentMixer;
         this.track = track;
-        if (_instanceof1(this.track.boundObject, exports.VFXItem)) {
-            this.particleSystem = this.track.boundObject.getComponent(exports.ParticleSystem);
+        if (_instanceof1(this.track.boundObject, VFXItem)) {
+            this.particleSystem = this.track.boundObject.getComponent(ParticleSystem);
         }
     }
     var _proto = RuntimeClip.prototype;
@@ -26564,7 +26560,7 @@ var RuntimeClip = /*#__PURE__*/ function() {
         var started = false;
         var boundObject = this.track.boundObject;
         if (localTime >= clip.start + clip.duration && clip.endBehavior === EndBehavior.destroy) {
-            if (_instanceof1(boundObject, exports.VFXItem) && exports.VFXItem.isParticle(boundObject) && this.particleSystem && !this.particleSystem.destroyed) {
+            if (_instanceof1(boundObject, VFXItem) && VFXItem.isParticle(boundObject) && this.particleSystem && !this.particleSystem.destroyed) {
                 weight = 1.0;
             } else {
                 weight = 0.0;
@@ -26613,7 +26609,7 @@ var ActivationMixerPlayable = /*#__PURE__*/ function(Playable) {
     var _proto = ActivationMixerPlayable.prototype;
     _proto.processFrame = function processFrame(context) {
         var boundObject = context.output.getUserData();
-        if (!_instanceof1(boundObject, exports.VFXItem)) {
+        if (!_instanceof1(boundObject, VFXItem)) {
             return;
         }
         var boundItem = boundObject;
@@ -26635,7 +26631,7 @@ var ActivationMixerPlayable = /*#__PURE__*/ function(Playable) {
     return ActivationMixerPlayable;
 }(Playable);
 
-exports.ActivationTrack = /*#__PURE__*/ function(TrackAsset) {
+var ActivationTrack = /*#__PURE__*/ function(TrackAsset) {
     _inherits(ActivationTrack, TrackAsset);
     function ActivationTrack() {
         return TrackAsset.apply(this, arguments);
@@ -26645,10 +26641,10 @@ exports.ActivationTrack = /*#__PURE__*/ function(TrackAsset) {
         return new ActivationMixerPlayable(graph);
     };
     return ActivationTrack;
-}(exports.TrackAsset);
-exports.ActivationTrack = __decorate([
+}(TrackAsset);
+ActivationTrack = __decorate([
     effectsClass(DataType.ActivationTrack)
-], exports.ActivationTrack);
+], ActivationTrack);
 
 var PropertyClipPlayable = /*#__PURE__*/ function(Playable) {
     _inherits(PropertyClipPlayable, Playable);
@@ -27161,7 +27157,7 @@ var SerializationHelper = /*#__PURE__*/ function() {
     var _proto = CompositionComponent.prototype;
     _proto.onStart = function onStart() {
         if (!this.timelineAsset) {
-            this.timelineAsset = new exports.TimelineAsset(this.engine);
+            this.timelineAsset = new TimelineAsset(this.engine);
         }
         this.resolveBindings();
         this.timelinePlayable = this.timelineAsset.createPlayable(this.graph);
@@ -27174,7 +27170,7 @@ var SerializationHelper = /*#__PURE__*/ function() {
         for(var _iterator = _create_for_of_iterator_helper_loose(this.timelineAsset.tracks), _step; !(_step = _iterator()).done;){
             var track = _step.value;
             var boundObject = track.boundObject;
-            if (_instanceof1(boundObject, exports.VFXItem)) {
+            if (_instanceof1(boundObject, VFXItem)) {
                 var subCompositionComponent = boundObject.getComponent(CompositionComponent);
                 if (subCompositionComponent) {
                     subCompositionComponent.setReusable(value);
@@ -27199,7 +27195,7 @@ var SerializationHelper = /*#__PURE__*/ function() {
                 var item = _step.value;
                 item.composition = this.item.composition;
                 // 设置预合成作为元素时的时长、结束行为和渲染延时
-                if (exports.VFXItem.isComposition(item)) {
+                if (VFXItem.isComposition(item)) {
                     this.item.composition.refContent.push(item);
                     var compositionContent = item.props.content;
                     var refId = compositionContent.options.refId;
@@ -27247,12 +27243,12 @@ var SerializationHelper = /*#__PURE__*/ function() {
     _proto.hitTest = function hitTest(ray, x, y, regions, force, options) {
         var _this, _loop = function(i) {
             var item = _this.items[i];
-            if (item.isActive && item.transform.getValid() && !exports.VFXItem.isComposition(item) && !skip(item)) {
+            if (item.isActive && item.transform.getValid() && !VFXItem.isComposition(item) && !skip(item)) {
                 var hitParams = item.getHitTestParams(force);
                 if (hitParams) {
                     var success = false;
                     var intersectPoint = new Vector3();
-                    if (hitParams.type === exports.HitTestType.triangle) {
+                    if (hitParams.type === HitTestType.triangle) {
                         var triangles = hitParams.triangles, backfaceCulling = hitParams.backfaceCulling;
                         for(var j = 0; j < triangles.length; j++){
                             var triangle = triangles[j];
@@ -27262,7 +27258,7 @@ var SerializationHelper = /*#__PURE__*/ function() {
                                 break;
                             }
                         }
-                    } else if (hitParams.type === exports.HitTestType.box) {
+                    } else if (hitParams.type === HitTestType.box) {
                         var center = hitParams.center, size = hitParams.size;
                         var boxMin = center.clone().addScaledVector(size, 0.5);
                         var boxMax = center.clone().addScaledVector(size, -0.5);
@@ -27273,7 +27269,7 @@ var SerializationHelper = /*#__PURE__*/ function() {
                             success = true;
                             hitPositions.push(intersectPoint);
                         }
-                    } else if (hitParams.type === exports.HitTestType.sphere) {
+                    } else if (hitParams.type === HitTestType.sphere) {
                         var center1 = hitParams.center, radius = hitParams.radius;
                         if (ray.intersectSphere({
                             center: center1,
@@ -27282,7 +27278,7 @@ var SerializationHelper = /*#__PURE__*/ function() {
                             success = true;
                             hitPositions.push(intersectPoint);
                         }
-                    } else if (hitParams.type === exports.HitTestType.custom) {
+                    } else if (hitParams.type === HitTestType.custom) {
                         var tempPosition = hitParams.collect(ray, new Vector2(x, y));
                         if (tempPosition && tempPosition.length > 0) {
                             tempPosition.forEach(function(pos) {
@@ -27515,12 +27511,12 @@ var PropertyTrack = /*#__PURE__*/ function(TrackAsset) {
         this.propertyNames = propertyNames;
     };
     return PropertyTrack;
-}(exports.TrackAsset);
+}(TrackAsset);
 __decorate([
     serialize()
 ], PropertyTrack.prototype, "path", void 0);
 
-exports.FloatPropertyTrack = /*#__PURE__*/ function(PropertyTrack) {
+var FloatPropertyTrack = /*#__PURE__*/ function(PropertyTrack) {
     _inherits(FloatPropertyTrack, PropertyTrack);
     function FloatPropertyTrack() {
         return PropertyTrack.apply(this, arguments);
@@ -27549,29 +27545,29 @@ exports.FloatPropertyTrack = /*#__PURE__*/ function(PropertyTrack) {
     };
     return FloatPropertyTrack;
 }(PropertyTrack);
-exports.FloatPropertyTrack = __decorate([
+FloatPropertyTrack = __decorate([
     effectsClass(DataType.FloatPropertyTrack)
-], exports.FloatPropertyTrack);
+], FloatPropertyTrack);
 
-exports.SpriteColorTrack = /*#__PURE__*/ function(TrackAsset) {
+var SpriteColorTrack = /*#__PURE__*/ function(TrackAsset) {
     _inherits(SpriteColorTrack, TrackAsset);
     function SpriteColorTrack() {
         return TrackAsset.apply(this, arguments);
     }
     return SpriteColorTrack;
-}(exports.TrackAsset);
-exports.SpriteColorTrack = __decorate([
+}(TrackAsset);
+SpriteColorTrack = __decorate([
     effectsClass(DataType.SpriteColorTrack)
-], exports.SpriteColorTrack);
+], SpriteColorTrack);
 
-exports.SubCompositionTrack = /*#__PURE__*/ function(TrackAsset) {
+var SubCompositionTrack = /*#__PURE__*/ function(TrackAsset) {
     _inherits(SubCompositionTrack, TrackAsset);
     function SubCompositionTrack() {
         return TrackAsset.apply(this, arguments);
     }
     var _proto = SubCompositionTrack.prototype;
     _proto.updateAnimatedObject = function updateAnimatedObject() {
-        if (!this.parent || !_instanceof1(this.parent.boundObject, exports.VFXItem)) {
+        if (!this.parent || !_instanceof1(this.parent.boundObject, VFXItem)) {
             throw new Error("SubCompositionTrack needs to be set under the VFXItem track.");
         }
         this.boundObject = this.parent.boundObject.getComponent(CompositionComponent);
@@ -27580,23 +27576,23 @@ exports.SubCompositionTrack = /*#__PURE__*/ function(TrackAsset) {
         return new SubCompositionMixerPlayable(graph);
     };
     return SubCompositionTrack;
-}(exports.TrackAsset);
-exports.SubCompositionTrack = __decorate([
+}(TrackAsset);
+SubCompositionTrack = __decorate([
     effectsClass(DataType.SubCompositionTrack)
-], exports.SubCompositionTrack);
+], SubCompositionTrack);
 
-exports.TransformTrack = /*#__PURE__*/ function(TrackAsset) {
+var TransformTrack = /*#__PURE__*/ function(TrackAsset) {
     _inherits(TransformTrack, TrackAsset);
     function TransformTrack() {
         return TrackAsset.apply(this, arguments);
     }
     return TransformTrack;
-}(exports.TrackAsset);
-exports.TransformTrack = __decorate([
+}(TrackAsset);
+TransformTrack = __decorate([
     effectsClass(DataType.TransformTrack)
-], exports.TransformTrack);
+], TransformTrack);
 
-exports.MaterialTrack = /*#__PURE__*/ function(TrackAsset) {
+var MaterialTrack = /*#__PURE__*/ function(TrackAsset) {
     _inherits(MaterialTrack, TrackAsset);
     function MaterialTrack() {
         return TrackAsset.apply(this, arguments);
@@ -27610,15 +27606,15 @@ exports.MaterialTrack = /*#__PURE__*/ function(TrackAsset) {
         this.boundObject = this.parent.boundObject.materials[this.index];
     };
     return MaterialTrack;
-}(exports.TrackAsset);
+}(TrackAsset);
 __decorate([
     serialize()
-], exports.MaterialTrack.prototype, "index", void 0);
-exports.MaterialTrack = __decorate([
+], MaterialTrack.prototype, "index", void 0);
+MaterialTrack = __decorate([
     effectsClass("MaterialTrack")
-], exports.MaterialTrack);
+], MaterialTrack);
 
-exports.Vector4PropertyTrack = /*#__PURE__*/ function(PropertyTrack) {
+var Vector4PropertyTrack = /*#__PURE__*/ function(PropertyTrack) {
     _inherits(Vector4PropertyTrack, PropertyTrack);
     function Vector4PropertyTrack() {
         return PropertyTrack.apply(this, arguments);
@@ -27635,11 +27631,11 @@ exports.Vector4PropertyTrack = /*#__PURE__*/ function(PropertyTrack) {
     };
     return Vector4PropertyTrack;
 }(PropertyTrack);
-exports.Vector4PropertyTrack = __decorate([
+Vector4PropertyTrack = __decorate([
     effectsClass(DataType.Vector4PropertyTrack)
-], exports.Vector4PropertyTrack);
+], Vector4PropertyTrack);
 
-exports.ColorPropertyTrack = /*#__PURE__*/ function(PropertyTrack) {
+var ColorPropertyTrack = /*#__PURE__*/ function(PropertyTrack) {
     _inherits(ColorPropertyTrack, PropertyTrack);
     function ColorPropertyTrack() {
         return PropertyTrack.apply(this, arguments);
@@ -27656,11 +27652,11 @@ exports.ColorPropertyTrack = /*#__PURE__*/ function(PropertyTrack) {
     };
     return ColorPropertyTrack;
 }(PropertyTrack);
-exports.ColorPropertyTrack = __decorate([
+ColorPropertyTrack = __decorate([
     effectsClass(DataType.ColorPropertyTrack)
-], exports.ColorPropertyTrack);
+], ColorPropertyTrack);
 
-exports.ColorPropertyPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
+var ColorPropertyPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     _inherits(ColorPropertyPlayableAsset, PlayableAsset);
     function ColorPropertyPlayableAsset() {
         return PlayableAsset.apply(this, arguments);
@@ -27676,12 +27672,12 @@ exports.ColorPropertyPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
 }(PlayableAsset);
 __decorate([
     serialize()
-], exports.ColorPropertyPlayableAsset.prototype, "curveData", void 0);
-exports.ColorPropertyPlayableAsset = __decorate([
+], ColorPropertyPlayableAsset.prototype, "curveData", void 0);
+ColorPropertyPlayableAsset = __decorate([
     effectsClass(DataType.ColorPropertyPlayableAsset)
-], exports.ColorPropertyPlayableAsset);
+], ColorPropertyPlayableAsset);
 
-exports.FloatPropertyPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
+var FloatPropertyPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     _inherits(FloatPropertyPlayableAsset, PlayableAsset);
     function FloatPropertyPlayableAsset() {
         return PlayableAsset.apply(this, arguments);
@@ -27697,12 +27693,12 @@ exports.FloatPropertyPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
 }(PlayableAsset);
 __decorate([
     serialize()
-], exports.FloatPropertyPlayableAsset.prototype, "curveData", void 0);
-exports.FloatPropertyPlayableAsset = __decorate([
+], FloatPropertyPlayableAsset.prototype, "curveData", void 0);
+FloatPropertyPlayableAsset = __decorate([
     effectsClass(DataType.FloatPropertyPlayableAsset)
-], exports.FloatPropertyPlayableAsset);
+], FloatPropertyPlayableAsset);
 
-exports.SubCompositionPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
+var SubCompositionPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     _inherits(SubCompositionPlayableAsset, PlayableAsset);
     function SubCompositionPlayableAsset() {
         return PlayableAsset.apply(this, arguments);
@@ -27713,9 +27709,9 @@ exports.SubCompositionPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     };
     return SubCompositionPlayableAsset;
 }(PlayableAsset);
-exports.SubCompositionPlayableAsset = __decorate([
+SubCompositionPlayableAsset = __decorate([
     effectsClass(DataType.SubCompositionPlayableAsset)
-], exports.SubCompositionPlayableAsset);
+], SubCompositionPlayableAsset);
 
 /**
  * A class that stores track assets and the generated mixer playables and playable outputs.
@@ -27734,7 +27730,7 @@ exports.SubCompositionPlayableAsset = __decorate([
     return TrackInstance;
 }();
 
-exports.TimelineAsset = /*#__PURE__*/ function(PlayableAsset) {
+var TimelineAsset = /*#__PURE__*/ function(PlayableAsset) {
     _inherits(TimelineAsset, PlayableAsset);
     function TimelineAsset() {
         var _this;
@@ -27749,7 +27745,7 @@ exports.TimelineAsset = /*#__PURE__*/ function(PlayableAsset) {
         timelinePlayable.setTraversalMode(PlayableTraversalMode.Passthrough);
         for(var _iterator = _create_for_of_iterator_helper_loose(this.tracks), _step; !(_step = _iterator()).done;){
             var track = _step.value;
-            if (_instanceof1(track, exports.ObjectBindingTrack)) {
+            if (_instanceof1(track, ObjectBindingTrack)) {
                 track.create(this);
             }
         }
@@ -27813,10 +27809,10 @@ exports.TimelineAsset = /*#__PURE__*/ function(PlayableAsset) {
 }(PlayableAsset);
 __decorate([
     serialize()
-], exports.TimelineAsset.prototype, "tracks", void 0);
-exports.TimelineAsset = __decorate([
+], TimelineAsset.prototype, "tracks", void 0);
+TimelineAsset = __decorate([
     effectsClass(DataType.TimelineAsset)
-], exports.TimelineAsset);
+], TimelineAsset);
 var TimelinePlayable = /*#__PURE__*/ function(Playable) {
     _inherits(TimelinePlayable, Playable);
     function TimelinePlayable() {
@@ -27878,19 +27874,19 @@ var TrackSortWrapper = function TrackSortWrapper(track, originalIndex) {
 function compareTracks(a, b) {
     var bindingA = a.track.boundObject;
     var bindingB = b.track.boundObject;
-    if (!_instanceof1(bindingA, exports.VFXItem) || !_instanceof1(bindingB, exports.VFXItem)) {
+    if (!_instanceof1(bindingA, VFXItem) || !_instanceof1(bindingB, VFXItem)) {
         return a.originalIndex - b.originalIndex;
     }
-    if (exports.VFXItem.isAncestor(bindingA, bindingB)) {
+    if (VFXItem.isAncestor(bindingA, bindingB)) {
         return -1;
-    } else if (exports.VFXItem.isAncestor(bindingB, bindingA)) {
+    } else if (VFXItem.isAncestor(bindingB, bindingA)) {
         return 1;
     } else {
         return a.originalIndex - b.originalIndex; // 非父子关系的元素保持原始顺序
     }
 }
 
-exports.Vector4PropertyPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
+var Vector4PropertyPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
     _inherits(Vector4PropertyPlayableAsset, PlayableAsset);
     function Vector4PropertyPlayableAsset() {
         return PlayableAsset.apply(this, arguments);
@@ -27906,12 +27902,12 @@ exports.Vector4PropertyPlayableAsset = /*#__PURE__*/ function(PlayableAsset) {
 }(PlayableAsset);
 __decorate([
     serialize()
-], exports.Vector4PropertyPlayableAsset.prototype, "curveData", void 0);
-exports.Vector4PropertyPlayableAsset = __decorate([
+], Vector4PropertyPlayableAsset.prototype, "curveData", void 0);
+Vector4PropertyPlayableAsset = __decorate([
     effectsClass("Vector4PropertyPlayableAsset")
-], exports.Vector4PropertyPlayableAsset);
+], Vector4PropertyPlayableAsset);
 
-exports.ObjectBindingTrack = /*#__PURE__*/ function(TrackAsset1) {
+var ObjectBindingTrack = /*#__PURE__*/ function(TrackAsset1) {
     _inherits(ObjectBindingTrack, TrackAsset1);
     function ObjectBindingTrack() {
         return TrackAsset1.apply(this, arguments);
@@ -27919,13 +27915,13 @@ exports.ObjectBindingTrack = /*#__PURE__*/ function(TrackAsset1) {
     var _proto = ObjectBindingTrack.prototype;
     _proto.updateAnimatedObject = function updateAnimatedObject() {};
     _proto.create = function create(timelineAsset) {
-        if (!_instanceof1(this.boundObject, exports.VFXItem)) {
+        if (!_instanceof1(this.boundObject, VFXItem)) {
             return;
         }
         var boundItem = this.boundObject;
         // 添加粒子动画 clip // TODO 待移除
-        if (boundItem.getComponent(exports.ParticleSystem)) {
-            var particleTrack = timelineAsset.createTrack(exports.TrackAsset, this, "ParticleTrack");
+        if (boundItem.getComponent(ParticleSystem)) {
+            var particleTrack = timelineAsset.createTrack(TrackAsset, this, "ParticleTrack");
             particleTrack.boundObject = this.boundObject;
             var particleClip = particleTrack.createClip(ParticleBehaviourPlayableAsset);
             particleClip.start = boundItem.start;
@@ -27934,10 +27930,10 @@ exports.ObjectBindingTrack = /*#__PURE__*/ function(TrackAsset1) {
         }
     };
     return ObjectBindingTrack;
-}(exports.TrackAsset);
-exports.ObjectBindingTrack = __decorate([
+}(TrackAsset);
+ObjectBindingTrack = __decorate([
     effectsClass(DataType.ObjectBindingTrack)
-], exports.ObjectBindingTrack);
+], ObjectBindingTrack);
 
 function _possible_constructor_return(self, call) {
     if (call && (_type_of(call) === "object" || typeof call === "function")) return call;
@@ -28139,7 +28135,7 @@ var DEFAULT_FONTS = [
     "courier"
 ];
 var seed$5 = 0;
-exports.TextComponent = /*#__PURE__*/ function(BaseRenderComponent) {
+var TextComponent = /*#__PURE__*/ function(BaseRenderComponent) {
     _inherits(TextComponent, BaseRenderComponent);
     function TextComponent(engine, props) {
         var _this;
@@ -28207,9 +28203,9 @@ exports.TextComponent = /*#__PURE__*/ function(BaseRenderComponent) {
     };
     return TextComponent;
 }(BaseRenderComponent);
-exports.TextComponent = __decorate([
+TextComponent = __decorate([
     effectsClass(DataType.TextComponent)
-], exports.TextComponent);
+], TextComponent);
 var TextComponentBase = /*#__PURE__*/ function() {
     function TextComponentBase() {}
     var _proto = TextComponentBase.prototype;
@@ -28566,7 +28562,7 @@ var TextComponentBase = /*#__PURE__*/ function() {
     };
     return TextComponentBase;
 }();
-applyMixins(exports.TextComponent, [
+applyMixins(TextComponent, [
     TextComponentBase
 ]);
 
@@ -28587,7 +28583,7 @@ var Asset = /*#__PURE__*/ function(EffectsObject) {
     return Asset;
 }(EffectsObject);
 
-exports.BinaryAsset = /*#__PURE__*/ function(EffectsObject) {
+var BinaryAsset = /*#__PURE__*/ function(EffectsObject) {
     _inherits(BinaryAsset, EffectsObject);
     function BinaryAsset() {
         return EffectsObject.apply(this, arguments);
@@ -28598,10 +28594,10 @@ exports.BinaryAsset = /*#__PURE__*/ function(EffectsObject) {
 }(EffectsObject);
 __decorate([
     serialize()
-], exports.BinaryAsset.prototype, "buffer", void 0);
-exports.BinaryAsset = __decorate([
+], BinaryAsset.prototype, "buffer", void 0);
+BinaryAsset = __decorate([
     effectsClass(DataType.BinaryAsset)
-], exports.BinaryAsset);
+], BinaryAsset);
 
 /**
  * @since 2.0.0
@@ -30460,7 +30456,7 @@ function passRenderLevel(l, renderLevel) {
     return false;
 }
 
-exports.Scene = void 0;
+var Scene;
 (function(Scene) {
     function isJSONObject(scene) {
         return isObject(scene) && "jsonScene" in scene;
@@ -30475,7 +30471,7 @@ exports.Scene = void 0;
         return isObject(scene) && "options" in scene;
     }
     Scene.isWithOptions = isWithOptions;
-})(exports.Scene || (exports.Scene = {}));
+})(Scene || (Scene = {}));
 
 function getBackgroundImage(template, variables) {
     var templateBackground;
@@ -30599,7 +30595,7 @@ var seed$4 = 1;
                 startTime = alipay.performance.now();
                 timeInfoMessages = [];
                 gpuInstance = renderer == null ? void 0 : renderer.engine.gpuCapability;
-                compressedTexture = (_gpuInstance_detail_compressedTexture = gpuInstance == null ? void 0 : gpuInstance.detail.compressedTexture) != null ? _gpuInstance_detail_compressedTexture : exports.COMPRESSED_TEXTURE.NONE;
+                compressedTexture = (_gpuInstance_detail_compressedTexture = gpuInstance == null ? void 0 : gpuInstance.detail.compressedTexture) != null ? _gpuInstance_detail_compressedTexture : COMPRESSED_TEXTURE.NONE;
                 timeInfos = {};
                 cancelLoading = false;
                 waitPromise = new Promise(function(resolve, reject) {
@@ -30680,7 +30676,7 @@ var seed$4 = 1;
                                 _this.baseUrl = alipay.location.href;
                                 _state.label = 3;
                             case 3:
-                                if (!exports.Scene.isJSONObject(rawJSON)) return [
+                                if (!Scene.isJSONObject(rawJSON)) return [
                                     3,
                                     5
                                 ];
@@ -31000,7 +30996,7 @@ var seed$4 = 1;
                                         ];
                                         _this.sourceFrom[id] = {
                                             url: resultImage.src,
-                                            type: exports.TextureSourceType.video
+                                            type: TextureSourceType.video
                                         };
                                         return [
                                             2,
@@ -31013,7 +31009,7 @@ var seed$4 = 1;
                                         }
                                         _this.sourceFrom[id] = {
                                             url: resultImage.src,
-                                            type: exports.TextureSourceType.image
+                                            type: TextureSourceType.image
                                         };
                                         return [
                                             4,
@@ -31041,16 +31037,16 @@ var seed$4 = 1;
                                         if ("compressed" in img && useCompressedTexture && compressedTexture) {
                                             // 2. 压缩纹理
                                             compressed = img.compressed;
-                                            if (compressedTexture === exports.COMPRESSED_TEXTURE.ASTC) {
+                                            if (compressedTexture === COMPRESSED_TEXTURE.ASTC) {
                                                 src = compressed.astc;
-                                            } else if (compressedTexture === exports.COMPRESSED_TEXTURE.PVRTC) {
+                                            } else if (compressedTexture === COMPRESSED_TEXTURE.PVRTC) {
                                                 src = compressed.pvrtc;
                                             }
                                             if (src) {
                                                 bufferURL = new alipay.URL(src, baseUrl).href;
                                                 _this.sourceFrom[id] = {
                                                     url: bufferURL,
-                                                    type: exports.TextureSourceType.compressed
+                                                    type: TextureSourceType.compressed
                                                 };
                                                 return [
                                                     2,
@@ -31091,7 +31087,7 @@ var seed$4 = 1;
                                         _ref = _tmp, url1 = _ref.url, image = _ref.image;
                                         _this.sourceFrom[id] = {
                                             url: url1,
-                                            type: exports.TextureSourceType.image
+                                            type: TextureSourceType.image
                                         };
                                         return [
                                             2,
@@ -31245,7 +31241,7 @@ var seed$4 = 1;
                                     texture = createTextureOptionsBySource(image, _this.sourceFrom[imageId], id);
                                     return [
                                         2,
-                                        texture.sourceType === exports.TextureSourceType.compressed ? texture : _extends({}, texture, textureOptions)
+                                        texture.sourceType === TextureSourceType.compressed ? texture : _extends({}, texture, textureOptions)
                                     ];
                                 }
                                 throw new Error("Invalid texture source: " + source + ".");
@@ -31327,7 +31323,7 @@ function createTextureOptionsBySource(image, sourceFrom, id) {
     } else if (_instanceof1(image, alipay.HTMLImageElement) || isCanvas(image)) {
         return _extends({
             image: image,
-            sourceType: exports.TextureSourceType.image,
+            sourceType: TextureSourceType.image,
             sourceFrom: sourceFrom,
             keepImageSource: true,
             minFilter: glContext.LINEAR,
@@ -31336,7 +31332,7 @@ function createTextureOptionsBySource(image, sourceFrom, id) {
     } else if (_instanceof1(image, alipay.HTMLVideoElement)) {
         // 视频
         return _extends({
-            sourceType: exports.TextureSourceType.video,
+            sourceType: TextureSourceType.video,
             video: image,
             minFilter: glContext.LINEAR,
             magFilter: glContext.LINEAR
@@ -31348,7 +31344,7 @@ function createTextureOptionsBySource(image, sourceFrom, id) {
         }, options);
     } else if ("width" in image && "height" in image && "data" in image) {
         return _extends({
-            sourceType: exports.TextureSourceType.data,
+            sourceType: TextureSourceType.data,
             data: image,
             wrapS: glContext.CLAMP_TO_EDGE,
             wrapT: glContext.CLAMP_TO_EDGE,
@@ -31981,7 +31977,7 @@ var LateUpdateTickData = /*#__PURE__*/ function(TickData) {
         assertExist(sourceContent);
         _this.renderer = renderer;
         _this.refCompositionProps = refCompositionProps;
-        _this.rootItem = new exports.VFXItem(_this.getEngine(), sourceContent);
+        _this.rootItem = new VFXItem(_this.getEngine(), sourceContent);
         _this.rootItem.name = "rootItem";
         _this.rootItem.composition = _assert_this_initialized(_this);
         // Spawn rootCompositionComponent
@@ -32257,7 +32253,7 @@ var LateUpdateTickData = /*#__PURE__*/ function(TickData) {
         }
         for(var _iterator2 = _create_for_of_iterator_helper_loose(contentItems), _step2; !(_step2 = _iterator2()).done;){
             var item2 = _step2.value;
-            if (exports.VFXItem.isComposition(item2)) {
+            if (VFXItem.isComposition(item2)) {
                 this.buildItemTree(item2);
             }
         }
@@ -32428,7 +32424,7 @@ var LateUpdateTickData = /*#__PURE__*/ function(TickData) {
             if (!texture) {
                 continue;
             }
-            if (texture.sourceType === exports.TextureSourceType.data && !this.texInfo[texture.getInstanceId()]) {
+            if (texture.sourceType === TextureSourceType.data && !this.texInfo[texture.getInstanceId()]) {
                 var _this_rendererOptions;
                 if (texture !== ((_this_rendererOptions = this.rendererOptions) == null ? void 0 : _this_rendererOptions.emptyTexture) && texture !== this.renderFrame.transparentTexture && texture !== this.getEngine().emptyTexture) {
                     texture.dispose();
@@ -32525,11 +32521,11 @@ var LateUpdateTickData = /*#__PURE__*/ function(TickData) {
             return;
         }
         this.renderer.clear({
-            stencilAction: exports.TextureLoadAction.clear,
+            stencilAction: TextureLoadAction.clear,
             clearStencil: 0,
-            depthAction: exports.TextureLoadAction.clear,
+            depthAction: TextureLoadAction.clear,
             clearDepth: 1,
-            colorAction: exports.TextureLoadAction.clear,
+            colorAction: TextureLoadAction.clear,
             clearColor: [
                 0,
                 0,
@@ -34651,12 +34647,12 @@ var DEFAULT_FPS = 60;
     return Ticker;
 }();
 
-registerPlugin("camera", CameraVFXItemLoader, exports.VFXItem, true);
-registerPlugin("text", TextLoader, exports.VFXItem, true);
-registerPlugin("sprite", SpriteLoader, exports.VFXItem, true);
-registerPlugin("particle", ParticleLoader, exports.VFXItem, true);
-registerPlugin("cal", CalculateLoader, exports.VFXItem, true);
-registerPlugin("interact", InteractLoader, exports.VFXItem, true);
+registerPlugin("camera", CameraVFXItemLoader, VFXItem, true);
+registerPlugin("text", TextLoader, VFXItem, true);
+registerPlugin("sprite", SpriteLoader, VFXItem, true);
+registerPlugin("particle", ParticleLoader, VFXItem, true);
+registerPlugin("cal", CalculateLoader, VFXItem, true);
+registerPlugin("interact", InteractLoader, VFXItem, true);
 var version$1 = "2.1.4";
 logger.info("Core version: " + version$1 + ".");
 
@@ -34710,21 +34706,21 @@ var GLTexture = /*#__PURE__*/ function(Texture) {
     _proto.release = function release() {
         var sourceType = this.source.sourceType;
         switch(sourceType){
-            case exports.TextureSourceType.image:
+            case TextureSourceType.image:
                 // @ts-expect-error
                 delete this.source.image;
                 // @ts-expect-error
                 delete this.source.cube;
                 break;
-            case exports.TextureSourceType.data:
+            case TextureSourceType.data:
                 // @ts-expect-error
                 delete this.source.data;
                 break;
-            case exports.TextureSourceType.compressed:
+            case TextureSourceType.compressed:
                 // @ts-expect-error
                 delete this.source.mipmaps;
                 break;
-            case exports.TextureSourceType.mipmaps:
+            case TextureSourceType.mipmaps:
                 // @ts-expect-error
                 delete this.source.mipmaps;
                 break;
@@ -34756,7 +34752,7 @@ var GLTexture = /*#__PURE__*/ function(Texture) {
         var width = 0;
         var height = 0;
         // TODO 原GLState的textureUnitDict参数未处理。
-        this.bind(sourceType === exports.TextureSourceType.video);
+        this.bind(sourceType === TextureSourceType.video);
         // 选择 type 和 format
         if (type === glContext.HALF_FLOAT) {
             type = detail.halfFloatTexture;
@@ -34802,7 +34798,7 @@ var GLTexture = /*#__PURE__*/ function(Texture) {
         // gl的状态可能在外面被改变了，这里必须重新设置
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, source.flipY);
         // 根据不同的 TextureSourceType 传输对应贴图数据到 GPU
-        if (sourceType === exports.TextureSourceType.framebuffer) {
+        if (sourceType === TextureSourceType.framebuffer) {
             if (optionsData) {
                 var _optionsData_width;
                 width = (_optionsData_width = optionsData.width) != null ? _optionsData_width : 0;
@@ -34812,7 +34808,7 @@ var GLTexture = /*#__PURE__*/ function(Texture) {
                     gl.texImage2D(target, 0, internalFormat, width, height, 0, format, type, null);
                 }
             }
-        } else if (sourceType === exports.TextureSourceType.data) {
+        } else if (sourceType === TextureSourceType.data) {
             if (target === gl.TEXTURE_CUBE_MAP) {
                 optionsCube.forEach(function(data, key) {
                     var _this_texImage2DData = _this.texImage2DData(gl, gl.TEXTURE_CUBE_MAP_POSITIVE_X + key, 0, internalFormat, format, type, data), x = _this_texImage2DData[0], y = _this_texImage2DData[1];
@@ -34823,7 +34819,7 @@ var GLTexture = /*#__PURE__*/ function(Texture) {
                 var ref;
                 ref = this.texImage2DData(gl, target, 0, internalFormat, format, type, data), width = ref[0], height = ref[1];
             }
-        } else if (sourceType === exports.TextureSourceType.image || sourceType === exports.TextureSourceType.video) {
+        } else if (sourceType === TextureSourceType.image || sourceType === TextureSourceType.video) {
             if (target === gl.TEXTURE_CUBE_MAP) {
                 cube.forEach(function(image, key) {
                     var _this_texImage2D = _this.texImage2D(gl, gl.TEXTURE_CUBE_MAP_POSITIVE_X + key, 0, internalFormat, format, type, image), x = _this_texImage2D[0], y = _this_texImage2D[1];
@@ -34840,7 +34836,7 @@ var GLTexture = /*#__PURE__*/ function(Texture) {
                     gl.generateMipmap(target);
                 }
             }
-        } else if (sourceType === exports.TextureSourceType.mipmaps) {
+        } else if (sourceType === TextureSourceType.mipmaps) {
             var ret;
             if (target === gl.TEXTURE_2D) {
                 mipmaps.forEach(function(mipmap, level) {
@@ -34869,7 +34865,7 @@ var GLTexture = /*#__PURE__*/ function(Texture) {
                     });
                 });
             }
-        } else if (sourceType === exports.TextureSourceType.compressed) {
+        } else if (sourceType === TextureSourceType.compressed) {
             if (optionsMipmaps && optionsMipmaps.length !== 0) {
                 width = optionsMipmaps[0].width;
                 height = optionsMipmaps[0].height;
@@ -34918,7 +34914,7 @@ var GLTexture = /*#__PURE__*/ function(Texture) {
         var _this_engine_gpuCapability_detail_maxTextureSize;
         var maxSize = (_this_engine_gpuCapability_detail_maxTextureSize = this.engine.gpuCapability.detail.maxTextureSize) != null ? _this_engine_gpuCapability_detail_maxTextureSize : 2048;
         var img = image;
-        if (sourceType !== exports.TextureSourceType.video) {
+        if (sourceType !== TextureSourceType.video) {
             var shouldResize = minFilter !== gl.NEAREST || magFilter !== gl.NEAREST || wrapS !== gl.CLAMP_TO_EDGE || wrapT !== gl.CLAMP_TO_EDGE;
             shouldResize = shouldResize || image.width > maxSize || image.height > maxSize;
             if (shouldResize) {
@@ -34933,7 +34929,7 @@ var GLTexture = /*#__PURE__*/ function(Texture) {
             img.width,
             img.height
         ];
-        if (sourceType === exports.TextureSourceType.video) {
+        if (sourceType === TextureSourceType.video) {
             var videoWidth = image.videoWidth, videoHeight = image.videoHeight;
             return [
                 videoWidth,
@@ -35028,7 +35024,7 @@ var GLTexture = /*#__PURE__*/ function(Texture) {
         var _this = this;
         return _async_to_generator(function() {
             return __generator(this, function(_state) {
-                if (_this.source.sourceType === exports.TextureSourceType.video && _this.source.video && _this.initialized) {
+                if (_this.source.sourceType === TextureSourceType.video && _this.source.video && _this.initialized) {
                     _this.update({
                         video: _this.source.video
                     });
@@ -35162,7 +35158,7 @@ var GLRendererInternal = /*#__PURE__*/ function() {
         this.pipelineContext = pipelineContext;
         this.emptyTexture2D = new GLTexture(engine, {
             data: d,
-            sourceType: exports.TextureSourceType.data,
+            sourceType: TextureSourceType.data,
             format: gl.LUMINANCE,
             internalFormat: gl.LUMINANCE,
             type: gl.UNSIGNED_BYTE
@@ -35178,7 +35174,7 @@ var GLRendererInternal = /*#__PURE__*/ function() {
                 d,
                 d
             ],
-            sourceType: exports.TextureSourceType.data,
+            sourceType: TextureSourceType.data,
             format: gl.LUMINANCE,
             internalFormat: gl.LUMINANCE,
             type: gl.UNSIGNED_BYTE
@@ -36324,7 +36320,7 @@ var GLMaterial = /*#__PURE__*/ function(Material) {
         _this.macrosDirty = true;
         _this.glMaterialState = new GLMaterialState();
         if (props) {
-            _this.shader = new exports.Shader(engine);
+            _this.shader = new Shader(engine);
             _this.shader.shaderData = _extends({}, props.shader, {
                 id: generateGUID(),
                 dataType: DataType.Shader
@@ -36798,7 +36794,7 @@ var GLMaterial = /*#__PURE__*/ function(Material) {
             return;
         }
         (_this_shaderVariant = this.shaderVariant) == null ? void 0 : _this_shaderVariant.dispose();
-        if ((options == null ? void 0 : options.textures) !== exports.DestroyOptions.keep) {
+        if ((options == null ? void 0 : options.textures) !== DestroyOptions.keep) {
             Object.keys(this.textures).forEach(function(key) {
                 var texture = _this.textures[key];
                 // TODO 纹理释放需要引用计数
@@ -37063,7 +37059,7 @@ var ExtWrap = /*#__PURE__*/ function() {
         source.initialize();
         tex.initialize();
         tex.updateSource({
-            sourceType: exports.TextureSourceType.framebuffer,
+            sourceType: TextureSourceType.framebuffer,
             data: {
                 width: tex.getWidth() || source.getWidth(),
                 height: tex.getHeight() || source.getHeight()
@@ -37138,7 +37134,7 @@ var ExtWrap = /*#__PURE__*/ function() {
                 name: name,
                 vertex: vertexShader,
                 fragment: fragmentShader,
-                glslVersion: level === 2 ? exports.GLSLVersion.GLSL3 : exports.GLSLVersion.GLSL1
+                glslVersion: level === 2 ? GLSLVersion.GLSL3 : GLSLVersion.GLSL1
             }
         });
         material.blending = false;
@@ -37153,7 +37149,7 @@ var ExtWrap = /*#__PURE__*/ function() {
         return new CopyTexturePass(this.renderer, {
             name: "mri-copy-rp",
             clearAction: {
-                colorAction: exports.TextureLoadAction.whatever
+                colorAction: TextureLoadAction.whatever
             },
             attachments: [
                 attachment
@@ -37344,7 +37340,7 @@ var GLFramebuffer = /*#__PURE__*/ function(Framebuffer) {
         _this.renderer = renderer;
         _this.engine = renderer.engine;
         var _depthStencilAttachment_storageType;
-        _this.depthStencilStorageType = (_depthStencilAttachment_storageType = depthStencilAttachment == null ? void 0 : depthStencilAttachment.storageType) != null ? _depthStencilAttachment_storageType : exports.RenderPassAttachmentStorageType.none;
+        _this.depthStencilStorageType = (_depthStencilAttachment_storageType = depthStencilAttachment == null ? void 0 : depthStencilAttachment.storageType) != null ? _depthStencilAttachment_storageType : RenderPassAttachmentStorageType.none;
         _this.viewport = viewport;
         _this.isCustomViewport = !!isCustomViewport;
         _this.viewportScale = viewportScale;
@@ -37383,7 +37379,7 @@ var GLFramebuffer = /*#__PURE__*/ function(Framebuffer) {
         var gpuCapability = this.engine.gpuCapability;
         var _props_depthStencilAttachment1;
         var depthStencilAttachment = (_props_depthStencilAttachment1 = props.depthStencilAttachment) != null ? _props_depthStencilAttachment1 : {
-            storageType: exports.RenderPassAttachmentStorageType.none
+            storageType: RenderPassAttachmentStorageType.none
         };
         var willUseFbo = props.attachments.length > 0;
         var separateDepthStencil = true;
@@ -37395,14 +37391,14 @@ var GLFramebuffer = /*#__PURE__*/ function(Framebuffer) {
         var readableDepthStencilTextures = gpuCapability.detail.readableDepthStencilTextures;
         var storageType = depthStencilAttachment.storageType, storage = depthStencilAttachment.storage;
         this.colorTextures = props.attachments.slice();
-        if (!willUseFbo && storageType !== exports.RenderPassAttachmentStorageType.none) {
+        if (!willUseFbo && storageType !== RenderPassAttachmentStorageType.none) {
             throw new Error("Use depth stencil attachment without color attachments.");
         }
         if (willUseFbo) {
             this.fbo = renderer.glRenderer.createGLFramebuffer(this, this.name);
         }
         switch(storageType){
-            case exports.RenderPassAttachmentStorageType.depth_stencil_opaque:
+            case RenderPassAttachmentStorageType.depth_stencil_opaque:
                 if (storage) {
                     if (_instanceof1(storage, GLRenderbuffer)) {
                         this.depthStencilRenderbuffer = storage;
@@ -37419,7 +37415,7 @@ var GLFramebuffer = /*#__PURE__*/ function(Framebuffer) {
                 }
                 separateDepthStencil = false;
                 break;
-            case exports.RenderPassAttachmentStorageType.depth_16_opaque:
+            case RenderPassAttachmentStorageType.depth_16_opaque:
                 if (storage) {
                     if (_instanceof1(storage, GLRenderbuffer)) {
                         this.depthStencilRenderbuffer = storage;
@@ -37435,7 +37431,7 @@ var GLFramebuffer = /*#__PURE__*/ function(Framebuffer) {
                     }, renderer.glRenderer);
                 }
                 break;
-            case exports.RenderPassAttachmentStorageType.stencil_8_opaque:
+            case RenderPassAttachmentStorageType.stencil_8_opaque:
                 if (storage) {
                     if (_instanceof1(storage, GLRenderbuffer)) {
                         this.depthStencilRenderbuffer = storage;
@@ -37451,12 +37447,12 @@ var GLFramebuffer = /*#__PURE__*/ function(Framebuffer) {
                     }, renderer.glRenderer);
                 }
                 break;
-            case exports.RenderPassAttachmentStorageType.depth_16_texture:
+            case RenderPassAttachmentStorageType.depth_16_texture:
                 if (!readableDepthStencilTextures) {
                     throw new Error("Depth texture is not support in framebuffer.");
                 }
                 this.depthTexture = optDepthStencilTex != null ? optDepthStencilTex : new GLTexture(this.engine, {
-                    sourceType: exports.TextureSourceType.framebuffer,
+                    sourceType: TextureSourceType.framebuffer,
                     format: glContext.DEPTH_COMPONENT,
                     internalFormat: gpuCapability.internalFormatDepth16,
                     type: glContext.UNSIGNED_SHORT,
@@ -37464,12 +37460,12 @@ var GLFramebuffer = /*#__PURE__*/ function(Framebuffer) {
                 });
                 this.depthTexture.initialize();
                 break;
-            case exports.RenderPassAttachmentStorageType.depth_24_stencil_8_texture:
+            case RenderPassAttachmentStorageType.depth_24_stencil_8_texture:
                 if (!readableDepthStencilTextures) {
                     throw new Error("Depth stencil texture is not support in framebuffer.");
                 }
                 this.depthTexture = this.stencilTexture = optDepthStencilTex != null ? optDepthStencilTex : new GLTexture(this.engine, {
-                    sourceType: exports.TextureSourceType.framebuffer,
+                    sourceType: TextureSourceType.framebuffer,
                     format: glContext.DEPTH_STENCIL,
                     internalFormat: gpuCapability.internalFormatDepth24_stencil8,
                     type: gpuCapability.UNSIGNED_INT_24_8,
@@ -37487,13 +37483,13 @@ var GLFramebuffer = /*#__PURE__*/ function(Framebuffer) {
         var colorLen = this.colorTextures.length;
         if (storeAction && isWebGL2(gl) && colorLen > 0) {
             var attachments = [];
-            if (storeAction.depthAction === exports.TextureStoreAction.clear && this.depthStorage) {
+            if (storeAction.depthAction === TextureStoreAction.clear && this.depthStorage) {
                 addItem(attachments, separateDepthStencil ? gl.DEPTH_ATTACHMENT : gl.DEPTH_STENCIL_ATTACHMENT);
             }
-            if (storeAction.stencilAction === exports.TextureStoreAction.clear && this.stencilStorage) {
+            if (storeAction.stencilAction === TextureStoreAction.clear && this.stencilStorage) {
                 addItem(attachments, separateDepthStencil ? gl.STENCIL_ATTACHMENT : gl.DEPTH_STENCIL_ATTACHMENT);
             }
-            if (storeAction.colorAction === exports.TextureStoreAction.clear) {
+            if (storeAction.colorAction === TextureStoreAction.clear) {
                 for(var i = 0; i < colorLen; i++){
                     addItem(attachments, gl["COLOR_ATTACHMENT" + i]);
                 }
@@ -37615,8 +37611,8 @@ var GLFramebuffer = /*#__PURE__*/ function(Framebuffer) {
         if (this.renderer) {
             this.renderer.glRenderer.deleteGLFramebuffer(this);
             delete this.fbo;
-            var clearAttachment = (options == null ? void 0 : options.depthStencilAttachment) ? options.depthStencilAttachment : exports.RenderPassDestroyAttachmentType.force;
-            if (clearAttachment === exports.RenderPassDestroyAttachmentType.force || clearAttachment === exports.RenderPassDestroyAttachmentType.keepExternal && !this.externalStorage) {
+            var clearAttachment = (options == null ? void 0 : options.depthStencilAttachment) ? options.depthStencilAttachment : RenderPassDestroyAttachmentType.force;
+            if (clearAttachment === RenderPassDestroyAttachmentType.force || clearAttachment === RenderPassDestroyAttachmentType.keepExternal && !this.externalStorage) {
                 var _this_depthStencilRenderbuffer, _this_depthTexture;
                 (_this_depthStencilRenderbuffer = this.depthStencilRenderbuffer) == null ? void 0 : _this_depthStencilRenderbuffer.dispose();
                 (_this_depthTexture = this.depthTexture) == null ? void 0 : _this_depthTexture.dispose();
@@ -37630,7 +37626,7 @@ var GLFramebuffer = /*#__PURE__*/ function(Framebuffer) {
             key: "stencilStorage",
             get: function get() {
                 var storageType = this.depthStencilStorageType;
-                if (storageType !== exports.RenderPassAttachmentStorageType.depth_16_opaque) {
+                if (storageType !== RenderPassAttachmentStorageType.depth_16_opaque) {
                     return this.depthStencilRenderbuffer;
                 }
             }
@@ -37638,7 +37634,7 @@ var GLFramebuffer = /*#__PURE__*/ function(Framebuffer) {
         {
             key: "depthStorage",
             get: function get() {
-                if (this.depthStencilStorageType !== exports.RenderPassAttachmentStorageType.stencil_8_opaque) {
+                if (this.depthStencilStorageType !== RenderPassAttachmentStorageType.stencil_8_opaque) {
                     return this.depthStencilRenderbuffer;
                 }
             }
@@ -38061,13 +38057,13 @@ var GLShaderLibrary = /*#__PURE__*/ function() {
         var shaderWithMacros = _extends({}, shaderSource, {
             vertex: ShaderFactory.genFinalShaderCode({
                 level: this.engine.gpuCapability.level,
-                shaderType: exports.ShaderType.vertex,
+                shaderType: ShaderType.vertex,
                 shader: shaderSource.vertex,
                 macros: mergedMacros
             }),
             fragment: ShaderFactory.genFinalShaderCode({
                 level: this.engine.gpuCapability.level,
-                shaderType: exports.ShaderType.fragment,
+                shaderType: ShaderType.fragment,
                 shader: shaderSource.fragment,
                 macros: mergedMacros
             })
@@ -38105,13 +38101,13 @@ var GLShaderLibrary = /*#__PURE__*/ function() {
         var gl = this.pipelineContext.gl;
         var result = {
             shared: shared,
-            status: exports.ShaderCompileResultStatus.compiling
+            status: ShaderCompileResultStatus.compiling
         };
         var linkProgram = this.createProgram(gl, vertex, fragment, result);
         var ext = this.glAsyncCompileExt;
         var startTime = alipay.performance.now();
         var setupProgram = function(glProgram) {
-            result.status = exports.ShaderCompileResultStatus.success;
+            result.status = ShaderCompileResultStatus.success;
             result.compileTime = alipay.performance.now() - startTime;
             shader.program = glProgram;
             shader.initialized = true;
@@ -38133,7 +38129,7 @@ var GLShaderLibrary = /*#__PURE__*/ function() {
             var shouldLink = !asyncCallback || !ext || ext && gl.getProgramParameter(result.program, ext.COMPLETION_STATUS_KHR) == true;
             var program = shouldLink && linkProgram();
             if (program) {
-                if (result.status !== exports.ShaderCompileResultStatus.fail) {
+                if (result.status !== ShaderCompileResultStatus.fail) {
                     assignInspectorName(program, name);
                     var glProgram = new GLProgram(_this.engine, program, shader.id);
                     // FIXME: 这个检测不能在这里调用，安卓上会有兼容性问题。要么开发版使用，要么移到Shader首次使用时
@@ -38146,7 +38142,7 @@ var GLShaderLibrary = /*#__PURE__*/ function() {
                             // 忽略这类错误
                             setupProgram(glProgram);
                         } else {
-                            result.status = exports.ShaderCompileResultStatus.fail;
+                            result.status = ShaderCompileResultStatus.fail;
                             result.error = error;
                             console.error("compileProgramError: " + error, "\nvertex:\n", vertex, "\nfragment:\n", fragment);
                             gl.deleteProgram(program);
@@ -38186,7 +38182,7 @@ var GLShaderLibrary = /*#__PURE__*/ function() {
             gl.attachShader(program, fragShader);
             gl.linkProgram(program);
             result.program = program;
-            result.status = exports.ShaderCompileResultStatus.compiling;
+            result.status = ShaderCompileResultStatus.compiling;
             return function() {
                 result.program = undefined;
                 var linked = gl.getProgramParameter(program, gl.LINK_STATUS);
@@ -38196,7 +38192,7 @@ var GLShaderLibrary = /*#__PURE__*/ function() {
                     console.error("Failed to link program: " + info + ".");
                     var vsCheckResult = checkShader(gl, vertexShader, "vertex", vs);
                     var fsCheckResult = checkShader(gl, fragShader, "fragment", fs);
-                    result.status = exports.ShaderCompileResultStatus.fail;
+                    result.status = ShaderCompileResultStatus.fail;
                     if (vsCheckResult) {
                         result.error = vsCheckResult.error;
                         result.status = vsCheckResult.status;
@@ -38210,7 +38206,7 @@ var GLShaderLibrary = /*#__PURE__*/ function() {
                 return program;
             };
         }
-        result.status = exports.ShaderCompileResultStatus.fail;
+        result.status = ShaderCompileResultStatus.fail;
         return function() {
             return null;
         };
@@ -38273,7 +38269,7 @@ function checkShader(gl, shader, type, code) {
         }).join("\n"));
         return {
             error: error,
-            status: exports.ShaderCompileResultStatus.fail
+            status: ShaderCompileResultStatus.fail
         };
     }
 }
@@ -38836,7 +38832,7 @@ var GLRenderer = /*#__PURE__*/ function(Renderer) {
             ],
             attachments: [
                 new GLTexture(_this.engine, {
-                    sourceType: exports.TextureSourceType.framebuffer,
+                    sourceType: TextureSourceType.framebuffer,
                     data: {
                         width: _this.width,
                         height: _this.height
@@ -38844,7 +38840,7 @@ var GLRenderer = /*#__PURE__*/ function(Renderer) {
                 })
             ],
             depthStencilAttachment: {
-                storageType: exports.RenderPassAttachmentStorageType.none
+                storageType: RenderPassAttachmentStorageType.none
             }
         }, _assert_this_initialized(_this));
         return _this;
@@ -38975,27 +38971,27 @@ var GLRenderer = /*#__PURE__*/ function(Renderer) {
         }
         var textureFilter;
         var textureType;
-        var depthType = exports.RenderPassAttachmentStorageType.none;
+        var depthType = RenderPassAttachmentStorageType.none;
         // TODO 建立Map映射
-        if (filter === exports.FilterMode.Linear) {
+        if (filter === FilterMode.Linear) {
             textureFilter = glContext.LINEAR;
-        } else if (filter === exports.FilterMode.Nearest) {
+        } else if (filter === FilterMode.Nearest) {
             textureFilter = glContext.NEAREST;
         }
-        if (format === exports.RenderTextureFormat.RGBA32) {
+        if (format === RenderTextureFormat.RGBA32) {
             textureType = glContext.UNSIGNED_BYTE;
-        } else if (format === exports.RenderTextureFormat.RGBAHalf) {
+        } else if (format === RenderTextureFormat.RGBAHalf) {
             textureType = glContext.HALF_FLOAT;
         }
         if (depthBuffer === 0) {
-            depthType = exports.RenderPassAttachmentStorageType.none;
+            depthType = RenderPassAttachmentStorageType.none;
         } else if (depthBuffer === 16) {
-            depthType = exports.RenderPassAttachmentStorageType.depth_16_opaque;
+            depthType = RenderPassAttachmentStorageType.depth_16_opaque;
         } else if (depthBuffer === 24) {
-            depthType = exports.RenderPassAttachmentStorageType.depth_24_stencil_8_texture;
+            depthType = RenderPassAttachmentStorageType.depth_24_stencil_8_texture;
         }
         var colorAttachment = new GLTexture(this.engine, {
-            sourceType: exports.TextureSourceType.framebuffer,
+            sourceType: TextureSourceType.framebuffer,
             minFilter: textureFilter,
             magFilter: textureFilter,
             internalFormat: glContext.RGBA,
@@ -39029,7 +39025,7 @@ var GLRenderer = /*#__PURE__*/ function(Renderer) {
     _proto.clear = function clear(action) {
         var state = this.pipelineContext;
         var bit = 0;
-        if (action.colorAction === exports.TextureLoadAction.clear) {
+        if (action.colorAction === TextureLoadAction.clear) {
             var clearColor = action.clearColor;
             if (clearColor) {
                 state.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
@@ -39037,12 +39033,12 @@ var GLRenderer = /*#__PURE__*/ function(Renderer) {
             state.colorMask(true, true, true, true);
             bit = glContext.COLOR_BUFFER_BIT;
         }
-        if (action.stencilAction === exports.TextureLoadAction.clear) {
+        if (action.stencilAction === TextureLoadAction.clear) {
             state.stencilMask(0xff);
             state.clearStencil(action.clearStencil || 0);
             bit = bit | glContext.STENCIL_BUFFER_BIT;
         }
-        if (action.depthAction === exports.TextureLoadAction.clear) {
+        if (action.depthAction === TextureLoadAction.clear) {
             var depth = action.clearDepth;
             state.depthMask(true);
             state.clearDepth(Number.isFinite(depth) ? depth : 1);
@@ -39489,11 +39485,11 @@ var seed = 1;
                         }, options);
                         source = url;
                         // 加载多个合成链接并各自设置可选参数
-                        if (exports.Scene.isURL(url)) {
-                            if (!exports.Scene.isJSONObject(url)) {
+                        if (Scene.isURL(url)) {
+                            if (!Scene.isJSONObject(url)) {
                                 source = url.url;
                             }
-                            if (exports.Scene.isWithOptions(url)) {
+                            if (Scene.isWithOptions(url)) {
                                 opts = _extends({}, opts, url.options);
                             }
                         }
@@ -39810,11 +39806,11 @@ var seed = 1;
             if (this.compositions.length || this.compositions.length < comps.length || forceRender) {
                 this.renderer.setFramebuffer(null);
                 this.renderer.clear({
-                    stencilAction: exports.TextureLoadAction.clear,
+                    stencilAction: TextureLoadAction.clear,
                     clearStencil: 0,
-                    depthAction: exports.TextureLoadAction.clear,
+                    depthAction: TextureLoadAction.clear,
                     clearDepth: 1,
-                    colorAction: exports.TextureLoadAction.clear,
+                    colorAction: TextureLoadAction.clear,
                     clearColor: [
                         0,
                         0,
@@ -39904,11 +39900,11 @@ var seed = 1;
    */ _proto.clearCanvas = function clearCanvas(immediate) {
         if (immediate) {
             this.renderer.clear({
-                stencilAction: exports.TextureLoadAction.clear,
+                stencilAction: TextureLoadAction.clear,
                 clearStencil: 0,
-                depthAction: exports.TextureLoadAction.clear,
+                depthAction: TextureLoadAction.clear,
                 clearDepth: 1,
-                colorAction: exports.TextureLoadAction.clear,
+                colorAction: TextureLoadAction.clear,
                 clearColor: [
                     0,
                     0,
@@ -40161,7 +40157,7 @@ Texture.createWithData = function(engine, data, options) {
     var tex = new GLTexture(engine, {
         data: data,
         type: type,
-        sourceType: exports.TextureSourceType.data,
+        sourceType: TextureSourceType.data,
         format: format,
         internalFormat: internalFormat || format,
         wrapS: wrapS,
@@ -40198,255 +40194,4 @@ Engine.create = function(gl) {
  */ var version = "2.1.4";
 logger.info("Player version: " + version + ".");
 
-exports.AbstractPlugin = AbstractPlugin;
-exports.ActivationPlayable = ActivationPlayable;
-exports.AnimationClipPlayable = AnimationClipPlayable;
-exports.Asset = Asset;
-exports.AssetLoader = AssetLoader;
-exports.AssetManager = AssetManager;
-exports.BYTES_TYPE_MAP = BYTES_TYPE_MAP;
-exports.BaseRenderComponent = BaseRenderComponent;
-exports.Behaviour = Behaviour;
-exports.BezierCurve = BezierCurve;
-exports.BezierCurvePath = BezierCurvePath;
-exports.BezierCurveQuat = BezierCurveQuat;
-exports.COPY_FRAGMENT_SHADER = COPY_FRAGMENT_SHADER;
-exports.COPY_MESH_SHADER_ID = COPY_MESH_SHADER_ID;
-exports.COPY_VERTEX_SHADER = COPY_VERTEX_SHADER;
-exports.CalculateLoader = CalculateLoader;
-exports.Camera = Camera;
-exports.CameraVFXItemLoader = CameraVFXItemLoader;
-exports.ColorCurve = ColorCurve;
-exports.Component = Component;
-exports.Composition = Composition;
-exports.CompositionComponent = CompositionComponent;
-exports.CompositionSourceManager = CompositionSourceManager;
-exports.DEFAULT_FONTS = DEFAULT_FONTS;
-exports.DEFAULT_FPS = DEFAULT_FPS;
-exports.Database = Database;
-exports.Downloader = Downloader;
-exports.EFFECTS_COPY_MESH_NAME = EFFECTS_COPY_MESH_NAME;
-exports.EVENT_TYPE_CLICK = EVENT_TYPE_CLICK;
-exports.EVENT_TYPE_TOUCH_END = EVENT_TYPE_TOUCH_END;
-exports.EVENT_TYPE_TOUCH_MOVE = EVENT_TYPE_TOUCH_MOVE;
-exports.EVENT_TYPE_TOUCH_START = EVENT_TYPE_TOUCH_START;
-exports.EffectsObject = EffectsObject;
-exports.EffectsPackage = EffectsPackage;
-exports.Engine = Engine;
-exports.EventEmitter = EventEmitter;
-exports.EventSystem = EventSystem;
-exports.Float16ArrayWrapper = Float16ArrayWrapper;
-exports.Framebuffer = Framebuffer;
-exports.GLEngine = GLEngine;
-exports.GLGeometry = GLGeometry;
-exports.GLRenderer = GLRenderer;
-exports.GPUCapability = GPUCapability;
-exports.Geometry = Geometry;
-exports.GlobalUniforms = GlobalUniforms;
-exports.GradientValue = GradientValue;
-exports.HELP_LINK = HELP_LINK$1;
-exports.InteractLoader = InteractLoader;
-exports.InteractMesh = InteractMesh;
-exports.KTXTexture = KTXTexture;
-exports.LineSegments = LineSegments;
-exports.LinearValue = LinearValue;
-exports.Material = Material;
-exports.MaterialDataBlock = MaterialDataBlock;
-exports.Mesh = Mesh;
-exports.MeshCollider = MeshCollider;
-exports.PLAYER_OPTIONS_ENV_EDITOR = PLAYER_OPTIONS_ENV_EDITOR;
-exports.POST_PROCESS_SETTINGS = POST_PROCESS_SETTINGS;
-exports.ParticleBehaviourPlayable = ParticleBehaviourPlayable;
-exports.ParticleBehaviourPlayableAsset = ParticleBehaviourPlayableAsset;
-exports.ParticleLoader = ParticleLoader;
-exports.ParticleMesh = ParticleMesh;
-exports.ParticleSystemRenderer = ParticleSystemRenderer;
-exports.PassTextureCache = PassTextureCache;
-exports.PathSegments = PathSegments;
-exports.Player = Player;
-exports.PluginSystem = PluginSystem;
-exports.PropertyTrack = PropertyTrack;
-exports.RENDER_PASS_NAME_PREFIX = RENDER_PASS_NAME_PREFIX;
-exports.RENDER_PREFER_LOOKUP_TEXTURE = RENDER_PREFER_LOOKUP_TEXTURE;
-exports.RUNTIME_ENV = RUNTIME_ENV;
-exports.RandomSetValue = RandomSetValue;
-exports.RandomValue = RandomValue;
-exports.RandomVectorValue = RandomVectorValue;
-exports.RenderFrame = RenderFrame;
-exports.RenderPass = RenderPass;
-exports.RenderPassPriorityNormal = RenderPassPriorityNormal;
-exports.RenderPassPriorityPostprocess = RenderPassPriorityPostprocess;
-exports.RenderPassPriorityPrepare = RenderPassPriorityPrepare;
-exports.RenderTargetHandle = RenderTargetHandle;
-exports.Renderbuffer = Renderbuffer;
-exports.Renderer = Renderer;
-exports.RendererComponent = RendererComponent;
-exports.RuntimeClip = RuntimeClip;
-exports.SEMANTIC_MAIN_PRE_COLOR_ATTACHMENT_0 = SEMANTIC_MAIN_PRE_COLOR_ATTACHMENT_0;
-exports.SEMANTIC_MAIN_PRE_COLOR_ATTACHMENT_SIZE_0 = SEMANTIC_MAIN_PRE_COLOR_ATTACHMENT_SIZE_0;
-exports.SEMANTIC_PRE_COLOR_ATTACHMENT_0 = SEMANTIC_PRE_COLOR_ATTACHMENT_0;
-exports.SEMANTIC_PRE_COLOR_ATTACHMENT_SIZE_0 = SEMANTIC_PRE_COLOR_ATTACHMENT_SIZE_0;
-exports.SPRITE_VERTEX_STRIDE = SPRITE_VERTEX_STRIDE;
-exports.SemanticMap = SemanticMap;
-exports.SerializationHelper = SerializationHelper;
-exports.ShaderFactory = ShaderFactory;
-exports.ShaderVariant = ShaderVariant;
-exports.SpriteLoader = SpriteLoader;
-exports.StaticValue = StaticValue;
-exports.TEMPLATE_USE_OFFSCREEN_CANVAS = TEMPLATE_USE_OFFSCREEN_CANVAS;
-exports.TextComponentBase = TextComponentBase;
-exports.TextLayout = TextLayout;
-exports.TextLoader = TextLoader;
-exports.TextStyle = TextStyle;
-exports.Texture = Texture;
-exports.TextureFactory = TextureFactory;
-exports.Ticker = Ticker;
-exports.TimelineClip = TimelineClip;
-exports.TimelinePlayable = TimelinePlayable;
-exports.TrackSortWrapper = TrackSortWrapper;
-exports.Transform = Transform;
-exports.TransformAnimationPlayable = TransformAnimationPlayable;
-exports.ValueGetter = ValueGetter;
-exports.Vector4Curve = Vector4Curve;
-exports.adapter = index$3;
-exports.addByOrder = addByOrder;
-exports.addItem = addItem;
-exports.addItemWithOrder = addItemWithOrder;
-exports.applyMixins = applyMixins;
-exports.assertExist = assertExist;
-exports.asserts = asserts;
-exports.base64ToFile = base64ToFile;
-exports.blend = blend;
-exports.calculateTranslation = calculateTranslation;
-exports.canvasPool = canvasPool;
-exports.colorGradingFrag = colorGradingFrag;
-exports.colorStopsFromGradient = colorStopsFromGradient;
-exports.colorToArr = colorToArr$1;
-exports.combineImageTemplate = combineImageTemplate;
-exports.createCopyShader = createCopyShader;
-exports.createGLContext = createGLContext;
-exports.createKeyFrameMeta = createKeyFrameMeta;
-exports.createShape = createShape;
-exports.createValueGetter = createValueGetter;
-exports.decimalEqual = decimalEqual;
-exports.defaultPlugins = defaultPlugins;
-exports.deserializeMipmapTexture = deserializeMipmapTexture;
-exports.disableAllPlayer = disableAllPlayer;
-exports.earcut = earcut;
-exports.effectsClass = effectsClass;
-exports.effectsClassStore = effectsClassStore;
-exports.enlargeBuffer = enlargeBuffer;
-exports.ensureFixedNumber = ensureFixedNumber;
-exports.ensureVec3 = ensureVec3;
-exports.findPreviousRenderPass = findPreviousRenderPass;
-exports.gaussianDownFrag = gaussianDown_frag;
-exports.gaussianDownHFrag = gaussianDownHFrag;
-exports.gaussianDownVFrag = gaussianDownVFrag;
-exports.gaussianUpFrag = gaussianUpFrag;
-exports.generateEmptyTypedArray = generateEmptyTypedArray;
-exports.generateGUID = generateGUID;
-exports.generateHalfFloatTexture = generateHalfFloatTexture;
-exports.generateTransparentTexture = generateTransparentTexture;
-exports.generateWhiteTexture = generateWhiteTexture;
-exports.getActivePlayers = getActivePlayers;
-exports.getBackgroundImage = getBackgroundImage;
-exports.getColorFromGradientStops = getColorFromGradientStops;
-exports.getConfig = getConfig;
-exports.getDefaultTextureFactory = getDefaultTextureFactory;
-exports.getGeometryByShape = getGeometryByShape;
-exports.getGeometryTriangles = getGeometryTriangles;
-exports.getImageItemRenderInfo = getImageItemRenderInfo;
-exports.getKTXTextureOptions = getKTXTextureOptions;
-exports.getKeyFrameMetaByRawValue = getKeyFrameMetaByRawValue;
-exports.getMergedStore = getMergedStore;
-exports.getParticleMeshShader = getParticleMeshShader;
-exports.getPixelRatio = getPixelRatio;
-exports.getPlayerByCanvas = getPlayerByCanvas;
-exports.getPreMultiAlpha = getPreMultiAlpha;
-exports.getStandardComposition = getStandardComposition;
-exports.getStandardImage = getStandardImage;
-exports.getStandardItem = getStandardItem;
-exports.getStandardJSON = getStandardJSON;
-exports.getTextureSize = getTextureSize;
-exports.glContext = glContext;
-exports.glType2VertexFormatType = glType2VertexFormatType;
-exports.gpuTimer = gpuTimer;
-exports.imageDataFromColor = imageDataFromColor;
-exports.imageDataFromGradient = imageDataFromGradient;
-exports.initErrors = initErrors;
-exports.initGLContext = initGLContext;
-exports.integrate = integrate;
-exports.interpolateColor = interpolateColor;
-exports.isAlipayMiniApp = isAlipayMiniApp;
-exports.isAndroid = isAndroid;
-exports.isArray = isArray;
-exports.isCanvas = isCanvas;
-exports.isCanvasUsedByPlayer = isCanvasUsedByPlayer;
-exports.isFunction = isFunction;
-exports.isIOS = isIOS;
-exports.isIOSByUA = isIOSByUA;
-exports.isMiniProgram = isMiniProgram;
-exports.isObject = isObject;
-exports.isSimulatorCellPhone = isSimulatorCellPhone;
-exports.isString = isString;
-exports.isUniformStruct = isUniformStruct;
-exports.isUniformStructArray = isUniformStructArray;
-exports.isValidFontFamily = isValidFontFamily;
-exports.isWebGL2 = isWebGL2;
-exports.isWechatMiniApp = isWechatMiniApp;
-exports.itemFrag = itemFrag;
-exports.itemFrameFrag = itemFrameFrag;
-exports.itemVert = itemVert;
-exports.loadAVIFOptional = loadAVIFOptional;
-exports.loadBinary = loadBinary;
-exports.loadBlob = loadBlob;
-exports.loadImage = loadImage;
-exports.loadMedia = loadMedia;
-exports.loadVideo = loadVideo;
-exports.loadWebPOptional = loadWebPOptional;
-exports.logger = logger;
-exports.math = index;
-exports.modifyMaxKeyframeShader = modifyMaxKeyframeShader;
-exports.nearestPowerOfTwo = nearestPowerOfTwo;
-exports.noop = noop;
-exports.normalizeColor = normalizeColor;
-exports.numberToFix = numberToFix;
-exports.parsePercent = parsePercent$1;
-exports.particleFrag = particleFrag;
-exports.particleOriginTranslateMap = particleOriginTranslateMap$1;
-exports.particleUniformTypeMap = particleUniformTypeMap;
-exports.particleVert = particleVert;
-exports.passRenderLevel = passRenderLevel;
-exports.pluginLoaderMap = pluginLoaderMap;
-exports.randomInRange = randomInRange;
-exports.registerPlugin = registerPlugin;
-exports.removeItem = removeItem;
-exports.rotateVec2 = rotateVec2;
-exports.screenMeshVert = screenMeshVert;
-exports.serialize = serialize;
-exports.setBlendMode = setBlendMode;
-exports.setConfig = setConfig;
-exports.setDefaultTextureFactory = setDefaultTextureFactory;
-exports.setMaskMode = setMaskMode;
-exports.setMaxSpriteMeshItemCount = setMaxSpriteMeshItemCount;
-exports.setRayFromCamera = setRayFromCamera;
-exports.setSideMode = setSideMode;
-exports.setSpriteMeshMaxItemCountByGPU = setSpriteMeshMaxItemCountByGPU;
-exports.sortByOrder = sortByOrder;
-exports.spec = index$1;
-exports.spriteMeshShaderFromFilter = spriteMeshShaderFromFilter;
-exports.spriteMeshShaderFromRenderInfo = spriteMeshShaderFromRenderInfo;
-exports.spriteMeshShaderIdFromRenderInfo = spriteMeshShaderIdFromRenderInfo;
-exports.thresholdFrag = thresholdFrag;
-exports.throwDestroyedError = throwDestroyedError;
-exports.trailVert = trailVert;
-exports.translatePoint = translatePoint;
-exports.trianglesFromRect = trianglesFromRect;
-exports.unregisterPlugin = unregisterPlugin;
-exports.valIfUndefined = valIfUndefined;
-exports.value = value;
-exports.valueDefine = valueDefine;
-exports.vecFill = vecFill;
-exports.vecMulCombine = vecMulCombine;
-exports.version = version;
-exports.vertexFormatType2GLType = vertexFormatType2GLType;
+export { AbstractPlugin, ActivationPlayable, ActivationPlayableAsset, ActivationTrack, AnimationClip, AnimationClipPlayable, Asset, AssetLoader, AssetManager, BYTES_TYPE_MAP, BaseRenderComponent, Behaviour, BezierCurve, BezierCurvePath, BezierCurveQuat, BinaryAsset, COMPRESSED_TEXTURE, COPY_FRAGMENT_SHADER, COPY_MESH_SHADER_ID, COPY_VERTEX_SHADER, CalculateLoader, Camera, CameraController, CameraVFXItemLoader, ColorCurve, ColorPropertyPlayableAsset, ColorPropertyTrack, Component, Composition, CompositionComponent, CompositionSourceManager, DEFAULT_FONTS, DEFAULT_FPS, Database, DestroyOptions, Downloader, EFFECTS_COPY_MESH_NAME, EVENT_TYPE_CLICK, EVENT_TYPE_TOUCH_END, EVENT_TYPE_TOUCH_MOVE, EVENT_TYPE_TOUCH_START, EffectComponent, EffectsObject, EffectsPackage, Engine, EventEmitter, EventSystem, Fake3DAnimationMode, Fake3DComponent, FilterMode, Float16ArrayWrapper, FloatPropertyPlayableAsset, FloatPropertyTrack, Framebuffer, GLEngine, GLGeometry, GLRenderer, GLSLVersion, GPUCapability, Geometry, GlobalUniforms, GradientValue, HELP_LINK$1 as HELP_LINK, HitTestType, InteractComponent, InteractLoader, InteractMesh, Item, KTXTexture, LineSegments, LinearValue, Material, MaterialDataBlock, MaterialRenderType, MaterialTrack, Mesh, MeshCollider, ObjectBindingTrack, OrderType, PLAYER_OPTIONS_ENV_EDITOR, POST_PROCESS_SETTINGS, ParticleBehaviourPlayable, ParticleBehaviourPlayableAsset, ParticleLoader, ParticleMesh, ParticleSystem, ParticleSystemRenderer, PassTextureCache, PathSegments, Player, PluginSystem, PostProcessVolume, PropertyTrack, RENDER_PASS_NAME_PREFIX, RENDER_PREFER_LOOKUP_TEXTURE, RUNTIME_ENV, RandomSetValue, RandomValue, RandomVectorValue, RenderFrame, RenderPass, RenderPassAttachmentStorageType, RenderPassDestroyAttachmentType, RenderPassPriorityNormal, RenderPassPriorityPostprocess, RenderPassPriorityPrepare, RenderTargetHandle, RenderTextureFormat, Renderbuffer, Renderer, RendererComponent, RuntimeClip, SEMANTIC_MAIN_PRE_COLOR_ATTACHMENT_0, SEMANTIC_MAIN_PRE_COLOR_ATTACHMENT_SIZE_0, SEMANTIC_PRE_COLOR_ATTACHMENT_0, SEMANTIC_PRE_COLOR_ATTACHMENT_SIZE_0, SPRITE_VERTEX_STRIDE, Scene, SemanticMap, SerializationHelper, Shader, ShaderCompileResultStatus, ShaderFactory, ShaderType, ShaderVariant, ShapeComponent, SpriteColorPlayableAsset, SpriteColorTrack, SpriteComponent, SpriteLoader, StaticValue, SubCompositionPlayableAsset, SubCompositionTrack, TEMPLATE_USE_OFFSCREEN_CANVAS, TextComponent, TextComponentBase, TextLayout, TextLoader, TextStyle, Texture, TextureFactory, TextureLoadAction, TextureSourceType, TextureStoreAction, Ticker, TimelineAsset, TimelineClip, TimelinePlayable, TrackAsset, TrackSortWrapper, TrackType, Transform, TransformAnimationPlayable, TransformPlayableAsset, TransformTrack, VFXItem, ValueGetter, Vector4Curve, Vector4PropertyPlayableAsset, Vector4PropertyTrack, index$3 as adapter, addByOrder, addItem, addItemWithOrder, applyMixins, assertExist, asserts, base64ToFile, blend, calculateTranslation, canvasPool, colorGradingFrag, colorStopsFromGradient, colorToArr$1 as colorToArr, combineImageTemplate, createCopyShader, createGLContext, createKeyFrameMeta, createShape, createValueGetter, decimalEqual, defaultPlugins, deserializeMipmapTexture, disableAllPlayer, earcut, effectsClass, effectsClassStore, enlargeBuffer, ensureFixedNumber, ensureVec3, findPreviousRenderPass, gaussianDown_frag as gaussianDownFrag, gaussianDownHFrag, gaussianDownVFrag, gaussianUpFrag, generateEmptyTypedArray, generateGUID, generateHalfFloatTexture, generateTransparentTexture, generateWhiteTexture, getActivePlayers, getBackgroundImage, getColorFromGradientStops, getConfig, getDefaultTextureFactory, getGeometryByShape, getGeometryTriangles, getImageItemRenderInfo, getKTXTextureOptions, getKeyFrameMetaByRawValue, getMergedStore, getParticleMeshShader, getPixelRatio, getPlayerByCanvas, getPreMultiAlpha, getStandardComposition, getStandardImage, getStandardItem, getStandardJSON, getTextureSize, glContext, glType2VertexFormatType, gpuTimer, imageDataFromColor, imageDataFromGradient, initErrors, initGLContext, integrate, interpolateColor, isAlipayMiniApp, isAndroid, isArray, isCanvas, isCanvasUsedByPlayer, isFunction, isIOS, isIOSByUA, isMiniProgram, isObject, isSimulatorCellPhone, isString, isUniformStruct, isUniformStructArray, isValidFontFamily, isWebGL2, isWechatMiniApp, itemFrag, itemFrameFrag, itemVert, loadAVIFOptional, loadBinary, loadBlob, loadImage, loadMedia, loadVideo, loadWebPOptional, logger, index as math, maxSpriteMeshItemCount, modifyMaxKeyframeShader, nearestPowerOfTwo, noop, normalizeColor, numberToFix, parsePercent$1 as parsePercent, particleFrag, particleOriginTranslateMap$1 as particleOriginTranslateMap, particleUniformTypeMap, particleVert, passRenderLevel, pluginLoaderMap, randomInRange, registerPlugin, removeItem, rotateVec2, screenMeshVert, serialize, setBlendMode, setConfig, setDefaultTextureFactory, setMaskMode, setMaxSpriteMeshItemCount, setRayFromCamera, setSideMode, setSpriteMeshMaxItemCountByGPU, sortByOrder, index$1 as spec, spriteMeshShaderFromFilter, spriteMeshShaderFromRenderInfo, spriteMeshShaderIdFromRenderInfo, thresholdFrag, throwDestroyedError, trailVert, translatePoint, trianglesFromRect, unregisterPlugin, valIfUndefined, value, valueDefine, vecFill, vecMulCombine, version, vertexFormatType2GLType };
