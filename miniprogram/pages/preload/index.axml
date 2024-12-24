@@ -1,0 +1,8 @@
+<view class="container">
+  <canvas class="canvas"
+          id="J-webglCanvas"
+          onReady="onCanvasReady"
+          type="webgl">
+  </canvas>
+  <button onTap="handlePlay">播放</button>
+</view>
