@@ -5,6 +5,7 @@
     "pages/text/index",
     "pages/render-level/index",
     "pages/interactive/index",
+    "pages/offset-interactive/index",
     "pages/dynamic-image/index",
     "pages/spine/index",
     "pages/model/index",

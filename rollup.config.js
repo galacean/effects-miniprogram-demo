@@ -23,6 +23,7 @@ export default () => {
     'text',
     'render-level',
     'interactive',
+    'offset-interactive',
     'dynamic-image',
     'spine',
     'model',
