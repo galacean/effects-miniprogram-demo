@@ -4,3 +4,4 @@
 node_modules
 miniprogram/chunks
 miniprogram/pages/**/*.js
+miniprogram/components/**/*.js

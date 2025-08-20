@@ -3,7 +3,7 @@ import { registerCanvas } from '@galacean/appx-adapter/alipay';
 import '@galacean/effects-plugin-spine/alipay';
 
 // 找春天
-const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*PHr2S4nmAM8AAAAAAAAAAAAADlB4AQ';
+const json = 'https://g.alicdn.com/ani-assets/aca6ab90807d22390047daf3bcf05c21/0.0.1/mars.json';
 // 818 理财
 // const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*JaLiQYyUqhoAAAAAAAAAAAAADlB4AQ';
 

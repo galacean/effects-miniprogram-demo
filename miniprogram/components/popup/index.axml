@@ -1,0 +1,14 @@
+<view class="container" a:if="{{visible}}">
+  <canvas class="canvas"
+          id="J-webglCanvas"
+          onReady="onCanvasReady"
+          type="webgl">
+  </canvas>
+  <view disable-scroll="true"
+        class="cover"
+        onTouchStart="onTouchStart"
+        onTouchMove="onTouchMove"
+        onTouchEnd="onTouchEnd"
+        onTouchCancel="onTouchCancel">
+  </view>
+</view>

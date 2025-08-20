@@ -6,10 +6,10 @@
   },
   "dependencies": {
     "@galacean/appx-adapter": "^0.3.2",
-    "@galacean/effects": "^2.1.4",
-    "@galacean/effects-plugin-model": "^2.1.4",
-    "@galacean/effects-plugin-orientation-transformer": "^2.1.4",
-    "@galacean/effects-plugin-spine": "^2.1.4"
+    "@galacean/effects": "^2.6.0",
+    "@galacean/effects-plugin-model": "^2.6.0",
+    "@galacean/effects-plugin-orientation-transformer": "^2.6.0",
+    "@galacean/effects-plugin-spine": "^2.6.0"
   },
   "devDependencies": {
     "@mini-types/alipay": "^3",
