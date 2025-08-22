@@ -4,8 +4,8 @@
     "build": "rollup -c --environment BUILD:production"
   },
   "dependencies": {
-    "@galacean/appx-adapter": "^0.3.3",
-    "@galacean/effects": "^2.6.2"
+    "@galacean/appx-adapter": "^0.3.4",
+    "@galacean/effects": "^2.6.3"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.0.3",
