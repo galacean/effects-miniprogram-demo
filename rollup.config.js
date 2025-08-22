@@ -28,6 +28,7 @@ export default () => {
     'spine',
     'model',
     'preload',
+    'local-file',
   ].forEach(name => {
     input[name] = `./miniprogram/pages/${name}/index.ts`;
   });
