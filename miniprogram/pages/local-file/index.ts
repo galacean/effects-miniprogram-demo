@@ -1,8 +1,7 @@
 import { Player } from '@galacean/effects/alipay';
 import { registerCanvas } from '@galacean/appx-adapter/alipay';
-import '@galacean/effects-plugin-model/alipay';
 
-const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*K0bKRZ7XfwwAAAAARUAAAAgAelB4AQ';
+const json = 'assets/qixi/index.json';
 
 Page<{}, {
   player: Player | null;

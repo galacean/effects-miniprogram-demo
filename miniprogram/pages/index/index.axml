@@ -9,6 +9,7 @@
     <navigator open-type="navigate" url="/pages/model/index" hover-class="navigator-hover">3D 插件</navigator>
     <navigator open-type="navigate" url="/pages/gyroscope/index" hover-class="navigator-hover">陀螺仪插件</navigator>
     <navigator open-type="navigate" url="/pages/preload/index" hover-class="navigator-hover">资源预加载</navigator>
+    <navigator open-type="navigate" url="/pages/local-file/index" hover-class="navigator-hover">加载本地文件</navigator>
   </view>
   <view class="page-section" style="margin-top: 12px">
     <button onTap="handleOnTap">打开组件</button>

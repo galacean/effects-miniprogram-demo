@@ -9,7 +9,8 @@
     "pages/spine/index",
     "pages/model/index",
     "pages/gyroscope/index",
-    "pages/preload/index"
+    "pages/preload/index",
+    "pages/local-file/index"
   ],
   "window": {
     "canPullDown": "NO"

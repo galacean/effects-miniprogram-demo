@@ -28,6 +28,7 @@ export default () => {
     'model',
     'gyroscope',
     'preload',
+    'local-file',
   ].forEach(name => {
     input[`pages/${name}`] = `./miniprogram/pages/${name}/index.ts`;
   });

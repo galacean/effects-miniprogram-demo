@@ -6,5 +6,8 @@
   "developOptions": {
     "skipTranspile": false
   },
+  "assetsInclude": [
+    "assets/**"
+  ],
   "miniprogramRoot": "miniprogram/"
 }
