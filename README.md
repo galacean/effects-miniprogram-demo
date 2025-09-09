@@ -30,8 +30,6 @@ import { onMounted, onBeforeUnmount } from 'vue';
 import { registerCanvas } from '@galacean/appx-adapter/weapp';
 import { Player } from '@galacean/effects/weapp';
 
-const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*PubBSpHUbjYAAAAAAAAAAAAADlB4AQ';
-
 let player: Player = null;
 
 onMounted(async () => {
