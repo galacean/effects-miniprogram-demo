@@ -1,0 +1,41 @@
+<template>
+<view class="page">
+	<navigator open-type="navigate" url="/pages/inspire/index" hover-class="navigator-hover">灵感测试</navigator>
+	<navigator open-type="navigate" url="/pages/text/index" hover-class="navigator-hover">文本元素</navigator>
+	<navigator open-type="navigate" url="/pages/render-level/index" hover-class="navigator-hover">分级渲染</navigator>
+	<navigator open-type="navigate" url="/pages/interactive/index" hover-class="navigator-hover">交互元素</navigator>
+	<navigator open-type="navigate" url="/pages/offset-interactive/index" hover-class="navigator-hover">交互元素 - offset</navigator>
+	<navigator open-type="navigate" url="/pages/dynamic-image/index" hover-class="navigator-hover">动态换图</navigator>
+	<navigator open-type="navigate" url="/pages/spine/index" hover-class="navigator-hover">Spine 插件</navigator>
+	<navigator open-type="navigate" url="/pages/model/index" hover-class="navigator-hover">3D 插件</navigator>
+	<navigator open-type="navigate" url="/pages/preload/index" hover-class="navigator-hover">资源预加载</navigator>
+	<navigator open-type="navigate" url="/pages/local-file/index" hover-class="navigator-hover">加载本地文件</navigator>
+</view>
+</template>
+
+<script setup lang="ts">
+</script>
+
+<style>
+.page {
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: top;
+}
+
+.page navigator {
+	width: 100%;
+	background-color: white;
+	margin-top: 2rpx;
+	line-height: 120rpx;
+	text-align: center;
+	border-bottom: 1rpx solid #eee;
+}
+
+.page navigator .navigator-hover {
+	background-color: rgba(0, 0, 0, 0.1);
+	color: #fff;
+}
+</style>
