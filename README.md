@@ -16,6 +16,7 @@
 - [taobao-js](/../../tree/taobao-js): 通过小程序开发者工具创建的基于原生 js 模版的淘宝小程序 Demo
 - [douyin](/../../tree/douyin): 抖音小程序完整 Demo
 - [douyin-ts](/../../tree/douyin-ts): 通过小程序开发者工具创建的基于原生 js 模版的抖音小程序 Demo
+- [uni-app](/../../tree/uni-app): 基于 uni-app 的小程序 Demo
 
 ## 基于原生 js/ts 模版的小程序
 
