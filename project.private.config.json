@@ -3,5 +3,6 @@
   "projectname": "wechat-js",
   "setting": {
     "compileHotReLoad": true
-  }
+  },
+  "libVersion": "3.3.5"
 }
