@@ -5,10 +5,11 @@
     "build": "rollup -c --environment BUILD:production"
   },
   "dependencies": {
-    "@galacean/appx-adapter": "^0.3.4",
-    "@galacean/effects": "^2.6.3",
-    "@galacean/effects-plugin-model": "^2.6.3",
-    "@galacean/effects-plugin-spine": "^2.6.3"
+    "@galacean/appx-adapter": "^0.3.5",
+    "@galacean/effects": "^2.7.2",
+    "@galacean/effects-plugin-model": "^2.7.2",
+    "@galacean/effects-plugin-spine": "^2.7.2",
+    "@galacean/effects-plugin-ffd": "^2.7.2"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.0.3",
