@@ -14,3 +14,4 @@ lib
 miniprogram_npm
 miniprogram/chunks
 miniprogram/pages/**/*.js
+miniprogram/components/**/*.js
