@@ -45,8 +45,6 @@ Component({
               });
           });
 
-          console.log({ nodeCanvas })
-
           const canvas = await registerCanvas({ id: nodeCanvas });
 
           this.data.player = new Player({
