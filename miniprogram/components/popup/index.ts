@@ -30,6 +30,9 @@ Component({
   observers: {
     visible (visible: boolean) {
       if (!visible) {
+        this.data.player?.dispose();
+        this.data.player = null;
+
         return;
       }
 
@@ -68,6 +71,7 @@ Component({
   lifetimes: {
     detached () {
       this.data.player?.dispose();
+      this.data.player = null;
     },
   },
 });
