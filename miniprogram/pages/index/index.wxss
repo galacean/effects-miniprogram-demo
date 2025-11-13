@@ -6,6 +6,10 @@
   justify-content: top;
 }
 
+.page .page-section {
+  width: 100%;
+}
+
 .page navigator {
   width: 100%;
   background-color: white;

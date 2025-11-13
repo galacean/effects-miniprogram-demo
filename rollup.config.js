@@ -30,7 +30,12 @@ export default () => {
     'preload',
     'local-file',
   ].forEach(name => {
-    input[name] = `./miniprogram/pages/${name}/index.ts`;
+    input[`pages/${name}`] = `./miniprogram/pages/${name}/index.ts`;
+  });
+  [
+    'popup',
+  ].forEach(name => {
+    input[`components/${name}`] = `./miniprogram/components/${name}/index.ts`;
   });
 
   dependencies.forEach(name => {
@@ -46,7 +51,7 @@ export default () => {
     output: {
       format: 'cjs',
       dir: 'miniprogram/',
-      entryFileNames: 'pages/[name]/index.js',
+      entryFileNames: '[name]/index.js',
       chunkFileNames: 'chunks/[name].js',
       manualChunks,
     },
