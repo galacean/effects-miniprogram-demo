@@ -1,7 +1,10 @@
 import { registerCanvas } from '@galacean/appx-adapter/weapp';
 import { Player, TextComponent } from '@galacean/effects/weapp';
+import '@galacean/effects-plugin-rich-text/weapp';
+import { RichTextComponent } from '@galacean/effects-plugin-rich-text/weapp';
 
 const json = 'https://mdn.alipayobjects.com/mars/afts/file/A*LZmYQZ6etZoAAAAAAAAAAAAADlB4AQ';
+const richTextJson = 'https://mdn.alipayobjects.com/mars/afts/file/A*trEcQ7My81EAAAAAAAAAAAAADlB4AQ';
 
 Page<{}, {
   player: Player | null;
@@ -26,6 +29,15 @@ Page<{}, {
 
       textComponent?.setFontSize(48);
       textComponent?.setTextColor([255, 0, 0, 1]);
+
+      const richTextCompostion = await this.player.loadScene(richTextJson, {
+        variables: {
+          richText_1: '<color=green>Galacean\nEffects\n\n富文232本</color>',
+        }
+      });
+      const richTextItem = richTextCompostion.getItemByName('richText_1');
+      richTextItem?.getComponent(RichTextComponent);
+
       this.timer = setTimeout(() => {
         textComponent?.setText('Galacean Effects\n基于 Web\n效果丰富，氛围粒子、陀螺仪特效、3D 模型渲染\n100%还原');
       }, 1500);

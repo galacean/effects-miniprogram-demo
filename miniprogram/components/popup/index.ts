@@ -38,13 +38,26 @@ Component({
 
       wx.nextTick(async () => {
         try {
+          const id = '#J-webglCanvas';
           const query = wx.createSelectorQuery().in(this);
-          const nodeCanvas = await new Promise((resolve) => {
+          const nodeCanvas = await new Promise((resolve, reject) => {
             query
-              .select('#J-webglCanvas')
-              .node()
+              .select(id).node()
+              .select(id).boundingClientRect()
               .exec((res) => {
-                  resolve(res[0].node);
+                try {
+                  const canvas = res[0].node;
+                  const rect = res[1];
+
+                  if (canvas) {
+                    canvas.getBoundingClientRect = () => rect;
+                    resolve(canvas);
+                  } else {
+                    reject(`create canvas fail, canvas is ${canvas}`);
+                  }
+                } catch (e) {
+                  reject(`Cannot find canvas by id: ${id}, ${e}`);
+                }
               });
           });
 
