@@ -1,0 +1,14 @@
+<view class="container" wx:if="{{visible}}">
+  <canvas class="canvas"
+    id="J-webglCanvas"
+    type="webgl"
+  >
+  </canvas>
+  <view disable-scroll="true"
+        class="cover"
+        bind:touchcancel="touchCancel" 
+        bind:touchend="touchEnd" 
+        bind:touchmove="touchMove" 
+        bind:touchstart="touchStart">
+  </view>
+</view>
