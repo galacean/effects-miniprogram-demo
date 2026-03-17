@@ -2,6 +2,7 @@
   <canvas type="webgl"
           id="J-webglCanvas"
           style="width: 100%; height: 100%;"
+          onReady="onCanvasReady"
           disable-scroll="{{ true }}">
   </canvas>
 </view>
