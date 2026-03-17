@@ -11,7 +11,7 @@ Page<{
   async onLoad (query) {
     // 页面加载
   },
-  async onReady () {
+  async onCanvasReady () {
     // 页面加载完成
     const canvas = await adapter.registerCanvas({ id: '#J-webglCanvas' });
     // 实例化一个播放器
