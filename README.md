@@ -55,7 +55,7 @@ const canvas = await adapter.registerCanvas({ id: '#J-webglCanvas' });
   },
 ```
 
-1. 在 `libs` 目录下修改目标平台下对应的源码：
+2. 在 `libs` 目录下修改目标平台对应的源码：
 
 `libs/mp-alipay-galacean-effects.ts`:
 
@@ -65,7 +65,7 @@ export * from '@galacean/effects/alipay';
 + export * as SpinePlugin from '@galacean/effects-plugin-spine/alipay';
 ```
 
-1. 执行 `npm run build` 及后续流程
+3. 执行 `npm run build` 及后续流程
 
 ## 开发
 
