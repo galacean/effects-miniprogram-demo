@@ -45,8 +45,9 @@ const canvas = await adapter.registerCanvas({ id: '#J-webglCanvas' });
 
 1. 在 **main** 分支下增加想要安装的插件依赖，并执行 `npm install`
 
+`package.json`:
+
 ```diff
-  // package.json
   "dependencies": {
     "@galacean/appx-adapter": "^0.4.0",
     "@galacean/effects": "^2.8.9",
@@ -54,7 +55,9 @@ const canvas = await adapter.registerCanvas({ id: '#J-webglCanvas' });
   },
 ```
 
-2. 在 `libs` 目录下修改目标平台下对应的源码：
+1. 在 `libs` 目录下修改目标平台下对应的源码：
+
+`libs/mp-alipay-galacean-effects.ts`:
 
 ```diff
 export * as adapter from '@galacean/appx-adapter/alipay';
@@ -62,7 +65,7 @@ export * from '@galacean/effects/alipay';
 + export * as SpinePlugin from '@galacean/effects-plugin-spine/alipay';
 ```
 
-3. 执行 `npm run build` 及后续流程
+1. 执行 `npm run build` 及后续流程
 
 ## 开发
 
