@@ -1,12 +1,12 @@
 import { dispatchTouchCancel, dispatchTouchEnd, dispatchTouchMove, dispatchTouchStart, registerCanvas } from '@galacean/appx-adapter/weapp';
-import { Player, AbstractPlugin, registerPlugin } from '@galacean/effects/weapp';
+import { Player, Plugin, registerPlugin } from '@galacean/effects/weapp';
 import '@galacean/effects-plugin-model/weapp';
 import '@galacean/effects-plugin-spine/weapp';
 import inspireList from './assets/inspire-list';
 
 // 假装注册陀螺仪插件，兼容有陀螺仪的合成报错
 // @ts-expect-error
-registerPlugin('orientation-transformer', AbstractPlugin, AbstractPlugin, false);
+registerPlugin('orientation-transformer', Plugin);
 
 Page<{}, {
   player: Player | null;
